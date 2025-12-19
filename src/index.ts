@@ -19,6 +19,13 @@ async function build() {
     // Clean dist
     await fs.emptyDir(DIST_DIR);
 
+    // Copy static assets
+    const STATIC_DIR = path.join(SITE_DIR, 'static');
+    if (await fs.pathExists(STATIC_DIR)) {
+        await fs.copy(STATIC_DIR, DIST_DIR);
+        console.log(`Copied static assets to dist/`);
+    }
+
     // Find all markdown files
     const files = await glob('**/*.md', { cwd: CONTENT_DIR });
 
@@ -99,8 +106,8 @@ async function build() {
         }
 
         // Default fallbacks
-        fontFamilies.push('serif');
-        const fontFamilyCss = fontFamilies.join(', ');
+        const safeFontFamilies = [...fontFamilies, 'serif'];
+        const fontFamilyCss = safeFontFamilies.join(', ');
 
         const globalStyle = `
 <style>
@@ -115,6 +122,9 @@ body {
         fontCss += globalStyle;
 
         // Simple HTML wrap with Mermaid support
+        // Pass font families as a JSON array literal to avoid quoting issues
+        const fontListJson = JSON.stringify(safeFontFamilies);
+
         const finalHtml = `
 <!DOCTYPE html>
 <html lang="ja">
@@ -122,12 +132,22 @@ body {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${data.title}</title>
+    <link rel="icon" href="data:,"> <!-- Prevent favicon 404 -->
     ${fontCss}
     <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        
+        const fonts = ${fontListJson};
+        const fontFamily = fonts.join(', ');
+        
         mermaid.initialize({
-            startOnLoad: true,
-            fontFamily: "${fontFamilyCss.replace(/"/g, '\\"')}"
+            startOnLoad: false,
+            theme: 'default',
+            fontFamily: fontFamily
+        });
+        
+        await mermaid.run({
+            querySelector: '.mermaid'
         });
     </script>
 </head>
