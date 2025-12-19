@@ -43,13 +43,12 @@ async function build() {
             if (await fs.pathExists(fontPath)) {
                 try {
                     console.log(`  Subsetting font: ${data.font}`);
-                    const subsetBuffer = await subsetFont(fontPath, fullText);
+                    const { buffer, mimeType } = await subsetFont(fontPath, fullText);
 
-                    // opentype.js outputs TrueType (mapped from CFF or TTF)
-                    const mimeType = 'font/ttf';
-                    const format = 'truetype';
+                    // WOFF2 is now standard output
+                    const format = 'woff2';
 
-                    const dataUrl = bufferToDataUrl(subsetBuffer, mimeType);
+                    const dataUrl = bufferToDataUrl(buffer, mimeType);
 
                     fontCss = `
 <style>
