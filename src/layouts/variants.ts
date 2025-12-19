@@ -1,17 +1,21 @@
 import { baseLayout } from './base.js';
 
-export interface VariantRelation {
-    source: string;     // Base character (e.g. "凶")
-    property: string;   // Relation type (e.g. "kSemanticVariant", "kSrnsIVS" etc)
-    target: string;     // Target character (e.g. "兇" or "葛󠄂")
+export interface VariantRelationItem {
+    property: string;   // Relation type (e.g. "kSemanticVariant", "kSrnsIVS")
+    target: string;     // Target character
     note?: string;
+}
+
+export interface VariantGroup {
+    source: string;     // Base character
+    items: VariantRelationItem[];
 }
 
 export interface VariantsData {
     title: string;
     description?: string;
     layout: 'variants';
-    variants: VariantRelation[];
+    variants: VariantGroup[];
     [key: string]: any;
 }
 
@@ -19,44 +23,33 @@ function toHex(str: string): string {
     return Array.from(str).map(c => 'U+' + c.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')).join(' ');
 }
 
-// Group variants by source character
-function groupBySource(variants: VariantRelation[]): Record<string, VariantRelation[]> {
-    const groups: Record<string, VariantRelation[]> = {};
-    for (const v of variants) {
-        if (!groups[v.source]) {
-            groups[v.source] = [];
-        }
-        groups[v.source].push(v);
-    }
-    return groups;
-}
+// Generate Unihan-style text representation (Flatten 1-to-many relationship to 1-to-1 lines)
+function generateUnihanText(groups: VariantGroup[]): string {
+    let lines: string[] = [];
 
-// Generate Unihan-style text representation
-function generateUnihanText(variants: VariantRelation[]): string {
-    return variants.map(v => {
-        const sourceCode = toHex(v.source);
-        const targetCode = toHex(v.target);
-        return `${sourceCode}\t${v.property}\t${targetCode}\t# ${v.note || ''}`;
-    }).join('\n');
+    for (const group of groups) {
+        const sourceCode = toHex(group.source);
+        for (const item of group.items) {
+            const targetCode = toHex(item.target);
+            // Format: U+XXXX <TAB> Property <TAB> U+YYYY <TAB> # Note
+            lines.push(`${sourceCode}\t${item.property}\t${targetCode}\t# ${item.note || ''}`);
+        }
+    }
+
+    return lines.join('\n');
 }
 
 export function variantsLayout(data: VariantsData, bodyContent: string, fontCss: string, fontFamilies: string[]) {
 
-    // Grouping
-    const groups = groupBySource(data.variants);
-    const groupKeys = Object.keys(groups);
-
     // Render tables for each group
-    const sections = groupKeys.map(sourceChar => {
-        const relations = groups[sourceChar];
-
-        const rows = relations.map(r => {
+    const sections = data.variants.map(group => {
+        const rows = group.items.map(item => {
             return `
             <tr>
-                <td class="prop-cell">${r.property}</td>
-                <td class="target-glyph font-apply">${r.target}</td>
-                <td class="code-cell">${toHex(r.target)}</td>
-                <td class="note-cell">${r.note || ''}</td>
+                <td class="prop-cell">${item.property}</td>
+                <td class="target-glyph font-apply">${item.target}</td>
+                <td class="code-cell">${toHex(item.target)}</td>
+                <td class="note-cell">${item.note || ''}</td>
             </tr>
             `;
         }).join('');
@@ -65,8 +58,8 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
         <div class="variant-group">
             <div class="source-char-container">
                 <span class="source-label">Source:</span>
-                <span class="source-glyph font-apply">${sourceChar}</span>
-                <span class="source-code">${toHex(sourceChar)}</span>
+                <span class="source-glyph font-apply">${group.source}</span>
+                <span class="source-code">${toHex(group.source)}</span>
             </div>
             <table class="variants-table">
                 <thead>
@@ -158,6 +151,8 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
                 border: 1px solid var(--border-color);
                 background: var(--code-bg);
                 color: var(--text-color);
+                white-space: pre;
+                overflow: auto;
             }
         </style>
     `;
