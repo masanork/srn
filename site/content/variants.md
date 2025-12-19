@@ -6,44 +6,46 @@ font:
   - ipamjm.ttf
   - NotoSansJP-Regular.otf
 variants:
-  # Semantic Variants (同義異字)
+  # Semantic Variants
   - source: "凶"
-    property: "kSemanticVariant"
-    target: "兇"
-    note: "JIS第1水準/第2水準"
+    items:
+      - property: "kSemanticVariant"
+        target: "兇"
+        note: "JIS第1水準/第2水準"
   
   - source: "猫"
-    property: "kSemanticVariant"
-    target: "貓"
-    note: "旧字体"
+    items:
+      - property: "kSemanticVariant"
+        target: "貓"
+        note: "旧字体"
 
   # Z Variants (字形差)
   - source: "高"
-    property: "kZVariant"
-    target: "髙"
-    note: "はしご高 (Legacy compatibility)"
+    items:
+      - property: "kZVariant"
+        target: "髙"
+        note: "はしご高 (Legacy compatibility)"
 
-  # IVS Variants (独自プロパティ例)
+  # IVS Variants - Grooup "葛"
   - source: "葛"
-    property: "kSrnsIVS"
-    target: "葛󠄀"
-    note: "E0100 (標準)"
+    items:
+      - property: "kSrnsIVS"
+        target: "葛󠄀"
+        note: "E0100 (標準)"
+      - property: "kSrnsIVS"
+        target: "葛󠄂"
+        note: "E0102 (ヒ)"
   
-  - source: "葛"
-    property: "kSrnsIVS"
-    target: "葛󠄂"
-    note: "E0102 (ヒ)"
-  
+  # IVS Variants - Group "辻"
   - source: "辻"
-    property: "kSrnsIVS"
-    target: "辻󠄀"
-    note: "E0100 (二点)"
-
-  - source: "辻"
-    property: "kSrnsIVS"
-    target: "辻󠄂"
-    note: "E0102 (一点)"
+    items:
+      - property: "kSrnsIVS"
+        target: "辻󠄀"
+        note: "E0100 (二点)"
+      - property: "kSrnsIVS"
+        target: "辻󠄂"
+        note: "E0102 (一点)"
 ---
 
-このページは、MarkdownのFrontmatterに記述されたトリプルデータ (`Source`, `Property`, `Target`) から生成されています。
-ページ下部には、Unihan Databaseと同様の形式でエクスポートされたテキストデータがあります。
+このページは、MarkdownのFrontmatterに記述されたネスト構造データ (`Source` -> `Items[]`) から生成されています。
+ページ下部には、Unihan Databaseと同様のフラット形式 (`Source` `Property` `Target`) でエクスポートされたテキストデータがあります。
