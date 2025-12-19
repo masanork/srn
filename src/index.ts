@@ -27,6 +27,21 @@ async function build() {
     }
 
     // Find all markdown files
+    // Configure marked once
+    marked.use({
+        renderer: {
+            // @ts-ignore
+            code({ text, lang }) {
+                if (lang === 'mermaid') {
+                    return `<div class="mermaid">${text}</div>`;
+                }
+                const langClass = lang ? `class="language-${lang}"` : '';
+                return `<pre><code ${langClass}>${text}</code></pre>\n`;
+            }
+        }
+    });
+
+    // Find all markdown files
     const files = await glob('**/*.md', { cwd: CONTENT_DIR });
 
     for (const file of files) {
@@ -35,25 +50,6 @@ async function build() {
         const { data, content } = matter(source);
 
         console.log(`Processing: ${file}`);
-
-        marked.use({
-            renderer: {
-                // @ts-ignore
-                code(code, language, escaped) {
-                    if (language === 'mermaid') {
-                        return `<div class="mermaid">${code}</div>`;
-                    }
-                    // Fall back to default renderer seems hard if we effectively replaced it.
-                    // But we can just use simple HTML for code block as fallback or replicate default logic?
-                    // Or better: check marked documentation.
-                    // Actually, returning false/undefined usually falls back? No.
-
-                    // Simple fallback logic:
-                    const langClass = language ? `class="language-${language}"` : '';
-                    return `<pre><code ${langClass}>${code}</code></pre>\n`;
-                }
-            }
-        });
 
         // Convert to HTML
         const htmlContent = await marked.parse(content);
