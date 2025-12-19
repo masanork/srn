@@ -38,41 +38,62 @@ async function build() {
         const fullText = (data.title || '') + bodyText;
 
         let fontCss = '';
+        const fontFamilies: string[] = [];
+
         if (data.font) {
-            const fontPath = path.join(FONTS_DIR, data.font);
-            if (await fs.pathExists(fontPath)) {
-                try {
-                    console.log(`  Subsetting font: ${data.font}`);
-                    const { buffer, mimeType } = await subsetFont(fontPath, fullText);
+            const fonts = Array.isArray(data.font) ? data.font : [data.font];
 
-                    // WOFF2 is now standard output
-                    const format = 'woff2';
+            for (let i = 0; i < fonts.length; i++) {
+                const fontName = fonts[i];
+                const fontPath = path.join(FONTS_DIR, fontName);
 
-                    const dataUrl = bufferToDataUrl(buffer, mimeType);
+                if (await fs.pathExists(fontPath)) {
+                    try {
+                        console.log(`  Subsetting font: ${fontName}`);
+                        const { buffer, mimeType } = await subsetFont(fontPath, fullText);
 
-                    fontCss = `
+                        // If buffer is suspiciously small (header only), maybe warn?
+                        // But subsetFont returns valid font anyway.
+
+                        const format = 'woff2';
+                        const dataUrl = bufferToDataUrl(buffer, mimeType);
+                        const fontFamilyName = `SubsetFont-${i}`;
+
+                        fontCss += `
 <style>
 @font-face {
-  font-family: 'SubsetFont';
+  font-family: '${fontFamilyName}';
   src: url('${dataUrl}') format('${format}');
   font-display: swap;
 }
+</style>
+                        `;
+                        fontFamilies.push(`'${fontFamilyName}'`);
+                    } catch (err) {
+                        console.error(`  Error subsetting font ${fontName}: ${err}`);
+                        console.error(err);
+                    }
+                } else {
+                    console.warn(`  Font not found: ${fontName}`);
+                }
+            }
+        }
+
+        // Default fallbacks
+        fontFamilies.push('serif');
+        const fontFamilyCss = fontFamilies.join(', ');
+
+        const globalStyle = `
+<style>
 body {
-  font-family: 'SubsetFont', sans-serif;
+  font-family: ${fontFamilyCss};
   margin: 0;
   padding: 2rem;
   line-height: 1.6;
 }
 </style>
-                    `;
-                } catch (err) {
-                    console.error(`  Error subsetting font: ${err}`);
-                    console.error(err);
-                }
-            } else {
-                console.warn(`  Font not found: ${data.font}`);
-            }
-        }
+        `;
+        fontCss += globalStyle;
 
         // Simple HTML wrap
         const finalHtml = `
