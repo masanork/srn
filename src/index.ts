@@ -29,6 +29,19 @@ async function build() {
 
         console.log(`Processing: ${file}`);
 
+        // Custom renderer for Mermaid
+        const renderer = new marked.Renderer();
+        const originalCodeRenderer = renderer.code.bind(renderer);
+        renderer.code = (code, language, escaped) => {
+            if (language === 'mermaid') {
+                return `<div class="mermaid">${code}</div>`;
+            }
+            // @ts-ignore - marked types mismatch for bind, but this is safe
+            return originalCodeRenderer(code, language, escaped);
+        };
+        // @ts-ignore
+        marked.setOptions({ renderer });
+
         // Convert to HTML
         const htmlContent = await marked.parse(content);
 
@@ -95,7 +108,7 @@ body {
         `;
         fontCss += globalStyle;
 
-        // Simple HTML wrap
+        // Simple HTML wrap with Mermaid support
         const finalHtml = `
 <!DOCTYPE html>
 <html lang="ja">
@@ -104,6 +117,13 @@ body {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${data.title}</title>
     ${fontCss}
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            fontFamily: "${fontFamilyCss.replace(/"/g, '\\"')}"
+        });
+    </script>
 </head>
 <body>
     <h1>${data.title}</h1>
