@@ -7,7 +7,39 @@ srn (Short for Sorane) is a Static Site Generator designed for precision and per
 - **Dynamic Font Subsetting**: Automatically subsets fonts to include only the exact glyphs used in your content.
 - **Embedded Fonts**: Embeds the subsetted fonts directly, ensuring accurate rendering without the overhead of unused glyphs.
 
-## Overview
+## はじめに (Introduction in Japanese)
+
+srn (Sorane/空音) は、日本語タイポグラフィの美しさとWebパフォーマンスを両立させるために作られた静的サイトジェネレーターです。
+
+このツール最大の特徴は、**ページコンテンツで使用されている「文字」だけを抽出してフォントファイルを作り直し (サブセット化)、HTMLに直接埋め込む**ことです。
+
+### なぜこれが必要なのか？
+日本語フォントは数MB〜数十MBと巨大です。Webフォントとして使うには重すぎますが、サブセット化（常用漢字のみなど）を行ってもまだ数百KB残ることがあり、表示遅延 (FOIT) やレイアウトズレ (CLS) の原因となります。
+
+srnは「その1ページで使われている文字」**だけ**を含んだ数KB〜数十KBの超軽量フォントを生成します。これをHTMLに埋め込むことで、**ネットワークリクエスト・ゼロ、レイアウトシフト・ゼロ**の完璧なレンダリングを一瞬で実現します。
+
+### 使い方クイックスタート
+
+1.  **セットアップ**: [Bun](https://bun.sh) をインストールし、リポジトリをcloneして依存関係を入れます。
+    ```bash
+    git clone ...
+    bun install
+    ```
+2.  **フォントの準備**: 使いたいフォントファイル (`.otf`, `.ttf`) を `site/fonts/` フォルダに入れます。
+    > ※ フォントファイルは `.gitignore` されているため、ご自身のライセンスを持つフォントをローカルに配置してください。
+3.  **記事を書く**: `site/content/` に Markdown ファイルを作成し、Frontmatterで使用するフォント名を指定します。
+    ```markdown
+    ---
+    title: "私の記事"
+    font: "MyFont.otf"
+    ---
+    ここへ書いた文字だけが、MyFont.otf から抽出されます。
+    ```
+4.  **ビルド**: `bun run build` を実行すると `dist/` フォルダにHTMLが生成されます。
+
+---
+
+## Key Features
 
 Sorane aims to provide a seamless way to generate static sites where typography is paramount. Unlike traditional SSGs, **srn generates a unique, optimized font subset for every single page**, embedding it directly into the HTML.
 
