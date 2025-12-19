@@ -1,6 +1,8 @@
 ---
 title: "IPAmj明朝テスト"
-font: "ipamjm.ttf"
+font: 
+  - "ipamjm.ttf"
+  - "acgjm.ttf"
 ---
 
 # IPAmj明朝のテスト
