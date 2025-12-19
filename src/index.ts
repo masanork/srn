@@ -8,6 +8,8 @@ import * as cheerio from 'cheerio';
 import { subsetFont, bufferToDataUrl } from './font.ts';
 import { articleLayout } from './layouts/article.ts';
 import type { ArticleData } from './layouts/article.ts';
+import { variantsLayout } from './layouts/variants.ts';
+import type { VariantsData } from './layouts/variants.ts';
 
 // Configuration
 const SITE_DIR = path.resolve(process.cwd(), 'site');
@@ -107,6 +109,13 @@ async function build() {
         const safeFontFamilies = [...fontFamilies, 'serif'];
         const fontFamilyCss = safeFontFamilies.join(', ');
 
+
+
+        // ... (configuration)
+
+        // ...
+
+        // Global styles (only font-family injection needed now)
         const globalStyle = `
 <style>
 body {
@@ -117,12 +126,23 @@ body {
         fontCss += globalStyle;
 
         // Render HTML using Layout System
-        const finalHtml = articleLayout(
-            data as ArticleData,
-            htmlContent,
-            fontCss,
-            safeFontFamilies
-        );
+        let finalHtml = '';
+        if (data.layout === 'variants') {
+            finalHtml = variantsLayout(
+                data as VariantsData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
+            );
+        } else {
+            // Default to article
+            finalHtml = articleLayout(
+                data as ArticleData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
+            );
+        }
 
         // Write to dist
         const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
@@ -130,6 +150,7 @@ body {
         await fs.writeFile(outPath, finalHtml);
 
         console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
+
     }
 
     console.log('Build complete.');
