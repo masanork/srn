@@ -6,6 +6,8 @@ import { glob } from 'glob';
 
 import * as cheerio from 'cheerio';
 import { subsetFont, bufferToDataUrl } from './font.ts';
+import { articleLayout } from './layouts/article.ts';
+import type { ArticleData } from './layouts/article.ts';
 
 // Configuration
 const SITE_DIR = path.resolve(process.cwd(), 'site');
@@ -114,46 +116,13 @@ body {
         `;
         fontCss += globalStyle;
 
-        // Simple HTML wrap with Mermaid support
-        // Pass font families as a JSON array literal to avoid quoting issues
-        const fontListJson = JSON.stringify(safeFontFamilies);
-
-        const finalHtml = `
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
-    <title>${data.title}</title>
-    <link rel="icon" href="data:,"> <!-- Prevent favicon 404 -->
-    <link rel="stylesheet" href="style.css">
-    ${fontCss}
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-        
-        const fonts = ${fontListJson};
-        const fontFamily = fonts.join(', ');
-        
-        mermaid.initialize({
-            startOnLoad: false,
-            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
-            fontFamily: fontFamily
-        });
-        
-        await mermaid.run({
-            querySelector: '.mermaid'
-        });
-    </script>
-</head>
-<body>
-    <main>
-        <h1>${data.title}</h1>
-        ${htmlContent}
-    </main>
-</body>
-</html>
-        `;
+        // Render HTML using Layout System
+        const finalHtml = articleLayout(
+            data as ArticleData,
+            htmlContent,
+            fontCss,
+            safeFontFamilies
+        );
 
         // Write to dist
         const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
