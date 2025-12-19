@@ -1,30 +1,49 @@
 ---
-title: "異体字コレクション・テスト"
+title: "Unihan 異体字コレクション"
 layout: variants
-description: "IPAmj明朝に含まれる様々な異体字をテストするためのページです。"
+description: "様々なタイプの異体字関係（意味、字形、IVS）をUnihan形式で一覧化するテストページ。"
 font: 
   - ipamjm.ttf
   - NotoSansJP-Regular.otf
 variants:
-  - char: "葛"
-    ivs: "E0100"
-    note: "標準（葛飾区の葛）"
-  - char: "葛"
-    ivs: "E0102"
-    note: "下が「ヒ」"
-  - char: "辻"
-    ivs: "E0100"
-    note: "二点しんにょう"
-  - char: "辻"
-    ivs: "E0102"
-    note: "一点しんにょう"
-  - char: "逢"
-    ivs: "E0101"
-    note: "二点しんにょう"
-  - char: "芦"
-    ivs: "E0100"
-    note: "戸"
+  # Semantic Variants (同義異字)
+  - source: "凶"
+    property: "kSemanticVariant"
+    target: "兇"
+    note: "JIS第1水準/第2水準"
+  
+  - source: "猫"
+    property: "kSemanticVariant"
+    target: "貓"
+    note: "旧字体"
+
+  # Z Variants (字形差)
+  - source: "高"
+    property: "kZVariant"
+    target: "髙"
+    note: "はしご高 (Legacy compatibility)"
+
+  # IVS Variants (独自プロパティ例)
+  - source: "葛"
+    property: "kSrnsIVS"
+    target: "葛󠄀"
+    note: "E0100 (標準)"
+  
+  - source: "葛"
+    property: "kSrnsIVS"
+    target: "葛󠄂"
+    note: "E0102 (ヒ)"
+  
+  - source: "辻"
+    property: "kSrnsIVS"
+    target: "辻󠄀"
+    note: "E0100 (二点)"
+
+  - source: "辻"
+    property: "kSrnsIVS"
+    target: "辻󠄂"
+    note: "E0102 (一点)"
 ---
 
-異体字リストのテストです。
-下のテーブルはFrontmatterから自動生成されており、さらに下部には他のツールで利用可能なUnihan形式のテキストデータが出力されています。
+このページは、MarkdownのFrontmatterに記述されたトリプルデータ (`Source`, `Property`, `Target`) から生成されています。
+ページ下部には、Unihan Databaseと同様の形式でエクスポートされたテキストデータがあります。
