@@ -29,18 +29,24 @@ async function build() {
 
         console.log(`Processing: ${file}`);
 
-        // Custom renderer for Mermaid
-        const renderer = new marked.Renderer();
-        const originalCodeRenderer = renderer.code.bind(renderer);
-        renderer.code = (code, language, escaped) => {
-            if (language === 'mermaid') {
-                return `<div class="mermaid">${code}</div>`;
+        marked.use({
+            renderer: {
+                // @ts-ignore
+                code(code, language, escaped) {
+                    if (language === 'mermaid') {
+                        return `<div class="mermaid">${code}</div>`;
+                    }
+                    // Fall back to default renderer seems hard if we effectively replaced it.
+                    // But we can just use simple HTML for code block as fallback or replicate default logic?
+                    // Or better: check marked documentation.
+                    // Actually, returning false/undefined usually falls back? No.
+
+                    // Simple fallback logic:
+                    const langClass = language ? `class="language-${language}"` : '';
+                    return `<pre><code ${langClass}>${code}</code></pre>\n`;
+                }
             }
-            // @ts-ignore - marked types mismatch for bind, but this is safe
-            return originalCodeRenderer(code, language, escaped);
-        };
-        // @ts-ignore
-        marked.setOptions({ renderer });
+        });
 
         // Convert to HTML
         const htmlContent = await marked.parse(content);
