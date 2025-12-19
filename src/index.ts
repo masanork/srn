@@ -109,9 +109,6 @@ async function build() {
 <style>
 body {
   font-family: ${fontFamilyCss};
-  margin: 0;
-  padding: 2rem;
-  line-height: 1.6;
 }
 </style>
         `;
@@ -130,6 +127,7 @@ body {
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
     <title>${data.title}</title>
     <link rel="icon" href="data:,"> <!-- Prevent favicon 404 -->
+    <link rel="stylesheet" href="style.css">
     ${fontCss}
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
@@ -139,7 +137,7 @@ body {
         
         mermaid.initialize({
             startOnLoad: false,
-            theme: 'default',
+            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
             fontFamily: fontFamily
         });
         
@@ -149,8 +147,10 @@ body {
     </script>
 </head>
 <body>
-    <h1>${data.title}</h1>
-    ${htmlContent}
+    <main>
+        <h1>${data.title}</h1>
+        ${htmlContent}
+    </main>
 </body>
 </html>
         `;
