@@ -55,15 +55,40 @@ export function officialLayout(data: OfficialData, bodyContent: string, fontCss:
         </article>
 
         <style>
+            /* Force Light Mode / Print Style Consistency */
+            :root {
+                --bg-color: #ffffff;
+                --text-color: #000000;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg-color: #ffffff !important;
+                    --text-color: #000000 !important;
+                    --link-color: #0066cc !important;
+                    --heading-color: #000000 !important;
+                    --code-bg: #f0f0f0 !important;
+                    --border-color: #e0e0e0 !important;
+                }
+                body {
+                    background-color: #ffffff !important;
+                    color: #000000 !important;
+                }
+            }
+
+            body {
+                background-color: #f0f0f0; /* Slight gray background for browser view to make paper pop */
+            }
+
             .official-document {
                 max-width: 800px;
                 margin: 0 auto;
                 padding: 4rem;
-                background: white;
-                color: #000; /* Force pure black for thin fonts like IPAmjMincho */
-                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                background: white !important;
+                color: black !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
                 font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
-                -webkit-font-smoothing: auto; /* Prevent thinning on Mac */
+                -webkit-font-smoothing: auto;
                 -moz-osx-font-smoothing: auto;
             }
             /* Apply custom fonts to specific variant-heavy areas or body if needed */
