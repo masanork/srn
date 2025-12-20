@@ -153,7 +153,7 @@ export function officialLayout(data: OfficialData, bodyContent: string, fontCss:
             }
             .verification-details {
                 font-size: 0.8rem;
-                color: #666;
+                color: #333;
             }
             .download-btn {
                 display: inline-block;
