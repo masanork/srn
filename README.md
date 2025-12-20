@@ -4,8 +4,27 @@ srn (Short for Sorane) is a Static Site Generator designed for precision and per
 
 ## Key Features
 
-- **Dynamic Font Subsetting**: Automatically subsets fonts to include only the exact glyphs used in your content.
-- **Embedded Fonts**: Embeds the subsetted fonts directly, ensuring accurate rendering without the overhead of unused glyphs.
+## Key Features
+
+### 1. Smart Font Subsetting
+- Automatically detects used characters in Markdown content.
+- Generates minimal font subset (WOFF2) embedded as Data URI.
+- Supports **IVS (Ideographic Variation Sequence)** and Surrogate Pairs perfectly.
+- No need to upload full font files to the server.
+
+### 2. Post-Quantum Cryptography (PQC) Signing [New]
+- **Hybrid Digital Signature**: Incorporates both **ML-DSA-44 (Dilithium)** (NIST PQC Standard) and **Ed25519**.
+- **Verifiable Credentials (VC)**: Generates W3C-compliant Verifiable Credentials (JSON-LD) for each document designated as official content.
+- Ensures long-term authenticity of public documents against future quantum computer attacks.
+
+### 3. Variant Character Database [New]
+- **Unihan-style Management**: Define character variants (Source -> Property -> Target) in Frontmatter.
+- **Visual Comparison**: Dedicated layout to display glyph variants side-by-side using specific fonts.
+- **Data Export**: Auto-generates Unihan-compatible tab-separated text tables.
+
+### 4. Specialized Layouts
+- **Official Documents**: Vertical writing support, formal templates for government/business notices.
+- **Deep Linking**: Direct anchors to specific character definitions.
 
 ## はじめに (Introduction in Japanese)
 
