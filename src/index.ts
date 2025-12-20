@@ -69,28 +69,57 @@ async function build() {
         const fullText = (data.title || '') + bodyText;
 
         let fontCss = '';
-        const fontFamilies: string[] = [];
-
+        // Parse font configurations
+        let fontConfigs: string[] = [];
         if (data.font) {
-            const fonts = Array.isArray(data.font) ? data.font : [data.font];
+            fontConfigs = Array.isArray(data.font) ? data.font : [data.font];
+        } else {
+            // Default fonts if none specified
+            fontConfigs = ['ipamjm.ttf', 'acgjm.ttf'];
+        }
 
-            for (let i = 0; i < fonts.length; i++) {
-                const fontName = fonts[i];
-                const fontPath = path.join(FONTS_DIR, fontName);
+        const styleMap: Record<string, string[]> = {};
+        const uniqueFontsToSubset = new Set<string>();
 
-                if (await fs.pathExists(fontPath)) {
-                    try {
-                        console.log(`  Subsetting font: ${fontName}`);
-                        const { buffer, mimeType } = await subsetFont(fontPath, fullText);
+        const getBaseName = (fname: string) => path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
 
-                        // If buffer is suspiciously small (header only), maybe warn?
-                        // But subsetFont returns valid font anyway.
+        for (const config of fontConfigs) {
+            let styleName = 'default';
+            let fileListStr = config;
 
-                        const format = 'woff2';
-                        const dataUrl = bufferToDataUrl(buffer, mimeType);
-                        const fontFamilyName = `SubsetFont-${i}`;
+            if (config.includes(':')) {
+                const parts = config.split(':');
+                styleName = parts[0].trim();
+                fileListStr = parts.slice(1).join(':').trim(); // Join back in case filename has :, though unlikely
+            }
 
-                        fontCss += `
+            const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
+
+            if (!styleMap[styleName]) {
+                styleMap[styleName] = [];
+            }
+
+            for (const file of files) {
+                uniqueFontsToSubset.add(file);
+                // Use a generated family name based on filename to uniquely identify it
+                styleMap[styleName].push(`'${getBaseName(file)}'`);
+            }
+        }
+
+        // Subset unique fonts
+        for (const fontName of uniqueFontsToSubset) {
+            const fontPath = path.join(FONTS_DIR, fontName);
+
+            if (await fs.pathExists(fontPath)) {
+                try {
+                    console.log(`  Subsetting font: ${fontName}`);
+                    const { buffer, mimeType } = await subsetFont(fontPath, fullText);
+
+                    const format = 'woff2';
+                    const dataUrl = bufferToDataUrl(buffer, mimeType);
+                    const fontFamilyName = getBaseName(fontName);
+
+                    fontCss += `
 <style>
 @font-face {
   font-family: '${fontFamilyName}';
@@ -98,20 +127,29 @@ async function build() {
   font-display: swap;
 }
 </style>
-                        `;
-                        fontFamilies.push(`'${fontFamilyName}'`);
-                    } catch (err) {
-                        console.error(`  Error subsetting font ${fontName}: ${err}`);
-                        console.error(err);
-                    }
-                } else {
-                    console.warn(`  Font not found: ${fontName}`);
+                    `;
+                } catch (err) {
+                    console.error(`  Error subsetting font ${fontName}: ${err}`);
+                    console.error(err);
                 }
+            } else {
+                console.warn(`  Font not found: ${fontName}`);
             }
         }
 
+        // Generate utility classes for non-default styles
+        let utilityCss = '<style>\n';
+        for (const [styleName, stack] of Object.entries(styleMap)) {
+            if (styleName === 'default') continue;
+            const stackStr = [...stack, 'serif'].join(', ');
+            utilityCss += `.font-${styleName} { font-family: ${stackStr} !important; }\n`;
+        }
+        utilityCss += '</style>';
+        fontCss += utilityCss;
+
         // Default fallbacks
-        const safeFontFamilies = [...fontFamilies, 'serif'];
+        const defaultStack = styleMap['default'] || [];
+        const safeFontFamilies = [...defaultStack, 'serif'];
         const fontFamilyCss = safeFontFamilies.join(', ');
 
 

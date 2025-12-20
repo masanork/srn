@@ -2,7 +2,7 @@
 title: "行政事務標準文字追加文字一覧"
 layout: grid
 font:
-  - ipamjm.ttf
+  - acgjm.ttf
 ---
 
 # GJ Entries
