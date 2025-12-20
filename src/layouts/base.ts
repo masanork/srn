@@ -28,6 +28,8 @@ export function baseLayout(props: BaseLayoutProps): string {
     <title>${title}</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="help" type="text/plain" href="/llms.txt">
     ${fontCss}
     ${jsonLdScript}
     <script type="module">
