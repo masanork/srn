@@ -119,7 +119,7 @@ export async function subsetFont(fontPath: string, text: string): Promise<{ buff
 
     for (let i = 0; i < chars.length; i++) {
         const char = chars[i];
-        if (!char) continue;
+        if (char === undefined) continue;
         const code = char.codePointAt(0);
 
         if (code === undefined) continue;
