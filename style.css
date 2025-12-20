@@ -1,24 +1,16 @@
 :root {
   --bg-color: #f9f9f9;
-  --text-color: #2c3e50;
+  --text-color: #111;
   --link-color: #3498db;
-  --heading-color: #1a252f;
+  --heading-color: #000;
   --code-bg: #eceff1;
   --border-color: #e0e0e0;
   --max-width: 720px;
   --spacing: 1.5rem;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-color: #1a1a1a;
-    --text-color: #e0e0e0;
-    --link-color: #5dade2;
-    --heading-color: #ffffff;
-    --code-bg: #2d2d2d;
-    --border-color: #404040;
-  }
-}
+
 
 html {
   font-size: 16px;
@@ -32,7 +24,8 @@ body {
   margin: 0;
   padding: 0;
   line-height: 1.8;
-  font-feature-settings: "palt"; /* Proportional metrics for Japanese */
+  font-feature-settings: "palt";
+  /* Proportional metrics for Japanese */
 }
 
 /* Layout container */
@@ -44,7 +37,12 @@ main {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--heading-color);
   margin-top: 2.5em;
   margin-bottom: 1em;
@@ -105,7 +103,8 @@ pre code {
 }
 
 /* Lists */
-ul, ol {
+ul,
+ol {
   margin-bottom: 1.5em;
   padding-left: 2em;
 }
@@ -129,14 +128,8 @@ blockquote {
   display: flex;
   justify-content: center;
   margin: 2em 0;
-  background: white; /* Graphs often look better on white */
+  background: white;
+  /* Graphs often look better on white */
   padding: 1rem;
   border-radius: 8px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .mermaid {
-    background: #ffffff; /* Keeping graphs light for contrast, or use mermaid dark theme config */
-    /* If using mermaid dark theme, background can be transparent */
-  }
 }
