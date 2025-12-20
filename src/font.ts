@@ -1,9 +1,13 @@
 import opentype from 'opentype.js';
 import fs from 'fs-extra';
+import path from 'path';
 // @ts-ignore
 import wawoff2 from 'wawoff2';
 
-// Helper to read Big Endian values
+// ... (existing code) ...
+
+
+
 function getUShort(view: DataView, offset: number) { return view.getUint16(offset, false); }
 function getULong(view: DataView, offset: number) { return view.getUint32(offset, false); }
 function getUInt24(view: DataView, offset: number) {
@@ -182,6 +186,91 @@ export async function subsetFont(fontPath: string, text: string): Promise<{ buff
     };
 }
 
+
 export function bufferToDataUrl(buffer: Buffer, mimeType: string = 'font/sfnt'): string {
     return `data:${mimeType};base64,${buffer.toString('base64')}`;
+}
+
+const fontCache: Record<string, opentype.Font> = {};
+
+export async function getGlyphAsSvg(fontPath: string, identifier: string): Promise<string> {
+    let font = fontCache[fontPath];
+    if (!font) {
+        if (!await fs.pathExists(fontPath)) {
+            return `<span class="error">Font not found: ${path.basename(fontPath)}</span>`;
+        }
+        const fontBuffer = await fs.readFile(fontPath);
+        const arrayBuffer = fontBuffer.buffer.slice(fontBuffer.byteOffset, fontBuffer.byteOffset + fontBuffer.byteLength);
+        font = opentype.parse(arrayBuffer);
+        fontCache[fontPath] = font;
+    }
+
+    let glyph: opentype.Glyph | null = null;
+
+    // Try to find by Glyph Name (MJxxxx etc)
+    const numGlyphs = font.glyphs.length;
+    for (let i = 0; i < numGlyphs; i++) {
+        const g = font.glyphs.get(i);
+        if (g.name === identifier) {
+            glyph = g;
+            break;
+        }
+    }
+
+    // Try by GID if identifier looks like a number or 'gid:xxx'
+    if (!glyph) {
+        if (identifier.startsWith('gid:')) {
+            const gid = parseInt(identifier.split(':')[1]);
+            if (!isNaN(gid)) glyph = font.glyphs.get(gid);
+        }
+    }
+
+    // As a fallback, try to check if it's a direct character (though user said "not assigned code point")
+    // But maybe they passed a Unicode accidentally
+    // if (!glyph && identifier.length === 1) {
+    //    glyph = font.charToGlyph(identifier);
+    // }
+
+    if (!glyph) {
+        return `<span class="error">Glyph not found: ${identifier}</span>`;
+    }
+
+    // Generate SVG path
+    // Scale to standard size (e.g. 1000 units)
+    // opentype.js getPath(x, y, fontSize)
+    // We want to fit it into an SVG viewBox.
+    // Let's use UnitsPerEm as the coordinate system.
+
+    // To display correctly in SVG with default top-down coordinates:
+    // We can use a transformation or calculate path with inverted Y.
+    // opentype.js getPath returns commands for a 2D context where Y grows downwards if we just look at raw coordinates?
+    // Actually getPath(0, 0, 72) renders to canvas.
+    // getPath().toPathData(decimals) returns the 'd' attribute.
+
+    // Let's generate path data for 1em size.
+    // We place the origin at (0, em_ascender) so that the glyph sits on the baseline 
+    // and extends up to the ascender line at y=0.
+
+    const head = font.tables.head;
+    const unitsPerEm = font.unitsPerEm;
+    const ascender = font.ascender;
+    const descender = font.descender;
+
+    // Glyph Path
+    // Note: getPath(x, y, fontSize)
+    // We use unitsPerEm as fontSize to keep 1:1 coordinate mapping with font design space
+    const glyphPath = glyph.getPath(0, ascender, unitsPerEm);
+    const pathData = glyphPath.toPathData(2);
+
+    const width = glyph.advanceWidth || unitsPerEm;
+    // const height = ascender - descender; // Total height
+    const height = unitsPerEm; // Keep it simple square-ish relative to em
+
+    // ViewBox: 0 0 width height
+    // However, some glyphs might draw outside advanceWidth. 
+    // But for inline icon usage, using advanceWidth is standard.
+
+    return `<svg viewBox="0 0 ${width} ${height}" class="inline-glyph" style="height: 1em; vertical-align: middle; fill: currentColor;" xmlns="http://www.w3.org/2000/svg">
+        <path d="${pathData}" />
+    </svg>`;
 }
