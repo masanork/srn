@@ -5,7 +5,14 @@ import { marked } from 'marked';
 import { glob } from 'glob';
 
 import * as cheerio from 'cheerio';
-import { subsetFont, bufferToDataUrl } from './font.ts';
+import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
+
+// ... (existing imports and code) ...
+
+
+
+// Render HTML using Layout System
+let finalHtml = '';
 import { articleLayout } from './layouts/article.ts';
 import type { ArticleData } from './layouts/article.ts';
 import { variantsLayout } from './layouts/variants.ts';
@@ -81,7 +88,7 @@ async function build() {
         console.log(`Processing: ${file}`);
 
         // Convert to HTML
-        const htmlContent = await marked.parse(content);
+        let htmlContent = await marked.parse(content);
 
         // Extract text for subsetting
         const $ = cheerio.load(htmlContent);
@@ -187,6 +194,51 @@ body {
 </style>
         `;
         fontCss += globalStyle;
+
+        // Process Inline Glyph Tags [font:identifier]
+        const glyphPattern = /\[([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\]/g;
+        const matches = [...htmlContent.matchAll(glyphPattern)];
+
+        if (matches.length > 0) {
+            const replacers = await Promise.all(matches.map(async m => {
+                const fontRef = m[1];
+                const glyphId = m[2];
+                let fontFile = fontRef;
+
+                // Lookup fontConfigs to resolve style alias
+                // fontConfigs is array of strings e.g. "hero:ReggaeOne.ttf"
+                for (const cfg of fontConfigs) {
+                    let sName = 'default';
+                    let fFiles = cfg;
+                    if (cfg.includes(':')) {
+                        const pts = cfg.split(':');
+                        sName = pts[0].trim();
+                        fFiles = pts.slice(1).join(':').trim();
+                    }
+                    if (sName === fontRef) {
+                        fontFile = fFiles.split(',')[0].trim(); // Take first font
+                        break;
+                    }
+                }
+
+                let fontPath = path.join(FONTS_DIR, fontFile);
+                if (!await fs.pathExists(fontPath)) {
+                    if (await fs.pathExists(fontPath + '.ttf')) fontPath += '.ttf';
+                    else if (await fs.pathExists(fontPath + '.otf')) fontPath += '.otf';
+                }
+
+                // getGlyphAsSvg is imported from font.ts
+                const svg = await getGlyphAsSvg(fontPath, glyphId);
+                return { original: m[0], replacement: svg };
+            }));
+
+            let newHtml = htmlContent;
+            for (const { original, replacement } of replacers) {
+                // global replace
+                newHtml = newHtml.split(original).join(replacement);
+            }
+            htmlContent = newHtml;
+        }
 
         // Render HTML using Layout System
         let finalHtml = '';
