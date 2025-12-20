@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>Glyph Search Engine</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="help" type="text/plain" href="/llms.txt">
+    
+<style>
+@font-face {
+  font-family: 'ipamjm';
+  src: url('data:font/woff2;base64,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') format('woff2');
+  font-display: swap;
+}
+</style>
+                    <style>
+</style>
+<style>
+body {
+  font-family: 'ipamjm', serif;
+}
+</style>
+        
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        
+        const fonts = ["'ipamjm'","serif"];
+        const fontFamily = fonts.join(', ');
+        
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+            fontFamily: fontFamily
+        });
+        
+        await mermaid.run({
+            querySelector: '.mermaid'
+        });
+    </script>
+</head>
+<body>
+    <main>
+        
+        <style>
+            .search-container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 1rem;
+            }
+            .search-box {
+                width: 100%;
+                padding: 1rem;
+                font-size: 1.2rem;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+                margin-bottom: 2rem;
+            }
+            .results-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 1rem;
+            }
+            .result-item {
+                border: 1px solid #eee;
+                border-radius: 8px;
+                padding: 1rem;
+                text-align: center;
+                background: white;
+                cursor: pointer;
+                transition: transform 0.1s;
+            }
+            .result-item:hover {
+                transform: scale(1.02);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            .r-char {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+            .r-meta {
+                font-size: 0.8rem;
+                color: #666;
+                font-family: monospace;
+            }
+            .r-font {
+                font-size: 0.7rem;
+                color: #888;
+                margin-top: 0.2rem;
+            }
+            .loading {
+                text-align: center;
+                padding: 2rem;
+                color: #666;
+            }
+        </style>
+
+        <div class="search-container">
+            <h1>Glyph Search Engine</h1>
+            <p>Search across 270,000+ glyphs including MJ characters, IVS variants, and more. Real-time preview available.</p>
+            
+            <input type="text" id="searchInput" class="search-box" placeholder="Search by Glyph Name, ID, or Unicode (e.g. MJ010020)...">
+            
+            <div id="results" class="results-grid"></div>
+            <div id="status" class="loading">Loading index...</div>
+        </div>
+
+        <script type="module">
+            let index = [];
+            const resultEl = document.getElementById('results');
+            const statusEl = document.getElementById('status');
+            const inputEl = document.getElementById('searchInput');
+
+            // Fetch index
+            try {
+                const res = await fetch('/glyph-index.json');
+                index = await res.json();
+                statusEl.textContent = 'Loaded ' + index.length + ' glyphs. Type to search.';
+            } catch (e) {
+                statusEl.textContent = 'Error loading index.';
+                console.error(e);
+            }
+
+            function render(items) {
+                // Limit to 100 items for performance
+                const displayItems = items.slice(0, 100);
+                
+                resultEl.innerHTML = displayItems.map(item => {
+                    const char = item.unicode_hex ? String.fromCodePoint(parseInt(item.unicode_hex.replace('U+', ''), 16)) : '?';
+                    const syntax = '[' + item.name + ']'; 
+                    
+                    // Note: Use backslash-escaped backticks for inner template
+                    const onClick = "navigator.clipboard.writeText('" + syntax + "'); alert('Copied: " + syntax + "')";
+                    
+                    return `
+                        <div class="result-item" onclick="${onClick}">
+                            <div class="r-char">${char}</div>
+                            <div class="r-meta">${item.name}</div>
+                            <div class="r-font">${item.font_filename}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                if (items.length > 100) {
+                    const more = document.createElement('div');
+                    more.style.gridColumn = '1 / -1';
+                    more.style.textAlign = 'center';
+                    more.style.padding = '1rem';
+                    more.textContent = '...and ' + (items.length - 100) + ' more matches';
+                    resultEl.appendChild(more);
+                }
+            }
+
+            inputEl.addEventListener('input', (e) => {
+                const q = e.target.value.toLowerCase().trim();
+                if (!q) {
+                    resultEl.innerHTML = '';
+                    return;
+                }
+
+                const matches = index.filter(item => {
+                    return (item.name && item.name.toLowerCase().includes(q)) || 
+                           (item.unicode_hex && item.unicode_hex.toLowerCase().includes(q));
+                });
+
+                render(matches);
+            });
+
+        </script>
+    
+    </main>
+</body>
+</html>
