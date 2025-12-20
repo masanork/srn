@@ -112,7 +112,7 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
             }
             .source-label {
                 font-weight: bold;
-                color: #666;
+                color: #000;
             }
             .source-glyph {
                 font-size: 2.5rem;
@@ -121,7 +121,8 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
             }
             .source-code {
                 font-family: monospace;
-                color: #666;
+                color: #222;
+                font-weight: 600;
             }
             
             .variants-table {
@@ -129,13 +130,15 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
                 border-collapse: collapse;
             }
             .variants-table th, .variants-table td {
-                border: 1px solid #eee;
+                border: 1px solid #ccc;
                 padding: 0.8rem;
                 text-align: left;
+                color: #000;
             }
             .variants-table th {
                 background: var(--bg-color);
-                font-weight: 600;
+                font-weight: 700;
+                border-bottom: 2px solid #000;
             }
             .font-apply {
                 font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, serif;
