@@ -82,12 +82,35 @@ This approach achieves:
 
 ## Technical Stack
 
-- **Runtime**: [Bun](https://bun.sh/) (Fast All-in-One JavaScript Runtime)
+- **Runtime**: [Bun](https://bun.sh/) (REQUIRED: This project relies on Bun's built-in APIs and performance)
 - **Font Engine**: `opentype.js` (Pure JavaScript/Wasm subsetting flow)
-- **Bundler/Builder**: Bun (Native TypeScript support, no extra config needed)
+- **Database**: `bun:sqlite` (Used for glyph indexing and search)
+- **Bundler/Builder**: Bun (Native TypeScript support)
 
 ## Usage Concept
+**Important**: This project is designed to run with `bun`. While `npm` might install dependencies, the scripts rely on `bun run`.
 
+### 1. Basic Setup
+```bash
+git clone ...
+bun install
+```
+
+### 2. Font Management (New)
+srn now uses a local SQLite database to manage glyph information. This enables advanced search and auto-discovery of glyphs.
+
+1.  **Place Fonts**: Put your `.ttf` / `.otf` / `.woff2` files in `site/fonts/`.
+2.  **Build Database**: Run the indexer to parse fonts and build `site/data/fonts.db`.
+    ```bash
+    bun run db:build
+    ```
+3.  **Generate Catalog**: Create a local-only HTML catalog to browse all available glyphs.
+    ```bash
+    bun run catalog
+    # Output: site/fonts/catalog.html
+    ```
+
+### 3. Writing Content
 Configuration is kept simple. You associate fonts with content in your config or frontmatter.
 
 ```markdown

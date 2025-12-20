@@ -8,6 +8,17 @@ export interface GridData {
 }
 
 export function gridLayout(data: GridData, htmlContent: string, fontCss: string, fontFamilies: string[]) {
+    // Widen the container for grid view
+    const wideStyle = `
+        <style>
+            main {
+                max-width: 95% !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        </style>
+    `;
+
     // Parse the HTML table
     const $ = cheerio.load(htmlContent);
     const rows = $('table tbody tr');
@@ -16,10 +27,9 @@ export function gridLayout(data: GridData, htmlContent: string, fontCss: string,
 
     // Check if table parsing worked
     if (rows.length === 0) {
-        // Fallback if no table found (maybe just regular content)
         return baseLayout({
             title: data.title,
-            content: htmlContent,
+            content: wideStyle + htmlContent,
             fontCss,
             fontFamilies
         });
@@ -44,6 +54,7 @@ export function gridLayout(data: GridData, htmlContent: string, fontCss: string,
     });
 
     const fullContent = `
+        ${wideStyle}
 
         <p>行政事務標準文字追加文字（MJ+文字）のグリッド表示です。</p>
         <div class="char-grid">
@@ -68,9 +79,12 @@ export function gridLayout(data: GridData, htmlContent: string, fontCss: string,
                 align-items: center;
                 justify-content: center;
                 transition: box-shadow 0.2s;
+                content-visibility: auto;  /* Improve rendering performance for large lists */
+                contain-intrinsic-size: 140px; /* Estimate size */
             }
             .grid-item:hover {
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                z-index: 1; /* Bring to front on hover */
             }
             .char-display {
                 font-size: 3.5rem;

@@ -6,6 +6,7 @@ import { glob } from 'glob';
 
 import * as cheerio from 'cheerio';
 import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
+import { findGlyphInDb } from './db.ts';
 
 // ... (existing imports and code) ...
 
@@ -21,6 +22,8 @@ import { officialLayout } from './layouts/official.ts';
 import type { OfficialData } from './layouts/official.ts';
 import { gridLayout } from './layouts/grid.ts';
 import type { GridData } from './layouts/grid.ts';
+import { searchLayout } from './layouts/search.ts';
+import type { SearchData } from './layouts/search.ts';
 import { createHybridVC } from './vc.ts';
 
 // Configuration
@@ -44,109 +47,104 @@ async function build() {
     // Copy static assets
     const STATIC_DIR = path.join(SITE_DIR, 'static');
     if (await fs.pathExists(STATIC_DIR)) {
-        // For incremental, simple copy might be redundant but safe enough as it overwrites
-        await fs.copy(STATIC_DIR, DIST_DIR, { overwrite: true });
-        console.log(`Copied static assets to dist/`);
-    }
-
-    // Find all markdown files
-    // Configure marked once
-    marked.use({
-        renderer: {
-            // @ts-ignore
-            code({ text, lang }) {
-                if (lang === 'mermaid') {
-                    return `<div class="mermaid">${text}</div>`;
+        // Find all markdown files
+        // Configure marked once
+        marked.use({
+            renderer: {
+                // @ts-ignore
+                code({ text, lang }) {
+                    if (lang === 'mermaid') {
+                        return `<div class="mermaid">${text}</div>`;
+                    }
+                    const langClass = lang ? `class="language-${lang}"` : '';
+                    return `<pre><code ${langClass}>${text}</code></pre>\n`;
                 }
-                const langClass = lang ? `class="language-${lang}"` : '';
-                return `<pre><code ${langClass}>${text}</code></pre>\n`;
             }
-        }
-    });
+        });
 
-    // Find all markdown files
-    const files = await glob('**/*.md', { cwd: CONTENT_DIR });
+        // Find all markdown files
+        const files = await glob('**/*.md', { cwd: CONTENT_DIR });
 
-    for (const file of files) {
-        const filePath = path.join(CONTENT_DIR, file);
-        const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
+        for (const file of files) {
+            const filePath = path.join(CONTENT_DIR, file);
+            const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
 
-        // Incremental check: if not clean build, check modification times
-        if (!isClean && await fs.pathExists(outPath)) {
-            const srcStat = await fs.stat(filePath);
-            const dstStat = await fs.stat(outPath);
-            if (srcStat.mtime <= dstStat.mtime) {
-                // Log only if verbose? keeping it quiet for now or just log skipping
-                // console.log(`Skipping: ${file} (Up to date)`);
-                continue;
-            }
-        }
-
-        const source = await fs.readFile(filePath, 'utf-8');
-        const { data, content } = matter(source);
-
-        console.log(`Processing: ${file}`);
-
-        // Convert to HTML
-        let htmlContent = await marked.parse(content);
-
-        // Extract text for subsetting
-        const $ = cheerio.load(htmlContent);
-        const bodyText = $.text().replace(/\s+/g, '');
-        const fullText = (data.title || '') + bodyText;
-
-        let fontCss = '';
-        // Parse font configurations
-        let fontConfigs: string[] = [];
-        if (data.font) {
-            fontConfigs = Array.isArray(data.font) ? data.font : [data.font];
-        } else {
-            // Default fonts if none specified
-            fontConfigs = ['ipamjm.ttf', 'acgjm.ttf'];
-        }
-
-        const styleMap: Record<string, string[]> = {};
-        const uniqueFontsToSubset = new Set<string>();
-
-        const getBaseName = (fname: string) => path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
-
-        for (const config of fontConfigs) {
-            let styleName = 'default';
-            let fileListStr = config;
-
-            if (config.includes(':')) {
-                const parts = config.split(':');
-                styleName = (parts[0] || '').trim();
-                fileListStr = parts.slice(1).join(':').trim(); // Join back in case filename has :, though unlikely
+            // Incremental check: if not clean build, check modification times
+            if (!isClean && await fs.pathExists(outPath)) {
+                const srcStat = await fs.stat(filePath);
+                const dstStat = await fs.stat(outPath);
+                if (srcStat.mtime <= dstStat.mtime) {
+                    // Log only if verbose? keeping it quiet for now or just log skipping
+                    // console.log(`Skipping: ${file} (Up to date)`);
+                    continue;
+                }
             }
 
-            const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
+            const source = await fs.readFile(filePath, 'utf-8');
+            const { data, content } = matter(source);
 
-            if (!styleMap[styleName]) {
-                styleMap[styleName] = [];
+            console.log(`Processing: ${file}`);
+
+            // Convert to HTML
+            let htmlContent = await marked.parse(content);
+
+            // Extract text for subsetting
+            const $ = cheerio.load(htmlContent);
+            const bodyText = $.text().replace(/\s+/g, '');
+            const fullText = (data.title || '') + bodyText;
+
+            let fontCss = '';
+            // Parse font configurations
+            let fontConfigs: string[] = [];
+            if (data.font) {
+                fontConfigs = Array.isArray(data.font) ? data.font : [data.font];
+            } else {
+                // Default fonts if none specified
+                fontConfigs = ['ipamjm.ttf', 'acgjm.ttf'];
             }
 
-            for (const file of files) {
-                uniqueFontsToSubset.add(file);
-                // Use a generated family name based on filename to uniquely identify it
-                styleMap[styleName]?.push(`'${getBaseName(file)}'`);
+            const styleMap: Record<string, string[]> = {};
+            const uniqueFontsToSubset = new Set<string>();
+
+            const getBaseName = (fname: string) => path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
+
+            for (const config of fontConfigs) {
+                let styleName = 'default';
+                let fileListStr = config;
+
+                if (config.includes(':')) {
+                    const parts = config.split(':');
+                    styleName = (parts[0] || '').trim();
+                    fileListStr = parts.slice(1).join(':').trim(); // Join back in case filename has :, though unlikely
+                }
+
+                const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
+
+                if (!styleMap[styleName]) {
+                    styleMap[styleName] = [];
+                }
+
+                for (const file of files) {
+                    uniqueFontsToSubset.add(file);
+                    // Use a generated family name based on filename to uniquely identify it
+                    styleMap[styleName]?.push(`'${getBaseName(file)}'`);
+                }
             }
-        }
 
-        // Subset unique fonts
-        for (const fontName of uniqueFontsToSubset) {
-            const fontPath = path.join(FONTS_DIR, fontName);
+            // Subset unique fonts
+            for (const fontName of uniqueFontsToSubset) {
+                const fontPath = path.join(FONTS_DIR, fontName);
 
-            if (await fs.pathExists(fontPath)) {
-                try {
-                    console.log(`  Subsetting font: ${fontName}`);
-                    const { buffer, mimeType } = await subsetFont(fontPath, fullText);
+                if (await fs.pathExists(fontPath)) {
+                    try {
+                        console.log(`  Subsetting font: ${fontName}`);
+                        const { buffer, mimeType } = await subsetFont(fontPath, fullText);
 
-                    const format = 'woff2';
-                    const dataUrl = bufferToDataUrl(buffer, mimeType);
-                    const fontFamilyName = getBaseName(fontName);
+                        const format = 'woff2';
+                        const dataUrl = bufferToDataUrl(buffer, mimeType);
+                        const fontFamilyName = getBaseName(fontName);
 
-                    fontCss += `
+                        fontCss += `
 <style>
 @font-face {
   font-family: '${fontFamilyName}';
@@ -155,159 +153,242 @@ async function build() {
 }
 </style>
                     `;
-                } catch (err) {
-                    console.error(`  Error subsetting font ${fontName}: ${err}`);
-                    console.error(err);
+                    } catch (err) {
+                        console.error(`  Error subsetting font ${fontName}: ${err}`);
+                        console.error(err);
+                    }
+                } else {
+                    console.warn(`  Font not found: ${fontName}`);
                 }
-            } else {
-                console.warn(`  Font not found: ${fontName}`);
             }
-        }
 
-        // Generate utility classes for non-default styles
-        let utilityCss = '<style>\n';
-        for (const [styleName, stack] of Object.entries(styleMap)) {
-            if (styleName === 'default') continue;
-            const stackStr = [...stack, 'serif'].join(', ');
-            utilityCss += `.font-${styleName} { font-family: ${stackStr} !important; }\n`;
-        }
-        utilityCss += '</style>';
-        fontCss += utilityCss;
+            // Generate utility classes for non-default styles
+            let utilityCss = '<style>\n';
+            for (const [styleName, stack] of Object.entries(styleMap)) {
+                if (styleName === 'default') continue;
+                const stackStr = [...stack, 'serif'].join(', ');
+                utilityCss += `.font-${styleName} { font-family: ${stackStr} !important; }\n`;
+            }
+            utilityCss += '</style>';
+            fontCss += utilityCss;
 
-        // Default fallbacks
-        const defaultStack = styleMap['default'] || [];
-        const safeFontFamilies = [...defaultStack, 'serif'];
-        const fontFamilyCss = safeFontFamilies.join(', ');
-
+            // Default fallbacks
+            const defaultStack = styleMap['default'] || [];
+            const safeFontFamilies = [...defaultStack, 'serif'];
+            const fontFamilyCss = safeFontFamilies.join(', ');
 
 
-        // ... (configuration)
 
-        // ...
+            // ... (configuration)
 
-        // Global styles (only font-family injection needed now)
-        const globalStyle = `
+            // ...
+
+            // Global styles (only font-family injection needed now)
+            const globalStyle = `
 <style>
 body {
   font-family: ${fontFamilyCss};
 }
 </style>
         `;
-        fontCss += globalStyle;
+            fontCss += globalStyle;
 
-        // Process Inline Glyph Tags [font:identifier]
-        const glyphPattern = /\[([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\]/g;
-        const matches = [...htmlContent.matchAll(glyphPattern)];
+            // Process Inline Glyph Tags
+            // Format 1: [font:identifier] or [style:identifier] -> explicit
+            // Format 2: [identifier] -> auto-lookup from DB
+            const glyphPattern = /\[([a-zA-Z0-9_.-]+)(?::([a-zA-Z0-9_.-]+))?\]/g;
+            const matches = [...htmlContent.matchAll(glyphPattern)];
 
-        if (matches.length > 0) {
-            const replacers = await Promise.all(matches.map(async m => {
-                const fontRef = m[1];
-                const glyphId = m[2];
-                let fontFile = fontRef;
+            if (matches.length > 0) {
+                const replacers = await Promise.all(matches.map(async m => {
+                    const part1 = m[1] as string;
+                    const part2 = m[2]; // If undefined, it's Format 2 [part1]
 
-                // Lookup fontConfigs to resolve style alias
-                // fontConfigs is array of strings e.g. "hero:ReggaeOne.ttf"
-                for (const cfg of fontConfigs) {
-                    let sName = 'default';
-                    let fFiles = cfg;
-                    if (cfg.includes(':')) {
-                        const pts = cfg.split(':');
-                        sName = pts[0].trim();
-                        fFiles = pts.slice(1).join(':').trim();
+                    let fontFile = '';
+                    let glyphId = '';
+
+                    if (part2) {
+                        // [font:id]
+                        glyphId = part2;
+                        let fontRef = part1;
+
+                        // Resolve style alias
+                        fontFile = fontRef;
+                        for (const cfg of fontConfigs) {
+                            let sName = 'default';
+                            let fFiles = cfg;
+                            if (cfg.includes(':')) {
+                                const pts = cfg.split(':');
+                                sName = pts[0].trim();
+                                fFiles = pts.slice(1).join(':').trim();
+                            }
+                            if (sName === fontRef) {
+                                fontFile = fFiles.split(',')[0].trim();
+                                break;
+                            }
+                        }
+                    } else {
+                        // [id] -> Lookup DB
+                        glyphId = part1;
+                        const location = findGlyphInDb(glyphId);
+                        if (location) {
+                            fontFile = location.filename;
+                            console.log(`  Resolved ${glyphId} -> ${fontFile}`);
+                        } else {
+                            // If not found in DB, just return original text (might be a normal link reference)
+                            return { original: m[0], replacement: m[0] };
+                        }
                     }
-                    if (sName === fontRef) {
-                        fontFile = fFiles.split(',')[0].trim(); // Take first font
-                        break;
+
+                    if (!fontFile || !glyphId) return { original: m[0], replacement: m[0] };
+
+                    let fontPath = path.join(FONTS_DIR, fontFile);
+                    if (!await fs.pathExists(fontPath)) {
+                        if (await fs.pathExists(fontPath + '.ttf')) fontPath += '.ttf';
+                        else if (await fs.pathExists(fontPath + '.otf')) fontPath += '.otf';
                     }
+
+                    // getGlyphAsSvg is imported from font.ts
+                    const svg = await getGlyphAsSvg(fontPath, glyphId);
+                    return { original: m[0], replacement: svg };
+                }));
+
+                let newHtml = htmlContent;
+                for (const { original, replacement } of replacers) {
+                    // global replace
+                    newHtml = newHtml.split(original).join(replacement);
                 }
-
-                let fontPath = path.join(FONTS_DIR, fontFile);
-                if (!await fs.pathExists(fontPath)) {
-                    if (await fs.pathExists(fontPath + '.ttf')) fontPath += '.ttf';
-                    else if (await fs.pathExists(fontPath + '.otf')) fontPath += '.otf';
-                }
-
-                // getGlyphAsSvg is imported from font.ts
-                const svg = await getGlyphAsSvg(fontPath, glyphId);
-                return { original: m[0], replacement: svg };
-            }));
-
-            let newHtml = htmlContent;
-            for (const { original, replacement } of replacers) {
-                // global replace
-                newHtml = newHtml.split(original).join(replacement);
+                htmlContent = newHtml;
             }
-            htmlContent = newHtml;
+
+            // Render HTML using Layout System
+            let finalHtml = '';
+            if (data.layout === 'variants') {
+                finalHtml = variantsLayout(
+                    data as VariantsData,
+                    htmlContent,
+                    fontCss,
+                    safeFontFamilies
+                );
+            } else if (data.layout === 'official') {
+                // Generate VC for official documents
+                console.log("  Generating PQC Hybrid VC...");
+                // Extract plain text for signing (simplified)
+                const plainText = cheerio.load(htmlContent).text();
+
+                const vcPayload = {
+                    id: `urn:uuid:${crypto.randomUUID()}`,
+                    credentialSubject: {
+                        id: `https://example.com/notices/${file.replace('.md', '')}`,
+                        name: data.title,
+                        recipient: data.recipient,
+                        contentDigest: Buffer.from(new TextEncoder().encode(plainText)).toString('hex')
+                    }
+                };
+
+                const { vc } = await createHybridVC(vcPayload);
+
+                // Save VC sidecar
+                const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
+                await fs.writeJson(vcOutPath, vc, { spaces: 2 });
+                console.log(`  Generated VC: ${vcOutPath}`);
+
+
+
+                finalHtml = officialLayout(
+                    data as OfficialData,
+                    htmlContent,
+                    fontCss,
+                    safeFontFamilies,
+                    vc
+                );
+            } else if (data.layout === 'grid') {
+                finalHtml = gridLayout(
+                    data as GridData,
+                    htmlContent,
+                    fontCss,
+                    safeFontFamilies
+                );
+            } else if (data.layout === 'search') {
+                finalHtml = searchLayout(
+                    data as SearchData,
+                    htmlContent,
+                    fontCss,
+                    safeFontFamilies
+                );
+            } else {
+                // Default to article
+                finalHtml = articleLayout(
+                    data as ArticleData,
+                    htmlContent,
+                    fontCss,
+                    safeFontFamilies
+                );
+            }
+
+            // Write to dist
+
+            await fs.ensureDir(path.dirname(outPath));
+            await fs.writeFile(outPath, finalHtml);
+
+            console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
+
+
         }
 
-        // Render HTML using Layout System
-        let finalHtml = '';
-        if (data.layout === 'variants') {
-            finalHtml = variantsLayout(
-                data as VariantsData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies
-            );
-        } else if (data.layout === 'official') {
-            // Generate VC for official documents
-            console.log("  Generating PQC Hybrid VC...");
-            // Extract plain text for signing (simplified)
-            const plainText = cheerio.load(htmlContent).text();
 
-            const vcPayload = {
-                id: `urn:uuid:${crypto.randomUUID()}`,
-                credentialSubject: {
-                    id: `https://example.com/notices/${file.replace('.md', '')}`,
-                    name: data.title,
-                    recipient: data.recipient,
-                    contentDigest: Buffer.from(new TextEncoder().encode(plainText)).toString('hex')
-                }
-            };
+        // Generate Sitemaps
+        console.log("Generating sitemaps...");
+        const baseUrl = "https://example.com"; // TODO: Configure this via CLI or config
+        const sitemapItems = files.map(file => {
+            const url = `${baseUrl}/${file.replace('.md', '.html')}`;
+            return `
+    <url>
+        <loc>${url}</loc>
+        <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    </url>`;
+        });
 
-            const { vc } = await createHybridVC(vcPayload);
+        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemapItems.join('')}
+</urlset>`;
 
-            // Save VC sidecar
-            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
-            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-            console.log(`  Generated VC: ${vcOutPath}`);
+        await fs.writeFile(path.join(DIST_DIR, 'sitemap.xml'), sitemapXml);
 
+        // Generate llms.txt (AI Friendly Sitemap)
+        const llmsTxt = files.map(file => {
+            const title = path.basename(file, '.md');
+            const url = `/${file.replace('.md', '.html')}`;
+            return `- [${title}](${url})`;
+        }).join('\n');
 
+        await fs.writeFile(path.join(DIST_DIR, 'llms.txt'), llmsTxt);
+        console.log(`Generated sitemap.xml and llms.txt`);
 
-            finalHtml = officialLayout(
-                data as OfficialData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies,
-                vc
-            );
-        } else if (data.layout === 'grid') {
-            finalHtml = gridLayout(
-                data as GridData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies
-            );
-        } else {
-            // Default to article
-            finalHtml = articleLayout(
-                data as ArticleData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies
-            );
+        // Prune stale HTML files
+        console.log("Pruning stale files...");
+        const distHtmls = await glob('**/*.html', { cwd: DIST_DIR });
+        const validPaths = new Set<string>();
+
+        // Add markdown outputs
+        files.forEach(f => {
+            validPaths.add(f.replace(/\.md$/, '.html'));
+        });
+
+        // Add static html copies
+        const staticHtmls = await glob('**/*.html', { cwd: STATIC_DIR });
+        staticHtmls.forEach(f => validPaths.add(f));
+
+        for (const file of distHtmls) {
+            if (!validPaths.has(file)) {
+                await fs.remove(path.join(DIST_DIR, file));
+                console.log(`  Removed stale file: ${file}`);
+            }
         }
 
-        // Write to dist
-
-        await fs.ensureDir(path.dirname(outPath));
-        await fs.writeFile(outPath, finalHtml);
-
-        console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
-
+        console.log('Build complete.');
     }
-
-    console.log('Build complete.');
 }
 
 build().catch(err => {

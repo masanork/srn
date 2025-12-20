@@ -43,6 +43,10 @@ font:
         <h3>VC検証技術</h3>
         <p>耐量子暗号 (PQC) を用いたハイブリッド構成のVC検証プロセスについての技術解説。</p>
     </a>
+    <a href="./all.html" class="feature-card">
+        <h3>全文字一覧 (Heavy)</h3>
+        <p>MJ文字情報の全エントリ（約7万文字）を含む巨大なリスト。閲覧注意。</p>
+    </a>
 </div>
 
 <style>
