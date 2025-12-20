@@ -116,6 +116,8 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
             }
             .source-glyph {
                 font-size: 2.5rem;
+                color: #000;
+                -webkit-font-smoothing: auto;
             }
             .source-code {
                 font-family: monospace;
@@ -140,6 +142,8 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
             }
             .target-glyph {
                 font-size: 2rem;
+                color: #000;
+                -webkit-font-smoothing: auto;
             }
             .code-cell, .export-area {
                 font-family: monospace;
