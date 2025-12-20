@@ -12,6 +12,8 @@ import { variantsLayout } from './layouts/variants.ts';
 import type { VariantsData } from './layouts/variants.ts';
 import { officialLayout } from './layouts/official.ts';
 import type { OfficialData } from './layouts/official.ts';
+import { gridLayout } from './layouts/grid.ts';
+import type { GridData } from './layouts/grid.ts';
 import { createHybridVC } from './vc.ts';
 
 // Configuration
@@ -160,12 +162,21 @@ body {
             await fs.writeJson(vcOutPath, vc, { spaces: 2 });
             console.log(`  Generated VC: ${vcOutPath}`);
 
+
+
             finalHtml = officialLayout(
                 data as OfficialData,
                 htmlContent,
                 fontCss,
                 safeFontFamilies,
                 vc
+            );
+        } else if (data.layout === 'grid') {
+            finalHtml = gridLayout(
+                data as GridData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
             );
         } else {
             // Default to article
