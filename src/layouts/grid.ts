@@ -44,7 +44,7 @@ export function gridLayout(data: GridData, htmlContent: string, fontCss: string,
     });
 
     const fullContent = `
-        <h1>${data.title}</h1>
+
         <p>行政事務標準文字追加文字（MJ+文字）のグリッド表示です。</p>
         <div class="char-grid">
             ${gridItems}

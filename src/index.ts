@@ -23,15 +23,22 @@ const CONTENT_DIR = path.join(SITE_DIR, 'content');
 const FONTS_DIR = path.join(SITE_DIR, 'fonts');
 
 async function build() {
-    console.log('Starting build...');
+    const isClean = process.argv.includes('--clean');
+    console.log(`Starting build... (Clean: ${isClean})`);
 
-    // Clean dist
-    await fs.emptyDir(DIST_DIR);
+    // Clean dist only if requested
+    if (isClean) {
+        await fs.emptyDir(DIST_DIR);
+    }
+
+    // Always ensure dist exists
+    await fs.ensureDir(DIST_DIR);
 
     // Copy static assets
     const STATIC_DIR = path.join(SITE_DIR, 'static');
     if (await fs.pathExists(STATIC_DIR)) {
-        await fs.copy(STATIC_DIR, DIST_DIR);
+        // For incremental, simple copy might be redundant but safe enough as it overwrites
+        await fs.copy(STATIC_DIR, DIST_DIR, { overwrite: true });
         console.log(`Copied static assets to dist/`);
     }
 
@@ -55,6 +62,19 @@ async function build() {
 
     for (const file of files) {
         const filePath = path.join(CONTENT_DIR, file);
+        const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
+
+        // Incremental check: if not clean build, check modification times
+        if (!isClean && await fs.pathExists(outPath)) {
+            const srcStat = await fs.stat(filePath);
+            const dstStat = await fs.stat(outPath);
+            if (srcStat.mtime <= dstStat.mtime) {
+                // Log only if verbose? keeping it quiet for now or just log skipping
+                // console.log(`Skipping: ${file} (Up to date)`);
+                continue;
+            }
+        }
+
         const source = await fs.readFile(filePath, 'utf-8');
         const { data, content } = matter(source);
 
@@ -89,7 +109,7 @@ async function build() {
 
             if (config.includes(':')) {
                 const parts = config.split(':');
-                styleName = parts[0].trim();
+                styleName = (parts[0] || '').trim();
                 fileListStr = parts.slice(1).join(':').trim(); // Join back in case filename has :, though unlikely
             }
 
@@ -102,7 +122,7 @@ async function build() {
             for (const file of files) {
                 uniqueFontsToSubset.add(file);
                 // Use a generated family name based on filename to uniquely identify it
-                styleMap[styleName].push(`'${getBaseName(file)}'`);
+                styleMap[styleName]?.push(`'${getBaseName(file)}'`);
             }
         }
 
@@ -227,7 +247,7 @@ body {
         }
 
         // Write to dist
-        const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
+
         await fs.ensureDir(path.dirname(outPath));
         await fs.writeFile(outPath, finalHtml);
 
