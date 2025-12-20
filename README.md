@@ -23,6 +23,7 @@ srn (Short for Sorane) is a Static Site Generator designed for precision and per
 - **Data Export**: Auto-generates Unihan-compatible tab-separated text tables.
 
 ### 4. Specialized Layouts
+- **Official Documents**: Vertical writing support, formal templates for government/business notices.
 - **Deep Linking**: Direct anchors to specific character definitions.
 
 ## はじめに (Introduction in Japanese)
