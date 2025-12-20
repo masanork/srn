@@ -56,19 +56,23 @@ export async function createHybridVC(document: object): Promise<HybridVCResult> 
     const edSig = ed25519.sign(payloadBytes, edPriv);
 
     // 4. Output Hybrid VC
+    // 4. Output Hybrid VC
+    const issuerDid = `did:key:z${keys.ed25519.publicKey}`; // Simplified DID (not real multibase)
+
     const vc = {
         ...vcPayload,
+        "issuer": issuerDid,
         "proof": [
             {
                 "type": "Ed25519Signature2020",
-                "verificationMethod": `did:key:${keys.ed25519.publicKey}`,
+                "verificationMethod": `${issuerDid}#${keys.ed25519.publicKey}`,
                 "proofPurpose": "assertionMethod",
                 "proofValue": bytesToHex(edSig)
             },
             {
                 "type": "DataIntegrityProof",
                 "cryptosuite": "ml-dsa-44-2025",
-                "verificationMethod": `did:key:zPQC${keys.pqc.publicKey.substring(0, 16)}...`, // Placeholder DID
+                "verificationMethod": `did:key:zPQC${keys.pqc.publicKey}#${keys.pqc.publicKey}`,
                 "proofPurpose": "assertionMethod",
                 "proofValue": bytesToHex(pqcSig)
             }

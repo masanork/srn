@@ -39,6 +39,10 @@ font:
         <h3>異体字の深淵</h3>
         <p>IVS (Ideographic Variation Sequences) 完全対応。<br>点一つの違いが、意味を変える。</p>
     </a>
+    <a href="./tech-verification.html" class="feature-card">
+        <h3>VC検証技術</h3>
+        <p>耐量子暗号 (PQC) を用いたハイブリッド構成のVC検証プロセスについての技術解説。</p>
+    </a>
 </div>
 
 <style>
