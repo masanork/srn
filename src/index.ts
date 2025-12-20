@@ -10,6 +10,9 @@ import { articleLayout } from './layouts/article.ts';
 import type { ArticleData } from './layouts/article.ts';
 import { variantsLayout } from './layouts/variants.ts';
 import type { VariantsData } from './layouts/variants.ts';
+import { officialLayout } from './layouts/official.ts';
+import type { OfficialData } from './layouts/official.ts';
+import { createHybridVC } from './vc.ts';
 
 // Configuration
 const SITE_DIR = path.resolve(process.cwd(), 'site');
@@ -133,6 +136,36 @@ body {
                 htmlContent,
                 fontCss,
                 safeFontFamilies
+            );
+        } else if (data.layout === 'official') {
+            // Generate VC for official documents
+            console.log("  Generating PQC Hybrid VC...");
+            // Extract plain text for signing (simplified)
+            const plainText = cheerio.load(htmlContent).text();
+
+            const vcPayload = {
+                id: `urn:uuid:${crypto.randomUUID()}`,
+                credentialSubject: {
+                    id: `https://example.com/notices/${file.replace('.md', '')}`,
+                    name: data.title,
+                    recipient: data.recipient,
+                    contentDigest: Buffer.from(new TextEncoder().encode(plainText)).toString('hex')
+                }
+            };
+
+            const { vc } = await createHybridVC(vcPayload);
+
+            // Save VC sidecar
+            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
+            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
+            console.log(`  Generated VC: ${vcOutPath}`);
+
+            finalHtml = officialLayout(
+                data as OfficialData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies,
+                vc
             );
         } else {
             // Default to article
