@@ -1,125 +1,234 @@
 ---
-title: "空音"
+title: "SRN: Typography-First SSG"
 layout: width
 font: 
   - hero:ReggaeOne-Regular.ttf
   - default:ipamjm.ttf,acgjm.ttf
 ---
 
-<div class="hero-container">
-    <div class="hero-title font-hero">空音</div>
-    <div class="hero-subtitle">SORANE</div>
+<div class="server-header">
+    <div class="status-indicator"></div>
+    <div class="system-name">SRN NODE: <strong>ACTIVE</strong></div>
+    <div class="system-time">BUILD: v1.0.0 (BUN)</div>
 </div>
 
-<div class="concept-text">
-    <p>
-        言葉は、画（え）だ。<br>
-        文字は、音（おと）だ。
-    </p>
-    <p>
-        6万を超える漢字の海を、風のように駆ける。<br>
-        必要なものだけを、必要な瞬間に。
-    </p>
+<div class="hero-section">
+    <div class="logo-area font-hero">空音</div>
+    <p class="lead">SORANE: The Static Site Generator for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>
 </div>
 
-<div class="features-grid">
-    <a href="./sai.html" class="feature-card">
-        <h3>斎 Variants</h3>
-        <p>「斎」という文字の多様な異体字コレクション。<br>微妙な差異が織りなす文字の世界。</p>
-    </a>
-    <a href="./ben.html" class="feature-card">
-        <h3>辺 Variants</h3>
-        <p>「辺」という文字の多様な異体字コレクション。<br>しんにょうの点や払いの違いを網羅。</p>
-    </a>
-    <a href="./gj.html" class="feature-card">
-        <h3>MJ+文字一覧</h3>
-        <p>戸籍統一文字を含む、膨大な行政文字のグリッドビュー。<br>数千の文字も一瞬でレンダリング。</p>
-    </a>
-    <a href="./variants.html" class="feature-card">
-        <h3>異体字の深淵</h3>
-        <p>IVS (Ideographic Variation Sequences) 完全対応。<br>点一つの違いが、意味を変える。</p>
-    </a>
-    <a href="./tech-verification.html" class="feature-card">
-        <h3>VC検証技術</h3>
-        <p>耐量子暗号 (PQC) を用いたハイブリッド構成のVC検証プロセスについての技術解説。</p>
-    </a>
-    <a href="./all.html" class="feature-card">
-        <h3>全文字一覧 (Heavy)</h3>
-        <p>MJ文字情報の全エントリ（約7万文字）を含む巨大なリスト。閲覧注意。</p>
-    </a>
+<div class="dashboard-grid">
+    <div class="panel">
+        <div class="panel-header">CORE PHILOSOPHY</div>
+        <div class="panel-body">
+            <ul class="spec-list">
+                <li>
+                    <strong>Zero Layout Shift (CLS 0)</strong>
+                    <span>Subsetting fonts per page ensures content renders immediately with correct glyphs. No FOUT/FOIT.</span>
+                </li>
+                <li>
+                    <strong>Zero Request Overhead</strong>
+                    <span>Fonts are embedded as Base64 Data URIs. No external font requests. Offline ready.</span>
+                </li>
+                <li>
+                    <strong>Future-Proof Auth</strong>
+                    <span>Built-in Post-Quantum Cryptography (ML-DSA-44) support for document signing.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">MODULES & NAVIGATION</div>
+        <div class="panel-body nav-links">
+            <a href="./search.html" class="nav-item primary">
+                <span class="icon">🔍</span>
+                <span class="label">Glyph Search Engine</span>
+                <span class="desc">Search 270k+ glyphs with metadata preview.</span>
+            </a>
+            <a href="./variants.html" class="nav-item">
+                <span class="icon">字</span>
+                <span class="label">Variant Tester</span>
+                <span class="desc">IVS/SVS Rendering test page.</span>
+            </a>
+            <a href="./tech-verification.html" class="nav-item">
+                <span class="icon">🛡️</span>
+                <span class="label">PQC Verification</span>
+                <span class="desc">Hybrid VC (Verifiable Credentials) tech specs.</span>
+            </a>
+            <a href="./gj.html" class="nav-item">
+                <span class="icon">📊</span>
+                <span class="label">Grid View (MJ)</span>
+                <span class="desc">Massive glyph grid rendering test.</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="footer-status">
+    Runtime: Bun v1.x | Engine: opentype.js | Database: SQLite (WAL)
 </div>
 
 <style>
-    .hero-container {
-        text-align: center;
-        padding: 6rem 0 4rem;
-        animation: fadeIn 2s ease-out;
+    :root {
+        --bg-color: #f4f6f8;
+        --card-bg: #ffffff;
+        --text-main: #333;
+        --text-sub: #666;
+        --accent: #2c3e50;
+        --accent-light: #34495e;
+        --highlight: #3498db;
+        --success: #27ae60;
     }
-    
-    .hero-title {
-        font-size: 8rem;
-        line-height: 1;
-        letter-spacing: 0.2em;
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-main);
+    }
+
+    /* Header */
+    .server-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid #ddd;
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: var(--text-sub);
+        margin-bottom: 3rem;
+    }
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        background-color: var(--success);
+        border-radius: 50%;
+        box-shadow: 0 0 5px var(--success);
+    }
+
+    /* Hero */
+    .hero-section {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+    .logo-area {
+        font-size: 6rem;
         margin-bottom: 1rem;
-        text-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        /* ユーザー指定の「太めで幻想的なフォント」があればここに効いてくる */
+        color: var(--accent);
+        text-shadow: 2px 2px 0px #ddd;
     }
-
-    .hero-subtitle {
+    .lead {
         font-size: 1.2rem;
-        letter-spacing: 0.5em;
-        opacity: 0.6;
-        font-family: sans-serif;
+        line-height: 1.6;
+        color: var(--text-sub);
     }
 
-    .concept-text {
-        text-align: center;
-        margin: 4rem auto;
-        font-size: 1.1rem;
-        line-height: 2.4;
-        max-width: 600px;
-        color: #444;
-    }
-
-    .features-grid {
+    /* Dashboard */
+    .dashboard-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 2rem;
-        margin-top: 4rem;
+        margin-bottom: 4rem;
     }
 
-    .feature-card {
-        display: block;
-        padding: 2rem;
-        border: 1px solid #eaeaea;
+    .panel {
+        background: var(--card-bg);
+        border: 1px solid #ddd;
         border-radius: 8px;
-        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+
+    .panel-header {
+        background: #f8f9fa;
+        padding: 0.8rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        font-size: 0.85rem;
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        color: var(--text-sub);
+        text-transform: uppercase;
+    }
+
+    .panel-body {
+        padding: 1.5rem;
+    }
+
+    /* Spec List */
+    .spec-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .spec-list li {
+        margin-bottom: 1.5rem;
+    }
+    .spec-list li:last-child {
+        margin-bottom: 0;
+    }
+    .spec-list strong {
+        display: block;
+        color: var(--accent);
+        margin-bottom: 0.2rem;
+    }
+    .spec-list span {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--text-sub);
+        line-height: 1.4;
+    }
+
+    /* Nav Links */
+    .nav-links {
+        display: grid;
+        gap: 1rem;
+    }
+    .nav-item {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
         text-decoration: none;
         color: inherit;
-        background: rgba(255,255,255,0.8);
+        padding: 1rem;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        transition: all 0.2s;
     }
-    
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        border-color: #ccc;
+    .nav-item:hover {
+        background: #f8f9fa;
+        border-color: var(--highlight);
+        transform: translateX(4px);
+    }
+    .nav-item.primary {
+        border-left: 4px solid var(--highlight);
+    }
+    .nav-item .icon {
+        grid-row: 1 / -1;
+        font-size: 1.5rem;
+        text-align: center;
+    }
+    .nav-item .label {
+        font-weight: bold;
+        color: var(--accent);
+    }
+    .nav-item .desc {
+        font-size: 0.8rem;
+        color: var(--text-sub);
     }
 
-    .feature-card h3 {
-        margin-top: 0;
-        margin-bottom: 1rem;
-        font-size: 1.4rem;
-        border-bottom: none;
+    /* Footer */
+    .footer-status {
+        text-align: center;
+        padding: 2rem 0;
+        border-top: 1px solid #ddd;
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: #999;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @media (max-width: 768px) {
-        .hero-title {
-            font-size: 4rem;
-        }
+    @media (max-width: 600px) {
+        .logo-area { font-size: 4rem; }
+        .dashboard-grid { grid-template-columns: 1fr; }
     }
 </style>
