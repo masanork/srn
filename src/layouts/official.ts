@@ -60,8 +60,11 @@ export function officialLayout(data: OfficialData, bodyContent: string, fontCss:
                 margin: 0 auto;
                 padding: 4rem;
                 background: white;
+                color: #000; /* Force pure black for thin fonts like IPAmjMincho */
                 box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-                font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; /* Default serif */
+                font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+                -webkit-font-smoothing: auto; /* Prevent thinning on Mac */
+                -moz-osx-font-smoothing: auto;
             }
             /* Apply custom fonts to specific variant-heavy areas or body if needed */
             .doc-recipient, .doc-body {
