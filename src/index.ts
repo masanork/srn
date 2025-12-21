@@ -151,7 +151,22 @@ async function build() {
             // Extract text for subsetting
             const $ = cheerio.load(htmlContent);
             const bodyText = $.text().replace(/\s+/g, '');
-            const fullText = (data.title || '') + bodyText;
+
+            // Extract text from Frontmatter data to ensure all characters are subsetted
+            const extractTextFromData = (obj: any): string => {
+                let text = '';
+                if (typeof obj === 'string') {
+                    text += obj;
+                } else if (Array.isArray(obj)) {
+                    obj.forEach(item => text += extractTextFromData(item));
+                } else if (typeof obj === 'object' && obj !== null) {
+                    Object.values(obj).forEach(val => text += extractTextFromData(val));
+                }
+                return text;
+            };
+            const dataText = extractTextFromData(data);
+
+            const fullText = (data.title || '') + bodyText + dataText;
 
             let fontCss = '';
             // Parse font configurations
