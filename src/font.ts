@@ -96,7 +96,11 @@ function isVariationSelector(codepoint: number): boolean {
         (codepoint >= 0xE0100 && codepoint <= 0xE01EF); // VS17-VS256
 }
 
-export async function subsetFont(fontPath: string, text: string): Promise<{ buffer: Buffer, mimeType: string }> {
+export async function subsetFont(
+    fontPath: string,
+    text: string,
+    options: { puaStart: number, globalReplacements: Map<string, string> } = { puaStart: 0xE000, globalReplacements: new Map() }
+): Promise<{ buffer: Buffer, mimeType: string, nextPua: number }> {
     const fontBuffer = await fs.readFile(fontPath);
     // opentype.parse expects an ArrayBuffer, not a Node Buffer
     const arrayBuffer = fontBuffer.buffer.slice(fontBuffer.byteOffset, fontBuffer.byteOffset + fontBuffer.byteLength);
@@ -106,62 +110,128 @@ export async function subsetFont(fontPath: string, text: string): Promise<{ buff
     let ivsMap: IVSMap | null = null;
     try {
         ivsMap = parseCmapFormat14(arrayBuffer, font);
-        if (ivsMap) console.log('  IVS Map loaded successfully.');
+        if (ivsMap) console.log(`  [${path.basename(fontPath)}] IVS Map loaded.`);
     } catch (e) {
         console.warn('  Failed to parse CMAP Format 14:', e);
     }
 
     const glyphs: opentype.Glyph[] = [];
-    const glyphIndexSet = new Set<number>();
+    const addedGlyphs = new Set<opentype.Glyph>(); // Use object reference for deduplication
+
+    // Helper to add glyph
+    const addGlyph = (g: opentype.Glyph) => {
+        if (!addedGlyphs.has(g)) {
+            glyphs.push(g);
+            addedGlyphs.add(g);
+        }
+    };
 
     const notdefGlyph = font.glyphs.get(0);
-    glyphs.push(notdefGlyph);
-    glyphIndexSet.add(0);
+    addGlyph(notdefGlyph);
 
-    // Custom text iterator to handle Surrogate Pairs and IVS
+    // Local cache for this font subsetting session
+    const ivsCache = new Map<string, opentype.Glyph>();
+
+    let puaCounter = options.puaStart;
+    const { globalReplacements } = options;
+
     const chars = Array.from(text);
 
     for (let i = 0; i < chars.length; i++) {
         const char = chars[i];
-        if (char === undefined) continue;
+        if (!char) continue;
         const code = char.codePointAt(0);
-
         if (code === undefined) continue;
 
         // Check next char for Variation Selector
         let vsCode = 0;
+        let originalSeq = char; // Base
+
         if (i + 1 < chars.length) {
             const nextChar = chars[i + 1];
-            // Ensure nextChar is defined and get its code
             if (nextChar) {
                 const nextCode = nextChar.codePointAt(0);
                 if (nextCode !== undefined && isVariationSelector(nextCode)) {
                     vsCode = nextCode;
+                    originalSeq += nextChar; // Base + VS
                     i++; // Skip VS in next iteration
                 }
             }
         }
 
         let glyph: opentype.Glyph | null = null;
+        let isIvsGlyph = false;
 
-        // 1. Try IVS lookup
-        // Check if map exists and has the specific mapping
+        // 1. IVS Lookup
         if (vsCode && ivsMap && ivsMap[vsCode]) {
-            const gid = ivsMap[vsCode][code];
-            if (gid !== undefined) {
-                glyph = font.glyphs.get(gid);
+            // Check cache first
+            if (ivsCache.has(originalSeq)) {
+                glyph = ivsCache.get(originalSeq)!;
+                isIvsGlyph = true;
+            } else {
+                const gid = ivsMap[vsCode][code];
+                if (gid !== undefined) {
+                    const originGlyph = font.glyphs.get(gid);
+
+                    if (originGlyph) {
+                        // Determine PUA Code (Reuse global or assign new)
+                        let puaChar = globalReplacements.get(originalSeq);
+                        let puaCode: number;
+
+                        if (puaChar) {
+                            puaCode = puaChar.codePointAt(0)!;
+                        } else {
+                            puaCode = puaCounter++;
+                            puaChar = String.fromCodePoint(puaCode);
+                            globalReplacements.set(originalSeq, puaChar);
+                        }
+
+                        // Create Variant Glyph
+                        glyph = new opentype.Glyph({
+                            name: originGlyph.name || `u${code.toString(16)}_vs${vsCode.toString(16)}`,
+                            unicode: puaCode,
+                            unicodes: [puaCode],
+                            advanceWidth: originGlyph.advanceWidth,
+                            path: originGlyph.path
+                        });
+
+                        ivsCache.set(originalSeq, glyph);
+                        isIvsGlyph = true;
+                    }
+                }
             }
-            // console.log(`  IVS found: ${char} (U+${code.toString(16)}) + VS (U+${vsCode.toString(16)}) -> GID ${gid}`);
         }
 
-        // 2. Fallback to standard lookup
+        // 2. Fallback / Standard Lookup
         if (!glyph) {
+            // For IVS sequence not supported by this font, we should fallback to BASE char?
+            // If valid IVS but font missing support: fallback to base glyph.
+            // If we fall back to base glyph, we do NOT want to consume the VS if we want to let browser try fallback font?
+            // BUT here we are creating a subset font.
+            // Replaced content in HTML will be PUA.
+            // If FontA missing IVS, we don't map PUA.
+            // HTML remains "Base+VS" (if we don't replace globally? Wait).
+            // Logic: globalReplacements are applied to HTML.
+            // If FontA misses support, it adds NOTHING to globalReplacements.
+            // If FontB supports it, it adds S->PUA.
+            // HTML replaced S->PUA.
+            // Browser sees PUA. Checks FontA. FontA has NO glyph for PUA.
+            // Checks FontB. FontB has glyph for PUA. Renders FontB. Success!
+
+            // So if NOT found in map, we treat as standard char(s).
+            // WARNING: If vsCode was detected but not supported, we must handle 'char' (Base).
+            // What about VS char itself? Standard fonts usually map VS to nothing or invisible.
+            // We should just ensure Base glyph is added.
+
             glyph = font.charToGlyph(char);
+
+            // If we skipped 'nextChar' thinking it was a VS but now we fallback, 
+            // should we add VS glyph? usually invisible.
+            // Ideally we handled the pair.
         }
 
-        if (glyph && !glyphIndexSet.has(glyph.index)) {
-            glyphs.push(glyph);
-            glyphIndexSet.add(glyph.index);
+        if (glyph) {
+            addGlyph(glyph);
         }
     }
 
@@ -176,13 +246,12 @@ export async function subsetFont(fontPath: string, text: string): Promise<{ buff
     });
 
     const subsetBuffer = subset.toArrayBuffer();
-
-    // Compress to WOFF2
     const woff2Buffer = await wawoff2.compress(new Uint8Array(subsetBuffer));
 
     return {
         buffer: Buffer.from(woff2Buffer),
-        mimeType: 'font/woff2'
+        mimeType: 'font/woff2',
+        nextPua: puaCounter
     };
 }
 
