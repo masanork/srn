@@ -41,13 +41,18 @@ export type HybridKeys = ReturnType<typeof generateHybridKeys>;
 /**
  * Creates a Verifiable Credential signed with provided keys.
  */
-export async function createHybridVC(document: object, keys: HybridKeys): Promise<object> {
+export async function createHybridVC(
+    document: object,
+    keys: HybridKeys,
+    issuerDid?: string,
+    buildId?: string
+): Promise<object> {
     // 2. Prepare Payload
     // Ensure standard VC properties exist or merge them
     const vcPayload = {
         "@context": ["https://www.w3.org/2018/credentials/v1"],
         "type": ["VerifiableCredential"],
-        "issuer": "did:key:zUnknown...",
+        "issuer": issuerDid || "did:key:zUnknown...",
         "issuanceDate": new Date().toISOString(),
         ...document
     };
@@ -71,22 +76,23 @@ export async function createHybridVC(document: object, keys: HybridKeys): Promis
     const edSig = ed25519.sign(payloadBytes, edPrivBytes);
 
     // 4. Output Hybrid VC
-    const issuerDid = `did:key:z${keys.ed25519.publicKey}`; // Simplified DID (not real multibase)
+    const issuer = issuerDid || `did:key:z${keys.ed25519.publicKey}`;
+    const idSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.ed25519.publicKey);
 
     const vc = {
         ...vcPayload,
-        "issuer": issuerDid,
+        "issuer": issuer,
         "proof": [
             {
                 "type": "Ed25519Signature2020",
-                "verificationMethod": `${issuerDid}#${keys.ed25519.publicKey}`,
+                "verificationMethod": `${issuer}#${idSuffix}-ed25519`,
                 "proofPurpose": "assertionMethod",
                 "proofValue": bytesToHex(edSig)
             },
             {
                 "type": "DataIntegrityProof",
                 "cryptosuite": "ml-dsa-44-2025",
-                "verificationMethod": `did:key:zPQC${keys.pqc.publicKey}#${keys.pqc.publicKey}`,
+                "verificationMethod": `${issuer}#${idSuffix}-pqc`,
                 "proofPurpose": "assertionMethod",
                 "proofValue": bytesToHex(pqcSig)
             }
@@ -137,14 +143,25 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
 
         // 3. Verify Ed25519
         if (edProof) {
-            // Extract key from "did:key:z<PUBKEY>#<PUBKEY>" or just "#<PUBKEY>"
-            // Simplified: Expecting hex string in verificationMethod fragment
+            // Improved key extraction: look for known patterns or handle resolution
             const vm = edProof.verificationMethod || "";
-            const pubKeyHex = vm.split('#')[1];
+            // If it's did:key, we can extract directly. 
+            // If it's did:web, we might need to fetch the doc (but for now we fallback to build-in pubkeys if possible)
+            let pubKeyHex = "";
+            if (vm.includes('ed25519')) {
+                // In our new did:web format, the key might NOT be in the fragment itself
+                // but for PoC we've been putting it in the VM list.
+                // Ideally we resolve. TEMPORARY: check context/data for known local keys?
+                pubKeyHex = vm.split('#')[1] || "";
+            } else {
+                pubKeyHex = vm.split('#')[1] || "";
+            }
+
             const sigHex = edProof.proofValue;
 
             if (pubKeyHex && sigHex) {
-                checks.ed25519 = ed25519.verify(sigHex, payloadBytes, pubKeyHex);
+                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
+                checks.ed25519 = ed25519.verify(sigHex, payloadBytes, pubBytes);
             }
         }
 
@@ -186,7 +203,8 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
 export async function createStatusListVC(
     revokedBuildIds: string[],
     rootKeys: HybridKeys,
-    listUrl: string = "https://example.com/status-list.json"
+    listUrl: string = "https://example.com/status-list.json",
+    issuerDid?: string
 ): Promise<object> {
     const subjects = {
         "id": `${listUrl}#list`,
@@ -202,11 +220,11 @@ export async function createStatusListVC(
             "https://w3id.org/vc/status-list/2021/v1"
         ],
         "type": ["VerifiableCredential", "StatusList2021Credential"],
-        "issuer": `did:key:z${rootKeys.ed25519.publicKey}`,
+        "issuer": issuerDid || `did:key:z${rootKeys.ed25519.publicKey}`,
         "issuanceDate": new Date().toISOString(),
         "credentialSubject": subjects
     };
 
     // We reuse createHybridVC for signing, passing the payload (which overrides defaults)
-    return createHybridVC(vcPayload, rootKeys);
+    return createHybridVC(vcPayload, rootKeys, issuerDid, 'root');
 }

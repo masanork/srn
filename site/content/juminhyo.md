@@ -1,8 +1,8 @@
 ---
-title: "（見本）住民票の写し"
+title: "（見本）住民票の写し（世帯連記式）"
 layout: juminhyo
 date: 2025-12-21
-description: "住民票の写し（見本）"
+description: "住民票の写し（世帯連記式・見本）"
 font: ipamjm.ttf,acgjm.ttf
 certificateTitle: "住民票"
 issueDate: "令和8年1月15日"
