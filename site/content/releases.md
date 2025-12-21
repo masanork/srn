@@ -7,6 +7,19 @@ font: ipamjm.ttf,acgjm.ttf
 
 # Release History
 
+## v1.1.0 - Data-Driven Juminhyo & Core Refinement
+**Date:** 2025-12-21
+
+Refinements to the resident record generation system and core font processing.
+
+*   **Juminhyo System**: Refactored `juminhyo.md` to a fully data-driven Frontmatter architecture.
+    *   **Advanced Layout**: Implemented official MIC (Page 7) specifications with dynamic layout handling.
+    *   **Detailed Fields**: Added support for individual MyNumber, Resident Code, and precise movement dates.
+    *   **Layout Engine**: Fixed complex table structures (dynamic rowspans for history and domiciles).
+*   **Typography Core**:
+    *   **Data Subsetting**: Font subsetting now fully indexes YAML Frontmatter content, ensuring proper rendering of data-only views.
+    *   **Simplified DB**: Removed MJDB dependency in favor of a unified, file-based Glyph DB system.
+
 ## v1.0.0 - Trust Architecture & Verification Console
 **Date:** 2025-12-21
 
