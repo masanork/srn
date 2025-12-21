@@ -53,10 +53,15 @@ export function gridLayout(data: GridData, htmlContent: string, fontCss: string,
         }
     });
 
+    // Remove the table from the DOM so we can use the rest of the content (explanations, etc.)
+    $('table').remove();
+    const preambleContent = $('body').html() || '';
+
     const fullContent = `
         ${wideStyle}
+        <h1>${data.title}</h1>
+        ${preambleContent}
 
-        <p>行政事務標準文字追加文字（MJ+文字）のグリッド表示です。</p>
         <div class="char-grid">
             ${gridItems}
         </div>
