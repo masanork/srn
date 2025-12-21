@@ -99,6 +99,7 @@ async function main() {
         <div class="font-header">
             <h2>Font Family: ${ff.name}</h2>
             <p>Glyphs: ${font.glyphs.length} | Units per Em: ${font.unitsPerEm}</p>
+            <p><strong>Cmap Subtables:</strong> ${cmapInfo.join(', ')}</p>
         </div>
         <div class="glyph-grid">
 `;

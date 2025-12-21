@@ -47,6 +47,12 @@ async function build() {
     await fs.ensureDir(DIST_DIR);
     await fs.ensureDir(DATA_DIR);
 
+    // Copy style.css if it exists
+    const styleSrc = path.join(SITE_DIR, 'style.css');
+    if (await fs.pathExists(styleSrc)) {
+        await fs.copy(styleSrc, path.join(DIST_DIR, 'style.css'));
+    }
+
     // --- Key Management & History ---
     console.log("Initializing Key Management...");
 
@@ -181,7 +187,7 @@ async function build() {
             const styleMap: Record<string, string[]> = {};
             const uniqueFontsToSubset = new Set<string>();
 
-            const getBaseName = (fname: string) => path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
+            const getBaseName = (fname: string) => 'Srn-' + path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
 
             for (const config of fontConfigs) {
                 let styleName = 'default';
@@ -202,29 +208,18 @@ async function build() {
                 for (const file of files) {
                     uniqueFontsToSubset.add(file);
                     // Use a generated family name based on filename to uniquely identify it
-                    styleMap[styleName]?.push(`'${getBaseName(file)}'`);
+                    styleMap[styleName]?.push(getBaseName(file));
                 }
             }
 
             // Subset unique fonts
-            // Subset unique fonts
-            // Track global IVS replacements for this page to avoid PUA collisions
-            // and ensure consistent mapping across different fonts in the stack.
-            const globalIvsReplacements = new Map<string, string>();
-            let currentPua = 0xE000;
-
             for (const fontName of uniqueFontsToSubset) {
                 const fontPath = path.join(FONTS_DIR, fontName);
 
                 if (await fs.pathExists(fontPath)) {
                     try {
                         console.log(`  Subsetting font: ${fontName}`);
-                        const { buffer, mimeType, nextPua } = await subsetFont(fontPath, fullText, {
-                            puaStart: currentPua,
-                            globalReplacements: globalIvsReplacements
-                        });
-
-                        currentPua = nextPua;
+                        const { buffer, mimeType } = await subsetFont(fontPath, fullText);
 
                         const format = 'woff2';
                         const dataUrl = bufferToDataUrl(buffer, mimeType);
@@ -248,16 +243,6 @@ async function build() {
                 }
             }
 
-            // Apply IVS Replacements to HTML Content
-            // We replace the original Base+VS sequences with the assigned PUA characters
-            // which are now guaranteed to be in the subsetted fonts (if supported).
-            if (globalIvsReplacements.size > 0) {
-                console.log(`  Applying ${globalIvsReplacements.size} IVS replacements to HTML.`);
-                for (const [seq, rep] of globalIvsReplacements) {
-                    // Use split/join for global replacement of the sequence string
-                    htmlContent = htmlContent.split(seq).join(rep);
-                }
-            }
 
             // Generate utility classes for non-default styles
             let utilityCss = '<style>\n';
@@ -272,7 +257,12 @@ async function build() {
             // Default fallbacks
             const defaultStack = styleMap['default'] || [];
             const safeFontFamilies = [...defaultStack, 'serif'];
-            const fontFamilyCss = safeFontFamilies.join(', ');
+
+            // Generate valid CSS font stack: quote non-generic families
+            const fontFamilyCss = safeFontFamilies.map(f => {
+                if (['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'].includes(f)) return f;
+                return `'${f}'`;
+            }).join(', ');
 
             // Global styles (only font-family injection needed now)
             const globalStyle = `

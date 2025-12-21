@@ -141,7 +141,7 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
                 border-bottom: 2px solid #000;
             }
             .font-apply {
-                font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, serif;
+                font-family: ${fontFamilies.map(f => ['serif', 'sans-serif', 'monospace'].includes(f) ? f : `'${f}'`).join(', ')}, serif;
             }
             .target-glyph {
                 font-size: 2rem;

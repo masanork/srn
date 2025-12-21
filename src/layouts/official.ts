@@ -106,7 +106,7 @@ export function officialLayout(data: OfficialData, bodyContent: string, fontCss:
 
             /* Apply custom fonts to specific variant-heavy areas or body if needed */
             .doc-recipient, .doc-body {
-                font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, serif;
+                font-family: ${fontFamilies.map(f => ['serif', 'sans-serif', 'monospace'].includes(f) ? f : `'${f}'`).join(', ')}, serif;
             }
 
             .doc-header {

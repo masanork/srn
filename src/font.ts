@@ -103,146 +103,348 @@ function isVariationSelector(codepoint: number): boolean {
         (codepoint >= 0xE0100 && codepoint <= 0xE01EF); // VS17-VS256
 }
 
+
+// --- Binary Utilities ---
+function calculateChecksum(buffer: Uint8Array): number {
+    let sum = 0;
+    const nLongs = Math.floor(buffer.length / 4);
+    const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    for (let i = 0; i < nLongs; i++) {
+        sum = (sum + view.getUint32(i * 4, false)) >>> 0;
+    }
+    const left = buffer.length % 4;
+    if (left > 0) {
+        let val = 0;
+        for (let i = 0; i < left; i++) {
+            val = (val << 8) + (buffer[nLongs * 4 + i] ?? 0);
+        }
+        val = val << (8 * (4 - left));
+        sum = (sum + val) >>> 0;
+    }
+    return sum;
+}
+
+// --- Cmap Generators ---
+function generateCmapFormat12(mappings: { code: number, gid: number }[]): Uint8Array {
+    const sorted = [...mappings].sort((a, b) => a.code - b.code);
+    const groups: { start: number, end: number, gid: number }[] = [];
+
+    if (sorted.length > 0) {
+        let current = { start: sorted[0]!.code, end: sorted[0]!.code, gid: sorted[0]!.gid };
+        for (let i = 1; i < sorted.length; i++) {
+            const m = sorted[i]!;
+            if (m.code === current.end + 1 && m.gid === current.gid + (m.code - current.start)) {
+                current.end = m.code;
+            } else {
+                groups.push(current);
+                current = { start: m.code, end: m.code, gid: m.gid };
+            }
+        }
+        groups.push(current);
+    }
+
+    const size = 16 + 12 * groups.length;
+    const buffer = new Uint8Array(size);
+    const view = new DataView(buffer.buffer);
+
+    view.setUint16(0, 12, false); // format
+    view.setUint32(4, size, false); // length
+    view.setUint32(8, 0, false); // language
+    view.setUint32(12, groups.length, false); // numGroups
+
+    let offset = 16;
+    for (const g of groups) {
+        view.setUint32(offset, g.start, false);
+        view.setUint32(offset + 4, g.end, false);
+        view.setUint32(offset + 8, g.gid, false);
+        offset += 12;
+    }
+    return buffer;
+}
+
+function generateCmapFormat14(ivsRecords: { vs: number, code: number, gid: number }[]): Uint8Array {
+    const vsMap = new Map<number, { code: number, gid: number }[]>();
+    const seen = new Set<string>();
+
+    for (const rec of ivsRecords) {
+        const key = `${rec.vs}-${rec.code}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        if (!vsMap.has(rec.vs)) vsMap.set(rec.vs, []);
+        vsMap.get(rec.vs)!.push(rec);
+    }
+    const sortedVS = Array.from(vsMap.keys()).sort((a, b) => a - b);
+
+    let size = 10 + 11 * sortedVS.length;
+    const uvsTableSizes: number[] = [];
+
+    for (const vs of sortedVS) {
+        const mappings = vsMap.get(vs)!;
+        const tableSize = 4 + 5 * mappings.length;
+        uvsTableSizes.push(tableSize);
+        size += tableSize;
+    }
+
+    const buffer = new Uint8Array(size);
+    const view = new DataView(buffer.buffer);
+    let offset = 10;
+
+    view.setUint16(0, 14, false); // format
+    view.setUint32(2, size, false); // length
+    view.setUint32(6, sortedVS.length, false); // numRecords
+
+    let subTableOffset = 10 + 11 * sortedVS.length;
+
+    for (let i = 0; i < sortedVS.length; i++) {
+        const vs = sortedVS[i]!;
+        const uvsSize = uvsTableSizes[i]!;
+
+        view.setUint8(offset, (vs >> 16) & 0xFF);
+        view.setUint8(offset + 1, (vs >> 8) & 0xFF);
+        view.setUint8(offset + 2, vs & 0xFF);
+
+        view.setUint32(offset + 3, 0, false); // Default UVS = 0
+        view.setUint32(offset + 7, subTableOffset, false); // Non-Default UVS offset
+
+        offset += 11;
+        subTableOffset += uvsSize;
+    }
+
+    for (let i = 0; i < sortedVS.length; i++) {
+        const vs = sortedVS[i]!;
+        const mappings = vsMap.get(vs)!.sort((a, b) => a.code - b.code);
+
+        view.setUint32(offset, mappings.length, false);
+        offset += 4;
+
+        for (const m of mappings) {
+            view.setUint8(offset, (m.code >> 16) & 0xFF);
+            view.setUint8(offset + 1, (m.code >> 8) & 0xFF);
+            view.setUint8(offset + 2, m.code & 0xFF);
+            view.setUint16(offset + 3, m.gid, false);
+            offset += 5;
+        }
+    }
+    return buffer;
+}
+
+// --- Injection Logic ---
+function injectNativeCmap(subsetBuffer: ArrayBuffer, unicodeMap: { code: number, gid: number }[], ivsRecords: { vs: number, code: number, gid: number }[]): ArrayBuffer {
+    const view = new DataView(subsetBuffer);
+    const numTables = view.getUint16(4, false);
+
+    let cmapOffset = 0;
+    let cmapLength = 0;
+    let cmapDirOffset = 0;
+
+    for (let i = 0; i < numTables; i++) {
+        const p = 12 + i * 16;
+        const tag = String.fromCharCode(view.getUint8(p), view.getUint8(p + 1), view.getUint8(p + 2), view.getUint8(p + 3));
+        if (tag === 'cmap') {
+            cmapDirOffset = p;
+            cmapOffset = view.getUint32(p + 8, false);
+            cmapLength = view.getUint32(p + 12, false);
+            break;
+        }
+    }
+
+    if (!cmapOffset) return subsetBuffer;
+
+    // Build New Cmap Table
+    const oldCmapView = new DataView(subsetBuffer, cmapOffset, cmapLength);
+    const numSubtables = oldCmapView.getUint16(2, false);
+
+    interface SubTableRecord { platform: number; encoding: number; data: Uint8Array; }
+    const subtables: SubTableRecord[] = [];
+
+    // 1. Extract Format 4 (BMP) data from opentype.js
+    let f4Data: Uint8Array | null = null;
+    for (let i = 0; i < numSubtables; i++) {
+        const p = 4 + i * 8;
+        const off = oldCmapView.getUint32(p + 4, false);
+        const fmt = oldCmapView.getUint16(off, false);
+        if (fmt === 4) {
+            const len = oldCmapView.getUint16(off + 2, false);
+            f4Data = new Uint8Array(subsetBuffer, cmapOffset + off, len);
+            break;
+        }
+    }
+
+    if (f4Data) {
+        subtables.push({ platform: 0, encoding: 3, data: f4Data }); // Unicode BMP
+        subtables.push({ platform: 3, encoding: 1, data: f4Data }); // Windows BMP
+    }
+
+    // 2. Add Format 12 (Unicode Full Plane)
+    const f12Data = generateCmapFormat12(unicodeMap);
+    subtables.push({ platform: 0, encoding: 4, data: f12Data }); // Unicode Full
+    subtables.push({ platform: 3, encoding: 10, data: f12Data }); // Windows Unicode Full
+
+    // 3. Add Format 14 (IVS)
+    if (ivsRecords.length > 0) {
+        const f14Data = generateCmapFormat14(ivsRecords);
+        subtables.push({ platform: 0, encoding: 5, data: f14Data }); // Unicode Variation Sequences
+    }
+
+    // 4. Sort subtables by Platform ID then Encoding ID (Strictly required)
+    subtables.sort((a, b) => {
+        if (a.platform !== b.platform) return a.platform - b.platform;
+        return a.encoding - b.encoding;
+    });
+
+    // Construct the new cmap table binary
+    const headerSize = 4 + subtables.length * 8;
+    let totalCmapLen = headerSize;
+    for (const t of subtables) totalCmapLen += t.data.length;
+
+    const newCmap = new Uint8Array(totalCmapLen);
+    const ncw = new DataView(newCmap.buffer);
+    ncw.setUint16(0, 0, false);
+    ncw.setUint16(2, subtables.length, false);
+
+    let dataOffset = headerSize;
+    for (let i = 0; i < subtables.length; i++) {
+        const t = subtables[i]!;
+        const p = 4 + i * 8;
+        ncw.setUint16(p, t.platform, false);
+        ncw.setUint16(p + 2, t.encoding, false);
+        ncw.setUint32(p + 4, dataOffset, false);
+        newCmap.set(t.data, dataOffset);
+        dataOffset += t.data.length;
+    }
+
+    // Reconstruct the font binary with the new cmap table
+    const delta = totalCmapLen - cmapLength;
+    const newFontSize = subsetBuffer.byteLength + delta + 1024; // Extra padding
+    const newFont = new Uint8Array(newFontSize);
+    const nfv = new DataView(newFont.buffer);
+
+    // Copy everything up to the first table data
+    const tableDirSize = 12 + 16 * numTables;
+    newFont.set(new Uint8Array(subsetBuffer, 0, tableDirSize), 0);
+
+    const tables: { tag: string, offset: number, length: number, dirOffset: number }[] = [];
+    for (let i = 0; i < numTables; i++) {
+        const p = 12 + i * 16;
+        tables.push({
+            tag: String.fromCharCode(view.getUint8(p), view.getUint8(p + 1), view.getUint8(p + 2), view.getUint8(p + 3)),
+            offset: view.getUint32(p + 8, false),
+            length: view.getUint32(p + 12, false),
+            dirOffset: p
+        });
+    }
+    tables.sort((a, b) => a.offset - b.offset);
+
+    let writePtr = tableDirSize;
+    let headOffset = 0;
+
+    for (const t of tables) {
+        let data: Uint8Array;
+        let len = t.length;
+
+        if (t.tag === 'cmap') {
+            data = newCmap;
+            len = totalCmapLen;
+        } else {
+            data = new Uint8Array(subsetBuffer, t.offset, t.length);
+        }
+
+        // Align to 4 bytes
+        while (writePtr % 4 !== 0) writePtr++;
+
+        newFont.set(data, writePtr);
+
+        // Update Table Directory
+        nfv.setUint32(t.dirOffset + 8, writePtr, false);
+        nfv.setUint32(t.dirOffset + 12, len, false);
+
+        // Calculate and set table checksum
+        const checksum = calculateChecksum(newFont.subarray(writePtr, writePtr + len));
+        nfv.setUint32(t.dirOffset + 4, checksum, false);
+
+        if (t.tag === 'head') headOffset = writePtr;
+        writePtr += len;
+    }
+
+    // Update 'head' table checksumAdjustment
+    if (headOffset) {
+        nfv.setUint32(headOffset + 8, 0, false);
+        const fullChecksum = calculateChecksum(newFont.subarray(0, writePtr));
+        const adjustment = (0xB1B0AFBA - fullChecksum) >>> 0;
+        nfv.setUint32(headOffset + 8, adjustment, false);
+    }
+
+    return newFont.slice(0, writePtr).buffer;
+}
+
 export async function subsetFont(
     fontPath: string,
-    text: string,
-    options: { puaStart: number, globalReplacements: Map<string, string> } = { puaStart: 0xE000, globalReplacements: new Map() }
-): Promise<{ buffer: Buffer, mimeType: string, nextPua: number }> {
+    text: string
+): Promise<{ buffer: Buffer, mimeType: string }> {
     const fontBuffer = await fs.readFile(fontPath);
-    // opentype.parse expects an ArrayBuffer, not a Node Buffer
     const arrayBuffer = fontBuffer.buffer.slice(fontBuffer.byteOffset, fontBuffer.byteOffset + fontBuffer.byteLength);
     const font = opentype.parse(arrayBuffer);
 
-    // Try to parse IVS map
     let ivsMap: IVSMap | null = null;
     try {
         ivsMap = parseCmapFormat14(arrayBuffer, font);
-        if (ivsMap) console.log(`  [${path.basename(fontPath)}] IVS Map loaded.`);
-    } catch (e) {
-        console.warn('  Failed to parse CMAP Format 14:', e);
-    }
+    } catch (e) { }
 
     const glyphs: opentype.Glyph[] = [];
-    const addedGlyphs = new Set<opentype.Glyph>(); // Use object reference for deduplication
+    const addedGlyphs = new Map<opentype.Glyph, number>();
+    const unicodeMap: { code: number, gid: number }[] = [];
+    const ivsRecords: { vs: number, code: number, gid: number }[] = [];
 
-    // Helper to add glyph
-    const addGlyph = (g: opentype.Glyph) => {
+    const addGlyphToSubset = (g: opentype.Glyph): number => {
         if (!addedGlyphs.has(g)) {
+            const id = glyphs.length;
             glyphs.push(g);
-            addedGlyphs.add(g);
+            addedGlyphs.set(g, id);
+            return id;
         }
+        return addedGlyphs.get(g)!;
     };
 
-    const notdefGlyph = font.glyphs.get(0);
-    addGlyph(notdefGlyph);
-
-    // Local cache for this font subsetting session
-    const ivsCache = new Map<string, opentype.Glyph>();
-
-    let puaCounter = options.puaStart;
-    const { globalReplacements } = options;
+    addGlyphToSubset(font.glyphs.get(0)); // .notdef
 
     const chars = Array.from(text);
-
     for (let i = 0; i < chars.length; i++) {
-        const char = chars[i];
-        if (!char) continue;
-        const code = char.codePointAt(0);
-        if (code === undefined) continue;
+        const char = chars[i]!;
+        const code = char.codePointAt(0)!;
 
-        // Check next char for Variation Selector
         let vsCode = 0;
-        let originalSeq = char; // Base
-
         if (i + 1 < chars.length) {
-            const nextChar = chars[i + 1];
-            if (nextChar) {
-                const nextCode = nextChar.codePointAt(0);
-                if (nextCode !== undefined && isVariationSelector(nextCode)) {
-                    vsCode = nextCode;
-                    originalSeq += nextChar; // Base + VS
-                    i++; // Skip VS in next iteration
-                }
+            const nextCode = chars[i + 1]!.codePointAt(0)!;
+            if (isVariationSelector(nextCode)) {
+                vsCode = nextCode;
+                i++;
             }
         }
 
-        let glyph: opentype.Glyph | null = null;
-        let isIvsGlyph = false;
-
-        // 1. IVS Lookup
-        if (vsCode && ivsMap && ivsMap[vsCode]) {
-            // Check cache first
-            if (ivsCache.has(originalSeq)) {
-                glyph = ivsCache.get(originalSeq)!;
-                isIvsGlyph = true;
-            } else {
-                const gid = ivsMap[vsCode][code];
-                if (gid !== undefined) {
-                    const originGlyph = font.glyphs.get(gid);
-
-                    if (originGlyph) {
-                        // Determine PUA Code (Reuse global or assign new)
-                        let puaChar = globalReplacements.get(originalSeq);
-                        let puaCode: number;
-
-                        if (puaChar) {
-                            puaCode = puaChar.codePointAt(0)!;
-                        } else {
-                            puaCode = puaCounter++;
-                            puaChar = String.fromCodePoint(puaCode);
-                            globalReplacements.set(originalSeq, puaChar);
-                        }
-
-                        // Create Variant Glyph
-                        glyph = new opentype.Glyph({
-                            name: originGlyph.name || `u${code.toString(16)}_vs${vsCode.toString(16)}`,
-                            unicode: puaCode,
-                            unicodes: [puaCode],
-                            advanceWidth: originGlyph.advanceWidth,
-                            path: originGlyph.path
-                        });
-
-                        ivsCache.set(originalSeq, glyph);
-                        isIvsGlyph = true;
-                    }
-                }
+        const vsSubMap = vsCode && ivsMap ? ivsMap[vsCode] : undefined;
+        if (vsSubMap && vsSubMap[code] !== undefined) {
+            const originalGid = vsSubMap[code]!;
+            const variantGlyph = font.glyphs.get(originalGid);
+            if (variantGlyph) {
+                // Clone without unicode assignment (UVS variant)
+                const g = new opentype.Glyph({
+                    name: variantGlyph.name || `u${code.toString(16)}_v${vsCode.toString(16)}`,
+                    advanceWidth: variantGlyph.advanceWidth,
+                    path: variantGlyph.path
+                });
+                const subsetGid = addGlyphToSubset(g);
+                ivsRecords.push({ vs: vsCode, code, gid: subsetGid });
             }
         }
 
-        // 2. Fallback / Standard Lookup
-        if (!glyph) {
-            // For IVS sequence not supported by this font, we should fallback to BASE char?
-            // If valid IVS but font missing support: fallback to base glyph.
-            // If we fall back to base glyph, we do NOT want to consume the VS if we want to let browser try fallback font?
-            // BUT here we are creating a subset font.
-            // Replaced content in HTML will be PUA.
-            // If FontA missing IVS, we don't map PUA.
-            // HTML remains "Base+VS" (if we don't replace globally? Wait).
-            // Logic: globalReplacements are applied to HTML.
-            // If FontA misses support, it adds NOTHING to globalReplacements.
-            // If FontB supports it, it adds S->PUA.
-            // HTML replaced S->PUA.
-            // Browser sees PUA. Checks FontA. FontA has NO glyph for PUA.
-            // Checks FontB. FontB has glyph for PUA. Renders FontB. Success!
-
-            // So if NOT found in map, we treat as standard char(s).
-            // WARNING: If vsCode was detected but not supported, we must handle 'char' (Base).
-            // What about VS char itself? Standard fonts usually map VS to nothing or invisible.
-            // We should just ensure Base glyph is added.
-
-            glyph = font.charToGlyph(char);
-
-            // If we skipped 'nextChar' thinking it was a VS but now we fallback, 
-            // should we add VS glyph? usually invisible.
-            // Ideally we handled the pair.
-        }
-
-        if (glyph) {
-            addGlyph(glyph);
+        const baseGlyph = font.charToGlyph(char);
+        const subsetGid = addGlyphToSubset(baseGlyph);
+        if (baseGlyph.unicode !== undefined) {
+            unicodeMap.push({ code: baseGlyph.unicode, gid: subsetGid });
         }
     }
 
-    // Create a new font with the subset of glyphs
     const subset = new opentype.Font({
         familyName: 'SubsetFont',
         styleName: 'Regular',
@@ -253,14 +455,17 @@ export async function subsetFont(
     });
 
     const subsetBuffer = subset.toArrayBuffer();
-    const woff2Buffer = await wawoff2.compress(new Uint8Array(subsetBuffer));
+
+    // Inject custom cmap tables (Format 12 and 14)
+    const finalBuffer = injectNativeCmap(subsetBuffer, unicodeMap, ivsRecords);
+    const woff2Buffer = await wawoff2.compress(new Uint8Array(finalBuffer));
 
     return {
         buffer: Buffer.from(woff2Buffer),
-        mimeType: 'font/woff2',
-        nextPua: puaCounter
+        mimeType: 'font/woff2'
     };
 }
+
 
 
 export function bufferToDataUrl(buffer: Buffer, mimeType: string = 'font/sfnt'): string {
