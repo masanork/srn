@@ -1,74 +1,101 @@
 ---
-title: "技術情報: VC検証について"
+title: "PQC Verification Specifications"
 layout: article
+description: "Technical specifications for Post-Quantum Cryptography Hybrid Verifiable Credentials and Trust Architecture."
+font:
+  - hero:ReggaeOne-Regular.ttf
+  - default:ipamjm.ttf,acgjm.ttf
 ---
 
-このサイトで公開されている一部の公式文書（Official Layoutを使用しているページ）は、**耐量子暗号 (Post-Quantum Cryptography, PQC)** 技術を用いたVerifiable Credential (VC) として発行されています。
+# SRN Trust Architecture & PQC Specs
 
-これは、将来的な量子コンピュータの実用化においても改ざん耐性を維持するための実験的な取り組みです。
+## Overview
+SRN implements a **Hybrid Verifiable Credential (VC)** system secured by both traditional ECC (Ed25519) and Post-Quantum Cryptography (ML-DSA-44). This ensures both current compatibility and long-term security against quantum threats.
 
-## インラインSVGグリフ表示デモ
+The trust model is designed for a Static Site Generator (SSG) environment, utilizing ephemeral build keys anchored by a persistent Root Identity.
 
-フォントファイルから直接グリフを抽出してSVGとして表示しています（コードポイント未割り当て文字などの表示用）。
+## Cryptographic Primitives
+We utilize the following algorithms for dual-signing every official document:
 
-*   **斎 (MJ030062)**: [ipamjm:MJ030062]
-*   **辺 (MJ026194)**: [ipamjm:MJ026194]
-*   **甲骨文字 (GJ000001)**: [acgjm:GJ000001]
+| Component | Algorithm | Purpose | Standards Ref |
+|-----------|-----------|---------|---------------|
+| **Primary Signature** | **Ed25519** | Current Standards Compatibility | Ed25519Signature2020 |
+| **Quantum Safe** | **ML-DSA-44** | Future-Proofing (NIST Level 2) | FIPS 204 (Draft) / Dilithium |
+| **Canonicalization** | **JCS** | Deterministic JSON Signing | RFC 8785 |
+| **Digests** | **SHA-256** | Content Integrity | NIST FIPS 180-4 |
 
+## Trust Hierarchy
 
-## 技術仕様
+### 1. Root Identity (Trust Anchor)
+*   **Key Type**: Persistent Hybrid Keypair (Ed25519 + ML-DSA).
+*   **Storage**: Offline / Secure Environment (`site/data/root-key.json`).
+*   **Role**: Signs the **Status List VC**. It acts as the immutable identity of the SRN node. Verifiers trust this key (TOFU model).
 
-### ハイブリッド署名
+### 2. Ephemeral Build Keys (Issuers)
+*   **Key Type**: Ephemeral Hybrid Keypair.
+*   **Lifecycle**: Generated fresh for **every build**.
+*   **Role**: Signs individual **Document VCs** (Verification Method).
+*   **Identity**: Each build has a unique DID (`did:key:...`).
 
-現在の認証基盤との互換性を保ちつつ、未来の脅威に備えるため、以下の2つのアルゴリズムによる**ハイブリッド署名**を採用しています。
+### 3. Status List (Revocation)
+To bridge the trust between the persistent Root and ephemeral Build keys, we implement a **Status List VC**.
 
-1.  **Ed25519**: 
-    *   現在広く普及している公開鍵暗号方式。
-    *   高速で短い鍵サイズが特徴。
-    *   既存の多くのVC検証ツールで認識可能です。
+*   **Format**: Compatible with **Verifiable Credentials Status List v2021**.
+*   **Issuer**: Signed by the **Root Identity**.
+*   **Content**: A list of `revokedBuildIds` (Building blocks for potential Bitstring implementation).
+*   **Mechanism**:
+    1.  Official documents include a `credentialStatus` pointing to `status-list.json`.
+    2.  Verifiers fetch the Status List and verify it matches the Root Key.
+    3.  Verifiers check if the Document VC's issuer (Build Key) is present in the revocation list.
 
-2.  **ML-DSA-44 (Dilithium)**:
-    *   NIST（米国国立標準技術研究所）によって標準化が進められている耐量子署名アルゴリズムの一つ。
-    *   格子暗号に基づいており、量子コンピュータによる攻撃に対して耐性を持つと考えられています。
-    *   本システムでは `@noble/post-quantum` ライブラリを使用しています。
+## Data Model (JSON-LD)
 
-### VC構造
-
-発行されるVC（JSONファイル）は、`proof` プロパティに2つの署名オブジェクトを含んでいます。
-
+### Document VC Structure
 ```json
-"proof": [
-  {
-    "type": "Ed25519Signature2020",
-    "verificationMethod": "did:key:...",
-    "proofValue": "..."  // Ed25519による署名値
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/vc/status-list/2021/v1"
+  ],
+  "type": ["VerifiableCredential"],
+  "issuer": "did:key:zBuildKey...",
+  "issuanceDate": "2025-12-21T00:00:00Z",
+  "credentialStatus": {
+    "id": "https://example.com/status-list.json#0",
+    "type": "StatusList2021Entry",
+    "statusPurpose": "revocation",
+    "statusListCredential": "https://example.com/status-list.json"
   },
-  {
-    "type": "DataIntegrityProof",
-    "cryptosuite": "ml-dsa-44-2025",
-    "verificationMethod": "did:key:...",
-    "proofValue": "..."  // ML-DSA-44による署名値
-  }
-]
+  "credentialSubject": { ... },
+  "proof": [
+    { "type": "Ed25519Signature2020", ... },
+    { "type": "DataIntegrityProof", "cryptosuite": "ml-dsa-44-2025", ... }
+  ]
+}
 ```
 
-## 検証方法
+### Status List VC Structure
+```json
+{
+  "@context": [...],
+  "type": ["VerifiableCredential", "StatusList2021"],
+  "issuer": "did:key:zRootKey...",
+  "credentialSubject": {
+    "id": "https://example.com/status-list.json#list",
+    "type": "StatusList2021",
+    "statusPurpose": "revocation",
+    "srn:revokedBuildIds": ["build-170000000", ...]
+  },
+  "proof": [...]
+}
+```
 
-### 検証のロジック
+## Verification Process
+1.  **Integrity Check**: Validate the JCS-canonicalized JSON against the `proof` values (both Ed25519 and ML-DSA).
+2.  **Status Check**: 
+    *   Fetch the `credentialStatus.statusListCredential` URL.
+    *   Verify the Status List's signature against the known **Root Key**.
+    *   Ensure the Document VC's `issuer` (or Build ID) is **NOT** in the revocation list.
 
-検証を行うには、以下の手順が必要です。
-
-1.  **ペイロードの取得**: `proof` プロパティを除いたJSONオブジェクトを取得します。
-2.  **正準化 (Canonicalization)**: 
-    *   現在の実装では、簡易的なJSON文字列化（`JSON.stringify`）を用いています（実験的実装のため）。
-    *   将来的には URDNA2015 などの標準的な正準化アルゴリズムへの準拠を予定しています。
-3.  **署名検証**:
-    *   **Ed25519**: `verificationMethod` に含まれる公開鍵を用いて検証します。
-    *   **ML-DSA-44**: PQC対応のライブラリ（例: `@noble/post-quantum`）を用いて、同様に公開鍵で署名を検証します。
-
-### 開発者向け情報
-
-このサイトのビルドシステム (`src/vc.ts`) はオープンソースとして公開されています。
-詳細な実装ロジックについては、リポジトリ内のコードを参照してください。
-
-現在の実装はConcept Proof段階であり、鍵管理はエフェメラル（ビルドごとに生成）な鍵を用いています。永続的なアイデンティティ証明として使用する場合は、鍵の永続化とDID (Decentralized Identifier) の適切な管理が必要です。
+---
+*Note: This specification prioritizes "Zero Overhead" and "Static Verifiability" suitable for SSG environments, essentially implementing a specialized Public Key Infrastructure (PKI) without centralized certificate authorities.*

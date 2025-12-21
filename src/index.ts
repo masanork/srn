@@ -24,13 +24,17 @@ import { gridLayout } from './layouts/grid.ts';
 import type { GridData } from './layouts/grid.ts';
 import { searchLayout } from './layouts/search.ts';
 import type { SearchData } from './layouts/search.ts';
-import { createHybridVC } from './vc.ts';
+import { verifierLayout } from './layouts/verifier.ts';
+import type { VerifierData } from './layouts/verifier.ts';
+import { createHybridVC, generateHybridKeys, createStatusListVC } from './vc.ts';
+import type { HybridKeys } from './vc.ts';
 
 // Configuration
 const SITE_DIR = path.resolve(process.cwd(), 'site');
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
 const CONTENT_DIR = path.join(SITE_DIR, 'content');
 const FONTS_DIR = path.join(SITE_DIR, 'fonts');
+const DATA_DIR = path.join(SITE_DIR, 'data');
 
 async function build() {
     const isClean = process.argv.includes('--clean');
@@ -43,6 +47,41 @@ async function build() {
 
     // Always ensure dist exists
     await fs.ensureDir(DIST_DIR);
+    await fs.ensureDir(DATA_DIR);
+
+    // --- Key Management & History ---
+    console.log("Initializing Key Management...");
+    const historyPath = path.join(DATA_DIR, 'key-history.json');
+    let keyHistory: Array<{ timestamp: string; buildId: string; ed25519Params: string; pqcParams: string }> = [];
+
+    if (await fs.pathExists(historyPath)) {
+        try {
+            keyHistory = await fs.readJson(historyPath);
+        } catch (e) {
+            console.warn("Failed to read existing key history, starting fresh.");
+        }
+    }
+
+    // Generate keys for this build session
+    const currentKeys = generateHybridKeys();
+    const buildId = `build-${Date.now()}`; // Simple ID
+
+    // Log this session's keys
+    const newEntry = {
+        timestamp: new Date().toISOString(),
+        buildId: buildId,
+        ed25519Params: `did:key:z${currentKeys.ed25519.publicKey}`,
+        pqcParams: `did:key:zPQC${currentKeys.pqc.publicKey}`
+    };
+    keyHistory.push(newEntry);
+
+    // Persist history (Append-only approach for local dev)
+    await fs.writeJson(historyPath, keyHistory, { spaces: 2 });
+
+    // Publish history to dist
+    await fs.writeJson(path.join(DIST_DIR, 'key-history.json'), keyHistory, { spaces: 2 });
+    console.log(`  Key history updated. Current PQC Key: ...${currentKeys.pqc.publicKey.slice(-8)}`);
+    // --------------------------------
 
     // Copy static assets
     const STATIC_DIR = path.join(SITE_DIR, 'static');
@@ -286,7 +325,11 @@ body {
                     }
                 };
 
-                const { vc } = await createHybridVC(vcPayload);
+                // Use the single-source-of-truth keys for this build session
+                // And include status list URL
+                const vc = await createHybridVC(vcPayload, currentKeys, {
+                    statusListUrl: "https://example.com/status-list.json"
+                });
 
                 // Save VC sidecar
                 const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
@@ -316,6 +359,13 @@ body {
                     fontCss,
                     safeFontFamilies
                 );
+            } else if (data.layout === 'verifier') {
+                finalHtml = verifierLayout(
+                    data as VerifierData,
+                    htmlContent,
+                    fontCss,
+                    safeFontFamilies
+                );
             } else {
                 // Default to article
                 finalHtml = articleLayout(
@@ -336,6 +386,29 @@ body {
 
         }
 
+
+        // Bundle Client Scripts
+        console.log("Bundling client scripts...");
+        const clientEntry = path.join(process.cwd(), 'src/client/verify-app.ts');
+        if (await fs.pathExists(clientEntry)) {
+            const result = await Bun.build({
+                entrypoints: [clientEntry],
+                outdir: path.join(DIST_DIR, 'assets'),
+                naming: "[name]-bundle.[ext]", // e.g. verify-app-bundle.js
+                minify: true,
+            });
+            if (result.success) {
+                // Rename to fixed name expected by layout
+                const generated = path.join(DIST_DIR, 'assets', 'verify-app-bundle.js');
+                const target = path.join(DIST_DIR, 'assets', 'verify-bundle.js');
+                if (await fs.pathExists(generated)) {
+                    await fs.move(generated, target, { overwrite: true });
+                }
+                console.log("  Bundled verify-app.ts -> assets/verify-bundle.js");
+            } else {
+                console.error("  Bundle failed:", result.logs);
+            }
+        }
 
         // Generate Sitemaps
         console.log("Generating sitemaps...");

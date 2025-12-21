@@ -13,27 +13,36 @@ export interface OfficialData {
 
 export function officialLayout(data: OfficialData, bodyContent: string, fontCss: string, fontFamilies: string[], vc?: object) {
 
-    // Convert VC object to string for embedding/download
     const vcString = vc ? JSON.stringify(vc, null, 2) : '';
     const vcDataUri = vc ? `data:application/json;charset=utf-8,${encodeURIComponent(vcString)}` : '#';
 
-    const fullContent = `
-        <article class="official-document">
+    // Determine if this is a structured notification letter or just a signed document
+    const isNotification = data.recipient || data.sender;
+
+    let docHeader = '';
+    if (isNotification) {
+        docHeader = `
             <header class="doc-header">
                 <div class="doc-number">２０２５１２２０第１号</div>
-                <div class="doc-date">${data.date}</div>
+                <div class="doc-date">${data.date || new Date().toISOString().split('T')[0]}</div>
             </header>
 
             <div class="doc-recipient">
-                <div class="org-name">${data.recipient}</div>
-                <div class="rep-name">代表取締役　${data.recipientName}　殿</div>
+                <div class="org-name">${data.recipient || ''}</div>
+                <div class="rep-name">${data.recipientName ? `代表取締役　${data.recipientName}　殿` : ''}</div>
             </div>
 
             <div class="doc-sender">
-                <div class="sender-title">${data.sender}</div>
+                <div class="sender-title">${data.sender || ''}</div>
             </div>
 
-            <h1 class="doc-subject">${data.subject}</h1>
+            <h1 class="doc-subject">${data.subject || data.title}</h1>
+        `;
+    }
+
+    const fullContent = `
+        <article class="${isNotification ? 'official-document' : 'signed-document'}">
+            ${docHeader}
 
             <div class="doc-body">
                 ${bodyContent}
@@ -80,7 +89,7 @@ export function officialLayout(data: OfficialData, bodyContent: string, fontCss:
                 background-color: #f0f0f0; /* Slight gray background for browser view to make paper pop */
             }
 
-            .official-document {
+            .official-document, .signed-document {
                 max-width: 800px;
                 margin: 0 auto;
                 padding: 4rem;
@@ -91,6 +100,10 @@ export function officialLayout(data: OfficialData, bodyContent: string, fontCss:
                 -webkit-font-smoothing: auto;
                 -moz-osx-font-smoothing: auto;
             }
+            .signed-document {
+                 padding: 2rem; /* Less padding for raw documents */
+            }
+
             /* Apply custom fonts to specific variant-heavy areas or body if needed */
             .doc-recipient, .doc-body {
                 font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, serif;
@@ -164,9 +177,6 @@ export function officialLayout(data: OfficialData, bodyContent: string, fontCss:
             .download-btn:hover {
                 text-decoration: underline;
             }
-
-            /* Vertical writing support for specific sections if requested */
-            /* Currently horizontal standard for notification */
         </style>
     `;
 
