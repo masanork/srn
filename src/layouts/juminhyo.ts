@@ -69,87 +69,146 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
         }
     };
 
-    const itemsHtml = data.items.map((item, index) => {
-        const hasPrev = !!item.prevAddress;
-        const hasDomicile = !!item.domiciles;
-        // Check for sensitive/optional fields
-        const hasMyNumber = !!item.myNumber || !!item.residentCode;
+    const columnWidths = [
+        19, 19, 19, 19, 19, 27,
+        19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+        19, 19, 19, 19, 19, 28,
+        19, 19, 19, 19, 19, 19, 19, 19, 19, 19
+    ];
+    const rowHeights = Array.from({ length: 53 }, (_, idx) => (idx === 5 ? 17 : 18));
 
-        // Base rows (Name, DOB, Relation, Remarks) = 4
-        // Optional rows: Prev = 1, Domicile = 1, MyNumber/Code = 1
-        const rowspan = 4
-            + (hasPrev ? 1 : 0)
-            + (hasDomicile ? 1 : 0)
-            + (hasMyNumber ? 1 : 0);
+    const labelHtml = (main: string, _kana?: string) => `
+        <div class="label-text">
+            <span class="label-main">${main}</span>
+        </div>
+    `;
+
+    const normalizeText = (value?: string) => value ?? '';
+    const normalizeDomicile = (domiciles?: string[]) => {
+        if (!domiciles || domiciles.length === 0) {
+            return { honseki: '', hittosha: '' };
+        }
+        const honseki = domiciles[0] ?? '';
+        const hittosha = domiciles[1] ? domiciles[1].replace(/^筆頭者：?/, '') : '';
+        return { honseki, hittosha };
+    };
+
+    const normalizeRemarks = (remarks?: string[]) => {
+        const slots = Array.from({ length: 4 }, (_, idx) => remarks?.[idx] ?? '');
+        return slots;
+    };
+
+    const rowHeight = (rowNumber: number) => rowHeights[rowNumber - 1] ?? 18;
+
+    const fillItems = Array.from({ length: 4 }, (_, idx) => data.items[idx] ?? {
+        name: '',
+        kana: '',
+        dob: '',
+        gender: '',
+        relationship: '',
+        becameResident: '',
+        addressDate: '',
+        notificationDate: ''
+    });
+
+    const renderPersonRows = (item: JuminhyoItem, index: number, startRow: number) => {
+        const { honseki, hittosha } = normalizeDomicile(item.domiciles);
+        const [remark1, remark2, remark3, remark4] = normalizeRemarks(item.remarks);
 
         return `
-    <div class="person-block">
-        <table class="person-table">
-            <colgroup>
-                <col style="width: 30px;">
-                <col style="width: 80px;">
-                <col style="width: 32%;">
-                <col style="width: 80px;">
-                <col>
-            </colgroup>
-            <tr>
-                <td rowspan="${rowspan}" class="col-num">${index + 1}</td>
-                <th>氏名</th>
-                <td colspan="3">
-                    ${item.kana ? `<span class="kana">${item.kana}</span>` : ''}
-                    <span class="name-large">${item.name}</span>
-                </td>
+            <tr style="height: ${rowHeight(startRow)}px;">
+                <td class="cell number-cell" rowspan="12">${index + 1}</td>
+                <td class="cell label-cell" colspan="5">${labelHtml('氏名の振り仮名')}</td>
+                <td class="cell value-cell" colspan="18">${normalizeText(item.kana)}</td>
+                <td class="cell label-cell" colspan="6">${labelHtml('個人番号', 'コジンバンゴウ')}</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(item.myNumber)}</td>
             </tr>
-            <tr>
-                <th>生年月日</th>
-                <td>${item.dob}</td>
-                <th>性別</th>
-                <td>${item.gender}</td>
+            <tr style="height: ${rowHeight(startRow + 1)}px;">
+                <td class="cell label-cell" colspan="5" rowspan="2">${labelHtml('氏名', 'ウジメイ')}</td>
+                <td class="cell value-cell name-cell" colspan="18" rowspan="2">${normalizeText(item.name)}</td>
+                <td class="cell label-cell" colspan="6">${labelHtml('住民票コード', 'ジュウミンヒョウ')}</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(item.residentCode)}</td>
             </tr>
-            <tr>
-                <th>続柄</th>
-                <td>${item.relationship}</td>
-                <th>住民となった日<br>等</th>
-                <td>
-                    ${item.becameResident ? `<div><span class="label">住民となった日：</span>${item.becameResident}</div>` : ''}
-                    ${item.becameResidentReason ? `<div><span class="label">届出の理由：</span>${item.becameResidentReason}</div>` : ''}
-                    ${item.addressDate ? `<div><span class="label">住所を定めた日：</span>${item.addressDate}</div>` : ''}
-                    ${item.notificationDate ? `<div><span class="label">届出年月日：</span>${item.notificationDate}</div>` : ''}
-                </td>
+            <tr style="height: ${rowHeight(startRow + 2)}px;">
+                <td class="cell label-cell" colspan="6">${labelHtml('住民となった年月日', 'ジュウミンネンガッピ')}</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(item.becameResident)}</td>
             </tr>
-            ${item.prevAddress ? `
-            <tr>
-                <th>前住所</th>
-                <td colspan="3">${item.prevAddress}</td>
+            <tr style="height: ${rowHeight(startRow + 3)}px;">
+                <td class="cell label-cell" colspan="5">${labelHtml('旧氏の振り仮名', 'キュウウジフガナ')}</td>
+                <td class="cell value-cell" colspan="18"></td>
+                <td class="cell label-cell" colspan="6">${labelHtml('住所を定めた年月日', 'ジュウショサダネンガッピ')}</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(item.addressDate)}</td>
             </tr>
-            ` : ''}
-            ${item.domiciles ? `
-            <tr>
-                <th>本籍</th>
-                <td colspan="3">
-                    ${item.domiciles.join('<br>')}
-                </td>
+            <tr style="height: ${rowHeight(startRow + 4)}px;">
+                <td class="cell label-cell" colspan="5">${labelHtml('旧氏', 'キュウウジ')}</td>
+                <td class="cell value-cell" colspan="18"></td>
+                <td class="cell label-cell" colspan="6">${labelHtml('届出日', 'トドケデビ')}</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(item.notificationDate)}</td>
             </tr>
-            ` : ''}
-            ${hasMyNumber ? `
-            <tr>
-                <th>個人番号等</th>
-                <td colspan="3">
-                    ${item.myNumber ? `<div><span class="label">個人番号：</span>${item.myNumber}</div>` : ''}
-                    ${item.residentCode ? `<div><span class="label">住民票コード：</span>${item.residentCode}</div>` : ''}
-                </td>
+            <tr style="height: ${rowHeight(startRow + 5)}px;">
+                <td class="cell label-cell" colspan="5">${labelHtml('生年月日', 'セイネンガッピ')}</td>
+                <td class="cell value-cell" colspan="8">${normalizeText(item.dob)}</td>
+                <td class="cell label-cell" colspan="2">${labelHtml('性別', 'セイベツ')}</td>
+                <td class="cell value-cell" colspan="2">${normalizeText(item.gender)}</td>
+                <td class="cell label-cell" colspan="2">${labelHtml('続柄', 'ゾクガラ')}</td>
+                <td class="cell value-cell" colspan="4">${normalizeText(item.relationship)}</td>
+                <td class="cell label-cell" colspan="6">${labelHtml('筆頭者', 'ヒットウシャ')}</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(hittosha)}</td>
             </tr>
-            ` : ''}
-            <tr>
-                <th>備考</th>
-                <td colspan="3">
-                    ${item.remarks ? item.remarks.join('<br>') : ''}
-                </td>
+            <tr style="height: ${rowHeight(startRow + 6)}px;">
+                <td class="cell label-cell" colspan="5">${labelHtml('本籍', 'ホンセキ')}</td>
+                <td class="cell value-cell" colspan="34">${normalizeText(honseki)}</td>
             </tr>
-        </table>
-    </div>
+            <tr style="height: ${rowHeight(startRow + 7)}px;">
+                <td class="cell label-cell" colspan="5">${labelHtml('転入前住所', 'テンニュウマエジュウショ')}</td>
+                <td class="cell value-cell" colspan="34">${normalizeText(item.prevAddress)}</td>
+            </tr>
+            <tr style="height: ${rowHeight(startRow + 8)}px;">
+                <td class="cell label-cell" colspan="5">＊＊＊</td>
+                <td class="cell value-cell" colspan="18">${normalizeText(remark1)}</td>
+                <td class="cell label-cell" colspan="6">＊＊＊</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(remark2)}</td>
+            </tr>
+            <tr style="height: ${rowHeight(startRow + 9)}px;">
+                <td class="cell label-cell" colspan="5">＊＊＊</td>
+                <td class="cell value-cell" colspan="18">${normalizeText(remark3)}</td>
+                <td class="cell label-cell" colspan="6">＊＊＊</td>
+                <td class="cell value-cell" colspan="10">${normalizeText(remark4)}</td>
+            </tr>
+            <tr style="height: ${rowHeight(startRow + 10)}px;">
+                <td class="cell value-cell" colspan="39"></td>
+            </tr>
+            <tr style="height: ${rowHeight(startRow + 11)}px;">
+                <td class="cell value-cell" colspan="39"></td>
+            </tr>
         `;
-    }).join('');
+    };
+
+    const tableHeaderRows = `
+        <tr style="height: ${rowHeights[0]}px;">
+            <td class="cell no-border" colspan="16"></td>
+            <td class="cell title-cell no-border" colspan="7" rowspan="2">${normalizeText(data.certificateTitle)}</td>
+            <td class="cell no-border" colspan="10"></td>
+            <td class="cell date-cell no-border" colspan="7" rowspan="2">${normalizeText(data.issueDate)}</td>
+        </tr>
+        <tr style="height: ${rowHeights[1]}px;">
+            <td class="cell no-border" colspan="16"></td>
+            <td class="cell no-border" colspan="10"></td>
+        </tr>
+        <tr style="height: ${rowHeights[2]}px;">
+            <td class="cell label-cell" colspan="6">${labelHtml('住所', 'ジュウショ')}</td>
+            <td class="cell value-cell" colspan="34">${normalizeText(data.address)}</td>
+        </tr>
+        <tr style="height: ${rowHeights[3]}px;">
+            <td class="cell label-cell" colspan="6">${labelHtml('世帯主', 'セタイヌシ')}</td>
+            <td class="cell value-cell" colspan="34">${normalizeText(data.householder)}</td>
+        </tr>
+        <tr style="height: ${rowHeights[4]}px;">
+            <td class="cell no-border" colspan="40"></td>
+        </tr>
+    `;
+
+    const itemsHtml = fillItems.map((item, index) => renderPersonRows(item, index, 6 + index * 12)).join('');
 
     const fullContent = `
         <script type="application/ld+json">
@@ -158,61 +217,32 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
 
         <div class="jumin-sheet">
             ${data.watermark ? `<div class="watermark">${data.watermark}</div>` : ''}
-  
-            <div class="header-area">
-                <div class="title">${data.certificateTitle}</div>
-                <div class="issue-date">発行日：${data.issueDate}</div>
-            </div>
 
-            <div class="grid-container">
-                <table class="main-info">
-                    <colgroup>
-                        <col style="width: 110px;"> <!-- 30px index + 80px label alignment -->
-                        <col>
-                    </colgroup>
-                    <tr>
-                        <th>住所</th>
-                        <td>${data.address}</td>
-                    </tr>
-                    <tr>
-                        <th>世帯主氏名</th>
-                        <td>${data.householder}</td>
-                    </tr>
-                </table>
-
+            <table class="jumin-table">
+                <colgroup>
+                    ${columnWidths.map(width => `<col style="width: ${width}px;">`).join('')}
+                </colgroup>
+                ${tableHeaderRows}
                 ${itemsHtml}
-            </div>
+            </table>
 
-            <div class="footer-area">
+            <div class="jumin-footer">
                 <div class="cert-text">
-                    この写しは、住民基本台帳の原本と相違ないことを証明する。
+                    この写しは、世帯全員の住民票の原本と相違ないことを証明する。
                 </div>
-                
-                <div class="official-seal-row">
-                    <div class="mayor-name">
-                        ${data.issuer.title}　${data.issuer.name}
-                    </div>
-                    <div class="stamp-wrapper">
-                        <div class="stamp-box">
-                            公印<br>省略
-                        </div>
-                        ${vc ? `
-                        <div class="digital-badge" title="デジタル署名付き">
-                            DIGITAL
-                        </div>
-                        ` : ''}
-                    </div>
+                <div class="issuer-line">
+                    ${normalizeText(data.issuer.title)}　${normalizeText(data.issuer.name)}　印
                 </div>
-
-                ${vc ? `
-                <div class="vc-debug-area">
-                    <details>
-                        <summary>デジタル原本データ構造 (VC/JSON-LD)</summary>
-                        <pre class="vc-code">${JSON.stringify(vc, null, 2)}</pre>
-                    </details>
-                </div>
-                ` : ''}
             </div>
+
+            ${vc ? `
+            <div class="vc-debug-area">
+                <details>
+                    <summary>デジタル原本データ構造 (VC/JSON-LD)</summary>
+                    <pre class="vc-code">${JSON.stringify(vc, null, 2)}</pre>
+                </details>
+            </div>
+            ` : ''}
         </div>
 
         <style>
@@ -222,7 +252,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 min-height: 297mm;
                 margin: 0 auto;
                 border: 1px solid #ccc;
-                padding: 15mm;
+                padding: 2mm;
                 background-color: #fff;
                 box-shadow: 0 0 10px rgba(0,0,0,0.1);
                 position: relative;
@@ -242,144 +272,71 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 padding: 20px 80px;
                 white-space: nowrap;
             }
-            .header-area {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                margin-bottom: 5mm;
-                border-bottom: 2px solid #333;
-                padding-bottom: 2mm;
-            }
-            .title {
-                font-size: 22pt;
-                font-weight: bold;
-                letter-spacing: 0.2em;
-            }
-            .issue-date {
-                font-size: 11pt;
-            }
-            .grid-container {
-                border-bottom: 2px solid #333; /* Close the bottom of the grid */
-            }
-            .main-info {
-                width: 100%;
+            .jumin-table {
+                width: 777px;
                 border-collapse: collapse;
-                margin: 0; /* Remove margin to connect */
-                font-size: 11pt;
-            }
-            .main-info th, .main-info td {
-                border: 1px solid #333;
-                padding: 1mm 2mm;
-                vertical-align: middle;
-            }
-            .main-info th {
-                background-color: #f2f2f2;
-                text-align: left;
-                font-weight: normal;
-                border-bottom: none; /* Connect to next table visually if needed, but 1px solid is better for grid */
-            }
-            .person-block {
-                margin: 0;
-                padding: 0;
-                /* Remove individual border wrapper, rely on table borders */
-                border: none;
-                margin-top: -1px; /* Overlap previous table bottom border */
-            }
-            .person-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 10.5pt;
                 table-layout: fixed;
-                border-top: none; /* Rely on previous element's border */
-            }
-            .person-table th, .person-table td {
-                border: 1px solid #333;
-                padding: 1mm 2mm;
-                vertical-align: top;
-                word-wrap: break-word;
-            }
-            /* Remove top border of first row cells to merge with previous block */
-            /* Actually, maintaining 1px solid is safer effectively creates the grid */
-            
-            .person-table th {
-                background-color: #f2f2f2;
-                font-weight: normal;
-                text-align: left;
-                vertical-align: middle;
-            }
-            .col-num {
-                text-align: center;
-                background-color: #e6e6e6;
-                font-weight: bold;
-                vertical-align: middle !important;
-                font-size: 12pt;
-            }
-            .kana {
-                font-size: 8pt;
-                color: #444;
-                display: block;
-                margin-bottom: 1px;
-            }
-            .name-large {
-                font-size: 14pt;
-                font-weight: bold;
-            }
-            .label {
+                margin: 0 auto;
                 font-size: 9pt;
-                color: #555;
-                margin-right: 0.5em;
             }
-            .footer-area {
-                margin-top: 15mm;
+            .jumin-table .cell {
+                border: 1px solid #000;
+                padding: 1px 2px;
+                vertical-align: middle;
+                word-break: break-word;
+            }
+            .jumin-table .no-border {
+                border: none;
+            }
+            .title-cell {
+                font-size: 16pt;
+                font-weight: bold;
                 text-align: center;
-                page-break-inside: avoid;
+                letter-spacing: 0.4em;
             }
-            .cert-text {
-                text-align: left;
-                margin-bottom: 10mm;
+            .date-cell {
+                font-size: 9pt;
+                text-align: right;
+                vertical-align: top;
+                padding-top: 2px;
+                padding-right: 4px;
+            }
+            .number-cell {
+                text-align: center;
                 font-size: 11pt;
+                font-weight: bold;
+            }
+            .label-cell {
+                font-size: 8.5pt;
+                line-height: 1.1;
+            }
+            .value-cell {
+                font-size: 9.5pt;
+                line-height: 1.2;
+            }
+            .name-cell {
+                font-size: 12pt;
+                font-weight: bold;
+            }
+            .label-text {
+                display: inline-flex;
+                align-items: baseline;
+            }
+            .label-main {
+                font-size: 8.5pt;
+            }
+            .jumin-footer {
+                width: 777px;
+                margin: 6mm auto 0;
+                font-size: 10.5pt;
                 line-height: 1.6;
             }
-            .official-seal-row {
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                margin-top: 10mm;
-                margin-right: 10mm;
+            .cert-text {
+                margin-bottom: 8mm;
             }
-            .mayor-name {
-                font-size: 14pt;
-                margin-right: 5mm;
-                font-weight: bold;
-            }
-            .stamp-wrapper {
-                position: relative;
-                display: inline-block;
-            }
-            .stamp-box {
-                width: 20mm;
-                height: 20mm;
-                border: 3px solid #d00;
-                color: #d00;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            .issuer-line {
+                text-align: right;
                 font-size: 11pt;
-                font-weight: bold;
-                line-height: 1.2;
-                box-shadow: 0 0 0 1px #fff inset;
-            }
-            .digital-badge {
-                position: absolute;
-                bottom: -8px;
-                right: -8px;
-                background: #007bff;
-                color: white;
-                font-size: 9px;
-                padding: 2px 4px;
-                border-radius: 4px;
-                font-weight: bold;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             }
             .vc-debug-area {
                 margin-top: 20mm;
@@ -395,15 +352,16 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 padding: 5px;
             }
             .vc-code {
-                background: #f8f9fa;
+                background: #f3f4f6;
+                color: #111;
                 padding: 10px;
                 border-radius: 4px;
                 overflow-x: auto;
-                font-family: monospace;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
                 max-height: 400px;
                 overflow-y: auto;
                 margin-top: 5px;
-                border: 1px solid #eee;
+                border: 1px solid #d0d7de;
             }
             @media print {
                 .jumin-sheet {
@@ -414,7 +372,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                     width: 100%;
                     max-width: none;
                 }
-                .vc-debug-area, .digital-badge {
+                .vc-debug-area {
                     display: none !important;
                 }
                 body {

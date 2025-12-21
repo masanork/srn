@@ -34,6 +34,13 @@ const CONTENT_DIR = path.join(SITE_DIR, 'content');
 const FONTS_DIR = path.join(SITE_DIR, 'fonts');
 const DATA_DIR = path.join(SITE_DIR, 'data');
 
+// Next-Gen Identity: did:web configuration
+// Ideally these come from environment variables or a config file
+const SITE_DOMAIN = process.env.SITE_DOMAIN || "masanork.github.io";
+const SITE_PATH = process.env.SITE_PATH || "/srn";
+// Resulting DID: did:web:masanork.github.io:srn
+const SITE_DID = `did:web:${SITE_DOMAIN}${SITE_PATH.replace(/\//g, ':')}`;
+
 async function build() {
     const isClean = process.argv.includes('--clean');
     console.log(`Starting build... (Clean: ${isClean})`);
@@ -97,12 +104,51 @@ async function build() {
     await fs.writeJson(historyPath, keyHistory, { spaces: 2 });
     await fs.writeJson(path.join(DIST_DIR, 'key-history.json'), keyHistory, { spaces: 2 });
 
-    // 4. Generate Status List VC (Signed by Root Key)
+    // 4. Generate DID Document (did:web standard)
+    console.log(`Generating DID Document for ${SITE_DID}...`);
+    const didDoc = {
+        "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/jws-2020/v1"
+        ],
+        "id": SITE_DID,
+        "verificationMethod": [
+            {
+                "id": `${SITE_DID}#root-ed25519`,
+                "type": "Ed25519VerificationKey2020",
+                "controller": SITE_DID,
+                "publicKeyHex": rootKeys.ed25519.publicKey
+            },
+            {
+                "id": `${SITE_DID}#${buildId}-ed25519`,
+                "type": "Ed25519VerificationKey2020",
+                "controller": SITE_DID,
+                "publicKeyHex": currentKeys.ed25519.publicKey
+            },
+            {
+                "id": `${SITE_DID}#${buildId}-pqc`,
+                "type": "DataIntegrityProof",
+                "controller": SITE_DID,
+                "publicKeyHex": currentKeys.pqc.publicKey
+            }
+        ],
+        "assertionMethod": [
+            `${SITE_DID}#root-ed25519`,
+            `${SITE_DID}#${buildId}-ed25519`,
+            `${SITE_DID}#${buildId}-pqc`
+        ]
+    };
+
+    await fs.ensureDir(path.join(DIST_DIR, '.well-known'));
+    await fs.writeJson(path.join(DIST_DIR, '.well-known', 'did.json'), didDoc, { spaces: 2 });
+
+    // 5. Generate Status List VC (Signed by Root Key)
     // Filter revoked build IDs
     const revokedBuildIds = keyHistory.filter(k => k.revoked).map(k => k.buildId);
+    const statusListUrl = `https://${SITE_DOMAIN}${SITE_PATH}/status-list.json`;
 
     try {
-        const statusListVc = await createStatusListVC(revokedBuildIds, rootKeys);
+        const statusListVc = await createStatusListVC(revokedBuildIds, rootKeys, statusListUrl, SITE_DID);
         await fs.writeJson(path.join(DIST_DIR, 'status-list.json'), statusListVc, { spaces: 2 });
         console.log("  Generated Status List VC (Signed by Root Key).");
     } catch (err) {
@@ -415,7 +461,7 @@ body {
                 };
 
                 // Use the single-source-of-truth keys for this build session
-                const vc = await createHybridVC(vcPayload, currentKeys);
+                const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
 
                 // Save VC sidecar
                 const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
@@ -471,7 +517,7 @@ body {
                     }
                 };
 
-                const vc = await createHybridVC(vcPayload, currentKeys);
+                const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
 
                 // Save VC sidecar
                 const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
