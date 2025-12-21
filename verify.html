@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>PQC Verification Console</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="help" type="text/plain" href="/llms.txt">
+    
+<style>
+@font-face {
+  font-family: 'ipamjm';
+  src: url('data:font/woff2;base64,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') format('woff2');
+  font-display: swap;
+}
+</style>
+                    <style>
+</style>
+<style>
+body {
+  font-family: 'ipamjm', serif;
+}
+</style>
+        
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        
+        const fonts = ["'ipamjm'","serif"];
+        const fontFamily = fonts.join(', ');
+        
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+            fontFamily: fontFamily
+        });
+        
+        await mermaid.run({
+            querySelector: '.mermaid'
+        });
+    </script>
+</head>
+<body>
+    <main>
+        
+        <style>
+            .verifier-container {
+                max-width: 800px;
+                margin: 0 auto;
+                text-align: center;
+                padding: 2rem 1rem;
+            }
+            .drop-zone {
+                border: 3px dashed #ccc;
+                border-radius: 12px;
+                padding: 4rem 2rem;
+                margin: 2rem 0;
+                transition: all 0.3s;
+                background: #fafafa;
+                cursor: pointer;
+            }
+            .drop-zone.active {
+                border-color: #3498db;
+                background: #eaf6ff;
+                transform: scale(1.02);
+            }
+            .drop-zone p {
+                font-size: 1.2rem;
+                color: #888;
+                pointer-events: none;
+            }
+            .upload-btn {
+                display: inline-block;
+                margin-top: 1rem;
+                padding: 0.5rem 1.5rem;
+                background: #fff;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9rem;
+            }
+            
+             .check-item {
+                padding: 1rem;
+                border-radius: 6px;
+                text-align: left;
+            }
+            .check-item.pass { background: #e8f8f5; border: 1px solid #27ae60; color: #27ae60; }
+            .check-item.fail { background: #fdedec; border: 1px solid #c0392b; color: #c0392b; }
+            
+            .scanning {
+                font-family: monospace;
+                color: #666;
+                animation: pulse 1s infinite;
+            }
+            @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        </style>
+
+        <div class="verifier-container">
+            <h1>PQC Verification Console</h1>
+            <p>Verify the authenticity of generic Sorane documents using Hybrid Post-Quantum Signatures (Ed25519 + ML-DSA-44).</p>
+            
+            <p>This tool runs purely in your browser. No data is uploaded to any server.
+Drag and drop a <code>.vc.json</code> file generated by this site to verify its digital signature.</p>
+
+
+            <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-input').click()">
+                <p>Drag & Drop <strong>.vc.json</strong> file here</p>
+                <div class="upload-btn">or Click to Browse</div>
+                <input type="file" id="file-input" accept=".json" style="display: none;">
+            </div>
+
+            <div id="result-area"></div>
+        </div>
+
+        <script src="/assets/verify-bundle.js" type="module"></script>
+    
+    </main>
+</body>
+</html>
