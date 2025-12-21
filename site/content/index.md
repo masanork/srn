@@ -51,10 +51,10 @@ font:
                 <span class="label">Issues & Roadmap</span>
                 <span class="desc">Limitations & Future Considerations.</span>
             </a>
-            <a href="./koseki.html" class="nav-item">
+            <a href="./juminhyo.html" class="nav-item">
                 <span class="icon">📜</span>
                 <span class="label">Sample Certificate</span>
-                <span class="desc">Koseki (Family Register) VC Demo.</span>
+                <span class="desc">Juminhyo (Residence) Demo.</span>
             </a>
             <a href="./variants.html" class="nav-item">
                 <span class="icon">字</span>
