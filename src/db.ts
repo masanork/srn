@@ -40,21 +40,26 @@ export function resolveMjCode(mjCode: string): string | null {
 
     try {
         const query = db.prepare(`
-            SELECT mjivs, ucs_implemented, unicode 
-            FROM dictionary 
-            WHERE mj_code = ?
+            SELECT d.mjivs, d.ucs_implemented, d.unicode, p.pup_code 
+            FROM dictionary d
+            LEFT JOIN mj_pup p ON d.mj_code = p.mj_code
+            WHERE d.mj_code = ?
         `);
-        const result = query.get(mjCode) as { mjivs: string, ucs_implemented: string, unicode: string } | null;
+        const result = query.get(mjCode) as { mjivs: string, ucs_implemented: string, unicode: string, pup_code: string } | null;
 
         if (!result) return null;
 
-        // Priority 1: MJIVS (e.g. 5000_E0101) - hex string with underscore
+        // Priority 1: MJIVS (Specific Glyph Variant)
         if (result.mjivs) {
-            // Converts "5000_E0101" -> "\u5000\uDB40\uDD01"
             return convertHexSequenceToChar(result.mjivs);
         }
 
-        // Priority 2: UCS Implemented (e.g. 20BB7)
+        // Priority 2: PUP (Private Use Area - for characters without standard code points)
+        if (result.pup_code) {
+            return convertHexSequenceToChar(result.pup_code);
+        }
+
+        // Priority 3: UCS Implemented
         if (result.ucs_implemented) {
             return convertHexSequenceToChar(result.ucs_implemented);
         }
