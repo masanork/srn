@@ -25,10 +25,6 @@ items:
        - "筆頭者：住民 太郎"
     myNumber: "123456789012"
     residentCode: "11112222333"
-    election: "選挙人名簿に登録されている"
-    qualifications:
-       - "国民健康保険：被保険者"
-       - "国民年金：第1号被保険者"
     remarks: 
        - "自動交付機利用者"
   - name: "住民　花子"
@@ -46,10 +42,6 @@ items:
        - "筆頭者：住民 太郎"
     myNumber: "987654321098"
     residentCode: "44445555666"
-    election: "選挙人名簿に登録されている"
-    qualifications:
-       - "国民健康保険：被保険者"
-       - "国民年金：第3号被保険者"
   - name: "住民 一郎"
     kana: "ジュウミン イチロウ"
     dob: "令和元年5月1日"
@@ -65,7 +57,20 @@ items:
        - "筆頭者：住民 太郎"
     myNumber: "555566667777"
     residentCode: "77778888999"
-    election: ""
+  - name: "住民 二郎"
+    kana: "ジュウミン ジロウ"
+    dob: "令和4年4月4日"
+    gender: "男"
+    relationship: "子"
+    becameResident: "令和4年4月4日"
+    becameResidentReason: "出生"
+    addressDate: "令和4年4月4日"
+    notificationDate: "令和4年4月14日"
+    domiciles:
+       - "東京都千代田区千代田1-1"
+       - "筆頭者：住民 太郎"
+    myNumber: "111122223333"
+    residentCode: "44440000111"
 issuer:
     title: "港区長"
     name: "港　次郎"
