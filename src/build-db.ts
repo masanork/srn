@@ -111,7 +111,7 @@ async function processFont(filePath: string) {
                 $unicode_hex: unicodeHeader,
                 $name: glyph.name || null,
                 $advance_width: glyph.advanceWidth
-            });
+            } as any);
         }
     });
 

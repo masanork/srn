@@ -51,8 +51,22 @@ async function build() {
 
     // --- Key Management & History ---
     console.log("Initializing Key Management...");
+
+    // 1. Root Key (Trust Anchor) management
+    const rootKeyPath = path.join(DATA_DIR, 'root-key.json');
+    let rootKeys: HybridKeys;
+    if (await fs.pathExists(rootKeyPath)) {
+        rootKeys = await fs.readJson(rootKeyPath);
+        console.log("  Loaded Root Key.");
+    } else {
+        rootKeys = generateHybridKeys();
+        await fs.writeJson(rootKeyPath, rootKeys, { spaces: 2 });
+        console.log("  Generated NEW Root Key.");
+    }
+
+    // 2. Load History
     const historyPath = path.join(DATA_DIR, 'key-history.json');
-    let keyHistory: Array<{ timestamp: string; buildId: string; ed25519Params: string; pqcParams: string }> = [];
+    let keyHistory: Array<{ timestamp: string; buildId: string; revoked?: boolean; ed25519Params: string; pqcParams: string }> = [];
 
     if (await fs.pathExists(historyPath)) {
         try {
@@ -62,24 +76,35 @@ async function build() {
         }
     }
 
-    // Generate keys for this build session
+    // 3. Generate Ephemeral Keys for this build
     const currentKeys = generateHybridKeys();
-    const buildId = `build-${Date.now()}`; // Simple ID
+    const buildId = `build-${Date.now()}`;
 
-    // Log this session's keys
     const newEntry = {
         timestamp: new Date().toISOString(),
         buildId: buildId,
+        revoked: false,
         ed25519Params: `did:key:z${currentKeys.ed25519.publicKey}`,
         pqcParams: `did:key:zPQC${currentKeys.pqc.publicKey}`
     };
     keyHistory.push(newEntry);
 
-    // Persist history (Append-only approach for local dev)
+    // Persist history
     await fs.writeJson(historyPath, keyHistory, { spaces: 2 });
-
-    // Publish history to dist
     await fs.writeJson(path.join(DIST_DIR, 'key-history.json'), keyHistory, { spaces: 2 });
+
+    // 4. Generate Status List VC (Signed by Root Key)
+    // Filter revoked build IDs
+    const revokedBuildIds = keyHistory.filter(k => k.revoked).map(k => k.buildId);
+
+    try {
+        const statusListVc = await createStatusListVC(revokedBuildIds, rootKeys);
+        await fs.writeJson(path.join(DIST_DIR, 'status-list.json'), statusListVc, { spaces: 2 });
+        console.log("  Generated Status List VC (Signed by Root Key).");
+    } catch (err) {
+        console.error("Failed to generate status list:", err);
+    }
+
     console.log(`  Key history updated. Current PQC Key: ...${currentKeys.pqc.publicKey.slice(-8)}`);
     // --------------------------------
 
@@ -321,15 +346,13 @@ body {
                         id: `https://example.com/notices/${file.replace('.md', '')}`,
                         name: data.title,
                         recipient: data.recipient,
+                        "srn:buildId": buildId, // Embed Build ID for Revocation Check
                         contentDigest: Buffer.from(new TextEncoder().encode(plainText)).toString('hex')
                     }
                 };
 
                 // Use the single-source-of-truth keys for this build session
-                // And include status list URL
-                const vc = await createHybridVC(vcPayload, currentKeys, {
-                    statusListUrl: "https://example.com/status-list.json"
-                });
+                const vc = await createHybridVC(vcPayload, currentKeys);
 
                 // Save VC sidecar
                 const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));

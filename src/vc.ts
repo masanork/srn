@@ -176,3 +176,37 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
         };
     }
 }
+
+/**
+ * Creates a Status List VC signed by the Root Key.
+ * @param revokedBuildIds List of build IDs that are revoked
+ * @param rootKeys The Root Key pair
+ * @param listUrl The URL where this list will be published
+ */
+export async function createStatusListVC(
+    revokedBuildIds: string[],
+    rootKeys: HybridKeys,
+    listUrl: string = "https://example.com/status-list.json"
+): Promise<object> {
+    const subjects = {
+        "id": `${listUrl}#list`,
+        "type": "StatusList2021",
+        "statusPurpose": "revocation",
+        "encodedList": "", // We use a custom property for readability in this PoC
+        "srn:revokedBuildIds": revokedBuildIds
+    };
+
+    const vcPayload = {
+        "@context": [
+            "https://www.w3.org/2018/credentials/v1",
+            "https://w3id.org/vc/status-list/2021/v1"
+        ],
+        "type": ["VerifiableCredential", "StatusList2021Credential"],
+        "issuer": `did:key:z${rootKeys.ed25519.publicKey}`,
+        "issuanceDate": new Date().toISOString(),
+        "credentialSubject": subjects
+    };
+
+    // We reuse createHybridVC for signing, passing the payload (which overrides defaults)
+    return createHybridVC(vcPayload, rootKeys);
+}

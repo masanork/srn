@@ -45,9 +45,32 @@ document.addEventListener('DOMContentLoaded', () => {
             resultArea!.innerHTML = '<div class="scanning">Verifying Signatures (Ed25519 + ML-DSA-44)...</div>';
 
             // Artificial delay for "scanning" effect
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 600));
 
             const result = await verifyHybridVC(json);
+
+            if (result.isValid) {
+                // Check Revocation
+                resultArea!.innerHTML = '<div class="scanning">Checking Revocation Status...</div>';
+                try {
+                    const statusListUrl = 'status-list.json'; // Relative path assuming hosted in root
+                    const resp = await fetch(statusListUrl);
+                    if (resp.ok) {
+                        const statusList = await resp.json();
+                        const revokedIds = statusList.credentialSubject?.['srn:revokedBuildIds'] || [];
+                        const vcBuildId = json.credentialSubject?.['srn:buildId'];
+
+                        if (vcBuildId && revokedIds.includes(vcBuildId)) {
+                            result.isValid = false;
+                            (result as any).revocationError = `REVOKED: Build ID '${vcBuildId}' is in the revocation list.`;
+                        }
+                    } else {
+                        console.warn("Could not fetch status list");
+                    }
+                } catch (e) {
+                    console.warn("Revocation check failed (Network error?)", e);
+                }
+            }
 
             renderResult(result, json);
 
@@ -57,13 +80,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderResult(result: any, json: any) {
-        const isValid = result.isValid;
-        const color = isValid ? '#27ae60' : '#c0392b';
-        const icon = isValid ? '🛡️ VALID' : '⚠️ INVALID';
+        let isValid = result.isValid;
+        let color = isValid ? '#27ae60' : '#c0392b';
+        let icon = isValid ? '🛡️ VALID' : '⚠️ INVALID';
+        let msg = '';
+
+        if ((result as any).revocationError) {
+            isValid = false;
+            color = '#d32f2f';
+            icon = '❌ REVOKED';
+            msg = `<div style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 4px; margin: 1rem 0; font-weight: bold;">
+                ${(result as any).revocationError}
+            </div>`;
+        }
 
         const html = `
             <div style="border: 2px solid ${color}; padding: 2rem; border-radius: 8px; background: #fff;">
                 <h2 style="color: ${color}; margin-top: 0; font-size: 2rem;">${icon}</h2>
+                ${msg}
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
                     <div class="check-item ${result.checks.ed25519 ? 'pass' : 'fail'}">
