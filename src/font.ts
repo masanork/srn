@@ -446,9 +446,7 @@ export async function subsetFont(
 
         const baseGlyph = font.charToGlyph(char);
         const subsetGid = addGlyphToSubset(baseGlyph);
-        if (baseGlyph.unicode !== undefined) {
-            unicodeMap.push({ code: baseGlyph.unicode, gid: subsetGid });
-        }
+        unicodeMap.push({ code, gid: subsetGid });
     }
 
     const subset = new opentype.Font({

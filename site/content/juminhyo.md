@@ -6,7 +6,7 @@ description: "住民票の写し（世帯連記式・見本）"
 font: ipamjm.ttf,acgjm.ttf
 certificateTitle: "住民票"
 issueDate: "令和8年1月15日"
-address: "東京都港区虎ノ門２－２－１"
+address: "東京都港区虎ノ門２－２－１　虎ノ門ハイツ１０１号"
 householder: "䶒藤󠄃　太朗󠄅"
 watermark: "見　本"
 items:
@@ -19,7 +19,7 @@ items:
     becameResidentReason: "転入"
     addressDate: "令和元年１２月　４日"
     notificationDate: "令和元年１２月　１日"
-    prevAddress: "千葉県千葉市中央区中央１－１－１"
+    prevAddress: "東京都千代田区霞が関２丁目２番１号"
     domiciles:
        - "東京都千代田区千代田１－１"
        - "筆頭者：䶒藤󠄃 太朗󠄅"
@@ -36,7 +36,7 @@ items:
     becameResidentReason: "転入"
     addressDate: "令和元年１２月　４日"
     notificationDate: "令和元年１２月　１日"
-    prevAddress: "千葉県千葉市中央区中央１－１－１"
+    prevAddress: "東京都千代田区霞が関２丁目２番１号"
     domiciles:
        - "東京都千代田区千代田１－１"
        - "筆頭者：䶒藤󠄃 太朗󠄅"
@@ -51,7 +51,7 @@ items:
     becameResidentReason: "出生"
     addressDate: "＊＊＊"
     notificationDate: "令和元年１２月　１日"
-    prevAddress: "千葉県千葉市中央区中央１－１－１"
+    prevAddress: "東京都千代田区霞が関２丁目２番１号"
     domiciles:
        - "東京都千代田区千代田１－１"
        - "筆頭者：䶒藤󠄃 太朗󠄅"
@@ -66,6 +66,7 @@ items:
     becameResidentReason: "出生"
     addressDate: "＊＊＊"
     notificationDate: "令和元年１２月　１日"
+    prevAddress: "東京都千代田区霞が関２丁目２番１号"
     domiciles:
        - "東京都千代田区千代田１－１"
        - "筆頭者：䶒藤󠄃 太朗󠄅"

@@ -21,10 +21,10 @@ import type { GridData } from './layouts/grid.ts';
 import { searchLayout } from './layouts/search.ts';
 import type { SearchData } from './layouts/search.ts';
 import { juminhyoLayout } from './layouts/juminhyo.ts';
-import type { JuminhyoData } from './layouts/juminhyo.ts';
+import type { JuminhyoData, JuminhyoItem } from './layouts/juminhyo.ts';
 import { verifierLayout } from './layouts/verifier.ts';
 import type { VerifierData } from './layouts/verifier.ts';
-import { createHybridVC, generateHybridKeys, createStatusListVC } from './vc.ts';
+import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from './vc.ts';
 import type { HybridKeys } from './vc.ts';
 
 // Configuration
@@ -156,6 +156,15 @@ async function build() {
     }
 
     console.log(`  Key history updated. Current PQC Key: ...${currentKeys.pqc.publicKey.slice(-8)}`);
+
+    // 6. Copy schemas to dist
+    const schemaSrcDir = path.join(__dirname, '../site/schemas');
+    const schemaDistDir = path.join(DIST_DIR, 'schemas');
+    if (await fs.pathExists(schemaSrcDir)) {
+        await fs.ensureDir(schemaDistDir);
+        await fs.copy(schemaSrcDir, schemaDistDir);
+        console.log("  Copied schemas to dist.");
+    }
     // --------------------------------
 
     // Copy static assets
@@ -316,18 +325,21 @@ async function build() {
             }
 
 
+            // Default fallbacks
+            const defaultStack = styleMap['default'] || [];
+            const safeDefaultStack = defaultStack.map(f => `'${f}'`);
+
             // Generate utility classes for non-default styles
             let utilityCss = '<style>\n';
             for (const [styleName, stack] of Object.entries(styleMap)) {
                 if (styleName === 'default') continue;
-                const stackStr = [...stack, 'serif'].join(', ');
+                const quotedStack = stack.map(f => `'${f}'`);
+                const stackStr = [...quotedStack, ...safeDefaultStack, 'serif'].join(', ');
                 utilityCss += `.font-${styleName} { font-family: ${stackStr} !important; }\n`;
             }
             utilityCss += '</style>';
             fontCss += utilityCss;
 
-            // Default fallbacks
-            const defaultStack = styleMap['default'] || [];
             const safeFontFamilies = [...defaultStack, 'serif'];
 
             // Generate valid CSS font stack: quote non-generic families
@@ -505,6 +517,10 @@ body {
                 const vcPayload = {
                     id: `urn:uuid:${crypto.randomUUID()}`,
                     type: ["VerifiableCredential", "ResidentRecord"],
+                    credentialSchema: {
+                        id: `https://${SITE_DOMAIN}${SITE_PATH}/schemas/juminhyo-v1.schema.json`,
+                        type: "JsonSchema"
+                    },
                     credentialSubject: {
                         id: `https://example.com/certificates/${file.replace('.md', '')}`,
                         type: "ResidentRecord",
@@ -512,24 +528,52 @@ body {
                         householder: data.householder,
                         address: data.address,
                         "srn:buildId": buildId,
-                        // Hash of the specific items to ensure integrity
-                        itemsDigest: Buffer.from(new TextEncoder().encode(JSON.stringify(data.items))).toString('hex')
+                        member: (data.items as JuminhyoItem[]).map((item: JuminhyoItem) => ({
+                            name: item.name,
+                            kana: item.kana,
+                            birthDate: item.dob,
+                            gender: item.gender,
+                            relationship: item.relationship,
+                            becameResidentDate: item.becameResident,
+                            becameResidentReason: item.becameResidentReason,
+                            addressSetDate: item.addressDate,
+                            notificationDate: item.notificationDate,
+                            residentCode: item.residentCode,
+                            individualNumber: item.myNumber,
+                            prevAddress: item.prevAddress,
+                            domiciles: item.domiciles,
+                            remarks: item.remarks
+                        }))
                     }
                 };
 
                 const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
+                const binaryVc = await createCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
+                const sdVc = await createSdCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
 
-                // Save VC sidecar
+                // Save VC sidecars
                 const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
                 await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-                console.log(`  Generated Juminhyo VC: ${vcOutPath}`);
+
+                const binVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.cbor'));
+                await fs.writeFile(binVcOutPath, binaryVc.cbor);
+
+                const sdVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.sd.cwt'));
+                await fs.writeFile(sdVcOutPath, sdVc.cbor);
+
+                const disclosuresOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.disclosures.json'));
+                await fs.writeJson(disclosuresOutPath, sdVc.disclosures, { spaces: 2 });
+
+                console.log(`  Generated Juminhyo VCs: ${vcOutPath}, ${binVcOutPath}, ${sdVcOutPath}`);
 
                 finalHtml = juminhyoLayout(
                     data as JuminhyoData,
                     htmlContent,
                     fontCss,
                     safeFontFamilies,
-                    vc // Pass the VC
+                    vc,
+                    binaryVc.base64url,
+                    sdVc.disclosures
                 );
             } else {
                 // Default to article
