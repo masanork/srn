@@ -1,8 +1,8 @@
 ---
-title: "（見本）住民票"
+title: "（見本）住民票の写し"
 layout: juminhyo
-date: 2024-12-21
-description: "総務省標準仕様準拠 住民票の写し（見本）機械可読対応"
+date: 2025-12-21
+description: "住民票の写し（見本）"
 font: ipamjm.ttf,acgjm.ttf
 certificateTitle: "住民票"
 issueDate: "令和8年1月15日"
@@ -32,5 +32,5 @@ items:
        - "田家より転入"
 issuer:
     title: "千代田区長"
-    name: "千代田　太䥲"
+    name: "千代田　太朤"
 ---
