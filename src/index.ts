@@ -207,13 +207,24 @@ async function build() {
             }
 
             // Subset unique fonts
+            // Subset unique fonts
+            // Track global IVS replacements for this page to avoid PUA collisions
+            // and ensure consistent mapping across different fonts in the stack.
+            const globalIvsReplacements = new Map<string, string>();
+            let currentPua = 0xE000;
+
             for (const fontName of uniqueFontsToSubset) {
                 const fontPath = path.join(FONTS_DIR, fontName);
 
                 if (await fs.pathExists(fontPath)) {
                     try {
                         console.log(`  Subsetting font: ${fontName}`);
-                        const { buffer, mimeType } = await subsetFont(fontPath, fullText);
+                        const { buffer, mimeType, nextPua } = await subsetFont(fontPath, fullText, {
+                            puaStart: currentPua,
+                            globalReplacements: globalIvsReplacements
+                        });
+
+                        currentPua = nextPua;
 
                         const format = 'woff2';
                         const dataUrl = bufferToDataUrl(buffer, mimeType);
@@ -234,6 +245,17 @@ async function build() {
                     }
                 } else {
                     console.warn(`  Font not found: ${fontName}`);
+                }
+            }
+
+            // Apply IVS Replacements to HTML Content
+            // We replace the original Base+VS sequences with the assigned PUA characters
+            // which are now guaranteed to be in the subsetted fonts (if supported).
+            if (globalIvsReplacements.size > 0) {
+                console.log(`  Applying ${globalIvsReplacements.size} IVS replacements to HTML.`);
+                for (const [seq, rep] of globalIvsReplacements) {
+                    // Use split/join for global replacement of the sequence string
+                    htmlContent = htmlContent.split(seq).join(rep);
                 }
             }
 
