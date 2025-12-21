@@ -412,6 +412,13 @@ body {
                     fontCss,
                     safeFontFamilies
                 );
+            } else if (data.layout === 'juminhyo') {
+                finalHtml = juminhyoLayout(
+                    data as JuminhyoData,
+                    htmlContent, // Usually empty for data-only MD
+                    fontCss,
+                    safeFontFamilies
+                );
             } else {
                 // Default to article
                 finalHtml = articleLayout(
