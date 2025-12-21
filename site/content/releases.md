@@ -7,6 +7,26 @@ font: ipamjm.ttf,acgjm.ttf
 
 # Release History
 
+## v1.2.0 - Selective Disclosure & MIC Compliance
+**Date:** 2025-12-22
+
+Enhancing privacy and administrative compliance for digital resident records.
+
+*   **Selective Disclosure (SD-CWT)**:
+    *   Implemented binary SD-CWT (CBOR/COSE) using salted disclosure hashes.
+    *   Added **SD Debug Console** to the document footer to visualize hidden claims and disclosures.
+    *   Enables granular control over sensitive fields (e.g., MyNumber) within a single signed credential.
+*   **Administrative Compliance (MIC 001018493.pdf)**:
+    *   Implemented **Anti-Print Measures**: CSS-based "VOID / INVALID PRINT" watermark and warning notices.
+    *   Clarified the "Digital Original" status: Personal prints are invalid; only digital presentations (VP) are authoritative.
+*   **Credential Schema Integration**:
+    *   Added W3C VC 2.0 compliant `credentialSchema` linking to JSON Schemas hosted on `did:web`.
+    *   Enabled structural validation of machine-readable data by third-party verifiers.
+*   **UX & Typography**:
+    *   Relocated the digital signature badge to the official seal area for logical consistency.
+    *   Upgraded top page typography to Noto Sans JP for a professional, professional aesthetic.
+    *   Fixed `ReferenceError` in error handling during font subsetting.
+
 ## v1.1.0 - Data-Driven Juminhyo & Core Refinement
 **Date:** 2025-12-21
 
