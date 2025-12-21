@@ -20,6 +20,8 @@ import { gridLayout } from './layouts/grid.ts';
 import type { GridData } from './layouts/grid.ts';
 import { searchLayout } from './layouts/search.ts';
 import type { SearchData } from './layouts/search.ts';
+import { juminhyoLayout } from './layouts/juminhyo.ts';
+import type { JuminhyoData } from './layouts/juminhyo.ts';
 import { verifierLayout } from './layouts/verifier.ts';
 import type { VerifierData } from './layouts/verifier.ts';
 import { createHybridVC, generateHybridKeys, createStatusListVC } from './vc.ts';
