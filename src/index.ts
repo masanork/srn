@@ -186,6 +186,7 @@ async function build() {
 
             const styleMap: Record<string, string[]> = {};
             const uniqueFontsToSubset = new Set<string>();
+            const ivsSupportCountByFamily = new Map<string, number>();
 
             const getBaseName = (fname: string) => 'Srn-' + path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
 
@@ -219,7 +220,7 @@ async function build() {
                 if (await fs.pathExists(fontPath)) {
                     try {
                         console.log(`  Subsetting font: ${fontName}`);
-                        const { buffer, mimeType } = await subsetFont(fontPath, fullText);
+                        const { buffer, mimeType, ivsRecordsCount } = await subsetFont(fontPath, fullText);
 
                         const format = 'woff2';
                         const dataUrl = bufferToDataUrl(buffer, mimeType);
@@ -234,12 +235,37 @@ async function build() {
 }
 </style>
                     `;
+                        ivsSupportCountByFamily.set(fontFamilyName, ivsRecordsCount);
                     } catch (err) {
                         console.error(`  Error subsetting font ${fontName}: ${err}`);
                         console.error(err);
+                        ivsSupportCountByFamily.set(fontFamilyName, 0);
                     }
                 } else {
                     console.warn(`  Font not found: ${fontName}`);
+                    const fontFamilyName = getBaseName(fontName);
+                    ivsSupportCountByFamily.set(fontFamilyName, 0);
+                }
+            }
+
+            const anyIvsSupport = Array.from(ivsSupportCountByFamily.values()).some(count => count > 0);
+            if (anyIvsSupport) {
+                const reorderStackForIvs = (stack: string[]) => {
+                    return stack
+                        .map((name, index) => ({
+                            name,
+                            index,
+                            score: ivsSupportCountByFamily.get(name) ?? 0
+                        }))
+                        .sort((a, b) => {
+                            if (a.score !== b.score) return b.score - a.score;
+                            return a.index - b.index;
+                        })
+                        .map(entry => entry.name);
+                };
+
+                for (const [styleName, stack] of Object.entries(styleMap)) {
+                    styleMap[styleName] = reorderStackForIvs(stack);
                 }
             }
 
