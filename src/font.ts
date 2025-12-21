@@ -39,19 +39,25 @@ function parseCmapFormat14(buffer: ArrayBuffer, font: opentype.Font): IVSMap | n
 
     if (!cmapOffset) return null;
 
-    // 2. Find encoding record for Unicode Variation Sequences (Platform 0, Encoding 5)
-    //    Format 14 is typically in Platform 0, Encoding 5.
+    // 2. Find encoding record for Unicode Variation Sequences
+    //    We scan for any subtable that has Format 14.
+    //    Commonly Platform 0, Encoding 5.
     const numSubtables = getUShort(view, cmapOffset + 2);
     let subtableOffset = 0;
 
     for (let i = 0; i < numSubtables; i++) {
         const p = cmapOffset + 4 + i * 8;
-        const platformID = getUShort(view, p);
-        const encodingID = getUShort(view, p + 2);
+        const offset = getULong(view, p + 4);
 
-        // Unicode Variation Sequences
-        if (platformID === 0 && encodingID === 5) {
-            subtableOffset = cmapOffset + getULong(view, p + 4);
+        // Check subtable format
+        const subTableStart = cmapOffset + offset;
+
+        // Ensure within bounds
+        if (subTableStart + 2 > view.byteLength) continue;
+
+        const format = getUShort(view, subTableStart);
+        if (format === 14) {
+            subtableOffset = subTableStart;
             break;
         }
     }
@@ -59,6 +65,7 @@ function parseCmapFormat14(buffer: ArrayBuffer, font: opentype.Font): IVSMap | n
     if (!subtableOffset) return null;
 
     // 3. Parse Format 14
+    // Format is already checked above, but good for clarity
     const format = getUShort(view, subtableOffset);
     if (format !== 14) return null;
 
