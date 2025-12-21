@@ -87,9 +87,9 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
         <table class="person-table">
             <colgroup>
                 <col style="width: 30px;">
-                <col style="width: 12%;">
-                <col style="width: 30%;">
-                <col style="width: 12%;">
+                <col style="width: 80px;">
+                <col style="width: 32%;">
+                <col style="width: 80px;">
                 <col>
             </colgroup>
             <tr>
@@ -164,22 +164,24 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 <div class="issue-date">発行日：${data.issueDate}</div>
             </div>
 
-            <table class="main-info">
-                <colgroup>
-                    <col style="width: 15%;">
-                    <col>
-                </colgroup>
-                <tr>
-                    <th>住所</th>
-                    <td>${data.address}</td>
-                </tr>
-                <tr>
-                    <th>世帯主氏名</th>
-                    <td>${data.householder}</td>
-                </tr>
-            </table>
+            <div class="grid-container">
+                <table class="main-info">
+                    <colgroup>
+                        <col style="width: 110px;"> <!-- 30px index + 80px label alignment -->
+                        <col>
+                    </colgroup>
+                    <tr>
+                        <th>住所</th>
+                        <td>${data.address}</td>
+                    </tr>
+                    <tr>
+                        <th>世帯主氏名</th>
+                        <td>${data.householder}</td>
+                    </tr>
+                </table>
 
-            ${itemsHtml}
+                ${itemsHtml}
+            </div>
 
             <div class="footer-area">
                 <div class="cert-text">
@@ -256,10 +258,13 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             .issue-date {
                 font-size: 11pt;
             }
+            .grid-container {
+                border-bottom: 2px solid #333; /* Close the bottom of the grid */
+            }
             .main-info {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 2mm;
+                margin: 0; /* Remove margin to connect */
                 font-size: 11pt;
             }
             .main-info th, .main-info td {
@@ -271,25 +276,31 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 background-color: #f2f2f2;
                 text-align: left;
                 font-weight: normal;
+                border-bottom: none; /* Connect to next table visually if needed, but 1px solid is better for grid */
             }
             .person-block {
-                border: 2px solid #333;
-                margin-top: -1px; /* Overlap borders */
-                margin-bottom: 5mm;
-                break-inside: avoid;
+                margin: 0;
+                padding: 0;
+                /* Remove individual border wrapper, rely on table borders */
+                border: none;
+                margin-top: -1px; /* Overlap previous table bottom border */
             }
             .person-table {
                 width: 100%;
                 border-collapse: collapse;
                 font-size: 10.5pt;
                 table-layout: fixed;
+                border-top: none; /* Rely on previous element's border */
             }
             .person-table th, .person-table td {
                 border: 1px solid #333;
                 padding: 1mm 2mm;
                 vertical-align: top;
-                word-wrap: break-word; /* Ensure long text wraps */
+                word-wrap: break-word;
             }
+            /* Remove top border of first row cells to merge with previous block */
+            /* Actually, maintaining 1px solid is safer effectively creates the grid */
+            
             .person-table th {
                 background-color: #f2f2f2;
                 font-weight: normal;
@@ -356,7 +367,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 font-size: 11pt;
                 font-weight: bold;
                 line-height: 1.2;
-                box-shadow: 0 0 0 1px #fff inset; /* visual tweak */
+                box-shadow: 0 0 0 1px #fff inset;
             }
             .digital-badge {
                 position: absolute;
