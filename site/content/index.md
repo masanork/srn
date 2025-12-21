@@ -39,8 +39,12 @@ font:
         <div class="panel-body nav-links">
             <a href="./guide.html" class="nav-item">
                 <span class="icon">📖</span>
-                <span class="label">Developer Guide</span>
                 <span class="desc">System architecture & Usage manual.</span>
+            </a>
+            <a href="./releases.html" class="nav-item">
+                <span class="icon">🔖</span>
+                <span class="label">Release History</span>
+                <span class="desc">Changelog & versions.</span>
             </a>
             <a href="./koseki.html" class="nav-item">
                 <span class="icon">📜</span>
