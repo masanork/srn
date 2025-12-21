@@ -46,6 +46,11 @@ font:
                 <span class="label">Release History</span>
                 <span class="desc">Changelog & versions.</span>
             </a>
+            <a href="./issues.html" class="nav-item">
+                <span class="icon">🚧</span>
+                <span class="label">Issues & Roadmap</span>
+                <span class="desc">Limitations & Future Considerations.</span>
+            </a>
             <a href="./koseki.html" class="nav-item">
                 <span class="icon">📜</span>
                 <span class="label">Sample Certificate</span>
