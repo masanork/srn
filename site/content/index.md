@@ -73,18 +73,13 @@ font:
             </a>
             <a href="./gj.html" class="nav-item">
                 <span class="icon">📊</span>
-                <span class="label">Grid View (MJ)</span>
+                <span class="label">行政事務標準文字 追加文字一覧</span>
                 <span class="desc">Massive glyph grid rendering test.</span>
             </a>
             <a href="./sai.html" class="nav-item">
                 <span class="icon">字</span>
-                <span class="label">Sai Variants</span>
+                <span class="label">斎 Variants</span>
                 <span class="desc">Comprehensive list of 'Sai' variants (MJ).</span>
-            </a>
-            <a href="./all.html" class="nav-item">
-                <span class="icon">📚</span>
-                <span class="label">All Glyphs (Heavy)</span>
-                <span class="desc">Full list of ~70k characters.</span>
             </a>
         </div>
     </div>
