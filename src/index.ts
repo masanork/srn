@@ -258,26 +258,47 @@ body {
             fontCss += globalStyle;
 
             // Process Inline Glyph Tags
-            // Format 1: [font:identifier] or [style:identifier] -> explicit
-            // Format 2: [identifier] -> auto-lookup from DB
-            const glyphPattern = /\[([a-zA-Z0-9_.-]+)(?::([a-zA-Z0-9_.-]+))?\]/g;
+            // Supports:
+            // [glyphId] -> Auto lookup
+            // [fontOrStyle:glyphId] -> Explicit
+            // [font:fontOrStyle:glyphId] -> Explicit (ignoring prefix)
+
+            // Capture anything inside [ ... ] that looks like a glyph tag
+            // We'll parse the internals manually with split(':')
+            const glyphPattern = /\[([a-zA-Z0-9_.:-]+)\]/g;
             const matches = [...htmlContent.matchAll(glyphPattern)];
 
             if (matches.length > 0) {
                 const replacers = await Promise.all(matches.map(async m => {
-                    const part1 = m[1] as string;
-                    const part2 = m[2]; // If undefined, it's Format 2 [part1]
+                    const rawContent = m[1] || '';
+                    const parts = rawContent.split(':');
 
-                    let fontFile = '';
+                    let fontRef = '';
                     let glyphId = '';
 
-                    if (part2) {
-                        // [font:id]
-                        glyphId = part2;
-                        let fontRef = part1;
+                    // Analyze parts
+                    if (parts.length === 1) {
+                        // [glyphId]
+                        glyphId = parts[0];
+                    } else if (parts.length === 2) {
+                        // [fontOrStyle:glyphId]
+                        fontRef = parts[0];
+                        glyphId = parts[1];
+                    } else if (parts.length >= 3) {
+                        // [prefix:fontOrStyle:glyphId] e.g. [font:ipamjm.ttf:MJ005232]
+                        // We ignore the first part (prefix)
+                        fontRef = parts[1];
+                        glyphId = parts[2];
+                    }
 
-                        // Resolve style alias
+                    let fontFile = '';
+
+                    if (fontRef) {
+                        // Explicit font/style specified
                         fontFile = fontRef;
+
+                        // Check if it matches a defined style alias
+                        // (Same logic as before)
                         for (const cfg of fontConfigs) {
                             let sName = 'default';
                             let fFiles = cfg;
@@ -292,14 +313,17 @@ body {
                             }
                         }
                     } else {
-                        // [id] -> Lookup DB
-                        glyphId = part1;
+                        // Auto lookup from DB
                         const location = findGlyphInDb(glyphId);
                         if (location) {
                             fontFile = location.filename;
                             console.log(`  Resolved ${glyphId} -> ${fontFile}`);
                         } else {
-                            // If not found in DB, just return original text (might be a normal link reference)
+                            // Valid markdown link or text?
+                            // If it looks like a glyph ID (MJ/GJ), warn. Otherwise ignore.
+                            if (glyphId.match(/^(MJ|GJ|uni)/)) {
+                                console.warn(`  Glyph not found in DB: ${glyphId}`);
+                            }
                             return { original: m[0], replacement: m[0] };
                         }
                     }
@@ -312,9 +336,14 @@ body {
                         else if (await fs.pathExists(fontPath + '.otf')) fontPath += '.otf';
                     }
 
-                    // getGlyphAsSvg is imported from font.ts
-                    const svg = await getGlyphAsSvg(fontPath, glyphId);
-                    return { original: m[0], replacement: svg };
+                    try {
+                        // getGlyphAsSvg is imported from font.ts
+                        const svg = await getGlyphAsSvg(fontPath, glyphId);
+                        return { original: m[0], replacement: svg };
+                    } catch (e) {
+                        console.error(`  Failed to generate SVG for ${glyphId} in ${fontFile}:`, e);
+                        return { original: m[0], replacement: m[0] };
+                    }
                 }));
 
                 let newHtml = htmlContent;
