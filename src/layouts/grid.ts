@@ -90,7 +90,7 @@ export function gridLayout(data: GridData, htmlContent: string, fontCss: string,
                 font-size: 3.5rem;
                 line-height: 1.2;
                 margin-bottom: 0.5rem;
-                font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, serif;
+                font-family: ${fontFamilies.map(f => ['serif', 'sans-serif', 'monospace'].includes(f) ? f : `'${f}'`).join(', ')}, serif;
                 color: #000;
                 -webkit-font-smoothing: auto;
             }
