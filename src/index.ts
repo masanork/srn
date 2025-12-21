@@ -6,7 +6,7 @@ import { glob } from 'glob';
 
 import * as cheerio from 'cheerio';
 import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
-import { findGlyphInDb, resolveMjCode } from './db.ts';
+import { findGlyphInDb } from './db.ts';
 
 // Render HTML using Layout System
 let finalHtml = '';
@@ -272,15 +272,9 @@ body {
                         glyphId = parts[2];
                     }
 
-                    // --- MJ Code Resolution (via MJDB) ---
-                    if (glyphId && glyphId.startsWith('MJ')) {
-                        const resolved = resolveMjCode(glyphId);
-                        if (resolved) {
-                            console.log(`  Resolved MJ Code ${glyphId} -> ${Buffer.from(resolved).toString('hex')}`);
-                            glyphId = resolved;
-                        }
-                    }
-                    // --------------------------
+                    // --- MJ Code Resolution Removed as per user request ---
+                    // if (glyphId && glyphId.startsWith('MJ')) { ... }
+                    // ----------------------------------------------------
 
                     let fontFile = '';
 
