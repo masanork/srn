@@ -166,14 +166,14 @@ font:
     }
 
     .panel-header {
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.15em;
-        color: var(--highlight);
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        color: #94a3b8;
         text-transform: uppercase;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.25rem;
         display: inline-block;
         font-family: var(--font-default);
     }

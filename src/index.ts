@@ -538,6 +538,8 @@ body {
                             becameResidentReason: item.becameResidentReason,
                             addressSetDate: item.addressDate,
                             notificationDate: item.notificationDate,
+                            maidenName: item.maidenName,
+                            maidenKana: item.maidenKana,
                             residentCode: item.residentCode,
                             individualNumber: item.myNumber,
                             prevAddress: item.prevAddress,
