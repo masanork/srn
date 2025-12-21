@@ -1,145 +1,176 @@
+```
 ---
-title: "住民票の写しサンプル"
+title: "（見本）住民票"
 layout: official
 date: 2024-12-21
-description: "住民票の写しのサンプル（Verifiable Credential）"
+description: "総務省標準仕様準拠 住民票の写し（見本）"
 font: ipamjm.ttf,acgjm.ttf
 ---
 
 <style>
-  .jumin-container {
+  .jumin-sheet {
     font-family: 'IPAmjMincho', serif;
     max-width: 100%;
     margin: 0 auto;
-    border: 4px double #333;
-    padding: 30px;
+    border: 1px solid #000;
+    padding: 20px;
     background-color: #fff;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    position: relative;
   }
-  .jumin-header {
-    text-align: center;
-    font-size: 28px;
+  .watermark {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 80px;
+    color: rgba(200, 200, 200, 0.5);
+    z-index: 0;
+    pointer-events: none;
     font-weight: bold;
-    margin-bottom: 40px;
-    letter-spacing: 5px;
-    text-decoration: underline;
-    text-underline-offset: 8px;
+    border: 5px solid rgba(200, 200, 200, 0.5);
+    padding: 20px 50px;
   }
-  .jumin-table {
+  .header-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+  }
+  .title {
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 5px;
+  }
+  .issue-date {
+    font-size: 14px;
+  }
+  .main-info {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 30px;
-    font-size: 16px;
+    margin-bottom: 5px;
   }
-  .jumin-table th, .jumin-table td {
-    border: 1px solid #333;
-    padding: 12px;
+  .main-info th, .main-info td {
+    border: 1px solid #000;
+    padding: 5px 8px;
+    vertical-align: top;
   }
-  .jumin-table th {
-    background-color: #f5f5f5;
-    width: 18%;
+  .main-info th {
+    background-color: #f0f0f0;
+    width: 15%;
     text-align: left;
-    white-space: nowrap;
+    font-weight: normal;
+    font-size: 12px;
   }
-  .member-block {
-    border: 2px solid #333;
+  .person-block {
+    border: 2px solid #000;
+    margin-top: -1px; /* Overlap borders */
     margin-bottom: 20px;
     break-inside: avoid;
   }
-  .member-table {
+  .person-table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 14px;
   }
-  .member-table th {
-    background-color: #fafafa;
-    font-weight: normal;
-    font-size: 13px;
-    border-bottom: 1px dotted #ccc;
-    border-right: 1px dotted #ccc;
-    text-align: left;
-    padding: 6px 10px;
-    width: 15%;
-    color: #555;
-  }
-  .member-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid #eee;
+  .person-table th, .person-table td {
+    border: 1px solid #000;
+    padding: 5px 8px;
     vertical-align: middle;
   }
-  .member-num {
-    background: #eef; 
-    vertical-align: middle; 
-    text-align: center; 
-    width: 40px; 
-    font-weight: bold;
-    border-right: 2px solid #333;
-  }
-  .col-name { 
-    font-size: 1.4em; 
-    font-weight: bold; 
-    font-family: 'IPAmjMincho', serif;
-  }
-  .col-kana {
-    font-size: 0.8em;
-    color: #555;
-    margin-bottom: -5px;
-    display: block;
-  }
-  .footer-cert {
-    margin-top: 60px;
-    text-align: right;
-    line-height: 2;
-    position: relative;
-  }
-  .hanko {
-    position: absolute;
-    right: 0px;
-    top: 30px;
-    width: 80px;
-    height: 80px;
-    border: 3px solid #d00;
-    border-radius: 50%;
-    color: #d00;
+  .person-table th {
+    background-color: #f9f9f9;
+    font-weight: normal;
     font-size: 12px;
+    width: 12%;
+    text-align: left;
+  }
+  .kana {
+    font-size: 10px;
+    color: #555;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .name-large {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .col-num {
+    width: 30px;
+    text-align: center;
+    background-color: #e0e0e0;
+    font-weight: bold;
+    border-right: 2px solid #000;
+  }
+  .footer-area {
+    margin-top: 40px;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .cert-text {
+    text-align: left;
+    margin-bottom: 20px;
+    line-height: 1.8;
+  }
+  .official-seal-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 30px;
+  }
+  .mayor-name {
+    font-size: 16px;
+    margin-right: 20px;
+  }
+  .stamp-box {
+    width: 60px;
+    height: 60px;
+    border: 3px solid #d00;
+    color: #d00;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    transform: rotate(-10deg);
-    opacity: 0.7;
-    pointer-events: none;
+    font-size: 12px;
     font-weight: bold;
+    border-radius: 50%;
   }
 </style>
 
-<div class="jumin-container">
-  <div class="jumin-header">住民票の写し</div>
+<div class="jumin-sheet">
+  <div class="watermark">見　本</div>
+  
+  <div class="header-area">
+    <div class="title">住民票</div>
+    <div class="issue-date">発行日：令和8年1月15日</div>
+  </div>
 
-  <table class="jumin-table">
+  <table class="main-info">
     <tr>
-      <th>現住所</th>
-      <td>東京都千代田区千代田１番１号</td>
+      <th style="width: 100px;">住所</th>
+      <td colspan="3">東京都千代田区千代田１番１号</td>
     </tr>
     <tr>
       <th>世帯主氏名</th>
-      <td>徳川　家康</td>
+      <td colspan="3">山田　𠮷男</td>
     </tr>
   </table>
 
-  <!-- 構成員 1 -->
-  <div class="member-block">
-    <table class="member-table">
+  <!-- Person 1 -->
+  <div class="person-block">
+    <table class="person-table">
       <tr>
-        <td rowspan="5" class="member-num">1</td>
+        <td rowspan="4" class="col-num">1</td>
         <th>氏名</th>
         <td colspan="3">
-          <span class="col-kana">トクガワ　イエヤス</span>
-          <span class="col-name">徳川　家康</span>
+          <span class="kana">ヤマダ　ヨシオ</span>
+          <span class="name-large">山田　𠮷男</span> <!-- 𠮷: U+20BB7 -->
         </td>
       </tr>
       <tr>
         <th>生年月日</th>
-        <td>天文11年12月26日</td>
+        <td style="width: 30%;">昭和55年12月26日</td>
         <th>性別</th>
         <td>男</td>
       </tr>
@@ -147,104 +178,78 @@ font: ipamjm.ttf,acgjm.ttf
         <th>続柄</th>
         <td>世帯主</td>
         <th>住民となった日</th>
-        <td>慶長8年2月12日</td>
+        <td>平成20年4月1日</td>
       </tr>
       <tr>
         <th>本籍</th>
         <td colspan="3">
-          三河国岡崎（愛知県岡崎市康生町561番地）<br>
-          筆頭者：徳川　広忠
+          東京都千代田区千代田１番地<br>
+          筆頭者：山田　太郎
         </td>
       </tr>
       <tr>
+        <td style="border:none;"></td> <!-- spacer for num column -->
         <th>備考</th>
         <td colspan="3">
-          住民票コード：12345678901
+          マイナンバー：************
         </td>
       </tr>
     </table>
   </div>
 
-  <!-- 構成員 2 -->
-  <div class="member-block">
-    <table class="member-table">
+  <!-- Person 2 -->
+  <div class="person-block">
+    <table class="person-table">
       <tr>
-        <td rowspan="5" class="member-num">2</td>
+        <td rowspan="4" class="col-num">2</td>
         <th>氏名</th>
         <td colspan="3">
-          <span class="col-kana">トクガワ　ヒデタダ</span>
-          <span class="col-name">徳川　秀忠</span>
+          <span class="kana">サイトウ　ハジメ</span>
+          <span class="name-large">斉󠄃藤　一</span> <!-- 斉󠄃: U+6589 U+E0103 -->
         </td>
       </tr>
       <tr>
         <th>生年月日</th>
-        <td>天正7年4月7日</td>
+        <td>平成1年1月1日</td>
         <th>性別</th>
         <td>男</td>
       </tr>
       <tr>
         <th>続柄</th>
-        <td>子</td>
+        <td>世帯主の子</td>
         <th>住民となった日</th>
-        <td>慶長10年4月16日</td>
+        <td>令和5年6月1日</td>
       </tr>
       <tr>
         <th>前住所</th>
         <td colspan="3">
-          遠江国浜松
+          埼玉県さいたま市浦和区
         </td>
       </tr>
       <tr>
+        <td style="border:none;"></td>
         <th>備考</th>
         <td colspan="3">
-           [font:ipamjm.ttf:MJ000216]田家より転入 <!-- 土の下が長い吉 (MJ000216) -->
-        </td>
-      </tr>
-    </table>
-  </div>
-  
-  <!-- 構成員 3 (外字デモ) -->
-  <div class="member-block">
-    <table class="member-table">
-      <tr>
-        <td rowspan="4" class="member-num">3</td>
-        <th>氏名</th>
-        <td colspan="3">
-          <span class="col-kana">サイトウ　ハジメ</span>
-          <span class="col-name">[font:ipamjm.ttf:MJ059659]藤　一</span> <!-- 斉の異体字 -->
-        </td>
-      </tr>
-      <tr>
-        <th>生年月日</th>
-        <td>弘化元年1月1日</td>
-        <th>性別</th>
-        <td>男</td>
-      </tr>
-      <tr>
-        <th>続柄</th>
-        <td>縁故者</td>
-        <th>住民となった日</th>
-        <td>明治元年1月1日</td>
-      </tr>
-      <tr>
-        <th>備考</th>
-        <td colspan="3">
-           転入届出：明治元年1月5日
+         田家より転入
         </td>
       </tr>
     </table>
   </div>
 
-
-  <div class="footer-cert">
-    <p>これは、住民基本台帳に記録されている事項の写しであることを証明する。</p>
-    <p>令和7年12月21日</p>
-    <p style="font-size:1.4em; font-weight:bold; margin-top:20px;">
-      東京都千代田区長　千代田　太[font:ipamjm.ttf:MJ005232]
-    </p> <!-- 郎の異体字 -->
-    <div class="hanko">
-      公印<br>省略
+  <div class="footer-area">
+    <div class="cert-text">
+      この写しは、住民基本台帳の原本と相違ないことを証明する。
+    </div>
+    
+    <div class="official-seal-row">
+      <div class="mayor-name">
+        千代田区長　千代田　太䥲 <!-- 䥲: U+4972 -->
+      </div>
+      <div class="stamp-box">
+        公印<br>省略
+      </div>
     </div>
   </div>
 
 </div>
+```
