@@ -29,6 +29,8 @@ items:
        - "自動交付機利用者"
   - name: "䶒藤󠄃　花󠄃子"
     kana: "サイトウ　ハナコ"
+    maidenName: "渡𮞽"
+    maidenKana: "ワタナベ"
     dob: "平成5年5月5日"
     gender: "女"
     relationship: "妻"

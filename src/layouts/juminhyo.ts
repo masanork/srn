@@ -8,6 +8,8 @@ export interface JuminhyoItem {
     dob: string;
     gender: string;
     relationship: string;
+    maidenName?: string;
+    maidenKana?: string;
 
     // Resident Dates
     becameResident: string;
@@ -119,7 +121,9 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
         relationship: '',
         becameResidentDate: '',
         addressSetDate: '',
-        notificationDate: ''
+        notificationDate: '',
+        maidenName: '',
+        maidenKana: ''
     });
 
     const renderPersonRows = (item: any, index: number, startRow: number) => {
@@ -146,13 +150,13 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             </tr>
             <tr style="height: ${rowHeight(startRow + 3)}px;">
                 <td class="cell label-cell" colspan="5">${labelHtml('旧氏の振り仮名', 'キュウウジフガナ')}</td>
-                <td class="cell value-cell" colspan="18"></td>
+                <td class="cell value-cell" colspan="18">${normalizeText(item.maidenKana)}</td>
                 <td class="cell label-cell" colspan="6">${labelHtml('住所を定めた年月日', 'ジュウショサダネンガッピ')}</td>
                 <td class="cell value-cell" colspan="10">${normalizeText(item.addressSetDate)}</td>
             </tr>
             <tr style="height: ${rowHeight(startRow + 4)}px;">
                 <td class="cell label-cell" colspan="5">${labelHtml('旧氏', 'キュウウジ')}</td>
-                <td class="cell value-cell" colspan="18"></td>
+                <td class="cell value-cell" colspan="18">${normalizeText(item.maidenName)}</td>
                 <td class="cell label-cell" colspan="6">${labelHtml('届出日', 'トドケデビ')}</td>
                 <td class="cell value-cell" colspan="10">${normalizeText(item.notificationDate)}</td>
             </tr>
@@ -322,8 +326,8 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                         <div class="mobile-person-card">
                             <div class="person-header">
                                 <span class="person-number">${index + 1}</span>
-                                <span class="person-name">${normalizeText(item.name)}</span>
-                                <span class="person-kana">${normalizeText(item.kana)}</span>
+                                <span class="person-name">${normalizeText(item.name)}${item.maidenName ? ` (${normalizeText(item.maidenName)})` : ''}</span>
+                                <span class="person-kana">${normalizeText(item.kana)}${item.maidenKana ? ` (${normalizeText(item.maidenKana)})` : ''}</span>
                             </div>
                             <div class="person-grid">
                                 <div class="grid-item">
