@@ -7,9 +7,22 @@ export interface JuminhyoItem {
     dob: string;
     gender: string;
     relationship: string;
+
+    // Resident Dates
     becameResident: string;
+    becameResidentReason?: string;
+    addressDate?: string;
+    notificationDate?: string;
+
     prevAddress?: string;
     domiciles?: string[]; // 本籍
+
+    // Sensitive / Optional
+    myNumber?: string;
+    residentCode?: string;
+    election?: string;
+    qualifications?: string[];
+
     remarks?: string[];
 }
 
@@ -59,9 +72,17 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
     const itemsHtml = data.items.map((item, index) => {
         const hasPrev = !!item.prevAddress;
         const hasDomicile = !!item.domiciles;
-        // Base rows (Name, DOB, Relation) = 3 + Remarks = 1 => 4
-        // Optional rows: Prev = 1, Domicile = 1
-        const rowspan = 4 + (hasPrev ? 1 : 0) + (hasDomicile ? 1 : 0);
+        // Check for sensitive/optional fields
+        const hasMyNumber = !!item.myNumber || !!item.residentCode;
+        const hasElection = !!item.election || (item.qualifications && item.qualifications.length > 0);
+
+        // Base rows (Name, DOB, Relation, Remarks) = 4
+        // Optional rows: Prev = 1, Domicile = 1, MyNumber/Code = 1, Election/Qual = 1
+        const rowspan = 4
+            + (hasPrev ? 1 : 0)
+            + (hasDomicile ? 1 : 0)
+            + (hasMyNumber ? 1 : 0)
+            + (hasElection ? 1 : 0);
 
         return `
     <div class="person-block">
@@ -83,8 +104,13 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             <tr>
                 <th>続柄</th>
                 <td>${item.relationship}</td>
-                <th>住民となった日</th>
-                <td>${item.becameResident}</td>
+                <th>住民となった日<br>等</th>
+                <td>
+                    ${item.becameResident ? `<div>住民となった日：${item.becameResident}</div>` : ''}
+                    ${item.becameResidentReason ? `<div>届出の理由：${item.becameResidentReason}</div>` : ''}
+                    ${item.addressDate ? `<div>住所を定めた日：${item.addressDate}</div>` : ''}
+                    ${item.notificationDate ? `<div>届出年月日：${item.notificationDate}</div>` : ''}
+                </td>
             </tr>
             ${item.prevAddress ? `
             <tr>
@@ -97,6 +123,24 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 <th>本籍</th>
                 <td colspan="3">
                     ${item.domiciles.join('<br>')}
+                </td>
+            </tr>
+            ` : ''}
+            ${hasMyNumber ? `
+            <tr>
+                <th>個人番号等</th>
+                <td colspan="3">
+                    ${item.myNumber ? `<div>個人番号：${item.myNumber}</div>` : ''}
+                    ${item.residentCode ? `<div>住民票コード：${item.residentCode}</div>` : ''}
+                </td>
+            </tr>
+            ` : ''}
+            ${hasElection ? `
+            <tr>
+                <th>選挙・資格</th>
+                <td colspan="3">
+                    ${item.election ? `<div>${item.election}</div>` : ''}
+                    ${item.qualifications ? item.qualifications.map(q => `<div>${q}</div>`).join('') : ''}
                 </td>
             </tr>
             ` : ''}
