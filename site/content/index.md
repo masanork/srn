@@ -6,11 +6,7 @@ font:
   - default:ipamjm.ttf,acgjm.ttf
 ---
 
-<div class="server-header">
-    <div class="status-indicator"></div>
-    <div class="system-name">SRN NODE: <strong>ACTIVE</strong></div>
-    <div class="system-time">BUILD: v1.0.0 (BUN)</div>
-</div>
+
 
 <div class="hero-section">
     <div class="logo-area font-hero">空音</div>
@@ -41,10 +37,15 @@ font:
     <div class="panel">
         <div class="panel-header">MODULES & NAVIGATION</div>
         <div class="panel-body nav-links">
-            <a href="./search.html" class="nav-item primary">
-                <span class="icon">🔍</span>
-                <span class="label">Glyph Search Engine</span>
-                <span class="desc">Search 270k+ glyphs with metadata preview.</span>
+            <a href="./guide.html" class="nav-item">
+                <span class="icon">📖</span>
+                <span class="label">Developer Guide</span>
+                <span class="desc">System architecture & Usage manual.</span>
+            </a>
+            <a href="./koseki.html" class="nav-item">
+                <span class="icon">📜</span>
+                <span class="label">Sample Certificate</span>
+                <span class="desc">Koseki (Family Register) VC Demo.</span>
             </a>
             <a href="./variants.html" class="nav-item">
                 <span class="icon">字</span>
@@ -53,13 +54,28 @@ font:
             </a>
             <a href="./tech-verification.html" class="nav-item">
                 <span class="icon">🛡️</span>
-                <span class="label">PQC Verification</span>
+                <span class="label">PQC Verification Specs</span>
                 <span class="desc">Hybrid VC (Verifiable Credentials) tech specs.</span>
+            </a>
+            <a href="./verify.html" class="nav-item primary">
+                <span class="icon">✅</span>
+                <span class="label">Verify VC Console</span>
+                <span class="desc">Client-side verification of ML-DSA signatures.</span>
             </a>
             <a href="./gj.html" class="nav-item">
                 <span class="icon">📊</span>
                 <span class="label">Grid View (MJ)</span>
                 <span class="desc">Massive glyph grid rendering test.</span>
+            </a>
+            <a href="./sai.html" class="nav-item">
+                <span class="icon">字</span>
+                <span class="label">Sai Variants</span>
+                <span class="desc">Comprehensive list of 'Sai' variants (MJ).</span>
+            </a>
+            <a href="./all.html" class="nav-item">
+                <span class="icon">📚</span>
+                <span class="label">All Glyphs (Heavy)</span>
+                <span class="desc">Full list of ~70k characters.</span>
             </a>
         </div>
     </div>
@@ -99,17 +115,18 @@ font:
         margin-bottom: 3rem;
     }
     .status-indicator {
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
         background-color: var(--success);
         border-radius: 50%;
-        box-shadow: 0 0 5px var(--success);
     }
+
 
     /* Hero */
     .hero-section {
         text-align: center;
         margin-bottom: 4rem;
+        padding-top: 4rem;
     }
     .logo-area {
         font-size: 6rem;
