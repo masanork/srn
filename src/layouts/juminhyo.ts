@@ -43,7 +43,7 @@ export interface JuminhyoData {
     [key: string]: any;
 }
 
-export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss: string, fontFamilies: string[]) {
+export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss: string, fontFamilies: string[], vc?: any) {
     // Generate JSON-LD for Machine Readability
     // Using a schema.org compatible structure or a custom context for government documents
     const jsonLd = {
@@ -85,6 +85,13 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
         return `
     <div class="person-block">
         <table class="person-table">
+            <colgroup>
+                <col style="width: 30px;">
+                <col style="width: 12%;">
+                <col style="width: 30%;">
+                <col style="width: 12%;">
+                <col>
+            </colgroup>
             <tr>
                 <td rowspan="${rowspan}" class="col-num">${index + 1}</td>
                 <th>氏名</th>
@@ -95,7 +102,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             </tr>
             <tr>
                 <th>生年月日</th>
-                <td style="width: 30%;">${item.dob}</td>
+                <td>${item.dob}</td>
                 <th>性別</th>
                 <td>${item.gender}</td>
             </tr>
@@ -104,10 +111,10 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 <td>${item.relationship}</td>
                 <th>住民となった日<br>等</th>
                 <td>
-                    ${item.becameResident ? `<div>住民となった日：${item.becameResident}</div>` : ''}
-                    ${item.becameResidentReason ? `<div>届出の理由：${item.becameResidentReason}</div>` : ''}
-                    ${item.addressDate ? `<div>住所を定めた日：${item.addressDate}</div>` : ''}
-                    ${item.notificationDate ? `<div>届出年月日：${item.notificationDate}</div>` : ''}
+                    ${item.becameResident ? `<div><span class="label">住民となった日：</span>${item.becameResident}</div>` : ''}
+                    ${item.becameResidentReason ? `<div><span class="label">届出の理由：</span>${item.becameResidentReason}</div>` : ''}
+                    ${item.addressDate ? `<div><span class="label">住所を定めた日：</span>${item.addressDate}</div>` : ''}
+                    ${item.notificationDate ? `<div><span class="label">届出年月日：</span>${item.notificationDate}</div>` : ''}
                 </td>
             </tr>
             ${item.prevAddress ? `
@@ -128,8 +135,8 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             <tr>
                 <th>個人番号等</th>
                 <td colspan="3">
-                    ${item.myNumber ? `<div>個人番号：${item.myNumber}</div>` : ''}
-                    ${item.residentCode ? `<div>住民票コード：${item.residentCode}</div>` : ''}
+                    ${item.myNumber ? `<div><span class="label">個人番号：</span>${item.myNumber}</div>` : ''}
+                    ${item.residentCode ? `<div><span class="label">住民票コード：</span>${item.residentCode}</div>` : ''}
                 </td>
             </tr>
             ` : ''}
@@ -158,13 +165,17 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             </div>
 
             <table class="main-info">
+                <colgroup>
+                    <col style="width: 15%;">
+                    <col>
+                </colgroup>
                 <tr>
-                    <th style="width: 100px;">住所</th>
-                    <td colspan="3">${data.address}</td>
+                    <th>住所</th>
+                    <td>${data.address}</td>
                 </tr>
                 <tr>
                     <th>世帯主氏名</th>
-                    <td colspan="3">${data.householder}</td>
+                    <td>${data.householder}</td>
                 </tr>
             </table>
 
@@ -179,141 +190,225 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                     <div class="mayor-name">
                         ${data.issuer.title}　${data.issuer.name}
                     </div>
-                    <div class="stamp-box">
-                        公印<br>省略
+                    <div class="stamp-wrapper">
+                        <div class="stamp-box">
+                            公印<br>省略
+                        </div>
+                        ${vc ? `
+                        <div class="digital-badge" title="デジタル署名付き">
+                            DIGITAL
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
+
+                ${vc ? `
+                <div class="vc-debug-area">
+                    <details>
+                        <summary>デジタル原本データ構造 (VC/JSON-LD)</summary>
+                        <pre class="vc-code">${JSON.stringify(vc, null, 2)}</pre>
+                    </details>
+                </div>
+                ` : ''}
             </div>
         </div>
 
         <style>
             .jumin-sheet {
-                font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, serif;
-                max-width: 100%;
+                font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, "Hiragino Mincho ProN", "Yu Mincho", serif;
+                max-width: 210mm; /* A4 width */
+                min-height: 297mm;
                 margin: 0 auto;
-                border: 1px solid #000;
-                padding: 20px;
+                border: 1px solid #ccc;
+                padding: 15mm;
                 background-color: #fff;
                 box-shadow: 0 0 10px rgba(0,0,0,0.1);
                 position: relative;
+                box-sizing: border-box;
             }
             .watermark {
                 position: absolute;
-                top: 30%;
+                top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%) rotate(-45deg);
-                font-size: 80px;
-                color: rgba(200, 200, 200, 0.5);
+                font-size: 100px;
+                color: rgba(0, 0, 0, 0.05);
                 z-index: 0;
                 pointer-events: none;
                 font-weight: bold;
-                border: 5px solid rgba(200, 200, 200, 0.5);
-                padding: 20px 50px;
+                border: 10px solid rgba(0, 0, 0, 0.05);
+                padding: 20px 80px;
+                white-space: nowrap;
             }
             .header-area {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-end;
-                margin-bottom: 20px;
-                border-bottom: 2px solid #000;
-                padding-bottom: 10px;
+                margin-bottom: 5mm;
+                border-bottom: 2px solid #333;
+                padding-bottom: 2mm;
             }
             .title {
-                font-size: 24px;
+                font-size: 22pt;
                 font-weight: bold;
-                letter-spacing: 5px;
+                letter-spacing: 0.2em;
             }
             .issue-date {
-                font-size: 14px;
+                font-size: 11pt;
             }
             .main-info {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 5px;
+                margin-bottom: 2mm;
+                font-size: 11pt;
             }
             .main-info th, .main-info td {
-                border: 1px solid #000;
-                padding: 5px 8px;
-                vertical-align: top;
+                border: 1px solid #333;
+                padding: 1mm 2mm;
+                vertical-align: middle;
             }
             .main-info th {
-                background-color: #f0f0f0;
-                width: 15%;
+                background-color: #f2f2f2;
                 text-align: left;
                 font-weight: normal;
-                font-size: 12px;
             }
             .person-block {
-                border: 2px solid #000;
+                border: 2px solid #333;
                 margin-top: -1px; /* Overlap borders */
-                margin-bottom: 20px;
+                margin-bottom: 5mm;
                 break-inside: avoid;
             }
             .person-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 14px;
+                font-size: 10.5pt;
+                table-layout: fixed;
             }
             .person-table th, .person-table td {
-                border: 1px solid #000;
-                padding: 5px 8px;
-                vertical-align: middle;
+                border: 1px solid #333;
+                padding: 1mm 2mm;
+                vertical-align: top;
+                word-wrap: break-word; /* Ensure long text wraps */
             }
             .person-table th {
-                background-color: #f9f9f9;
+                background-color: #f2f2f2;
                 font-weight: normal;
-                font-size: 12px;
-                width: 12%;
                 text-align: left;
-            }
-            .kana {
-                font-size: 10px;
-                color: #555;
-                display: block;
-                margin-bottom: 2px;
-            }
-            .name-large {
-                font-size: 18px;
-                font-weight: bold;
+                vertical-align: middle;
             }
             .col-num {
-                width: 30px;
                 text-align: center;
-                background-color: #e0e0e0;
+                background-color: #e6e6e6;
                 font-weight: bold;
-                border-right: 2px solid #000;
+                vertical-align: middle !important;
+                font-size: 12pt;
+            }
+            .kana {
+                font-size: 8pt;
+                color: #444;
+                display: block;
+                margin-bottom: 1px;
+            }
+            .name-large {
+                font-size: 14pt;
+                font-weight: bold;
+            }
+            .label {
+                font-size: 9pt;
+                color: #555;
+                margin-right: 0.5em;
             }
             .footer-area {
-                margin-top: 40px;
+                margin-top: 15mm;
                 text-align: center;
                 page-break-inside: avoid;
             }
             .cert-text {
                 text-align: left;
-                margin-bottom: 20px;
-                line-height: 1.8;
+                margin-bottom: 10mm;
+                font-size: 11pt;
+                line-height: 1.6;
             }
             .official-seal-row {
                 display: flex;
                 justify-content: flex-end;
                 align-items: center;
-                margin-top: 30px;
+                margin-top: 10mm;
+                margin-right: 10mm;
             }
             .mayor-name {
-                font-size: 16px;
-                margin-right: 20px;
+                font-size: 14pt;
+                margin-right: 5mm;
+                font-weight: bold;
+            }
+            .stamp-wrapper {
+                position: relative;
+                display: inline-block;
             }
             .stamp-box {
-                width: 60px;
-                height: 60px;
+                width: 20mm;
+                height: 20mm;
                 border: 3px solid #d00;
                 color: #d00;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 12px;
+                font-size: 11pt;
                 font-weight: bold;
-                border-radius: 50%;
+                line-height: 1.2;
+                box-shadow: 0 0 0 1px #fff inset; /* visual tweak */
+            }
+            .digital-badge {
+                position: absolute;
+                bottom: -8px;
+                right: -8px;
+                background: #007bff;
+                color: white;
+                font-size: 9px;
+                padding: 2px 4px;
+                border-radius: 4px;
+                font-weight: bold;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            }
+            .vc-debug-area {
+                margin-top: 20mm;
+                border-top: 1px dashed #ccc;
+                padding-top: 5mm;
+                text-align: left;
+                font-size: 9pt;
+            }
+            .vc-debug-area summary {
+                cursor: pointer;
+                color: #007bff;
+                font-weight: bold;
+                padding: 5px;
+            }
+            .vc-code {
+                background: #f8f9fa;
+                padding: 10px;
+                border-radius: 4px;
+                overflow-x: auto;
+                font-family: monospace;
+                max-height: 400px;
+                overflow-y: auto;
+                margin-top: 5px;
+                border: 1px solid #eee;
+            }
+            @media print {
+                .jumin-sheet {
+                    border: none;
+                    box-shadow: none;
+                    margin: 0;
+                    padding: 0;
+                    width: 100%;
+                    max-width: none;
+                }
+                .vc-debug-area, .digital-badge {
+                    display: none !important;
+                }
+                body {
+                    background-color: #fff;
+                }
             }
         </style>
     `;

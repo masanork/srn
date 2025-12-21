@@ -413,11 +413,39 @@ body {
                     safeFontFamilies
                 );
             } else if (data.layout === 'juminhyo') {
+                // Generate VC for Juminhyo
+                console.log("  Generating Juminhyo Hybrid VC...");
+
+                // Construct a structured payload for Juminhyo
+                // In a real scenario, this would match the JSON-LD structure exactly.
+                const vcPayload = {
+                    id: `urn:uuid:${crypto.randomUUID()}`,
+                    type: ["VerifiableCredential", "ResidentRecord"],
+                    credentialSubject: {
+                        id: `https://example.com/certificates/${file.replace('.md', '')}`,
+                        type: "ResidentRecord",
+                        name: data.certificateTitle,
+                        householder: data.householder,
+                        address: data.address,
+                        "srn:buildId": buildId,
+                        // Hash of the specific items to ensure integrity
+                        itemsDigest: Buffer.from(new TextEncoder().encode(JSON.stringify(data.items))).toString('hex')
+                    }
+                };
+
+                const vc = await createHybridVC(vcPayload, currentKeys);
+
+                // Save VC sidecar
+                const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
+                await fs.writeJson(vcOutPath, vc, { spaces: 2 });
+                console.log(`  Generated Juminhyo VC: ${vcOutPath}`);
+
                 finalHtml = juminhyoLayout(
                     data as JuminhyoData,
-                    htmlContent, // Usually empty for data-only MD
+                    htmlContent,
                     fontCss,
-                    safeFontFamilies
+                    safeFontFamilies,
+                    vc // Pass the VC
                 );
             } else {
                 // Default to article
