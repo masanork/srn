@@ -126,7 +126,13 @@ function calculateChecksum(buffer: Uint8Array): number {
 
 // --- Cmap Generators ---
 function generateCmapFormat12(mappings: { code: number, gid: number }[]): Uint8Array {
-    const sorted = [...mappings].sort((a, b) => a.code - b.code);
+    const uniqueMap = new Map<number, number>();
+    for (const m of mappings) {
+        if (!uniqueMap.has(m.code)) uniqueMap.set(m.code, m.gid);
+    }
+    const sorted = Array.from(uniqueMap.entries())
+        .map(([code, gid]) => ({ code, gid }))
+        .sort((a, b) => a.code - b.code);
     const groups: { start: number, end: number, gid: number }[] = [];
 
     if (sorted.length > 0) {
