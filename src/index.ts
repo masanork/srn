@@ -7,10 +7,7 @@ import { glob } from 'glob';
 import * as cheerio from 'cheerio';
 import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
 import { findGlyphInDb } from './db.ts';
-
-// ... (existing imports and code) ...
-
-
+import { MJ_MAP } from './mj-map.ts';
 
 // Render HTML using Layout System
 let finalHtml = '';
@@ -138,8 +135,6 @@ async function build() {
                 const srcStat = await fs.stat(filePath);
                 const dstStat = await fs.stat(outPath);
                 if (srcStat.mtime <= dstStat.mtime) {
-                    // Log only if verbose? keeping it quiet for now or just log skipping
-                    // console.log(`Skipping: ${file} (Up to date)`);
                     continue;
                 }
             }
@@ -241,12 +236,6 @@ async function build() {
             const safeFontFamilies = [...defaultStack, 'serif'];
             const fontFamilyCss = safeFontFamilies.join(', ');
 
-
-
-            // ... (configuration)
-
-            // ...
-
             // Global styles (only font-family injection needed now)
             const globalStyle = `
 <style>
@@ -258,13 +247,6 @@ body {
             fontCss += globalStyle;
 
             // Process Inline Glyph Tags
-            // Supports:
-            // [glyphId] -> Auto lookup
-            // [fontOrStyle:glyphId] -> Explicit
-            // [font:fontOrStyle:glyphId] -> Explicit (ignoring prefix)
-
-            // Capture anything inside [ ... ] that looks like a glyph tag
-            // We'll parse the internals manually with split(':')
             const glyphPattern = /\[([a-zA-Z0-9_.:-]+)\]/g;
             const matches = [...htmlContent.matchAll(glyphPattern)];
 
@@ -291,6 +273,16 @@ body {
                         glyphId = parts[2];
                     }
 
+                    // --- MJ Code Resolution ---
+                    if (glyphId && glyphId.startsWith('MJ')) {
+                        const mapped = MJ_MAP[glyphId];
+                        if (mapped) {
+                            console.log(`  Mapped ${glyphId} -> ${Buffer.from(mapped).toString('hex')}`);
+                            glyphId = mapped;
+                        }
+                    }
+                    // --------------------------
+
                     let fontFile = '';
 
                     if (fontRef) {
@@ -298,7 +290,6 @@ body {
                         fontFile = fontRef;
 
                         // Check if it matches a defined style alias
-                        // (Same logic as before)
                         for (const cfg of fontConfigs) {
                             let sName = 'default';
                             let fFiles = cfg;
@@ -319,8 +310,6 @@ body {
                             fontFile = location.filename;
                             console.log(`  Resolved ${glyphId} -> ${fontFile}`);
                         } else {
-                            // Valid markdown link or text?
-                            // If it looks like a glyph ID (MJ/GJ), warn. Otherwise ignore.
                             if (glyphId.match(/^(MJ|GJ|uni)/)) {
                                 console.warn(`  Glyph not found in DB: ${glyphId}`);
                             }
@@ -337,7 +326,6 @@ body {
                     }
 
                     try {
-                        // getGlyphAsSvg is imported from font.ts
                         const svg = await getGlyphAsSvg(fontPath, glyphId);
                         return { original: m[0], replacement: svg };
                     } catch (e) {
@@ -348,7 +336,6 @@ body {
 
                 let newHtml = htmlContent;
                 for (const { original, replacement } of replacers) {
-                    // global replace
                     newHtml = newHtml.split(original).join(replacement);
                 }
                 htmlContent = newHtml;
@@ -366,7 +353,6 @@ body {
             } else if (data.layout === 'official') {
                 // Generate VC for official documents
                 console.log("  Generating PQC Hybrid VC...");
-                // Extract plain text for signing (simplified)
                 const plainText = cheerio.load(htmlContent).text();
 
                 const vcPayload = {
@@ -387,8 +373,6 @@ body {
                 const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
                 await fs.writeJson(vcOutPath, vc, { spaces: 2 });
                 console.log(`  Generated VC: ${vcOutPath}`);
-
-
 
                 finalHtml = officialLayout(
                     data as OfficialData,
@@ -428,14 +412,10 @@ body {
                 );
             }
 
-            // Write to dist
-
             await fs.ensureDir(path.dirname(outPath));
             await fs.writeFile(outPath, finalHtml);
 
             console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
-
-
         }
 
 
@@ -446,11 +426,10 @@ body {
             const result = await Bun.build({
                 entrypoints: [clientEntry],
                 outdir: path.join(DIST_DIR, 'assets'),
-                naming: "[name]-bundle.[ext]", // e.g. verify-app-bundle.js
+                naming: "[name]-bundle.[ext]",
                 minify: true,
             });
             if (result.success) {
-                // Rename to fixed name expected by layout
                 const generated = path.join(DIST_DIR, 'assets', 'verify-app-bundle.js');
                 const target = path.join(DIST_DIR, 'assets', 'verify-bundle.js');
                 if (await fs.pathExists(generated)) {
@@ -464,7 +443,7 @@ body {
 
         // Generate Sitemaps
         console.log("Generating sitemaps...");
-        const baseUrl = "https://example.com"; // TODO: Configure this via CLI or config
+        const baseUrl = "https://example.com";
         const sitemapItems = files.map(file => {
             const url = `${baseUrl}/${file.replace('.md', '.html')}`;
             return `
@@ -496,12 +475,10 @@ ${sitemapItems.join('')}
         const distHtmls = await glob('**/*.html', { cwd: DIST_DIR });
         const validPaths = new Set<string>();
 
-        // Add markdown outputs
         files.forEach(f => {
             validPaths.add(f.replace(/\.md$/, '.html'));
         });
 
-        // Add static html copies
         const staticHtmls = await glob('**/*.html', { cwd: STATIC_DIR });
         staticHtmls.forEach(f => validPaths.add(f));
 

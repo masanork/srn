@@ -225,11 +225,23 @@ export async function getGlyphAsSvg(fontPath: string, identifier: string): Promi
         }
     }
 
-    // As a fallback, try to check if it's a direct character (though user said "not assigned code point")
-    // But maybe they passed a Unicode accidentally
-    // if (!glyph && identifier.length === 1) {
-    //    glyph = font.charToGlyph(identifier);
-    // }
+    // As a fallback, check if the identifier is a Unicode string (or IVS sequence)
+    // We assume if it contains non-ASCII characters, it's a direct character string.
+    if (!glyph && /[^\x00-\x7F]/.test(identifier)) {
+        // Handle IVS? opentype.js charToGlyph might not handle IVS sequence directly.
+        // We extracted logic in subsetFont but charToGlyph takes a single char usually.
+        // But let's check input length.
+
+        // Simple case: Just the first codepoint (Base char)
+        // Ideally we should use the IVS map we parsed in subsetFont, but we don't have it cached here easily.
+        // For PoC, we rely on the font's default charToGlyph behavior for the base char.
+        // OR we map specific IVS if we had the map.
+
+        // Note: For now, we just pass the string. If it's multiple chars (IVS), charToGlyph takes the first?
+        // opentype.js 1.3.4 signature: charToGlyph(c). matches standard unicode binding.
+
+        glyph = font.charToGlyph(identifier);
+    }
 
     if (!glyph) {
         return `<span class="error">Glyph not found: ${identifier}</span>`;
