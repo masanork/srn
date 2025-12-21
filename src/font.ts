@@ -381,7 +381,7 @@ function injectNativeCmap(subsetBuffer: ArrayBuffer, unicodeMap: { code: number,
 export async function subsetFont(
     fontPath: string,
     text: string
-): Promise<{ buffer: Buffer, mimeType: string }> {
+): Promise<{ buffer: Buffer, mimeType: string, ivsRecordsCount: number }> {
     const fontBuffer = await fs.readFile(fontPath);
     const arrayBuffer = fontBuffer.buffer.slice(fontBuffer.byteOffset, fontBuffer.byteOffset + fontBuffer.byteLength);
     const font = opentype.parse(arrayBuffer);
@@ -462,7 +462,8 @@ export async function subsetFont(
 
     return {
         buffer: Buffer.from(woff2Buffer),
-        mimeType: 'font/woff2'
+        mimeType: 'font/woff2',
+        ivsRecordsCount: ivsRecords.length
     };
 }
 
