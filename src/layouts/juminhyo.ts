@@ -74,15 +74,13 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
         const hasDomicile = !!item.domiciles;
         // Check for sensitive/optional fields
         const hasMyNumber = !!item.myNumber || !!item.residentCode;
-        const hasElection = !!item.election || (item.qualifications && item.qualifications.length > 0);
 
         // Base rows (Name, DOB, Relation, Remarks) = 4
-        // Optional rows: Prev = 1, Domicile = 1, MyNumber/Code = 1, Election/Qual = 1
+        // Optional rows: Prev = 1, Domicile = 1, MyNumber/Code = 1
         const rowspan = 4
             + (hasPrev ? 1 : 0)
             + (hasDomicile ? 1 : 0)
-            + (hasMyNumber ? 1 : 0)
-            + (hasElection ? 1 : 0);
+            + (hasMyNumber ? 1 : 0);
 
         return `
     <div class="person-block">
@@ -135,15 +133,6 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 </td>
             </tr>
             ` : ''}
-            ${hasElection ? `
-            <tr>
-                <th>選挙・資格</th>
-                <td colspan="3">
-                    ${item.election ? `<div>${item.election}</div>` : ''}
-                    ${item.qualifications ? item.qualifications.map(q => `<div>${q}</div>`).join('') : ''}
-                </td>
-            </tr>
-            ` : ''}
             <tr>
                 <td style="border:none;"></td>
                 <th>備考</th>
@@ -152,6 +141,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 </td>
             </tr>
         </table>
+    </div>
         `;
     }).join('');
 
