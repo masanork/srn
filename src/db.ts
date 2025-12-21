@@ -3,18 +3,89 @@ import { Database } from "bun:sqlite";
 import path from 'path';
 import fs from 'fs-extra';
 
-const DB_PATH = path.resolve(process.cwd(), 'site', 'data', 'fonts.db');
+// Access the separate mjdb.sqlite3
+const MJDB_PATH = path.resolve(process.cwd(), 'site/data/mjdb.sqlite3');
+const FONTS_DB_PATH = path.resolve(process.cwd(), 'site/data/fonts.db');
 
-let db: Database | null = null;
+let mjDb: Database | null = null;
+let fontsDb: Database | null = null;
 
-function getDb() {
-    if (!db) {
-        if (fs.existsSync(DB_PATH)) {
-            db = new Database(DB_PATH, { readonly: true });
+function getMjDb() {
+    if (!mjDb) {
+        if (fs.existsSync(MJDB_PATH)) {
+            console.log(`Loading MJ Database: ${MJDB_PATH}`);
+            mjDb = new Database(MJDB_PATH, { readonly: true });
+        } else {
+            console.warn("MJ Database not found. MJ lookup will fail.");
         }
     }
-    return db;
+    return mjDb;
 }
+
+function getFontsDb() {
+    if (!fontsDb) {
+        if (fs.existsSync(FONTS_DB_PATH)) {
+            fontsDb = new Database(FONTS_DB_PATH, { readonly: true });
+        }
+    }
+    return fontsDb;
+}
+
+/**
+ * Looks up an MJ Code in the mjdb.sqlite3 and returns the resolved Unicode String (including IVS).
+ */
+export function resolveMjCode(mjCode: string): string | null {
+    const db = getMjDb();
+    if (!db) return null;
+
+    try {
+        const query = db.prepare(`
+            SELECT mjivs, ucs_implemented, unicode 
+            FROM dictionary 
+            WHERE mj_code = ?
+        `);
+        const result = query.get(mjCode) as { mjivs: string, ucs_implemented: string, unicode: string } | null;
+
+        if (!result) return null;
+
+        // Priority 1: MJIVS (e.g. 5000_E0101) - hex string with underscore
+        if (result.mjivs) {
+            // Converts "5000_E0101" -> "\u5000\uDB40\uDD01"
+            return convertHexSequenceToChar(result.mjivs);
+        }
+
+        // Priority 2: UCS Implemented (e.g. 20BB7)
+        if (result.ucs_implemented) {
+            return convertHexSequenceToChar(result.ucs_implemented);
+        }
+
+        // Priority 3: Unicode (e.g. 20BB7)
+        if (result.unicode) {
+            return convertHexSequenceToChar(result.unicode);
+        }
+
+        return null;
+    } catch (e) {
+        console.error(`MJ Lookup Error for ${mjCode}:`, e);
+        return null;
+    }
+}
+
+function convertHexSequenceToChar(hexSeq: string): string {
+    const parts = hexSeq.split(/[_ ]/);
+    let result = "";
+
+    for (const part of parts) {
+        const cleanHex = part.replace(/^U\+/, '');
+        if (!cleanHex) continue;
+        const codePoint = parseInt(cleanHex, 16);
+        if (!isNaN(codePoint)) {
+            result += String.fromCodePoint(codePoint);
+        }
+    }
+    return result;
+}
+
 
 export interface GlyphLocation {
     filename: string;
@@ -23,7 +94,7 @@ export interface GlyphLocation {
 }
 
 export function findGlyphInDb(identifier: string): GlyphLocation | null {
-    const database = getDb();
+    const database = getFontsDb();
     if (!database) return null;
 
     // Prefer exact match on name
@@ -32,7 +103,7 @@ export function findGlyphInDb(identifier: string): GlyphLocation | null {
         FROM glyphs g 
         JOIN fonts f ON g.font_id = f.id 
         WHERE g.name = $identifier
-        ORDER BY f.filename DESC -- Simple priority for now, maybe prefer ipamjm?
+        ORDER BY f.filename DESC
         LIMIT 1
     `);
 
