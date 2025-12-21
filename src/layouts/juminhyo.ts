@@ -134,7 +134,6 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             </tr>
             ` : ''}
             <tr>
-                <td style="border:none;"></td>
                 <th>備考</th>
                 <td colspan="3">
                     ${item.remarks ? item.remarks.join('<br>') : ''}
