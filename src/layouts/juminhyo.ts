@@ -217,7 +217,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
 
         <style>
             .jumin-sheet {
-                font-family: ${fontFamilies.map(f => `'${f}'`).join(', ')}, "Hiragino Mincho ProN", "Yu Mincho", serif;
+                font-family: ${fontFamilies.length > 0 ? fontFamilies.join(', ') + ',' : ''} "Hiragino Mincho ProN", "Yu Mincho", serif;
                 max-width: 210mm; /* A4 width */
                 min-height: 297mm;
                 margin: 0 auto;
