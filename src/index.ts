@@ -242,8 +242,16 @@ async function build() {
                         fontConfigs.push('default:ipamjm.ttf,acgjm.ttf');
                         fontConfigs.push('GJM:ipamjm.ttf,acgjm.ttf');
                         hasDefault = true;
+                    } else if (cfg === 'TOKI') {
+                        const tokiFiles = 'TOUKIMIN.ttf,TMIN1501.ttf,TMIN1502.ttf,TMIN1503.ttf,TMIN1504.ttf,TMIN1505.ttf,TMIN1506.ttf,TMIN1507.ttf,TMIN1508.ttf,TMIN1509.ttf,TMIN1510.ttf,TMIN1511.ttf,TMIN1601.ttf,TMIN1602.ttf,TMIN1603.ttf,TMIN1604.ttf,TMINEX1.ttf';
+                        fontConfigs.push(`default:${tokiFiles}`);
+                        fontConfigs.push(`TOKI:${tokiFiles}`);
+                        hasDefault = true;
                     } else if (cfg.startsWith('GJM:')) {
                         fontConfigs.push(cfg.replace('GJM:', 'GJM:ipamjm.ttf,acgjm.ttf,'));
+                    } else if (cfg.startsWith('TOKI:')) {
+                        const tokiFiles = 'TOUKIMIN.ttf,TMIN1501.ttf,TMIN1502.ttf,TMIN1503.ttf,TMIN1504.ttf,TMIN1505.ttf,TMIN1506.ttf,TMIN1507.ttf,TMIN1508.ttf,TMIN1509.ttf,TMIN1510.ttf,TMIN1511.ttf,TMIN1601.ttf,TMIN1602.ttf,TMIN1603.ttf,TMIN1604.ttf,TMINEX1.ttf';
+                        fontConfigs.push(cfg.replace('TOKI:', `TOKI:${tokiFiles},`));
                     } else {
                         fontConfigs.push(cfg);
                         if (cfg === 'default' || cfg.startsWith('default:')) hasDefault = true;
