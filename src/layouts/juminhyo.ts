@@ -85,7 +85,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
     const columnWidths = [
         19, 19, 19, 19, 19, 27,
         19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-        19, 19, 19, 19, 19, 28,
+        19, 19, 19, 19, 19, 29,
         19, 19, 19, 19, 19, 19, 19, 19, 19, 19
     ];
     const rowHeights = Array.from({ length: 53 }, (_, idx) => (idx === 5 ? 17 : 18));
@@ -282,10 +282,10 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
              data-vc-bin="${binaryVc || ''}">
             ${data.watermark ? `<div class="watermark">${data.watermark}</div>` : ''}
 
-
-            <div class="anti-copy-print-notice">
-                【デジタル原本】この画面はデジタル署名された原本です。これを印刷したものは住民票の写しとして利用できません。<br>
-                検証済みの電子的提示（Verifiable Presentation）のみが有効な証明書として機能します。
+            <div class="cert-viewer-header">
+                <div class="anti-copy-print-notice">
+                    【デジタル原本】この画面はデジタル署名された原本です。検証済みの電子的提示（VP）のみが有効な証明書として機能します。
+                </div>
             </div>
 
             <div class="void-watermark-print-only">
@@ -294,13 +294,15 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             </div>
 
             <div class="pc-view-only">
-                <table class="jumin-table">
-                    <colgroup>
-                        ${columnWidths.map(width => `<col style="width: ${width}px;">`).join('')}
-                    </colgroup>
-                    ${tableHeaderRows}
-                    ${itemsHtml}
-                </table>
+                <div class="table-container">
+                    <table class="jumin-table">
+                        <colgroup>
+                            ${columnWidths.map(width => `<col style="width: ${width}px;">`).join('')}
+                        </colgroup>
+                        ${tableHeaderRows}
+                        ${itemsHtml}
+                    </table>
+                </div>
 
                 <div class="table-footer-meta">
                     2026. 1. 15 電子交付 https://cert.go.jp https://wallet.jp Google Pixel 10 Pro
@@ -430,15 +432,11 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
         <style>
             .jumin-sheet {
                 font-family: ${fontFamilies.map(f => ['serif', 'sans-serif', 'monospace'].includes(f) ? f : `'${f}'`).join(', ')}, "Hiragino Mincho ProN", "Yu Mincho", serif;
-                max-width: 210mm; /* A4 width */
-                min-height: 297mm;
-                margin: 0 auto;
-                border: 1px solid #ccc;
-                padding: 2mm;
-                background-color: #fff;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
                 position: relative;
                 box-sizing: border-box;
+                overflow: visible;
+                background: transparent; /* Seamless with main background */
+                margin: 0;
             }
             .watermark {
                 position: absolute;
@@ -446,76 +444,57 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 left: 50%;
                 transform: translate(-50%, -50%) rotate(-45deg);
                 font-size: 100px;
-                color: rgba(0, 0, 0, 0.05);
+                color: rgba(0, 0, 0, 0.03);
                 z-index: 0;
                 pointer-events: none;
                 font-weight: bold;
-                border: 10px solid rgba(0, 0, 0, 0.05);
+                border: 10px solid rgba(0, 0, 0, 0.03);
                 padding: 20px 80px;
                 white-space: nowrap;
             }
+            .table-container {
+                overflow-x: auto; /* Handle smaller screens gracefully */
+                margin: 2rem 0;
+                padding-bottom: 1rem;
+            }
             .jumin-table {
-                width: 777px;
-                border-collapse: collapse;
-                table-layout: fixed;
-                margin: 0 auto;
+                width: 732px;
+                border-collapse: collapse !important;
+                table-layout: fixed !important;
+                margin: 0 auto !important;
                 font-size: 9pt;
+                background-color: #fff; /* Table itself stays white */
+                border: 1px solid #000 !important;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             }
             .jumin-table .cell {
-                border: 1px solid #000;
+                border: 1px solid #000 !important;
                 padding: 1px 2px;
                 vertical-align: middle;
                 word-break: break-word;
+                box-sizing: border-box;
+                background-clip: padding-box;
             }
             .jumin-table .no-border {
-                border: none;
+                border: none !important;
+                background-color: transparent !important;
             }
             .title-cell {
                 font-size: 16pt;
                 font-weight: bold;
                 text-align: center;
                 letter-spacing: 0.4em;
-            }
-            .date-cell {
-                font-size: 9pt;
-                text-align: right;
-                vertical-align: top;
-                padding-top: 2px;
-                padding-right: 4px;
-            }
-            .number-cell {
-                text-align: center;
-                font-size: 11pt;
-                font-weight: bold;
-            }
-            .label-cell {
-                font-size: 8.5pt;
-                line-height: 1.1;
-            }
-            .value-cell {
-                font-size: 9.5pt;
-                line-height: 1.2;
-            }
-            .name-cell {
-                font-size: 12pt;
-                font-weight: bold;
-            }
-            .label-text {
-                display: inline-flex;
-                align-items: baseline;
-            }
-            .label-main {
-                font-size: 8.5pt;
+                background-color: transparent !important;
             }
             .digital-badge {
                 position: absolute;
-                top: -6mm;
+                top: -8mm;
                 right: 0;
                 white-space: nowrap;
-                background: rgba(230, 255, 250, 0.6); /* Semi-transparent */
+                background: rgba(230, 255, 250, 0.9);
                 backdrop-filter: blur(2px);
                 color: #2c7a7b;
-                border: 1px solid rgba(129, 230, 217, 0.5);
+                border: 1px solid #81e6d9;
                 padding: 1mm 2mm;
                 font-size: 6.5pt;
                 border-radius: 4px;
@@ -523,43 +502,30 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 display: flex;
                 align-items: center;
                 gap: 5px;
-                transition: opacity 0.2s;
-                opacity: 0.7;
                 z-index: 10;
-            }
-            .digital-badge:hover {
-                opacity: 1;
-                background: rgba(230, 255, 250, 0.9);
             }
             .anti-copy-print-notice {
                 text-align: center;
-                font-size: 8pt;
+                font-size: 8.5pt;
                 color: #d73a49;
                 background: #fff8f8;
                 border: 1px solid #ffcccc;
-                padding: 1.5mm;
-                margin-bottom: 3mm;
-                border-radius: 4px;
+                padding: 1rem;
+                border-radius: 8px;
                 line-height: 1.4;
             }
             .void-watermark-print-only {
                 display: none;
             }
-            .badge-icon {
-                font-weight: bold;
-            }
             .jumin-footer {
-                width: 777px;
-                margin: 4mm auto 0;
+                width: 732px;
+                margin: 2rem auto 0;
                 font-size: 10.5pt;
                 line-height: 1.6;
             }
-            .cert-text {
-                margin-bottom: 6mm;
-            }
             .issue-date-line {
                 text-align: center;
-                margin-top: 1mm;
+                margin-top: 1rem;
                 font-size: 11pt;
             }
             .issuer-line {
@@ -579,7 +545,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 flex-direction: column;
                 align-items: center;
                 gap: 2px;
-                position: relative; /* Anchor for digital-badge */
+                position: relative;
             }
             .official-seal {
                 display: inline-flex;
@@ -593,51 +559,45 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 font-weight: bold;
                 line-height: 1.2;
                 text-align: center;
+                background: #fff;
             }
             .seal-notice {
                 font-size: 7.5pt;
                 color: #000;
             }
             .table-footer-meta {
-                width: 777px;
-                margin: 1mm auto;
+                width: 732px;
+                margin: 0.5rem auto;
                 font-size: 8pt;
                 text-align: right;
                 font-family: monospace;
+                color: var(--text-muted);
             }
             .vc-debug-area {
-                margin-top: 20mm;
-                border-top: 1px dashed #ccc;
-                padding-top: 5mm;
+                margin-top: 3rem;
+                border-top: 1px dashed var(--border-color);
+                padding-top: 1.5rem;
                 text-align: left;
-                font-size: 9pt;
             }
             .vc-debug-area summary {
                 cursor: pointer;
-                color: #007bff;
+                color: var(--primary-color);
                 font-weight: bold;
                 padding: 5px;
             }
             .vc-code {
-                background: #f3f4f6;
-                color: #111;
-                padding: 10px;
-                border-radius: 4px;
-                overflow-x: auto;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                background: #0f172a;
+                color: #e2e8f0;
+                padding: 1.25rem;
+                border-radius: 0.75rem;
                 max-height: 400px;
                 overflow-y: auto;
-                margin-top: 5px;
-                border: 1px solid #d0d7de;
+                margin-top: 0.5rem;
+                border: 1px solid #1e293b;
+                font-size: 0.85rem;
             }
+
             @media screen and (max-width: 800px) {
-                .jumin-sheet {
-                    width: 100%;
-                    max-width: 100%;
-                    padding: 4mm;
-                    border: none;
-                    box-shadow: none;
-                }
                 .pc-view-only {
                     display: none;
                 }
@@ -646,14 +606,10 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 }
                 .jumin-footer {
                     width: 100%;
-                    text-align: left;
                 }
                 .issuer-line {
                     justify-content: space-between;
                     flex-wrap: wrap;
-                }
-                .table-footer-meta {
-                    width: 100%;
                 }
             }
 
@@ -663,121 +619,33 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 }
             }
 
-            /* Mobile card styles */
-            .mobile-header {
-                margin-bottom: 6mm;
-                border-bottom: 2px solid #000;
-                padding-bottom: 3mm;
-            }
-            .mobile-title {
-                font-size: 1.5rem;
-                margin: 0 0 4mm 0;
-                text-align: center;
-            }
-            .household-summary {
-                background: #f9f9f9;
-                padding: 3mm;
-                border-radius: 4px;
-            }
-            .summary-item {
-                display: flex;
-                margin-bottom: 2mm;
-            }
-            .summary-label {
-                width: 60px;
-                font-size: 0.8rem;
-                font-weight: bold;
-                color: #666;
-            }
-            .summary-value {
-                flex: 1;
-                font-size: 0.95rem;
-            }
-            .mobile-person-card {
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                margin-bottom: 6mm;
-                overflow: hidden;
-            }
-            .person-header {
-                background: #f1f1f1;
-                padding: 3mm;
-                display: flex;
-                align-items: baseline;
-                gap: 3mm;
-            }
-            .person-number {
-                font-weight: bold;
-                background: #000;
-                color: #fff;
-                width: 24px;
-                height: 24px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                font-size: 0.8rem;
-            }
-            .person-name {
-                font-size: 1.1rem;
-                font-weight: bold;
-            }
-            .person-kana {
-                font-size: 0.75rem;
-                color: #666;
-            }
-            .person-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 0;
-                border-top: 1px solid #ddd;
-            }
-            .grid-item {
-                padding: 3mm;
-                border-bottom: 1px solid #eee;
-                border-right: 1px solid #eee;
-            }
-            .grid-item:nth-child(even) {
-                border-right: none;
-            }
-            .grid-item.full {
-                grid-column: span 2;
-                border-right: none;
-            }
-            .grid-label {
-                font-size: 0.7rem;
-                color: #888;
-                margin-bottom: 1mm;
-            }
-            .grid-value {
-                font-size: 0.9rem;
-            }
-
             @media print {
-                .pc-view-only {
-                    display: block !important;
+                @page {
+                    size: A4;
+                    margin: 15mm;
                 }
-                .mobile-view-only {
-                    display: none !important;
+                body {
+                    background: white !important;
+                    padding: 0 !important;
                 }
-                .jumin-sheet {
-                    border: none;
-                    box-shadow: none;
-                    margin: 0;
-                    padding: 0;
-                    width: 100%;
-                    max-width: none;
+                main {
+                    padding: 0 !important;
+                    box-shadow: none !important;
+                    border: none !important;
+                }
+                .anti-copy-print-notice {
+                    border: 1px solid #000 !important;
+                    color: #000 !important;
+                    background: none !important;
+                }
+                .jumin-table {
+                    box-shadow: none !important;
+                }
+                .jumin-table .no-border, .title-cell {
+                    background-color: white !important;
                 }
                 .vc-debug-area {
                     display: none !important;
-                }
-                body {
-                    background-color: #fff;
-                }
-                .anti-copy-print-notice {
-                    border-color: #000;
-                    color: #000;
-                    font-weight: bold;
                 }
                 .void-watermark-print-only {
                     display: block !important;
@@ -786,14 +654,13 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                     left: 50%;
                     transform: translate(-50%, -50%) rotate(-30deg);
                     font-size: 60pt;
-                    color: rgba(0, 0, 0, 0.1) !important;
-                    border: 10px solid rgba(0, 0, 0, 0.1);
+                    color: rgba(0, 0, 0, 0.05) !important;
+                    border: 10px solid rgba(0, 0, 0, 0.05);
                     padding: 20px 40px;
                     white-space: nowrap;
                     z-index: 9999;
                     pointer-events: none;
                     text-align: center;
-                    line-height: 1.2;
                 }
             }
         </style>
