@@ -3,8 +3,8 @@ title: "SRN: Typography-First SSG"
 layout: width
 font: 
   - hero:ReggaeOne-Regular.ttf
-  - default:NotoSansJP-Regular.otf,ipamjm.ttf
-  - bold:NotoSansJP-Regular.otf,ipamjm.ttf
+  - default:NotoSansJP-VariableFont_wght.ttf,ipamjm.ttf
+  - bold:NotoSansJP-VariableFont_wght.ttf,ipamjm.ttf
 ---
 
 

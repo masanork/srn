@@ -4,7 +4,7 @@ layout: variants
 description: "様々なタイプの異体字関係（意味、字形、IVS）をUnihan形式で一覧化するテストページ。"
 font: 
   - ipamjm.ttf
-  - NotoSansJP-Regular.otf
+  - NotoSansJP-VariableFont_wght.ttf
 variants:
   # Semantic Variants
   - source: "凶"
