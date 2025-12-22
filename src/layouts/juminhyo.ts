@@ -399,7 +399,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             ${vc ? `
             <div class="vc-debug-area">
                 <details>
-                    <summary>デジタル原本データ構造 (VC/JSON-LD)</summary>
+                    <summary>機械可読データ構造 (VC/JSON-LD)</summary>
                     <pre class="vc-code">${JSON.stringify(vc, null, 2)}</pre>
                 </details>
                 ${sdDisclosures && sdDisclosures.length > 0 ? `
