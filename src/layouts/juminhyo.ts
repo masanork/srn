@@ -284,7 +284,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
 
             <div class="cert-viewer-header">
                 <div class="anti-copy-print-notice">
-                    【デジタル原本】この画面はデジタル署名された原本です。検証済みの電子的提示（VP）のみが有効な証明書として機能します。
+                    これは電子交付された住民票の写しの内容確認画面です。検証済みの電子的提示（VP）のみが有効な証明書として機能します。
                 </div>
             </div>
 
@@ -305,7 +305,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 </div>
 
                 <div class="table-footer-meta">
-                    2026. 1. 15 電子交付 https://cert.go.jp https://wallet.jp Google Pixel 10 Pro
+                    2026.1.15 電子交付 発行: https://cert.go.jp 登録先: https://wallet.jp 端末: Google Pixel 10 Pro
                 </div>
             </div>
 
@@ -453,9 +453,10 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 white-space: nowrap;
             }
             .table-container {
-                overflow-x: auto; /* Handle smaller screens gracefully */
+                overflow-x: auto; 
                 margin: 2rem 0;
-                padding-bottom: 1rem;
+                padding: 10px; /* Buffer space for borders and shadows */
+                overflow: visible !important; /* Ensure no clipping by container */
             }
             .jumin-table {
                 width: 732px;
@@ -463,9 +464,13 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 table-layout: fixed !important;
                 margin: 0 auto !important;
                 font-size: 9pt;
-                background-color: #fff; /* Table itself stays white */
+                background-color: #fff;
                 border: 1px solid #000 !important;
-                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                overflow: visible !important; /* Override global style.css overflow: hidden */
+            }
+            .jumin-table tr {
+                border: none !important; /* Prevent row-level borders from interfering */
             }
             .jumin-table .cell {
                 border: 1px solid #000 !important;
@@ -485,6 +490,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 text-align: center;
                 letter-spacing: 0.4em;
                 background-color: transparent !important;
+                border: none !important;
             }
             .digital-badge {
                 position: absolute;
