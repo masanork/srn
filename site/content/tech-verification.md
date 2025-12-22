@@ -1,11 +1,12 @@
-title: "Sorane (空音) PQC & Verification Specs"
+---
+title: "PQC & Verification Specs"
 layout: article
-description: "Soraneプロジェクトにおけるポスト量子暗号（PQC）ハイブリッド署名および選択的開示（Selective Disclosure）の技術仕様。"
+description: "ポスト量子暗号（PQC）ハイブリッド署名および選択的開示（Selective Disclosure）の技術仕様。"
 font: hero:ReggaeOne-Regular.ttf
 ---
 
 ## Overview
-Soraneは、既存の楕円曲線暗号 (Ed25519) と将来の量子コンピュータ耐性を持つ **ポスト量子暗号 (ML-DSA-44)** を組み合わせた **ハイブリッド署名** を採用している。これにより、現在の互換性と長期的な真正性を両立させる。また、プライバシー保護のため、**選択的開示 (SD-CWT)** を実装し、必要な項目のみを提示可能としている。
+既存の楕円曲線暗号 (Ed25519) と将来の量子コンピュータ耐性を持つ **ポスト量子暗号 (ML-DSA-44)** を組み合わせた **ハイブリッド署名** を採用している。これにより、現在の互換性と長期的な真正性を両立させる。また、プライバシー保護のため、**選択的開示 (SD-CWT)** を実装し、必要な項目のみを提示可能としている。
 
 ## Cryptographic Primitives
 公認ドキュメントの署名とプライバシー保護に使用されるアルゴリズム：
