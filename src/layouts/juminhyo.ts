@@ -602,6 +602,11 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 border: 1px solid #1e293b;
                 font-size: 0.85rem;
             }
+            .name-cell, .person-name {
+                font-size: 18pt !important;
+                font-weight: bold;
+                letter-spacing: 0.1em;
+            }
 
             @media screen and (max-width: 800px) {
                 .pc-view-only {
