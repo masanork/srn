@@ -2,12 +2,8 @@
 title: "Technical Overview & Developer Guide"
 layout: article
 description: "A comprehensive guide to the SRN Static Site Generator architecture, features, and usage."
-font:
-  - hero:ReggaeOne-Regular.ttf
-  - default:ipamjm.ttf,acgjm.ttf
+font: hero:ReggaeOne-Regular.ttf
 ---
-
-# Technical Overview & Developer Guide
 
 ## System Concept
 

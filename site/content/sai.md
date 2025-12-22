@@ -1,7 +1,7 @@
 ---
 title: "斉・さい"
 layout: grid
-font: ["ipamjm.ttf", "acgjm.ttf"]
+font: GJM
 ---
 
 「斉」およびその異体字（斎、齊、齋など）のグリッド表示です。

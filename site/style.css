@@ -1,19 +1,27 @@
 :root {
     --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
     --secondary-color: #64748b;
     --bg-color: #f8fafc;
     --text-color: #1e293b;
+    --text-muted: #64748b;
     --border-color: #e2e8f0;
     --card-bg: #ffffff;
-    --accent-color: #f59e0b;
+    --accent-color: #0f172a;
+    --highlight: #3b82f6;
+    --success: #10b981;
+    --panel-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --premium-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --bg-color: #0f172a;
         --text-color: #f1f5f9;
+        --text-muted: #94a3b8;
         --border-color: #1e293b;
         --card-bg: #1e293b;
+        --accent-color: #f8fafc;
     }
 }
 
@@ -26,19 +34,21 @@
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    line-height: 1.6;
+    line-height: 1.7;
     font-size: 16px;
-    padding: 2rem;
-    max-width: 1000px;
+    padding: 3rem 2rem;
+    max-width: 1100px;
     margin: 0 auto;
+    letter-spacing: -0.01em;
 }
 
 main {
     background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    padding: 3rem;
+    border-radius: 1.5rem;
+    box-shadow: var(--premium-shadow);
     border: 1px solid var(--border-color);
+    transition: transform 0.2s ease;
 }
 
 h1,
@@ -47,73 +57,132 @@ h3,
 h4,
 h5,
 h6 {
-    margin-bottom: 1rem;
-    line-height: 1.25;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-top: 3rem;
+    border-bottom: 2px solid var(--bg-color);
+    padding-bottom: 0.5rem;
+}
+
+h3 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-top: 2rem;
 }
 
 p {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
 }
 
 a {
     color: var(--primary-color);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid transparent;
 }
 
 a:hover {
-    color: var(--accent-color);
+    color: var(--primary-hover);
+    border-bottom-color: var(--primary-hover);
 }
 
 pre {
-    background: #111;
-    color: #eee;
-    padding: 1rem;
-    border-radius: 0.5rem;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.25rem;
+    border-radius: 0.75rem;
     overflow-x: auto;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    border: 1px solid #1e293b;
 }
 
 code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.9em;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+pre code {
+    background: transparent;
+    padding: 0;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1.5rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    overflow: hidden;
 }
 
 th,
 td {
-    border: 1px solid var(--border-color);
-    padding: 0.75rem;
+    padding: 1rem;
     text-align: left;
+    border-bottom: 1px solid var(--border-color);
 }
 
 th {
     background-color: var(--bg-color);
     font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+tr:last-child td {
+    border-bottom: none;
 }
 
 .mermaid {
-    margin-bottom: 1.5rem;
+    margin: 2rem 0;
+    display: flex;
+    justify-content: center;
 }
 
-/* Specific document styles */
+/* Metadata Styles for Article */
+.article-meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.article-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Juminhyo & Official Specific */
 .doc-recipient {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.1rem;
 }
 
 .doc-body {
     white-space: pre-wrap;
-}
-
-.jumin-sheet {
-    /* Base font settings and grid lines for Juminhyo */
-    background: white;
-    color: black;
 }
 
 @media print {
@@ -126,5 +195,20 @@ th {
         box-shadow: none;
         border: none;
         padding: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    body {
+        padding: 1rem;
+    }
+
+    main {
+        padding: 1.5rem;
+        border-radius: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
     }
 }

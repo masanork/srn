@@ -1,7 +1,7 @@
 ---
 title: "辺・べん"
 layout: grid
-font: ["ipamjm.ttf", "acgjm.ttf"]
+font: GJM
 ---
 
 「辺」およびその異体字（邉、邊など）のグリッド表示です。

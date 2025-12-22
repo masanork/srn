@@ -233,10 +233,30 @@ async function build() {
             // Parse font configurations
             let fontConfigs: string[] = [];
             if (data.font) {
-                fontConfigs = Array.isArray(data.font) ? data.font : [data.font];
+                const rawConfigs = Array.isArray(data.font) ? data.font : [data.font];
+                fontConfigs = [];
+                let hasDefault = false;
+
+                for (const cfg of rawConfigs) {
+                    if (cfg === 'GJM') {
+                        fontConfigs.push('default:ipamjm.ttf,acgjm.ttf');
+                        fontConfigs.push('GJM:ipamjm.ttf,acgjm.ttf');
+                        hasDefault = true;
+                    } else if (cfg.startsWith('GJM:')) {
+                        fontConfigs.push(cfg.replace('GJM:', 'GJM:ipamjm.ttf,acgjm.ttf,'));
+                    } else {
+                        fontConfigs.push(cfg);
+                        if (cfg === 'default' || cfg.startsWith('default:')) hasDefault = true;
+                    }
+                }
+
+                // If no default style is specified, add the global default Noto Sans
+                if (!hasDefault) {
+                    fontConfigs.push('default:NotoSansJP-VariableFont_wght.ttf');
+                }
             } else {
-                // Default fonts if none specified
-                fontConfigs = ['ipamjm.ttf', 'acgjm.ttf'];
+                // Global default font
+                fontConfigs = ['default:NotoSansJP-VariableFont_wght.ttf'];
             }
 
             const styleMap: Record<string, string[]> = {};

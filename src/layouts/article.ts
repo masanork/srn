@@ -25,9 +25,24 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
 
     // Inject heading into body content if not already present (optional design choice)
     // For now, we manually follow the previous design: H1 + Content
+    // Inject heading into body content unless specifically hidden or using wide layout (usually index)
+    const showHeader = data.layout !== 'width' && data.hideTitle !== true;
+
     const fullContent = `
-        <h1>${data.title}</h1>
-        ${bodyContent}
+        <article>
+            ${showHeader ? `
+            <header>
+                <h1>${data.title}</h1>
+                <div class="article-meta">
+                    ${data.date ? `<span><time datetime="${data.date}">${data.date}</time></span>` : ''}
+                    ${data.author ? `<span>By ${data.author}</span>` : ''}
+                </div>
+            </header>
+            ` : ''}
+            <div class="article-body">
+                ${bodyContent}
+            </div>
+        </article>
     `;
 
     return baseLayout({
