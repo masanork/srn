@@ -2,9 +2,7 @@
 title: "Unihan 異体字コレクション"
 layout: variants
 description: "様々なタイプの異体字関係（意味、字形、IVS）をUnihan形式で一覧化するテストページ。"
-font: 
-  - ipamjm.ttf
-  - NotoSansJP-VariableFont_wght.ttf
+font: GJM
 variants:
   # Semantic Variants
   - source: "凶"

@@ -2,10 +2,7 @@
 title: "Release History"
 layout: article
 description: "Changelog and release history of SRN."
-font: ipamjm.ttf,acgjm.ttf
 ---
-
-# Release History
 
 ## v1.2.0 - Selective Disclosure & MIC Compliance
 **Date:** 2025-12-22
@@ -76,7 +73,7 @@ Enhanced typography management with a dedicated SQLite database.
 *   **Search**: Implemented `search.html` (internal tool) for finding glyphs by metadata.
 
 ## v0.5.0 - Initial SSG Core
-**Date:** 2025-12-18
+**Date:** 2025-12-19
 
 First functional version of the Typography-First Static Site Generator.
 

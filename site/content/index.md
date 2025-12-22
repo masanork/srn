@@ -3,8 +3,6 @@ title: "SRN: Typography-First SSG"
 layout: width
 font: 
   - hero:ReggaeOne-Regular.ttf
-  - default:NotoSansJP-VariableFont_wght.ttf,ipamjm.ttf
-  - bold:NotoSansJP-VariableFont_wght.ttf,ipamjm.ttf
 ---
 
 
@@ -90,184 +88,141 @@ font:
 </div>
 
 <style>
-    :root {
-        --bg-color: #f8fafc;
-        --card-bg: #ffffff;
-        --text-main: #1e293b;
-        --text-sub: #475569;
-        --accent: #0f172a;
-        --highlight: #3b82f6;
-        --success: #10b981;
-    }
-
-    body {
-        background-color: var(--bg-color);
-        color: var(--text-main);
-    }
-
-    /* Header */
-    .server-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid #ddd;
-        font-family: monospace;
-        font-size: 0.9rem;
-        color: var(--text-sub);
-        margin-bottom: 3rem;
-    }
-    .status-indicator {
-        width: 8px;
-        height: 8px;
-        background-color: var(--success);
-        border-radius: 50%;
-    }
-
-
-    /* Hero */
+<style>
+    /* Hero Section Enhancements */
     .hero-section {
         text-align: center;
-        margin-bottom: 4rem;
+        margin-bottom: 5rem;
         padding-top: 4rem;
     }
     .logo-area {
-        font-size: 6rem;
+        font-size: 7rem;
         margin-bottom: 0.5rem;
-        color: var(--accent);
+        color: var(--accent-color);
         letter-spacing: -0.05em;
-        font-weight: 700;
+        font-weight: 800;
+        line-height: 1;
     }
     .lead {
         font-size: 1.25rem;
         font-weight: 400;
         line-height: 1.6;
-        color: var(--text-sub);
+        color: var(--text-muted);
         max-width: 850px;
         margin: 0 auto;
-        letter-spacing: -0.01em;
     }
     .lead strong {
         font-weight: 700;
-        color: var(--accent);
+        color: var(--accent-color);
     }
 
-    /* Dashboard */
+    /* Dashboard Layout */
     .dashboard-grid {
         display: flex;
         flex-direction: column;
-        gap: 5rem;
+        gap: 6rem;
         margin-bottom: 6rem;
     }
 
-    .panel {
-        /* Remove card container effectively */
-    }
-
     .panel-header {
-        font-size: 0.72rem;
-        font-weight: 500;
-        letter-spacing: 0.12em;
-        color: #94a3b8;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
         text-transform: uppercase;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 0.25rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
         display: inline-block;
-        font-family: var(--font-default);
     }
 
-    .panel-body {
-        padding: 0;
-    }
-
-    /* Spec List */
+    /* Spec List (Features) */
     .spec-list {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 3rem;
         list-style: none;
         padding: 0;
-        margin: 0;
-    }
-    .spec-list li {
-        margin-bottom: 0;
     }
     .spec-list strong {
         display: block;
-        color: var(--accent);
-        margin-bottom: 0.5rem;
-        font-family: var(--font-bold);
-        font-size: 1.1rem;
-        letter-spacing: -0.01em;
+        color: var(--accent-color);
+        margin-bottom: 0.75rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
     }
     .spec-list span {
         display: block;
-        font-size: 0.95rem;
-        color: var(--text-sub);
+        font-size: 1rem;
+        color: var(--text-color);
         line-height: 1.6;
+        opacity: 0.8;
     }
 
-    /* Nav Links */
+    /* Nav Cards */
     .nav-links {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 1.5rem;
     }
     .nav-item {
         display: grid;
-        grid-template-columns: 48px 1fr;
-        grid-template-rows: auto auto;
+        grid-template-columns: 56px 1fr;
+        grid-row-gap: 0.25rem;
         align-items: center;
-        text-decoration: none;
-        color: inherit;
-        padding: 1.25rem;
-        border-radius: 12px;
-        transition: all 0.2s ease-out;
-        background: transparent;
-        border: 1px solid transparent;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--panel-shadow);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .nav-item:hover {
-        background: #fff;
-        border-color: #f1f5f9;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+        transform: translateY(-4px);
+        box-shadow: var(--premium-shadow);
+        border-color: var(--highlight);
     }
     .nav-item.primary {
-        background: #f0f9ff;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-color: #bae6fd;
     }
     .nav-item.primary:hover {
         background: #fff;
     }
+
     .nav-item .icon {
-        grid-row: 1 / -1;
-        font-size: 2rem;
-        opacity: 0.8;
+        grid-row: 1 / span 2;
+        font-size: 2.25rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     .nav-item .label {
-        font-weight: 600;
-        font-size: 1.05rem;
-        color: var(--accent);
-        margin-bottom: 0.2rem;
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--accent-color);
     }
     .nav-item .desc {
-        font-size: 0.85rem;
-        color: var(--text-sub);
+        font-size: 0.9rem;
+        color: var(--text-muted);
         line-height: 1.4;
     }
 
-    /* Footer */
+    /* Footer Status */
     .footer-status {
         text-align: center;
-        padding: 2rem 0;
-        border-top: 1px solid #ddd;
-        font-family: monospace;
+        padding: 4rem 0;
+        border-top: 1px solid var(--border-color);
+        font-family: ui-monospace, SFMono-Regular, monospace;
         font-size: 0.8rem;
-        color: #999;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
     }
 
-    @media (max-width: 600px) {
-        .logo-area { font-size: 4rem; }
-        .dashboard-grid { grid-template-columns: 1fr; }
+    @media (max-width: 768px) {
+        .logo-area { font-size: 4.5rem; }
+        .dashboard-grid { gap: 4rem; }
+        .nav-links { grid-template-columns: 1fr; }
     }
 </style>

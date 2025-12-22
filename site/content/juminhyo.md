@@ -3,7 +3,7 @@ title: "（見本）住民票の写し（世帯連記式）"
 layout: juminhyo
 date: 2025-12-21
 description: "住民票の写し（世帯連記式・見本）"
-font: ipamjm.ttf,acgjm.ttf
+font: GJM
 certificateTitle: "住民票"
 issueDate: "令和8年1月15日"
 address: "東京都港区虎ノ門２－２－１　虎ノ門ハイツ１０１号"

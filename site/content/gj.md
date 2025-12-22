@@ -1,8 +1,7 @@
 ---
 title: "行政事務標準文字追加文字一覧"
 layout: grid
-font:
-  - acgjm.ttf
+font: GJM
 ---
 
 | 通番 | 文字図形番号 | 文字コード |

@@ -2,12 +2,8 @@
 title: "PQC Verification Specifications"
 layout: article
 description: "Technical specifications for Post-Quantum Cryptography Hybrid Verifiable Credentials and Trust Architecture."
-font:
-  - hero:ReggaeOne-Regular.ttf
-  - default:ipamjm.ttf,acgjm.ttf
+font: hero:ReggaeOne-Regular.ttf
 ---
-
-# SRN Trust Architecture & PQC Specs
 
 ## Overview
 SRN implements a **Hybrid Verifiable Credential (VC)** system secured by both traditional ECC (Ed25519) and Post-Quantum Cryptography (ML-DSA-44). This ensures both current compatibility and long-term security against quantum threats.

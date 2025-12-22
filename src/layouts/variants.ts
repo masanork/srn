@@ -96,70 +96,97 @@ export function variantsLayout(data: VariantsData, bodyContent: string, fontCss:
 
         <style>
             .variant-group {
-                margin-bottom: 3rem;
-                padding: 1.5rem;
-                background: #fff;
+                margin-bottom: 4rem;
+                padding: 2.5rem;
+                background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 8px;
+                border-radius: 1.5rem;
+                box-shadow: var(--panel-shadow);
             }
             .source-char-container {
                 display: flex;
-                align-items: baseline;
-                gap: 1rem;
-                margin-bottom: 1rem;
-                border-bottom: 2px solid var(--link-color);
-                padding-bottom: 0.5rem;
+                align-items: center;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+                border-bottom: 2px solid var(--bg-color);
+                padding-bottom: 1.5rem;
             }
             .source-label {
-                font-weight: bold;
-                color: #000;
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.8rem;
+                letter-spacing: 0.1em;
             }
             .source-glyph {
-                font-size: 2.5rem;
-                color: #000;
-                -webkit-font-smoothing: auto;
+                font-size: 3.5rem;
+                color: var(--accent-color);
+                line-height: 1;
+                -webkit-font-smoothing: antialiased;
             }
             .source-code {
-                font-family: monospace;
-                color: #222;
+                font-family: ui-monospace, SFMono-Regular, monospace;
+                color: var(--text-color);
                 font-weight: 600;
+                background: var(--bg-color);
+                padding: 0.4rem 0.8rem;
+                border-radius: 0.5rem;
             }
             
             .variants-table {
                 width: 100%;
-                border-collapse: collapse;
+                border-collapse: separate;
+                border-spacing: 0;
+                border: 1px solid var(--border-color);
+                border-radius: 0.75rem;
+                overflow: hidden;
             }
             .variants-table th, .variants-table td {
-                border: 1px solid #ccc;
-                padding: 0.8rem;
+                padding: 1.25rem;
                 text-align: left;
-                color: #000;
+                border-bottom: 1px solid var(--border-color);
             }
             .variants-table th {
                 background: var(--bg-color);
-                font-weight: 700;
-                border-bottom: 2px solid #000;
+                font-weight: 600;
+                color: var(--text-muted);
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            .variants-table tr:last-child td {
+                border-bottom: none;
             }
             .font-apply {
                 font-family: ${fontFamilies.map(f => ['serif', 'sans-serif', 'monospace'].includes(f) ? f : `'${f}'`).join(', ')}, serif;
             }
             .target-glyph {
-                font-size: 2rem;
-                color: #000;
-                -webkit-font-smoothing: auto;
+                font-size: 2.5rem;
+                color: var(--accent-color);
+                line-height: 1;
+                -webkit-font-smoothing: antialiased;
             }
-            .code-cell, .export-area {
-                font-family: monospace;
+            .code-cell {
+                font-family: ui-monospace, SFMono-Regular, monospace;
+                font-size: 0.85rem;
+                color: var(--text-muted);
+            }
+            .export-section {
+                margin-top: 5rem;
             }
             .export-area {
                 width: 100%;
-                height: 200px;
-                padding: 1rem;
+                height: 300px;
+                padding: 1.5rem;
                 border: 1px solid var(--border-color);
-                background: var(--code-bg);
-                color: var(--text-color);
+                border-radius: 0.75rem;
+                background: #0f172a;
+                color: #e2e8f0;
                 white-space: pre;
                 overflow: auto;
+                font-family: ui-monospace, SFMono-Regular, monospace;
+                font-size: 0.85rem;
+                line-height: 1.6;
             }
         </style>
     `;

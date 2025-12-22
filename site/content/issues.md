@@ -2,7 +2,6 @@
 title: "Roadmap: Technical Status & Future Evolution"
 layout: article
 description: "SRNプロジェクトにおける技術的到達点、確定した実装方針、および次世代仕様（v2.0）へのロードマップ。"
-font: ipamjm.ttf,acgjm.ttf
 ---
 
 SRNプロジェクトは、高精度なタイポグラフィとポスト量子暗号（PQC）を組み合わせた新しいドキュメント基盤の概念実証（PoC）を超え、実運用を見据えた標準化フェーズに移行しています。
