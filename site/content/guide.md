@@ -1,3 +1,4 @@
+---
 title: "Sorane（空音）Technical Overview & Guide"
 layout: article
 description: "プロジェクトの設計思想、アーキテクチャ、および開発者向けガイド。"
@@ -9,13 +10,13 @@ Sorane（空音）は、**「高精度なタイポグラフィ」** と **「ポ
 
 コアとなる2つの柱：
 
-1.  **Typography-First (Zero Layout Shift)**:
-    *   ページごとに使用文字を解析し、フォントをサブセット化して埋め込むことで、どの端末でも「一文字の狂いもない」レンダリングを実現する。
-    *   IVS異体字や行政共通外字をネイティブにサポート。
-2.  **Cryptographic Authenticity & Privacy**:
-    *   すべての公認ドキュメントに **ポスト量子暗号 (ML-DSA-44)** を含むハイブリッド署名を付与。
-    *   **選択的開示 (Selective Disclosure / SD-CWT)** に対応し、プライバシーに配慮した最小限のデータ提示を実現。
-    *   e-Seals等に近い「組織の証跡」としての認証モデルを採用。
+1. **Typography-First (Zero Layout Shift)**:
+    * ページごとに使用文字を解析し、フォントをサブセット化して埋め込むことで、どの端末でも「一文字の狂いもない」レンダリングを実現する。
+    * IVS異体字や行政共通外字をネイティブにサポート。
+2. **Cryptographic Authenticity & Privacy**:
+    * すべての公認ドキュメントに **ポスト量子暗号 (ML-DSA-44)** を含むハイブリッド署名を付与。
+    * **選択的開示 (Selective Disclosure / SD-CWT)** に対応し、プライバシーに配慮した最小限のデータ提示を実現。
+    * e-Seals等に近い「組織の証跡」としての認証モデルを採用。
 
 ## Directory Structure
 
@@ -37,10 +38,12 @@ srn/
 ## Getting Started
 
 ### Prerequisites
-*   **Bun**: Runtime environment (v1.0+).
-*   **Node.js**: For compatibility (if needed).
+
+* **Bun**: Runtime environment (v1.0+).
+* **Node.js**: For compatibility (if needed).
 
 ### Installation
+
 ```bash
 git clone https://github.com/masanork/srn.git
 cd srn
@@ -48,13 +51,16 @@ npm install
 ```
 
 ### Initial Setup
+
 Before the first build, a Glyph Database must be generated for font analysis.
+
 ```bash
 # Initialize SQLite database from source font definitions (IVS/SVS)
 npm run db:build
 ```
 
 ### Building the Site
+
 ```bash
 # Standard Build (Incremental)
 npm run build
@@ -64,7 +70,9 @@ npm run build -- --clean
 ```
 
 ### Local Development
+
 To preview the site (and generate local font catalog):
+
 ```bash
 # Generate Glyph Catalog (site/fonts/catalog.html)
 npm run catalog
@@ -76,7 +84,9 @@ npx http-server dist
 ## Key Features & How-to
 
 ### 1. Writing Content
+
 Create Markdown files in `site/content/`.
+
 ```markdown
 ---
 title: "My Article"
@@ -87,7 +97,9 @@ Content goes here.
 ```
 
 ### 2. Verified Documents (Official VC)
+
 To certify a document, change the layout to `official`.
+
 ```markdown
 ---
 title: "Official Notice"
@@ -96,24 +108,27 @@ recipient: "Public"
 ---
 This content will be signed by the Root Key.
 ```
-*   **Result**: A `.vc.json` file is generated alongside the HTML.
-*   **Verification**: Users can verify this JSON in the [Verify Console](./verify.html).
+
+* **Result**: A `.vc.json` file is generated alongside the HTML.
+* **Verification**: Users can verify this JSON in the [Verify Console](./verify.html).
 
 ### 3. Font System (Typography)
+
 SRN allows precise control over font stacking and glyph substitution.
 
-*   **Inline Glyph**: `[font_name:glyph_id]` (e.g., `[ipamjm:MJ0001]`) embeds a specific glyph as SVG.
-*   **Auto Lookup**: `[MJ0001]` automatically finds the correct font from the database.
+* **Inline Glyph**: `[font_name:glyph_id]` (e.g., `[ipamjm:MJ000001]`) embeds a specific glyph as SVG.
+* **Auto Lookup**: `[MJ000001]` automatically finds the correct font from the database.
 
 ### 4. Trust Management (Advanced)
-*   **Root Key**: Generated automatically on first build in `site/data/root-key.json`. Back up this file to maintain issuer identity!
-*   **Revocation**: Status lists are generated in `dist/status-list.json`.
+
+* **Root Key**: Generated automatically on first build in `site/data/root-key.json`. Back up this file to maintain issuer identity!
+* **Revocation**: Status lists are generated in `dist/status-list.json`.
 
 ## Troubleshooting
 
-*   **Missing Glyphs**: Run `npm run catalog` to see available glyphs.
-*   **Build Errors**: Ensure `npm run db:build` was successful.
-*   **Signature Invalid**: If `site/data/root-key.json` was deleted, all previous signatures become invalid (Trust on First Use reset).
+* **Missing Glyphs**: Run `npm run catalog` to see available glyphs.
+* **Build Errors**: Ensure `npm run db:build` was successful.
+* **Signature Invalid**: If `site/data/root-key.json` was deleted, all previous signatures become invalid (Trust on First Use reset).
 
 ---
 *Built with [Bun](https://bun.sh) and [OpenType.js](https://opentype.js.org).*
