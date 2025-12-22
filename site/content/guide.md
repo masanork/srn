@@ -1,7 +1,6 @@
 title: "Sorane（空音）Technical Overview & Guide"
 layout: article
-description: "Sorane（空音）プロジェクトの設計思想、アーキテクチャ、および開発者向けガイド。"
-font: hero:ReggaeOne-Regular.ttf
+description: "プロジェクトの設計思想、アーキテクチャ、および開発者向けガイド。"
 ---
 
 ## System Concept
