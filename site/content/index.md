@@ -1,5 +1,5 @@
 ---
-title: "SRN: Typography-First SSG"
+title: "Sorane (空音): Typography-First SSG"
 layout: width
 font: 
   - hero:ReggaeOne-Regular.ttf
@@ -9,7 +9,7 @@ font:
 
 <div class="hero-section">
     <div class="logo-area font-hero">空音</div>
-    <p class="lead">SORANE: The Static Site Generator for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>
+    <p class="lead">SORANE (空音): The Reference Implementation for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>
 </div>
 
 <div class="dashboard-grid">
@@ -37,6 +37,7 @@ font:
         <div class="panel-body nav-links">
             <a href="./guide.html" class="nav-item">
                 <span class="icon">📖</span>
+                <span class="label">Developer Guide</span>
                 <span class="desc">System architecture & Usage manual.</span>
             </a>
             <a href="./releases.html" class="nav-item">
@@ -64,21 +65,7 @@ font:
                 <span class="label">PQC Verification Specs</span>
                 <span class="desc">Hybrid VC (Verifiable Credentials) tech specs.</span>
             </a>
-            <a href="./verify.html" class="nav-item primary">
-                <span class="icon">✅</span>
-                <span class="label">Verify VC Console</span>
-                <span class="desc">Client-side verification of ML-DSA signatures.</span>
-            </a>
-            <a href="./gj.html" class="nav-item">
-                <span class="icon">📊</span>
-                <span class="label">行政事務標準文字 追加文字一覧</span>
-                <span class="desc">Massive glyph grid rendering test.</span>
-            </a>
-            <a href="./sai.html" class="nav-item">
-                <span class="icon">字</span>
-                <span class="label">斎 Variants</span>
-                <span class="desc">Comprehensive list of 'Sai' variants (MJ).</span>
-            </a>
+
         </div>
     </div>
 </div>
@@ -87,7 +74,6 @@ font:
     Runtime: Bun v1.x | Engine: opentype.js | Database: SQLite (WAL)
 </div>
 
-<style>
 <style>
     /* Hero Section Enhancements */
     .hero-section {
@@ -165,8 +151,11 @@ font:
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 1.5rem;
+        justify-items: start;
     }
     .nav-item {
+        width: 100%;
+        max-width: 400px;
         display: grid;
         grid-template-columns: 56px 1fr;
         grid-row-gap: 0.25rem;

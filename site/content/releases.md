@@ -1,8 +1,28 @@
----
-title: "Release History"
+title: "Sorane (空音) Release History"
 layout: article
-description: "Changelog and release history of SRN."
+description: "Sorane（空音）プロジェクトのリリース履歴と主な更新内容。"
 ---
+
+## v1.3.0 - Branding & Discussion Paper Refinement
+**Date:** 2025-12-22
+
+Finalizing the technical memorandum for public institutions and aligning the project branding.
+
+*   **Project Branding**:
+    *   Unified project name to **"Sorane (空音)"**.
+    *   Revised project scope: Defined as an **OSS Reference Implementation** for high-fidelity typography and Post-Quantum Cryptography (PQC).
+*   **Documentation Refinement (`issues.md`)**:
+    *   Transformed into a technical memorandum/discussion paper ("論点整理の叩き台") for public institutions.
+    *   Revised tone to **Plain/Declarative (Da/Dearu)** style for professional neutrality.
+    *   Added deep-dives on:
+        *   **Non-standard Character Encoding**: PUA vs. JIS X 0213 normalization.
+        *   **Holder Binding**: PPID, ZKP, and JPKI serial number usage constraints.
+        *   **Frontend Interoperability**: Bridging PC workflows with smartphone wallets using Passkeys/CTAP.
+        *   **Legal Framing**: Defining signatures as **"Organizational Seals / e-Seals"** rather than natural person's electronic signatures.
+        *   **Ecosystem Governance**: Advocating for open specifications and conformance tests to avoid vendor lock-in.
+*   **Index Cleanup**:
+    *   Removed the massive "Additional Administrative Characters List" from the main navigation to focus on core documentation and demos.
+    *   Improved dashboard layout for better information hierarchy.
 
 ## v1.2.0 - Selective Disclosure & MIC Compliance
 **Date:** 2025-12-22
