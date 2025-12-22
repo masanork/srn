@@ -1,22 +1,22 @@
----
-title: "Technical Overview & Developer Guide"
+title: "Sorane（空音）Technical Overview & Guide"
 layout: article
-description: "A comprehensive guide to the SRN Static Site Generator architecture, features, and usage."
+description: "Sorane（空音）プロジェクトの設計思想、アーキテクチャ、および開発者向けガイド。"
 font: hero:ReggaeOne-Regular.ttf
 ---
 
 ## System Concept
 
-SRN (SoRaNe) is a specialized Static Site Generator designed for **Typography-First** and **Cryptographic Authenticity**. Unlike general-purpose SSGs, SRN focuses on two core pillars:
+Sorane（空音）は、**「高精度なタイポグラフィ」** と **「ポスト量子暗号（PQC）」** を組み合わせたデータ交付基盤のオープンソース参照実装（Reference Implementation）である。特定の完成された製品ではなく、公共機関がVCを発行する際の実装上の難所をクリアするための「技術的な叩き台」を提供することを目的としている。
 
-1.  **Zero Layout Shift (CLS 0)**:
-    *   Fonts are subsetted per page during build time.
-    *   Only exact glyphs used on the page are embedded as Base64.
-    *   Ensures identical rendering across all devices with zero external requests.
-2.  **Verifiable Authenticity**:
-    *   Every official document is cryptographically signed.
-    *   Implements **Post-Quantum Cryptography** (ML-DSA-44) alongside Ed25519.
-    *   Provides a built-in "Verification Console" for checking document integrity.
+コアとなる2つの柱：
+
+1.  **Typography-First (Zero Layout Shift)**:
+    *   ページごとに使用文字を解析し、フォントをサブセット化して埋め込むことで、どの端末でも「一文字の狂いもない」レンダリングを実現する。
+    *   IVS異体字や行政共通外字をネイティブにサポート。
+2.  **Cryptographic Authenticity & Privacy**:
+    *   すべての公認ドキュメントに **ポスト量子暗号 (ML-DSA-44)** を含むハイブリッド署名を付与。
+    *   **選択的開示 (Selective Disclosure / SD-CWT)** に対応し、プライバシーに配慮した最小限のデータ提示を実現。
+    *   e-Seals等に近い「組織の証跡」としての認証モデルを採用。
 
 ## Directory Structure
 

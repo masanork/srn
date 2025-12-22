@@ -1,24 +1,22 @@
----
-title: "PQC Verification Specifications"
+title: "Sorane (空音) PQC & Verification Specs"
 layout: article
-description: "Technical specifications for Post-Quantum Cryptography Hybrid Verifiable Credentials and Trust Architecture."
+description: "Soraneプロジェクトにおけるポスト量子暗号（PQC）ハイブリッド署名および選択的開示（Selective Disclosure）の技術仕様。"
 font: hero:ReggaeOne-Regular.ttf
 ---
 
 ## Overview
-SRN implements a **Hybrid Verifiable Credential (VC)** system secured by both traditional ECC (Ed25519) and Post-Quantum Cryptography (ML-DSA-44). This ensures both current compatibility and long-term security against quantum threats.
-
-The trust model is designed for a Static Site Generator (SSG) environment, utilizing ephemeral build keys anchored by a persistent Root Identity.
+Soraneは、既存の楕円曲線暗号 (Ed25519) と将来の量子コンピュータ耐性を持つ **ポスト量子暗号 (ML-DSA-44)** を組み合わせた **ハイブリッド署名** を採用している。これにより、現在の互換性と長期的な真正性を両立させる。また、プライバシー保護のため、**選択的開示 (SD-CWT)** を実装し、必要な項目のみを提示可能としている。
 
 ## Cryptographic Primitives
-We utilize the following algorithms for dual-signing every official document:
+公認ドキュメントの署名とプライバシー保護に使用されるアルゴリズム：
 
 | Component | Algorithm | Purpose | Standards Ref |
 |-----------|-----------|---------|---------------|
-| **Primary Signature** | **Ed25519** | Current Standards Compatibility | Ed25519Signature2020 |
-| **Quantum Safe** | **ML-DSA-44** | Future-Proofing (NIST Level 2) | FIPS 204 (Draft) / Dilithium |
-| **Canonicalization** | **JCS** | Deterministic JSON Signing | RFC 8785 |
-| **Digests** | **SHA-256** | Content Integrity | NIST FIPS 180-4 |
+| **Primary Signature** | **Ed25519** | 現在の標準規格との互換性確保 | Ed25519Signature2020 |
+| **Quantum Safe** | **ML-DSA-44** | 将来的な量子脅威への耐性確保 | FIPS 204 (Dilithium) |
+| **Privacy (SD)** | **SD-CWT** | 選択的開示によるプライバシー保護 | IETF SD-CWT (CBOR) |
+| **Canonicalization** | **JCS** | 決定論的なJSON署名の生成 | RFC 8785 |
+| **Digests** | **SHA-256** | コンテンツの完全性担保 | NIST FIPS 180-4 |
 
 ## Trust Hierarchy
 
