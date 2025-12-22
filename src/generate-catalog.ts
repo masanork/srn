@@ -17,7 +17,7 @@ async function main() {
     // Let's read dist/glyph-index.json.
     const indexFile = path.join(DIST_DIR, 'glyph-index.json');
     if (!fs.existsSync(indexFile)) {
-        console.error("Glyph index not found in dist/. Please run 'npm run db:build' first.");
+        console.error("Glyph index not found in dist/. Please run 'bun run db:build' first.");
         return;
     }
 

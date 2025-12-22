@@ -47,7 +47,7 @@ srn/
 ```bash
 git clone https://github.com/masanork/srn.git
 cd srn
-npm install
+bun install
 ```
 
 ### Initial Setup
@@ -56,17 +56,17 @@ Before the first build, a Glyph Database must be generated for font analysis.
 
 ```bash
 # Initialize SQLite database from source font definitions (IVS/SVS)
-npm run db:build
+bun run db:build
 ```
 
 ### Building the Site
 
 ```bash
 # Standard Build (Incremental)
-npm run build
+bun run build
 
 # Clean Build (Rebuild all)
-npm run build -- --clean
+bun run build -- --clean
 ```
 
 ### Local Development
@@ -75,10 +75,10 @@ To preview the site (and generate local font catalog):
 
 ```bash
 # Generate Glyph Catalog (site/fonts/catalog.html)
-npm run catalog
+bun run catalog
 
 # Serve dist directory
-npx http-server dist
+bun x http-server dist
 ```
 
 ## Key Features & How-to
@@ -126,8 +126,8 @@ SRN allows precise control over font stacking and glyph substitution.
 
 ## Troubleshooting
 
-* **Missing Glyphs**: Run `npm run catalog` to see available glyphs.
-* **Build Errors**: Ensure `npm run db:build` was successful.
+* **Missing Glyphs**: Run `bun run catalog` to see available glyphs.
+* **Build Errors**: Ensure `bun run db:build` was successful.
 * **Signature Invalid**: If `site/data/root-key.json` was deleted, all previous signatures become invalid (Trust on First Use reset).
 
 ---
