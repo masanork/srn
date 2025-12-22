@@ -435,8 +435,12 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 position: relative;
                 box-sizing: border-box;
                 overflow: visible;
-                background: transparent; /* Seamless with main background */
+                background-color: #fff !important;
+                color: #000 !important;
+                color-scheme: light !important;
                 margin: 0;
+                padding: 10mm;
+                min-height: 297mm;
             }
             .watermark {
                 position: absolute;
