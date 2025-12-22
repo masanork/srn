@@ -34,7 +34,6 @@ font:
             </ul>
         </div>
     </div>
-
     <div class="panel">
         <div class="panel-header">MODULES & NAVIGATION</div>
         <div class="panel-body nav-links">
