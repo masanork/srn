@@ -94,7 +94,7 @@ Introduction of cryptographic signing features for official documents.
 
 Enhanced typography management with a dedicated SQLite database.
 
-* **Glyph DB**: `npm run db:build` now parses `site/fonts/` and builds a detailed index.
+* **Glyph DB**: `bun run db:build` now parses `site/fonts/` and builds a detailed index.
 * **IVS/SVS Support**: Full support for Ideographic Variation Sequences.
 * **Inline Syntax**: Added `[font:glyph_id]` syntax for direct glyph embedding in Markdown.
 * **Search**: Implemented `search.html` (internal tool) for finding glyphs by metadata.
