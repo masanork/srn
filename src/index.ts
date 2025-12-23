@@ -7,6 +7,7 @@ import { glob } from 'glob';
 import * as cheerio from 'cheerio';
 import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
 import { findGlyphInDb } from './db.ts';
+import { loadConfig, getAbsolutePaths } from './config.ts';
 
 // Render HTML using Layout System
 let finalHtml = '';
@@ -28,17 +29,11 @@ import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, creat
 import type { HybridKeys } from './vc.ts';
 
 // Configuration
-const SITE_DIR = path.resolve(process.cwd(), 'site');
-const DIST_DIR = path.resolve(process.cwd(), 'dist');
-const CONTENT_DIR = path.join(SITE_DIR, 'content');
-const FONTS_DIR = path.join(SITE_DIR, 'fonts');
-const DATA_DIR = path.join(SITE_DIR, 'data');
+const config = await loadConfig();
+const { SITE_DIR, DIST_DIR, CONTENT_DIR, FONTS_DIR, DATA_DIR } = getAbsolutePaths(config);
 
-// Next-Gen Identity: did:web configuration
-// Ideally these come from environment variables or a config file
-const SITE_DOMAIN = process.env.SITE_DOMAIN || "masanork.github.io";
-const SITE_PATH = process.env.SITE_PATH || "/srn";
-// Resulting DID: did:web:masanork.github.io:srn
+const SITE_DOMAIN = process.env.SITE_DOMAIN || config.identity.domain;
+const SITE_PATH = process.env.SITE_PATH || config.identity.path;
 const SITE_DID = `did:web:${SITE_DOMAIN}${SITE_PATH.replace(/\//g, ':')}`;
 
 async function build() {
@@ -158,7 +153,7 @@ async function build() {
     console.log(`  Key history updated. Current PQC Key: ...${currentKeys.pqc.publicKey.slice(-8)}`);
 
     // 6. Copy schemas to dist
-    const schemaSrcDir = path.join(__dirname, '../site/schemas');
+    const schemaSrcDir = path.join(SITE_DIR, 'schemas');
     const schemaDistDir = path.join(DIST_DIR, 'schemas');
     if (await fs.pathExists(schemaSrcDir)) {
         await fs.ensureDir(schemaDistDir);
@@ -238,33 +233,45 @@ async function build() {
                 let hasDefault = false;
 
                 for (const cfg of rawConfigs) {
-                    if (cfg === 'GJM') {
-                        fontConfigs.push('default:ipamjm.ttf,acgjm.ttf');
-                        fontConfigs.push('GJM:ipamjm.ttf,acgjm.ttf');
-                        hasDefault = true;
-                    } else if (cfg === 'TOKI') {
-                        const tokiFiles = 'TOUKIMIN.ttf,TMIN1501.ttf,TMIN1502.ttf,TMIN1503.ttf,TMIN1504.ttf,TMIN1505.ttf,TMIN1506.ttf,TMIN1507.ttf,TMIN1508.ttf,TMIN1509.ttf,TMIN1510.ttf,TMIN1511.ttf,TMIN1601.ttf,TMIN1602.ttf,TMIN1603.ttf,TMIN1604.ttf,TMINEX1.ttf';
-                        fontConfigs.push(`default:${tokiFiles}`);
-                        fontConfigs.push(`TOKI:${tokiFiles}`);
-                        hasDefault = true;
-                    } else if (cfg.startsWith('GJM:')) {
-                        fontConfigs.push(cfg.replace('GJM:', 'GJM:ipamjm.ttf,acgjm.ttf,'));
-                    } else if (cfg.startsWith('TOKI:')) {
-                        const tokiFiles = 'TOUKIMIN.ttf,TMIN1501.ttf,TMIN1502.ttf,TMIN1503.ttf,TMIN1504.ttf,TMIN1505.ttf,TMIN1506.ttf,TMIN1507.ttf,TMIN1508.ttf,TMIN1509.ttf,TMIN1510.ttf,TMIN1511.ttf,TMIN1601.ttf,TMIN1602.ttf,TMIN1603.ttf,TMIN1604.ttf,TMINEX1.ttf';
-                        fontConfigs.push(cfg.replace('TOKI:', `TOKI:${tokiFiles},`));
+                    let matchedStyle = '';
+                    let matchedFiles: string[] = [];
+
+                    // Check for direct style match or style: expansion
+                    for (const [sName, files] of Object.entries(config.fontStyles)) {
+                        if (cfg === sName) {
+                            matchedStyle = sName;
+                            matchedFiles = files;
+                            break;
+                        } else if (cfg.startsWith(`${sName}:`)) {
+                            const extra = cfg.slice(sName.length + 1);
+                            matchedStyle = sName;
+                            matchedFiles = [...files, ...extra.split(',').map((s: string) => s.trim())];
+                            break;
+                        }
+                    }
+
+                    if (matchedStyle) {
+                        const fileList = matchedFiles.join(',');
+                        fontConfigs.push(`${matchedStyle}:${fileList}`);
+                        if (!hasDefault) {
+                            fontConfigs.push(`default:${fileList}`);
+                            hasDefault = true;
+                        }
                     } else {
                         fontConfigs.push(cfg);
                         if (cfg === 'default' || cfg.startsWith('default:')) hasDefault = true;
                     }
                 }
 
-                // If no default style is specified, add the global default Noto Sans
+                // If no default style is specified, add the global default
                 if (!hasDefault) {
-                    fontConfigs.push('default:NotoSansJP-VariableFont_wght.ttf');
+                    const defFiles = config.fontStyles['default'] || ['NotoSansJP-VariableFont_wght.ttf'];
+                    fontConfigs.push(`default:${defFiles.join(',')}`);
                 }
             } else {
                 // Global default font
-                fontConfigs = ['default:NotoSansJP-VariableFont_wght.ttf'];
+                const defFiles = config.fontStyles['default'] || ['NotoSansJP-VariableFont_wght.ttf'];
+                fontConfigs.push(`default:${defFiles.join(',')}`);
             }
 
             const styleMap: Record<string, string[]> = {};
@@ -301,13 +308,13 @@ async function build() {
                 const fontPath = path.join(FONTS_DIR, fontName);
 
                 if (await fs.pathExists(fontPath)) {
+                    const fontFamilyName = getBaseName(fontName);
                     try {
                         console.log(`  Subsetting font: ${fontName}`);
                         const { buffer, mimeType, ivsRecordsCount } = await subsetFont(fontPath, fullText);
 
                         const format = 'woff2';
                         const dataUrl = bufferToDataUrl(buffer, mimeType);
-                        const fontFamilyName = getBaseName(fontName);
 
                         fontCss += `
 <style>
@@ -433,6 +440,7 @@ body {
                                 fFiles = pts.slice(1).join(':').trim();
                             }
                             if (sName === fontRef) {
+                                // @ts-ignore
                                 fontFile = fFiles.split(',')[0].trim();
                                 break;
                             }
@@ -441,10 +449,10 @@ body {
                         // Auto lookup from DB
                         const location = findGlyphInDb(glyphId);
                         if (location) {
-                            fontFile = location.filename;
+                            fontFile = location.filename || '';
                             console.log(`  Resolved ${glyphId} -> ${fontFile}`);
                         } else {
-                            if (glyphId.match(/^(MJ|GJ|uni)/)) {
+                            if (glyphId && glyphId.match(/^(MJ|GJ|uni)/)) {
                                 console.warn(`  Glyph not found in DB: ${glyphId}`);
                             }
                             return { original: m[0], replacement: m[0] };

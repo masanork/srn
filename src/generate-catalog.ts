@@ -6,12 +6,12 @@ import path from 'path';
 // This tool assumes the fonts.db is already built in site/data/fonts.db
 // It will embed the glyph index JS, allowing a local file opening.
 
-async function main() {
-    const SITE_DIR = path.resolve(process.cwd(), 'site');
-    const FONTS_DIR = path.join(SITE_DIR, 'fonts');
-    const DATA_DIR = path.join(SITE_DIR, 'data');
-    const DIST_DIR = path.resolve(process.cwd(), 'dist');
+import { loadConfig, getAbsolutePaths } from './config.ts';
 
+const config = await loadConfig();
+const { FONTS_DIR, DATA_DIR, DIST_DIR } = getAbsolutePaths(config);
+
+async function main() {
     // Read glyph index from DIST if available, or site/data?
     // Actually the build-db script pushed to dist/glyph-index.json.
     // Let's read dist/glyph-index.json.

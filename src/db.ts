@@ -1,8 +1,11 @@
 import { Database } from "bun:sqlite";
 import path from 'path';
 import fs from 'fs-extra';
+import { loadConfig, getAbsolutePaths } from './config.ts';
 
-const FONTS_DB_PATH = path.resolve(process.cwd(), 'site/data/fonts.db');
+const config = await loadConfig();
+const { DATA_DIR } = getAbsolutePaths(config);
+const FONTS_DB_PATH = path.join(DATA_DIR, 'fonts.db');
 
 let fontsDb: Database | null = null;
 
