@@ -32,7 +32,7 @@ import type { HybridKeys } from './vc.ts';
 
 // Configuration
 const config = await loadConfig();
-const { SITE_DIR, DIST_DIR, CONTENT_DIR, FONTS_DIR, DATA_DIR } = getAbsolutePaths(config);
+const { SITE_DIR, DIST_DIR, CONTENT_DIR, FONTS_DIR, DATA_DIR, SCHEMAS_DIR } = getAbsolutePaths(config);
 
 const SITE_DOMAIN = process.env.SITE_DOMAIN || config.identity.domain;
 const SITE_PATH = process.env.SITE_PATH || config.identity.path;
@@ -155,11 +155,10 @@ async function build() {
     console.log(`  Key history updated. Current PQC Key: ...${currentKeys.pqc.publicKey.slice(-8)}`);
 
     // 6. Copy schemas to dist
-    const schemaSrcDir = path.join(SITE_DIR, 'schemas');
     const schemaDistDir = path.join(DIST_DIR, 'schemas');
-    if (await fs.pathExists(schemaSrcDir)) {
+    if (await fs.pathExists(SCHEMAS_DIR)) {
         await fs.ensureDir(schemaDistDir);
-        await fs.copy(schemaSrcDir, schemaDistDir);
+        await fs.copy(SCHEMAS_DIR, schemaDistDir);
         console.log("  Copied schemas to dist.");
     }
     // --------------------------------
@@ -184,10 +183,15 @@ async function build() {
 
         // Find all markdown files
         const files = await glob('**/*.md', { cwd: CONTENT_DIR });
+        const hasIndexMd = files.includes('index.md');
 
         // Pass 1: Collect metadata of all pages for CMS/Blog features
-        console.log("Collecting page metadata...");
+        const systemFiles = [
+            'srn.md', 'blog.md', 'guide.md', 'juminhyo.md', 'verify.md',
+            'releases.md', 'tech-verification.md', 'variants.md',
+        ];
         const allPages: BlogItem[] = [];
+
         for (const file of files) {
             const filePath = path.join(CONTENT_DIR, file);
             const source = await fs.readFile(filePath, 'utf-8');
@@ -195,26 +199,42 @@ async function build() {
             allPages.push({
                 title: data.title || file,
                 description: data.description || '',
-                date: data.date || '',
+                date: data.date ? String(data.date) : '',
                 author: data.author || '',
                 path: file.replace('.md', '.html'),
-                layout: data.layout || 'article'
+                layout: data.layout || 'article',
+                isSystem: data.isSystem === true || systemFiles.includes(file)
             });
         }
         // Sort by date (desc)
-        allPages.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        allPages.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 
         for (const file of files) {
             const filePath = path.join(CONTENT_DIR, file);
-            const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
 
-            // Incremental check: if not clean build, check modification times
-            if (!isClean && await fs.pathExists(outPath)) {
+            // Multiple output paths support (e.g. srn.md -> index.html if no index.md)
+            const targetFiles = [file.replace('.md', '.html')];
+            if (!hasIndexMd && file === 'srn.md') {
+                targetFiles.push('index.html');
+            }
+
+            // Incremental check: if not clean build, check if all targets are up to date
+            if (!isClean) {
+                let allUpToDate = true;
                 const srcStat = await fs.stat(filePath);
-                const dstStat = await fs.stat(outPath);
-                if (srcStat.mtime <= dstStat.mtime) {
-                    continue;
+                for (const tFile of targetFiles) {
+                    const tPath = path.join(DIST_DIR, tFile);
+                    if (!await fs.pathExists(tPath)) {
+                        allUpToDate = false;
+                        break;
+                    }
+                    const dstStat = await fs.stat(tPath);
+                    if (srcStat.mtime > dstStat.mtime) {
+                        allUpToDate = false;
+                        break;
+                    }
                 }
+                if (allUpToDate) continue;
             }
 
             const source = await fs.readFile(filePath, 'utf-8');
@@ -545,7 +565,7 @@ body {
                 const vcPayload = {
                     id: `urn:uuid:${crypto.randomUUID()}`,
                     credentialSubject: {
-                        id: `https://example.com/notices/${file.replace('.md', '')}`,
+                        id: `https://${SITE_DOMAIN}${SITE_PATH}/notices/${file.replace('.md', '')}`,
                         name: data.title,
                         recipient: data.recipient,
                         "srn:buildId": buildId, // Embed Build ID for Revocation Check
@@ -603,7 +623,7 @@ body {
                         type: "JsonSchema"
                     },
                     credentialSubject: {
-                        id: `https://example.com/certificates/${file.replace('.md', '')}`,
+                        id: `https://${SITE_DOMAIN}${SITE_PATH}/certificates/${file.replace('.md', '')}`,
                         type: "ResidentRecord",
                         name: data.certificateTitle,
                         householder: data.householder,
@@ -675,10 +695,12 @@ body {
                 );
             }
 
-            await fs.ensureDir(path.dirname(outPath));
-            await fs.writeFile(outPath, finalHtml);
-
-            console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
+            for (const tFile of targetFiles) {
+                const outPath = path.join(DIST_DIR, tFile);
+                await fs.ensureDir(path.dirname(outPath));
+                await fs.writeFile(outPath, finalHtml);
+                console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
+            }
         }
 
 
@@ -706,9 +728,14 @@ body {
 
         // Generate Sitemaps
         console.log("Generating sitemaps...");
-        const baseUrl = "https://example.com";
-        const sitemapItems = files.map(file => {
-            const url = `${baseUrl}/${file.replace('.md', '.html')}`;
+        const baseUrl = `https://${SITE_DOMAIN}${SITE_PATH}`;
+        const sitemapFiles = [...files.map(f => f.replace('.md', '.html'))];
+        if (!hasIndexMd && files.includes('srn.md')) {
+            sitemapFiles.push('index.html');
+        }
+
+        const sitemapItems = sitemapFiles.map(file => {
+            const url = `${baseUrl}/${file}`;
             return `
     <url>
         <loc>${url}</loc>
@@ -724,11 +751,11 @@ ${sitemapItems.join('')}
         await fs.writeFile(path.join(DIST_DIR, 'sitemap.xml'), sitemapXml);
 
         // Generate llms.txt (AI Friendly Sitemap)
-        const llmsTxt = files.map(file => {
-            const title = path.basename(file, '.md');
-            const url = `/${file.replace('.md', '.html')}`;
-            return `- [${title}](${url})`;
-        }).join('\n');
+        const llmsPages = [...files.map(f => ({ title: path.basename(f, '.md'), url: `/${f.replace('.md', '.html')}` }))];
+        if (!hasIndexMd && files.includes('srn.md')) {
+            llmsPages.push({ title: 'Home', url: '/index.html' });
+        }
+        const llmsTxt = llmsPages.map(p => `- [${p.title}](${p.url})`).join('\n');
 
         await fs.writeFile(path.join(DIST_DIR, 'llms.txt'), llmsTxt);
         console.log(`Generated sitemap.xml and llms.txt`);
@@ -741,6 +768,9 @@ ${sitemapItems.join('')}
         files.forEach(f => {
             validPaths.add(f.replace(/\.md$/, '.html'));
         });
+        if (!hasIndexMd && files.includes('srn.md')) {
+            validPaths.add('index.html');
+        }
 
         const staticHtmls = await glob('**/*.html', { cwd: STATIC_DIR });
         staticHtmls.forEach(f => validPaths.add(f));
