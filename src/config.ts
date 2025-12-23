@@ -14,7 +14,7 @@ export interface SrnConfig {
         domain: string;
         path: string;
     };
-    fontStyles: Record<string, string[]>;
+    fontStyles: Record<string, string[] | string>;
 }
 
 const CONFIG_FILE = path.resolve(process.cwd(), 'srn.config.yaml');

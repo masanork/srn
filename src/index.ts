@@ -225,6 +225,17 @@ async function build() {
             const fullText = (data.title || '') + bodyText + dataText;
 
             let fontCss = '';
+
+            // Helper to resolve font styles (including aliases)
+            const resolveStyleFiles = (styleName: string, seen = new Set<string>()): string[] => {
+                if (seen.has(styleName)) return [];
+                seen.add(styleName);
+                const entry = config.fontStyles[styleName];
+                if (!entry) return [];
+                if (Array.isArray(entry)) return entry;
+                return resolveStyleFiles(entry, seen);
+            };
+
             // Parse font configurations
             let fontConfigs: string[] = [];
             if (data.font) {
@@ -237,15 +248,15 @@ async function build() {
                     let matchedFiles: string[] = [];
 
                     // Check for direct style match or style: expansion
-                    for (const [sName, files] of Object.entries(config.fontStyles)) {
+                    for (const sName of Object.keys(config.fontStyles)) {
                         if (cfg === sName) {
                             matchedStyle = sName;
-                            matchedFiles = files;
+                            matchedFiles = resolveStyleFiles(sName);
                             break;
                         } else if (cfg.startsWith(`${sName}:`)) {
                             const extra = cfg.slice(sName.length + 1);
                             matchedStyle = sName;
-                            matchedFiles = [...files, ...extra.split(',').map((s: string) => s.trim())];
+                            matchedFiles = [...resolveStyleFiles(sName), ...extra.split(',').map((s: string) => s.trim())];
                             break;
                         }
                     }
@@ -265,13 +276,15 @@ async function build() {
 
                 // If no default style is specified, add the global default
                 if (!hasDefault) {
-                    const defFiles = config.fontStyles['default'] || ['NotoSansJP-VariableFont_wght.ttf'];
-                    fontConfigs.push(`default:${defFiles.join(',')}`);
+                    const defFiles = resolveStyleFiles('default');
+                    const fallback = defFiles.length > 0 ? defFiles : ['NotoSansJP-VariableFont_wght.ttf'];
+                    fontConfigs.push(`default:${fallback.join(',')}`);
                 }
             } else {
                 // Global default font
-                const defFiles = config.fontStyles['default'] || ['NotoSansJP-VariableFont_wght.ttf'];
-                fontConfigs.push(`default:${defFiles.join(',')}`);
+                const defFiles = resolveStyleFiles('default');
+                const fallback = defFiles.length > 0 ? defFiles : ['NotoSansJP-VariableFont_wght.ttf'];
+                fontConfigs.push(`default:${fallback.join(',')}`);
             }
 
             const styleMap: Record<string, string[]> = {};
@@ -408,16 +421,16 @@ body {
                     // Analyze parts
                     if (parts.length === 1) {
                         // [glyphId]
-                        glyphId = parts[0];
+                        glyphId = parts[0]!;
                     } else if (parts.length === 2) {
                         // [fontOrStyle:glyphId]
-                        fontRef = parts[0];
-                        glyphId = parts[1];
+                        fontRef = parts[0]!;
+                        glyphId = parts[1]!;
                     } else if (parts.length >= 3) {
                         // [prefix:fontOrStyle:glyphId] e.g. [font:ipamjm.ttf:MJ005232]
                         // We ignore the first part (prefix)
-                        fontRef = parts[1];
-                        glyphId = parts[2];
+                        fontRef = parts[1]!;
+                        glyphId = parts[2]!;
                     }
 
                     // --- MJ Code Resolution Removed as per user request ---
@@ -436,7 +449,7 @@ body {
                             let fFiles = cfg;
                             if (cfg.includes(':')) {
                                 const pts = cfg.split(':');
-                                sName = pts[0].trim();
+                                sName = pts[0]!.trim();
                                 fFiles = pts.slice(1).join(':').trim();
                             }
                             if (sName === fontRef) {
