@@ -701,7 +701,8 @@ body {
                 data as BlogData,
                 allPages,
                 fontCss,
-                safeFontFamilies
+                safeFontFamilies,
+                htmlContent
             );
         } else {
             // Default to article

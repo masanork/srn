@@ -15,7 +15,7 @@ export interface BlogData {
     description?: string;
 }
 
-export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, fontFamilies: string[]) {
+export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, fontFamilies: string[], htmlContent: string) {
     // Filter out index and system pages, showing only user articles/official docs
     const articles = items.filter(item =>
         (item.layout === 'article' || item.layout === 'official') && !item.isSystem
@@ -38,6 +38,7 @@ export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, f
             <header class="blog-header">
                 <h1>${data.title}</h1>
                 ${data.description ? `<p class="blog-lead">${data.description}</p>` : ''}
+                ${htmlContent ? `<div class="blog-custom-content">${htmlContent}</div>` : ''}
             </header>
             <div class="blog-grid">
                 ${articleCards}
@@ -65,6 +66,22 @@ export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, f
             .blog-lead {
                 font-size: 1.25rem;
                 color: var(--text-muted);
+                margin-bottom: 2rem;
+            }
+            .blog-custom-content {
+                margin: 0 auto 3rem;
+                max-width: 600px;
+                line-height: 1.8;
+                text-align: left;
+                padding: 1.5rem;
+                background: var(--bg-color);
+                border-radius: 0.75rem;
+                border: 1px solid var(--border-color);
+            }
+            .blog-custom-content a {
+                color: var(--highlight);
+                font-weight: 600;
+                text-decoration: underline;
             }
             .blog-grid {
                 display: grid;
