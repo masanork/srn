@@ -18,7 +18,7 @@ export interface BlogData {
 export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, fontFamilies: string[], htmlContent: string) {
     // Filter out index and system pages, showing only user articles/official docs
     const articles = items.filter(item =>
-        (item.layout === 'article' || item.layout === 'official') && !item.isSystem
+        item.layout === 'article' || item.layout === 'official'
     );
 
     const articleCards = articles.map(item => `

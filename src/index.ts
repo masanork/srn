@@ -204,10 +204,6 @@ async function build() {
     const hasIndexMd = files.includes('index.md');
 
     // Pass 1: Collect metadata of all pages for CMS/Blog features
-    const systemFiles = [
-        'srn.md', 'blog.md', 'guide.md', 'juminhyo.md', 'verify.md',
-        'releases.md', 'tech-verification.md', 'variants.md',
-    ];
     const allPages: BlogItem[] = [];
 
     for (const file of files) {
@@ -221,7 +217,7 @@ async function build() {
             author: data.author || '',
             path: file.replace('.md', '.html'),
             layout: data.layout || 'article',
-            isSystem: data.isSystem === true || systemFiles.includes(file)
+            isSystem: data.isSystem === true
         });
     }
     // Sort by date (desc)
