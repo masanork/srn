@@ -79,16 +79,35 @@ async function build() {
     // --- Key Management & History ---
     console.log("Initializing Key Management...");
 
-    // 1. Root Key (Trust Anchor) management
+    // 1. Primary Identity Handling
+    const delegateKeyPath = path.join(DATA_DIR, 'delegate-key.json');
     const rootKeyPath = path.join(DATA_DIR, 'root-key.json');
-    let rootKeys: HybridKeys;
-    if (await fs.pathExists(rootKeyPath)) {
+
+    let currentKeys: HybridKeys;
+    let delegateCertificate: any = null;
+    let rootKeys: HybridKeys | null = null;
+
+    if (await fs.pathExists(delegateKeyPath)) {
+        const delegateData = await fs.readJson(delegateKeyPath);
+        currentKeys = delegateData.buildKeys;
+        delegateCertificate = delegateData.delegateCertificate;
+        console.log("  Using Authorized Delegate Build Keys.");
+
+        // Root public key from delegate certificate for DID Doc
+        // (In real scenario we'd load this from a stable root-identity.json)
+    } else if (await fs.pathExists(rootKeyPath)) {
         rootKeys = await fs.readJson(rootKeyPath);
-        console.log("  Loaded Root Key.");
+        currentKeys = generateHybridKeys(); // Still use ephemeral for the build
+        console.log("  Loaded Root Key. Generated Ephemeral Build Key.");
     } else {
         rootKeys = generateHybridKeys();
+        currentKeys = generateHybridKeys();
         await fs.writeJson(rootKeyPath, rootKeys, { spaces: 2 });
-        console.log("  Generated NEW Root Key.");
+        console.log("  Generated NEW Root Key and Ephemeral Build Key.");
+    }
+
+    if (!rootKeys && await fs.pathExists(rootKeyPath)) {
+        rootKeys = await fs.readJson(rootKeyPath);
     }
 
     // 2. Load History
@@ -103,10 +122,8 @@ async function build() {
         }
     }
 
-    // 3. Generate Ephemeral Keys for this build
-    const currentKeys = generateHybridKeys();
+    // 3. Mark Build
     const buildId = `build-${Date.now()}`;
-
     const newEntry = {
         timestamp: new Date().toISOString(),
         buildId: buildId,
@@ -119,6 +136,11 @@ async function build() {
     // Persist history
     await fs.writeJson(historyPath, keyHistory, { spaces: 2 });
     await fs.writeJson(path.join(DIST_DIR, 'key-history.json'), keyHistory, { spaces: 2 });
+
+    // Copy delegate certificate to dist if it exists
+    if (delegateCertificate) {
+        await fs.writeJson(path.join(DIST_DIR, 'delegate-certificate.json'), delegateCertificate, { spaces: 2 });
+    }
 
     // 4. Generate DID Document (did:web standard)
     console.log(`Generating DID Document for ${SITE_DID}...`);
@@ -133,7 +155,7 @@ async function build() {
                 "id": `${SITE_DID}#root-ed25519`,
                 "type": "Ed25519VerificationKey2020",
                 "controller": SITE_DID,
-                "publicKeyHex": rootKeys.ed25519.publicKey
+                "publicKeyHex": rootKeys ? rootKeys.ed25519.publicKey : (delegateCertificate ? delegateCertificate.issuer.split(':').pop() : '') // Simplified root extraction
             },
             {
                 "id": `${SITE_DID}#${buildId}-ed25519`,
@@ -164,9 +186,13 @@ async function build() {
     const statusListUrl = `https://${SITE_DOMAIN}${SITE_PATH}/status-list.json`;
 
     try {
-        const statusListVc = await createStatusListVC(revokedBuildIds, rootKeys, statusListUrl, SITE_DID);
-        await fs.writeJson(path.join(DIST_DIR, 'status-list.json'), statusListVc, { spaces: 2 });
-        console.log("  Generated Status List VC (Signed by Root Key).");
+        if (rootKeys) {
+            const statusListVc = await createStatusListVC(revokedBuildIds, rootKeys, statusListUrl, SITE_DID);
+            await fs.writeJson(path.join(DIST_DIR, 'status-list.json'), statusListVc, { spaces: 2 });
+            console.log("  Generated Status List VC (Signed by Root Key).");
+        } else {
+            console.warn("  Skipping Status List VC (No Root Key available locally).");
+        }
     } catch (err) {
         console.error("Failed to generate status list:", err);
     }
@@ -468,6 +494,8 @@ async function build() {
 <style>
 body {
   font-family: ${fontFamilyCss};
+  font-weight: 450; /* Slightly heavier for better legibility on high-res screens */
+  font-variation-settings: 'wght' 450;
 }
 </style>
         `;

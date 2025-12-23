@@ -1,6 +1,7 @@
 import canonicalize from 'canonicalize';
 import { ml_dsa44 } from '@noble/post-quantum/ml-dsa.js';
 import { ed25519 } from '@noble/curves/ed25519.js';
+import { p256 } from '@noble/curves/nist.js';
 import { encode, decode } from 'cbor-x';
 import crypto from 'node:crypto';
 
@@ -114,6 +115,11 @@ export interface VerificationResult {
     checks: {
         ed25519: boolean;
         pqc: boolean;
+        p256: boolean;
+    };
+    chain?: {
+        isAuthorized: boolean;
+        issuer: string;
     };
     error?: string;
     decoded?: any;
@@ -121,11 +127,11 @@ export interface VerificationResult {
 
 /**
  * Verifies a Hybrid VC.
- * Notes:
- * - Allows simplified canonicalization (JSON.stringify) matching the styling process.
- * - Extracts keys directly from verificationMethod (simplified DID resolution).
  */
-export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
+export async function verifyHybridVC(
+    vc: any,
+    options: { trustedKeys?: Record<string, string> } = {}
+): Promise<VerificationResult> {
     try {
         // 1. Separate Proofs from Payload
         const proofs = vc.proof;
@@ -141,9 +147,10 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
 
         // 2. Extract Proofs
         const edProof = proofs.find(p => p.type === 'Ed25519Signature2020');
+        const p256Proof = proofs.find(p => p.type === 'EcdsaSecp256k1Signature2019' || p.type.includes('P256'));
         const pqcProof = proofs.find(p => p.cryptosuite === 'ml-dsa-44-2025');
 
-        const checks = { ed25519: false, pqc: false };
+        const checks = { ed25519: false, pqc: false, p256: false };
 
         // 3. Verify Ed25519
         if (edProof) {
@@ -153,6 +160,8 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
             // Clean suffix
             pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
 
+            // console.log(`Debug: Classic VM: ${vm}, pubKeyHex (pre-trusted): ${pubKeyHex}`);
+
             // Fallback: If it's a did:key and we don't have a hex, try to extract from the DID itself
             if ((!pubKeyHex || pubKeyHex === 'root' || pubKeyHex.length < 32) && vm.startsWith('did:key:z')) {
                 // This is a simplified did:key extraction (just taking what's after 'z')
@@ -161,10 +170,40 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
 
             const sigHex = edProof.proofValue;
 
+            // If not in DID/suffix, check trustedKeys
+            if ((!pubKeyHex || pubKeyHex === 'root') && options.trustedKeys) {
+                pubKeyHex = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!] || pubKeyHex;
+                // console.log(`Debug: Classic pubKeyHex (post-trusted): ${pubKeyHex}`);
+            }
+
             if (pubKeyHex && sigHex && pubKeyHex.length >= 64) {
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
                 checks.ed25519 = ed25519.verify(sigBytes, payloadBytes, pubBytes);
+                // console.log(`Debug: Classic verification result: ${checks.ed25519}`);
+            }
+        }
+
+        // 3.1 Verify P-256 (PassKey)
+        if (p256Proof) {
+            const vm = p256Proof.verificationMethod || "";
+            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
+            pubKeyHex = pubKeyHex.replace('-p256', '').replace('-ed25519', '').replace('-pqc', '');
+
+            if ((!pubKeyHex || pubKeyHex === 'root' || pubKeyHex.length < 32) && vm.startsWith('did:key:z')) {
+                pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
+            }
+
+            const sigHex = p256Proof.proofValue;
+
+            if (pubKeyHex && sigHex) {
+                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
+                const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
+                try {
+                    checks.p256 = p256.verify(sigBytes, payloadBytes, pubBytes);
+                } catch (e) {
+                    console.error("P-256 verification error:", e);
+                }
             }
         }
 
@@ -179,16 +218,22 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
 
             const sigHex = pqcProof.proofValue;
 
+            if ((!pubKeyHex || pubKeyHex === 'root') && options.trustedKeys) {
+                pubKeyHex = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!] || pubKeyHex;
+                // console.log(`Debug: PQC pubKeyHex (post-trusted): ${pubKeyHex.slice(0, 20)}...`);
+            }
+
             if (pubKeyHex && sigHex && pubKeyHex.length > 100) {
                 // ml_dsa44.verify(signature, message, publicKey)
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
                 checks.pqc = ml_dsa44.verify(sigBytes, payloadBytes, pubBytes);
+                // console.log(`Debug: PQC verification result: ${checks.pqc}`);
             }
         }
 
         return {
-            isValid: checks.ed25519 && checks.pqc, // Strict: Both must be valid
+            isValid: (checks.ed25519 || checks.p256) && checks.pqc, // Hybrid: (Classic) AND Quantum
             checks,
             decoded: payload
         };
@@ -196,7 +241,7 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
     } catch (e: any) {
         return {
             isValid: false,
-            checks: { ed25519: false, pqc: false },
+            checks: { ed25519: false, pqc: false, p256: false },
             error: e.message
         };
     }
@@ -369,5 +414,85 @@ export async function createSdCoseVC(
         cbor: finalCbor,
         base64url: b64,
         disclosures
+    };
+}
+
+/**
+ * Creates a Delegate Certificate where a Root Key (PassKey) authorizes a Build Key.
+ */
+export async function createDelegateCertificate(
+    buildKeys: HybridKeys,
+    rootKeys: HybridKeys, // In real PassKey, this signature comes from the browser
+    issuerDid: string,
+    validDays: number = 7
+): Promise<any> {
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + validDays);
+
+    const certificate = {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        "type": ["VerifiableCredential", "DelegateCertificate"],
+        "issuer": issuerDid,
+        "issuanceDate": new Date().toISOString(),
+        "expirationDate": validUntil.toISOString(),
+        "credentialSubject": {
+            "id": `did:key:z${buildKeys.ed25519.publicKey}`,
+            "publicKeyEd25519": buildKeys.ed25519.publicKey,
+            "publicKeyPqc": buildKeys.pqc.publicKey
+        }
+    };
+
+    // Sign with Root Key (Classic + PQC if hybrid, or just P-256 for PassKey)
+    return createHybridVC(certificate, rootKeys, issuerDid, 'root');
+}
+
+/**
+ * Verifies a VC and its authority chain.
+ */
+export async function verifyDelegateChain(
+    vc: any,
+    delegateCert: any,
+    rootPublicKeyHex: string,
+    rootPqcPublicKeyHex?: string
+): Promise<VerificationResult> {
+    const trustedKeys: Record<string, string> = {};
+    if (rootPublicKeyHex) trustedKeys['root'] = rootPublicKeyHex;
+    // We can also map specific DIDs if we want
+    const rootDid = delegateCert.issuer;
+    trustedKeys[`${rootDid}#root-ed25519`] = rootPublicKeyHex;
+    if (rootPqcPublicKeyHex) trustedKeys[`${rootDid}#root-pqc`] = rootPqcPublicKeyHex;
+
+    // 2. Ensure it's the correct root
+    // For PoC: if certResult.isValid is true, it means it was signed by the key we provided in trustedKeys.
+    // We just check if the issuer matches the DID we expect (if provided).
+    const certResult = await verifyHybridVC(delegateCert, { trustedKeys });
+    if (!certResult.isValid) return certResult;
+
+    // 3. Extract Build Keys from Certificate
+    const buildKeys = {
+        ed25519: delegateCert.credentialSubject.publicKeyEd25519,
+        pqc: delegateCert.credentialSubject.publicKeyPqc
+    };
+
+    // 4. Verify the Document VC (Signed by Delegate)
+    const vcTrustedKeys: Record<string, string> = {};
+    const vcIssuer = vc.issuer;
+    vcTrustedKeys[`${vcIssuer}#root-ed25519`] = buildKeys.ed25519;
+    vcTrustedKeys[`${vcIssuer}#root-pqc`] = buildKeys.pqc;
+
+    const vcResult = await verifyHybridVC(vc, { trustedKeys: vcTrustedKeys });
+    if (!vcResult.isValid) return vcResult;
+
+    // 5. Final check
+    const certSubjectId = delegateCert.credentialSubject.id;
+    const isAuthorizedSigner = vcIssuer === certSubjectId;
+
+    return {
+        ...vcResult,
+        isValid: vcResult.isValid && certResult.isValid && isAuthorizedSigner,
+        chain: {
+            isAuthorized: isAuthorizedSigner,
+            issuer: delegateCert.issuer
+        }
     };
 }
