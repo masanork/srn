@@ -225,6 +225,8 @@ async function build() {
 
     for (const file of files) {
         const filePath = path.join(CONTENT_DIR, file);
+        const source = await fs.readFile(filePath, 'utf-8');
+        const { data, content } = matter(source);
 
         // Multiple output paths support (e.g. srn.md -> index.html if no index.md)
         const targetFiles = [file.replace('.md', '.html')];
@@ -233,7 +235,9 @@ async function build() {
         }
 
         // Incremental check: if not clean build, check if all targets are up to date
-        if (!isClean) {
+        // Note: Dynamic pages like 'blog' or 'grid' should always be rebuilt 
+        // because they depend on other pages' metadata.
+        if (!isClean && data.layout !== 'blog' && data.layout !== 'grid' && data.layout !== 'search') {
             let allUpToDate = true;
             const srcStat = await fs.stat(filePath);
             for (const tFile of targetFiles) {
@@ -250,9 +254,6 @@ async function build() {
             }
             if (allUpToDate) continue;
         }
-
-        const source = await fs.readFile(filePath, 'utf-8');
-        const { data, content } = matter(source);
 
         console.log(`Processing: ${file}`);
 

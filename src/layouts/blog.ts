@@ -59,9 +59,16 @@ export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, f
                 font-size: 3rem;
                 font-weight: 800;
                 margin-bottom: 1rem;
-                background: linear-gradient(135deg, var(--accent-color), var(--highlight));
+                color: var(--accent-color, var(--heading-color, #000));
+                background: linear-gradient(135deg, var(--accent-color, var(--heading-color, #000)), var(--highlight, var(--primary-color, #3b82f6)));
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
+            }
+            /* Fallback for browsers that don't support text clipping or when background fails */
+            @supports not (-webkit-background-clip: text) {
+                .blog-header h1 {
+                    -webkit-text-fill-color: currentColor;
+                }
             }
             .blog-lead {
                 font-size: 1.25rem;
