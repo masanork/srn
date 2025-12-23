@@ -25,6 +25,8 @@ import { juminhyoLayout } from './layouts/juminhyo.ts';
 import type { JuminhyoData, JuminhyoItem } from './layouts/juminhyo.ts';
 import { verifierLayout } from './layouts/verifier.ts';
 import type { VerifierData } from './layouts/verifier.ts';
+import { blogLayout } from './layouts/blog.ts';
+import type { BlogItem, BlogData } from './layouts/blog.ts';
 import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from './vc.ts';
 import type { HybridKeys } from './vc.ts';
 
@@ -183,6 +185,25 @@ async function build() {
         // Find all markdown files
         const files = await glob('**/*.md', { cwd: CONTENT_DIR });
 
+        // Pass 1: Collect metadata of all pages for CMS/Blog features
+        console.log("Collecting page metadata...");
+        const allPages: BlogItem[] = [];
+        for (const file of files) {
+            const filePath = path.join(CONTENT_DIR, file);
+            const source = await fs.readFile(filePath, 'utf-8');
+            const { data } = matter(source);
+            allPages.push({
+                title: data.title || file,
+                description: data.description || '',
+                date: data.date || '',
+                author: data.author || '',
+                path: file.replace('.md', '.html'),
+                layout: data.layout || 'article'
+            });
+        }
+        // Sort by date (desc)
+        allPages.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
         for (const file of files) {
             const filePath = path.join(CONTENT_DIR, file);
             const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
@@ -222,7 +243,18 @@ async function build() {
             };
             const dataText = extractTextFromData(data);
 
-            const fullText = (data.title || '') + bodyText + dataText;
+            let fullText = (data.title || '') + bodyText + dataText;
+
+            // Common UI strings used across layouts
+            const commonStrings = "Read More → ログイン 検索 設定 Home Back Next";
+            fullText += commonStrings;
+
+            // CMS Improvement: If layout is blog, include metadata from all pages in subsetting
+            if (data.layout === 'blog') {
+                // Include all titles, descriptions, and authors from the metadata list
+                const cmsText = allPages.map(p => p.title + p.description + p.author).join('');
+                fullText += cmsText;
+            }
 
             let fontCss = '';
 
@@ -625,6 +657,13 @@ body {
                     vc,
                     binaryVc.base64url,
                     sdVc.disclosures
+                );
+            } else if (data.layout === 'blog') {
+                finalHtml = blogLayout(
+                    data as BlogData,
+                    allPages,
+                    fontCss,
+                    safeFontFamilies
                 );
             } else {
                 // Default to article

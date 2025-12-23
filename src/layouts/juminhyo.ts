@@ -305,7 +305,7 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                 </div>
 
                 <div class="table-footer-meta">
-                    2026.1.15 電子交付 発行: https://cert.go.jp 登録先: https://wallet.jp 端末: Google Pixel 10 Pro
+                    2026.1.15 電子交付 発行: https://cert.go.jp 登録先: https://wallet.jp バインド先: MacBook Pro (M3 Chip / Secure Enclave ID: 8A2F...)
                 </div>
             </div>
 
