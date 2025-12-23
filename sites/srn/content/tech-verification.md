@@ -92,5 +92,10 @@ To bridge the trust between the persistent Root and ephemeral Build keys, we imp
     *   Verify the Status List's signature against the known **Root Key**.
     *   Ensure the Document VC's `issuer` (or Build ID) is **NOT** in the revocation list.
 
+## Practical Proof-of-Concept (PoC)
+これらの技術仕様を実際に適用した実装例として、住民票（Resident Record）のデモを用意している。これは、行政文書のデジタル化におけるPQCの有効性と、高度なタイポグラフィの維持を同時に検証するためのものである。
+
+*   [Resident Record (PoC Demo)](./juminhyo.html)
+
 ---
 *Note: This specification prioritizes "Zero Overhead" and "Static Verifiability" suitable for SSG environments, essentially implementing a specialized Public Key Infrastructure (PKI) without centralized certificate authorities.*
