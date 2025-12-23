@@ -49,12 +49,13 @@ export async function createHybridVC(
     issuerDid?: string,
     buildId?: string
 ): Promise<object> {
+    const issuer = issuerDid || `did:key:z${keys.ed25519.publicKey}`;
+
     // 2. Prepare Payload
-    // Ensure standard VC properties exist or merge them
     const vcPayload = {
         "@context": ["https://www.w3.org/2018/credentials/v1"],
         "type": ["VerifiableCredential"],
-        "issuer": issuerDid || "did:key:zUnknown...",
+        "issuer": issuer,
         "issuanceDate": new Date().toISOString(),
         ...document
     };
@@ -78,8 +79,9 @@ export async function createHybridVC(
     const edSig = ed25519.sign(payloadBytes, edPrivBytes);
 
     // 4. Output Hybrid VC
-    const issuer = issuerDid || `did:key:z${keys.ed25519.publicKey}`;
     const idSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.ed25519.publicKey);
+
+    const pqcIdSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.pqc.publicKey);
 
     const vc = {
         ...vcPayload,
@@ -94,7 +96,7 @@ export async function createHybridVC(
             {
                 "type": "DataIntegrityProof",
                 "cryptosuite": "ml-dsa-44-2025",
-                "verificationMethod": `${issuer}#${idSuffix}-pqc`,
+                "verificationMethod": `${issuer}#${pqcIdSuffix}-pqc`,
                 "proofPurpose": "assertionMethod",
                 "proofValue": bytesToHex(pqcSig)
             }
@@ -147,33 +149,37 @@ export async function verifyHybridVC(vc: any): Promise<VerificationResult> {
         if (edProof) {
             // Improved key extraction: look for known patterns or handle resolution
             const vm = edProof.verificationMethod || "";
-            // If it's did:key, we can extract directly. 
-            // If it's did:web, we might need to fetch the doc (but for now we fallback to build-in pubkeys if possible)
-            let pubKeyHex = "";
-            if (vm.includes('ed25519')) {
-                // In our new did:web format, the key might NOT be in the fragment itself
-                // but for PoC we've been putting it in the VM list.
-                // Ideally we resolve. TEMPORARY: check context/data for known local keys?
-                pubKeyHex = vm.split('#')[1] || "";
-            } else {
-                pubKeyHex = vm.split('#')[1] || "";
+            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
+            // Clean suffix
+            pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
+
+            // Fallback: If it's a did:key and we don't have a hex, try to extract from the DID itself
+            if ((!pubKeyHex || pubKeyHex === 'root' || pubKeyHex.length < 32) && vm.startsWith('did:key:z')) {
+                // This is a simplified did:key extraction (just taking what's after 'z')
+                pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
             }
 
             const sigHex = edProof.proofValue;
 
-            if (pubKeyHex && sigHex) {
+            if (pubKeyHex && sigHex && pubKeyHex.length >= 64) {
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
-                checks.ed25519 = ed25519.verify(sigHex, payloadBytes, pubBytes);
+                const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
+                checks.ed25519 = ed25519.verify(sigBytes, payloadBytes, pubBytes);
             }
         }
 
         // 4. Verify PQC (ML-DSA)
         if (pqcProof) {
             const vm = pqcProof.verificationMethod || "";
-            const pubKeyHex = vm.split('#')[1];
+            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
+            pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
+
+            // Fallback for did:key (though PQC keys are usually too large for did:key:z...)
+            // But if it's there, we try. 
+
             const sigHex = pqcProof.proofValue;
 
-            if (pubKeyHex && sigHex) {
+            if (pubKeyHex && sigHex && pubKeyHex.length > 100) {
                 // ml_dsa44.verify(signature, message, publicKey)
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
@@ -228,7 +234,7 @@ export async function createStatusListVC(
     };
 
     // We reuse createHybridVC for signing, passing the payload (which overrides defaults)
-    return createHybridVC(vcPayload, rootKeys, issuerDid, 'root');
+    return createHybridVC(vcPayload, rootKeys, issuerDid);
 }
 
 /**
