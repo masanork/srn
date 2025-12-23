@@ -51,10 +51,29 @@ async function build() {
     await fs.ensureDir(DIST_DIR);
     await fs.ensureDir(DATA_DIR);
 
-    // Copy style.css if it exists
-    const styleSrc = path.join(SITE_DIR, 'style.css');
-    if (await fs.pathExists(styleSrc)) {
-        await fs.copy(styleSrc, path.join(DIST_DIR, 'style.css'));
+    // 0. Copy style.css (Order: static/style.css -> style.css -> shared/style.css)
+    const stylePaths = [
+        path.join(SITE_DIR, 'static', 'style.css'),
+        path.join(SITE_DIR, 'style.css'),
+        path.resolve(process.cwd(), 'shared', 'style.css')
+    ];
+
+    for (const p of stylePaths) {
+        if (await fs.pathExists(p)) {
+            await fs.copy(p, path.join(DIST_DIR, 'style.css'));
+            console.log(`  Using stylesheet: ${p}`);
+            break;
+        }
+    }
+
+    // 0.1 Copy other static assets from site's static directory
+    const STATIC_DIR = path.join(SITE_DIR, 'static');
+    if (await fs.pathExists(STATIC_DIR)) {
+        await fs.copy(STATIC_DIR, DIST_DIR, {
+            overwrite: true,
+            filter: (src) => !src.endsWith('style.css') // Already handled specifically or just copy all
+        });
+        console.log("  Copied site-specific static assets.");
     }
 
     // --- Key Management & History ---
@@ -163,225 +182,224 @@ async function build() {
     }
     // --------------------------------
 
-    // Copy static assets
-    const STATIC_DIR = path.join(SITE_DIR, 'static');
-    if (await fs.pathExists(STATIC_DIR)) {
-        // Find all markdown files
-        // Configure marked once
-        marked.use({
-            renderer: {
-                // @ts-ignore
-                code({ text, lang }) {
-                    if (lang === 'mermaid') {
-                        return `<div class="mermaid">${text}</div>`;
-                    }
-                    const langClass = lang ? `class="language-${lang}"` : '';
-                    return `<pre><code ${langClass}>${text}</code></pre>\n`;
+    // --------------------------------
+    // Setup Markdown Renderer
+    // Find all markdown files
+    // Configure marked once
+    marked.use({
+        renderer: {
+            // @ts-ignore
+            code({ text, lang }) {
+                if (lang === 'mermaid') {
+                    return `<div class="mermaid">${text}</div>`;
                 }
+                const langClass = lang ? `class="language-${lang}"` : '';
+                return `<pre><code ${langClass}>${text}</code></pre>\n`;
             }
-        });
-
-        // Find all markdown files
-        const files = await glob('**/*.md', { cwd: CONTENT_DIR });
-        const hasIndexMd = files.includes('index.md');
-
-        // Pass 1: Collect metadata of all pages for CMS/Blog features
-        const systemFiles = [
-            'srn.md', 'blog.md', 'guide.md', 'juminhyo.md', 'verify.md',
-            'releases.md', 'tech-verification.md', 'variants.md',
-        ];
-        const allPages: BlogItem[] = [];
-
-        for (const file of files) {
-            const filePath = path.join(CONTENT_DIR, file);
-            const source = await fs.readFile(filePath, 'utf-8');
-            const { data } = matter(source);
-            allPages.push({
-                title: data.title || file,
-                description: data.description || '',
-                date: data.date ? String(data.date) : '',
-                author: data.author || '',
-                path: file.replace('.md', '.html'),
-                layout: data.layout || 'article',
-                isSystem: data.isSystem === true || systemFiles.includes(file)
-            });
         }
-        // Sort by date (desc)
-        allPages.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+    });
 
-        for (const file of files) {
-            const filePath = path.join(CONTENT_DIR, file);
+    // Find all markdown files
+    const files = await glob('**/*.md', { cwd: CONTENT_DIR });
+    const hasIndexMd = files.includes('index.md');
 
-            // Multiple output paths support (e.g. srn.md -> index.html if no index.md)
-            const targetFiles = [file.replace('.md', '.html')];
-            if (!hasIndexMd && file === 'srn.md') {
-                targetFiles.push('index.html');
+    // Pass 1: Collect metadata of all pages for CMS/Blog features
+    const systemFiles = [
+        'srn.md', 'blog.md', 'guide.md', 'juminhyo.md', 'verify.md',
+        'releases.md', 'tech-verification.md', 'variants.md',
+    ];
+    const allPages: BlogItem[] = [];
+
+    for (const file of files) {
+        const filePath = path.join(CONTENT_DIR, file);
+        const source = await fs.readFile(filePath, 'utf-8');
+        const { data } = matter(source);
+        allPages.push({
+            title: data.title || file,
+            description: data.description || '',
+            date: data.date ? String(data.date) : '',
+            author: data.author || '',
+            path: file.replace('.md', '.html'),
+            layout: data.layout || 'article',
+            isSystem: data.isSystem === true || systemFiles.includes(file)
+        });
+    }
+    // Sort by date (desc)
+    allPages.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+
+    for (const file of files) {
+        const filePath = path.join(CONTENT_DIR, file);
+
+        // Multiple output paths support (e.g. srn.md -> index.html if no index.md)
+        const targetFiles = [file.replace('.md', '.html')];
+        if (!hasIndexMd && file === 'srn.md') {
+            targetFiles.push('index.html');
+        }
+
+        // Incremental check: if not clean build, check if all targets are up to date
+        if (!isClean) {
+            let allUpToDate = true;
+            const srcStat = await fs.stat(filePath);
+            for (const tFile of targetFiles) {
+                const tPath = path.join(DIST_DIR, tFile);
+                if (!await fs.pathExists(tPath)) {
+                    allUpToDate = false;
+                    break;
+                }
+                const dstStat = await fs.stat(tPath);
+                if (srcStat.mtime > dstStat.mtime) {
+                    allUpToDate = false;
+                    break;
+                }
             }
+            if (allUpToDate) continue;
+        }
 
-            // Incremental check: if not clean build, check if all targets are up to date
-            if (!isClean) {
-                let allUpToDate = true;
-                const srcStat = await fs.stat(filePath);
-                for (const tFile of targetFiles) {
-                    const tPath = path.join(DIST_DIR, tFile);
-                    if (!await fs.pathExists(tPath)) {
-                        allUpToDate = false;
+        const source = await fs.readFile(filePath, 'utf-8');
+        const { data, content } = matter(source);
+
+        console.log(`Processing: ${file}`);
+
+        // Convert to HTML
+        let htmlContent = await marked.parse(content);
+
+        // Extract text for subsetting
+        const $ = cheerio.load(htmlContent);
+        const bodyText = $.text().replace(/\s+/g, '');
+
+        // Extract text from Frontmatter data to ensure all characters are subsetted
+        const extractTextFromData = (obj: any): string => {
+            let text = '';
+            if (typeof obj === 'string') {
+                text += obj;
+            } else if (Array.isArray(obj)) {
+                obj.forEach(item => text += extractTextFromData(item));
+            } else if (typeof obj === 'object' && obj !== null) {
+                Object.values(obj).forEach(val => text += extractTextFromData(val));
+            }
+            return text;
+        };
+        const dataText = extractTextFromData(data);
+
+        let fullText = (data.title || '') + bodyText + dataText;
+
+        // Common UI strings used across layouts
+        const commonStrings = "Read More → ログイン 検索 設定 Home Back Next";
+        fullText += commonStrings;
+
+        // CMS Improvement: If layout is blog, include metadata from all pages in subsetting
+        if (data.layout === 'blog') {
+            // Include all titles, descriptions, and authors from the metadata list
+            const cmsText = allPages.map(p => p.title + p.description + p.author).join('');
+            fullText += cmsText;
+        }
+
+        let fontCss = '';
+
+        // Helper to resolve font styles (including aliases)
+        const resolveStyleFiles = (styleName: string, seen = new Set<string>()): string[] => {
+            if (seen.has(styleName)) return [];
+            seen.add(styleName);
+            const entry = config.fontStyles[styleName];
+            if (!entry) return [];
+            if (Array.isArray(entry)) return entry;
+            return resolveStyleFiles(entry, seen);
+        };
+
+        // Parse font configurations
+        let fontConfigs: string[] = [];
+        if (data.font) {
+            const rawConfigs = Array.isArray(data.font) ? data.font : [data.font];
+            fontConfigs = [];
+            let hasDefault = false;
+
+            for (const cfg of rawConfigs) {
+                let matchedStyle = '';
+                let matchedFiles: string[] = [];
+
+                // Check for direct style match or style: expansion
+                for (const sName of Object.keys(config.fontStyles)) {
+                    if (cfg === sName) {
+                        matchedStyle = sName;
+                        matchedFiles = resolveStyleFiles(sName);
+                        break;
+                    } else if (cfg.startsWith(`${sName}:`)) {
+                        const extra = cfg.slice(sName.length + 1);
+                        matchedStyle = sName;
+                        matchedFiles = [...resolveStyleFiles(sName), ...extra.split(',').map((s: string) => s.trim())];
                         break;
                     }
-                    const dstStat = await fs.stat(tPath);
-                    if (srcStat.mtime > dstStat.mtime) {
-                        allUpToDate = false;
-                        break;
-                    }
                 }
-                if (allUpToDate) continue;
+
+                if (matchedStyle) {
+                    const fileList = matchedFiles.join(',');
+                    fontConfigs.push(`${matchedStyle}:${fileList}`);
+                    if (!hasDefault) {
+                        fontConfigs.push(`default:${fileList}`);
+                        hasDefault = true;
+                    }
+                } else {
+                    fontConfigs.push(cfg);
+                    if (cfg === 'default' || cfg.startsWith('default:')) hasDefault = true;
+                }
             }
 
-            const source = await fs.readFile(filePath, 'utf-8');
-            const { data, content } = matter(source);
-
-            console.log(`Processing: ${file}`);
-
-            // Convert to HTML
-            let htmlContent = await marked.parse(content);
-
-            // Extract text for subsetting
-            const $ = cheerio.load(htmlContent);
-            const bodyText = $.text().replace(/\s+/g, '');
-
-            // Extract text from Frontmatter data to ensure all characters are subsetted
-            const extractTextFromData = (obj: any): string => {
-                let text = '';
-                if (typeof obj === 'string') {
-                    text += obj;
-                } else if (Array.isArray(obj)) {
-                    obj.forEach(item => text += extractTextFromData(item));
-                } else if (typeof obj === 'object' && obj !== null) {
-                    Object.values(obj).forEach(val => text += extractTextFromData(val));
-                }
-                return text;
-            };
-            const dataText = extractTextFromData(data);
-
-            let fullText = (data.title || '') + bodyText + dataText;
-
-            // Common UI strings used across layouts
-            const commonStrings = "Read More → ログイン 検索 設定 Home Back Next";
-            fullText += commonStrings;
-
-            // CMS Improvement: If layout is blog, include metadata from all pages in subsetting
-            if (data.layout === 'blog') {
-                // Include all titles, descriptions, and authors from the metadata list
-                const cmsText = allPages.map(p => p.title + p.description + p.author).join('');
-                fullText += cmsText;
-            }
-
-            let fontCss = '';
-
-            // Helper to resolve font styles (including aliases)
-            const resolveStyleFiles = (styleName: string, seen = new Set<string>()): string[] => {
-                if (seen.has(styleName)) return [];
-                seen.add(styleName);
-                const entry = config.fontStyles[styleName];
-                if (!entry) return [];
-                if (Array.isArray(entry)) return entry;
-                return resolveStyleFiles(entry, seen);
-            };
-
-            // Parse font configurations
-            let fontConfigs: string[] = [];
-            if (data.font) {
-                const rawConfigs = Array.isArray(data.font) ? data.font : [data.font];
-                fontConfigs = [];
-                let hasDefault = false;
-
-                for (const cfg of rawConfigs) {
-                    let matchedStyle = '';
-                    let matchedFiles: string[] = [];
-
-                    // Check for direct style match or style: expansion
-                    for (const sName of Object.keys(config.fontStyles)) {
-                        if (cfg === sName) {
-                            matchedStyle = sName;
-                            matchedFiles = resolveStyleFiles(sName);
-                            break;
-                        } else if (cfg.startsWith(`${sName}:`)) {
-                            const extra = cfg.slice(sName.length + 1);
-                            matchedStyle = sName;
-                            matchedFiles = [...resolveStyleFiles(sName), ...extra.split(',').map((s: string) => s.trim())];
-                            break;
-                        }
-                    }
-
-                    if (matchedStyle) {
-                        const fileList = matchedFiles.join(',');
-                        fontConfigs.push(`${matchedStyle}:${fileList}`);
-                        if (!hasDefault) {
-                            fontConfigs.push(`default:${fileList}`);
-                            hasDefault = true;
-                        }
-                    } else {
-                        fontConfigs.push(cfg);
-                        if (cfg === 'default' || cfg.startsWith('default:')) hasDefault = true;
-                    }
-                }
-
-                // If no default style is specified, add the global default
-                if (!hasDefault) {
-                    const defFiles = resolveStyleFiles('default');
-                    const fallback = defFiles.length > 0 ? defFiles : ['NotoSansJP-VariableFont_wght.ttf'];
-                    fontConfigs.push(`default:${fallback.join(',')}`);
-                }
-            } else {
-                // Global default font
+            // If no default style is specified, add the global default
+            if (!hasDefault) {
                 const defFiles = resolveStyleFiles('default');
                 const fallback = defFiles.length > 0 ? defFiles : ['NotoSansJP-VariableFont_wght.ttf'];
                 fontConfigs.push(`default:${fallback.join(',')}`);
             }
+        } else {
+            // Global default font
+            const defFiles = resolveStyleFiles('default');
+            const fallback = defFiles.length > 0 ? defFiles : ['NotoSansJP-VariableFont_wght.ttf'];
+            fontConfigs.push(`default:${fallback.join(',')}`);
+        }
 
-            const styleMap: Record<string, string[]> = {};
-            const uniqueFontsToSubset = new Set<string>();
-            const ivsSupportCountByFamily = new Map<string, number>();
+        const styleMap: Record<string, string[]> = {};
+        const uniqueFontsToSubset = new Set<string>();
+        const ivsSupportCountByFamily = new Map<string, number>();
 
-            const getBaseName = (fname: string) => 'Srn-' + path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
+        const getBaseName = (fname: string) => 'Srn-' + path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
 
-            for (const config of fontConfigs) {
-                let styleName = 'default';
-                let fileListStr = config;
+        for (const config of fontConfigs) {
+            let styleName = 'default';
+            let fileListStr = config;
 
-                if (config.includes(':')) {
-                    const parts = config.split(':');
-                    styleName = (parts[0] || '').trim();
-                    fileListStr = parts.slice(1).join(':').trim(); // Join back in case filename has :, though unlikely
-                }
-
-                const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
-
-                if (!styleMap[styleName]) {
-                    styleMap[styleName] = [];
-                }
-
-                for (const file of files) {
-                    uniqueFontsToSubset.add(file);
-                    // Use a generated family name based on filename to uniquely identify it
-                    styleMap[styleName]?.push(getBaseName(file));
-                }
+            if (config.includes(':')) {
+                const parts = config.split(':');
+                styleName = (parts[0] || '').trim();
+                fileListStr = parts.slice(1).join(':').trim(); // Join back in case filename has :, though unlikely
             }
 
-            // Subset unique fonts
-            for (const fontName of uniqueFontsToSubset) {
-                const fontPath = path.join(FONTS_DIR, fontName);
+            const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
 
-                if (await fs.pathExists(fontPath)) {
-                    const fontFamilyName = getBaseName(fontName);
-                    try {
-                        console.log(`  Subsetting font: ${fontName}`);
-                        const { buffer, mimeType, ivsRecordsCount } = await subsetFont(fontPath, fullText);
+            if (!styleMap[styleName]) {
+                styleMap[styleName] = [];
+            }
 
-                        const format = 'woff2';
-                        const dataUrl = bufferToDataUrl(buffer, mimeType);
+            for (const file of files) {
+                uniqueFontsToSubset.add(file);
+                // Use a generated family name based on filename to uniquely identify it
+                styleMap[styleName]?.push(getBaseName(file));
+            }
+        }
 
-                        fontCss += `
+        // Subset unique fonts
+        for (const fontName of uniqueFontsToSubset) {
+            const fontPath = path.join(FONTS_DIR, fontName);
+
+            if (await fs.pathExists(fontPath)) {
+                const fontFamilyName = getBaseName(fontName);
+                try {
+                    console.log(`  Subsetting font: ${fontName}`);
+                    const { buffer, mimeType, ivsRecordsCount } = await subsetFont(fontPath, fullText);
+
+                    const format = 'woff2';
+                    const dataUrl = bufferToDataUrl(buffer, mimeType);
+
+                    fontCss += `
 <style>
 @font-face {
   font-family: '${fontFamilyName}';
@@ -390,400 +408,399 @@ async function build() {
 }
 </style>
                     `;
-                        ivsSupportCountByFamily.set(fontFamilyName, ivsRecordsCount);
-                    } catch (err) {
-                        console.error(`  Error subsetting font ${fontName}: ${err}`);
-                        console.error(err);
-                        ivsSupportCountByFamily.set(fontFamilyName, 0);
-                    }
-                } else {
-                    console.warn(`  Font not found: ${fontName}`);
-                    const fontFamilyName = getBaseName(fontName);
+                    ivsSupportCountByFamily.set(fontFamilyName, ivsRecordsCount);
+                } catch (err) {
+                    console.error(`  Error subsetting font ${fontName}: ${err}`);
+                    console.error(err);
                     ivsSupportCountByFamily.set(fontFamilyName, 0);
                 }
+            } else {
+                console.warn(`  Font not found: ${fontName}`);
+                const fontFamilyName = getBaseName(fontName);
+                ivsSupportCountByFamily.set(fontFamilyName, 0);
             }
+        }
 
-            const anyIvsSupport = Array.from(ivsSupportCountByFamily.values()).some(count => count > 0);
-            if (anyIvsSupport) {
-                const reorderStackForIvs = (stack: string[]) => {
-                    return stack
-                        .map((name, index) => ({
-                            name,
-                            index,
-                            score: ivsSupportCountByFamily.get(name) ?? 0
-                        }))
-                        .sort((a, b) => {
-                            if (a.score !== b.score) return b.score - a.score;
-                            return a.index - b.index;
-                        })
-                        .map(entry => entry.name);
-                };
+        const anyIvsSupport = Array.from(ivsSupportCountByFamily.values()).some(count => count > 0);
+        if (anyIvsSupport) {
+            const reorderStackForIvs = (stack: string[]) => {
+                return stack
+                    .map((name, index) => ({
+                        name,
+                        index,
+                        score: ivsSupportCountByFamily.get(name) ?? 0
+                    }))
+                    .sort((a, b) => {
+                        if (a.score !== b.score) return b.score - a.score;
+                        return a.index - b.index;
+                    })
+                    .map(entry => entry.name);
+            };
 
-                for (const [styleName, stack] of Object.entries(styleMap)) {
-                    styleMap[styleName] = reorderStackForIvs(stack);
-                }
-            }
-
-
-            // Default fallbacks
-            const defaultStack = styleMap['default'] || [];
-            const safeDefaultStack = defaultStack.map(f => `'${f}'`);
-
-            // Generate utility classes for non-default styles
-            let utilityCss = '<style>\n';
             for (const [styleName, stack] of Object.entries(styleMap)) {
-                if (styleName === 'default') continue;
-                const quotedStack = stack.map(f => `'${f}'`);
-                const stackStr = [...quotedStack, ...safeDefaultStack, 'serif'].join(', ');
-                utilityCss += `.font-${styleName} { font-family: ${stackStr} !important; }\n`;
+                styleMap[styleName] = reorderStackForIvs(stack);
             }
-            utilityCss += '</style>';
-            fontCss += utilityCss;
+        }
 
-            const safeFontFamilies = [...defaultStack, 'serif'];
 
-            // Generate valid CSS font stack: quote non-generic families
-            const fontFamilyCss = safeFontFamilies.map(f => {
-                if (['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'].includes(f)) return f;
-                return `'${f}'`;
-            }).join(', ');
+        // Default fallbacks
+        const defaultStack = styleMap['default'] || [];
+        const safeDefaultStack = defaultStack.map(f => `'${f}'`);
 
-            // Global styles (only font-family injection needed now)
-            const globalStyle = `
+        // Generate utility classes for non-default styles
+        let utilityCss = '<style>\n';
+        for (const [styleName, stack] of Object.entries(styleMap)) {
+            if (styleName === 'default') continue;
+            const quotedStack = stack.map(f => `'${f}'`);
+            const stackStr = [...quotedStack, ...safeDefaultStack, 'serif'].join(', ');
+            utilityCss += `.font-${styleName} { font-family: ${stackStr} !important; }\n`;
+        }
+        utilityCss += '</style>';
+        fontCss += utilityCss;
+
+        const safeFontFamilies = [...defaultStack, 'serif'];
+
+        // Generate valid CSS font stack: quote non-generic families
+        const fontFamilyCss = safeFontFamilies.map(f => {
+            if (['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'].includes(f)) return f;
+            return `'${f}'`;
+        }).join(', ');
+
+        // Global styles (only font-family injection needed now)
+        const globalStyle = `
 <style>
 body {
   font-family: ${fontFamilyCss};
 }
 </style>
         `;
-            fontCss += globalStyle;
+        fontCss += globalStyle;
 
-            // Process Inline Glyph Tags
-            const glyphPattern = /\[([a-zA-Z0-9_.:-]+)\]/g;
-            const matches = [...htmlContent.matchAll(glyphPattern)];
+        // Process Inline Glyph Tags
+        const glyphPattern = /\[([a-zA-Z0-9_.:-]+)\]/g;
+        const matches = [...htmlContent.matchAll(glyphPattern)];
 
-            if (matches.length > 0) {
-                const replacers = await Promise.all(matches.map(async m => {
-                    const rawContent = m[1] || '';
-                    const parts = rawContent.split(':');
+        if (matches.length > 0) {
+            const replacers = await Promise.all(matches.map(async m => {
+                const rawContent = m[1] || '';
+                const parts = rawContent.split(':');
 
-                    let fontRef = '';
-                    let glyphId = '';
+                let fontRef = '';
+                let glyphId = '';
 
-                    // Analyze parts
-                    if (parts.length === 1) {
-                        // [glyphId]
-                        glyphId = parts[0]!;
-                    } else if (parts.length === 2) {
-                        // [fontOrStyle:glyphId]
-                        fontRef = parts[0]!;
-                        glyphId = parts[1]!;
-                    } else if (parts.length >= 3) {
-                        // [prefix:fontOrStyle:glyphId] e.g. [font:ipamjm.ttf:MJ005232]
-                        // We ignore the first part (prefix)
-                        fontRef = parts[1]!;
-                        glyphId = parts[2]!;
-                    }
+                // Analyze parts
+                if (parts.length === 1) {
+                    // [glyphId]
+                    glyphId = parts[0]!;
+                } else if (parts.length === 2) {
+                    // [fontOrStyle:glyphId]
+                    fontRef = parts[0]!;
+                    glyphId = parts[1]!;
+                } else if (parts.length >= 3) {
+                    // [prefix:fontOrStyle:glyphId] e.g. [font:ipamjm.ttf:MJ005232]
+                    // We ignore the first part (prefix)
+                    fontRef = parts[1]!;
+                    glyphId = parts[2]!;
+                }
 
-                    // --- MJ Code Resolution Removed as per user request ---
-                    // if (glyphId && glyphId.startsWith('MJ')) { ... }
-                    // ----------------------------------------------------
+                // --- MJ Code Resolution Removed as per user request ---
+                // if (glyphId && glyphId.startsWith('MJ')) { ... }
+                // ----------------------------------------------------
 
-                    let fontFile = '';
+                let fontFile = '';
 
-                    if (fontRef) {
-                        // Explicit font/style specified
-                        fontFile = fontRef;
+                if (fontRef) {
+                    // Explicit font/style specified
+                    fontFile = fontRef;
 
-                        // Check if it matches a defined style alias
-                        for (const cfg of fontConfigs) {
-                            let sName = 'default';
-                            let fFiles = cfg;
-                            if (cfg.includes(':')) {
-                                const pts = cfg.split(':');
-                                sName = pts[0]!.trim();
-                                fFiles = pts.slice(1).join(':').trim();
-                            }
-                            if (sName === fontRef) {
-                                // @ts-ignore
-                                fontFile = fFiles.split(',')[0].trim();
-                                break;
-                            }
+                    // Check if it matches a defined style alias
+                    for (const cfg of fontConfigs) {
+                        let sName = 'default';
+                        let fFiles = cfg;
+                        if (cfg.includes(':')) {
+                            const pts = cfg.split(':');
+                            sName = pts[0]!.trim();
+                            fFiles = pts.slice(1).join(':').trim();
                         }
+                        if (sName === fontRef) {
+                            // @ts-ignore
+                            fontFile = fFiles.split(',')[0].trim();
+                            break;
+                        }
+                    }
+                } else {
+                    // Auto lookup from DB
+                    const location = findGlyphInDb(glyphId);
+                    if (location) {
+                        fontFile = location.filename || '';
+                        console.log(`  Resolved ${glyphId} -> ${fontFile}`);
                     } else {
-                        // Auto lookup from DB
-                        const location = findGlyphInDb(glyphId);
-                        if (location) {
-                            fontFile = location.filename || '';
-                            console.log(`  Resolved ${glyphId} -> ${fontFile}`);
-                        } else {
-                            if (glyphId && glyphId.match(/^(MJ|GJ|uni)/)) {
-                                console.warn(`  Glyph not found in DB: ${glyphId}`);
-                            }
-                            return { original: m[0], replacement: m[0] };
+                        if (glyphId && glyphId.match(/^(MJ|GJ|uni)/)) {
+                            console.warn(`  Glyph not found in DB: ${glyphId}`);
                         }
-                    }
-
-                    if (!fontFile || !glyphId) return { original: m[0], replacement: m[0] };
-
-                    let fontPath = path.join(FONTS_DIR, fontFile);
-                    if (!await fs.pathExists(fontPath)) {
-                        if (await fs.pathExists(fontPath + '.ttf')) fontPath += '.ttf';
-                        else if (await fs.pathExists(fontPath + '.otf')) fontPath += '.otf';
-                    }
-
-                    try {
-                        const svg = await getGlyphAsSvg(fontPath, glyphId);
-                        return { original: m[0], replacement: svg };
-                    } catch (e) {
-                        console.error(`  Failed to generate SVG for ${glyphId} in ${fontFile}:`, e);
                         return { original: m[0], replacement: m[0] };
                     }
-                }));
-
-                let newHtml = htmlContent;
-                for (const { original, replacement } of replacers) {
-                    newHtml = newHtml.split(original).join(replacement);
                 }
-                htmlContent = newHtml;
-            }
 
-            // Render HTML using Layout System
-            let finalHtml = '';
-            if (data.layout === 'variants') {
-                finalHtml = variantsLayout(
-                    data as VariantsData,
-                    htmlContent,
-                    fontCss,
-                    safeFontFamilies
-                );
-            } else if (data.layout === 'official') {
-                // Generate VC for official documents
-                console.log("  Generating PQC Hybrid VC...");
-                const plainText = cheerio.load(htmlContent).text();
+                if (!fontFile || !glyphId) return { original: m[0], replacement: m[0] };
 
-                const vcPayload = {
-                    id: `urn:uuid:${crypto.randomUUID()}`,
-                    credentialSubject: {
-                        id: `https://${SITE_DOMAIN}${SITE_PATH}/notices/${file.replace('.md', '')}`,
-                        name: data.title,
-                        recipient: data.recipient,
-                        "srn:buildId": buildId, // Embed Build ID for Revocation Check
-                        contentDigest: Buffer.from(new TextEncoder().encode(plainText)).toString('hex')
-                    }
-                };
-
-                // Use the single-source-of-truth keys for this build session
-                const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
-
-                // Save VC sidecar
-                const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
-                await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-                console.log(`  Generated VC: ${vcOutPath}`);
-
-                finalHtml = officialLayout(
-                    data as OfficialData,
-                    htmlContent,
-                    fontCss,
-                    safeFontFamilies,
-                    vc
-                );
-            } else if (data.layout === 'grid') {
-                finalHtml = gridLayout(
-                    data as GridData,
-                    htmlContent,
-                    fontCss,
-                    safeFontFamilies
-                );
-            } else if (data.layout === 'search') {
-                finalHtml = searchLayout(
-                    data as SearchData,
-                    htmlContent,
-                    fontCss,
-                    safeFontFamilies
-                );
-            } else if (data.layout === 'verifier') {
-                finalHtml = verifierLayout(
-                    data as VerifierData,
-                    htmlContent,
-                    fontCss,
-                    safeFontFamilies
-                );
-            } else if (data.layout === 'juminhyo') {
-                // Generate VC for Juminhyo
-                console.log("  Generating Juminhyo Hybrid VC...");
-
-                // Construct a structured payload for Juminhyo
-                // In a real scenario, this would match the JSON-LD structure exactly.
-                const vcPayload = {
-                    id: `urn:uuid:${crypto.randomUUID()}`,
-                    type: ["VerifiableCredential", "ResidentRecord"],
-                    credentialSchema: {
-                        id: `https://${SITE_DOMAIN}${SITE_PATH}/schemas/juminhyo-v1.schema.json`,
-                        type: "JsonSchema"
-                    },
-                    credentialSubject: {
-                        id: `https://${SITE_DOMAIN}${SITE_PATH}/certificates/${file.replace('.md', '')}`,
-                        type: "ResidentRecord",
-                        name: data.certificateTitle,
-                        householder: data.householder,
-                        address: data.address,
-                        "srn:buildId": buildId,
-                        member: (data.items as JuminhyoItem[]).map((item: JuminhyoItem) => ({
-                            name: item.name,
-                            kana: item.kana,
-                            birthDate: item.dob,
-                            gender: item.gender,
-                            relationship: item.relationship,
-                            becameResidentDate: item.becameResident,
-                            becameResidentReason: item.becameResidentReason,
-                            addressSetDate: item.addressDate,
-                            notificationDate: item.notificationDate,
-                            maidenName: item.maidenName,
-                            maidenKana: item.maidenKana,
-                            residentCode: item.residentCode,
-                            individualNumber: item.myNumber,
-                            prevAddress: item.prevAddress,
-                            domiciles: item.domiciles,
-                            remarks: item.remarks
-                        }))
-                    }
-                };
-
-                const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
-                const binaryVc = await createCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
-                const sdVc = await createSdCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
-
-                // Save VC sidecars
-                const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
-                await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-
-                const binVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.cbor'));
-                await fs.writeFile(binVcOutPath, binaryVc.cbor);
-
-                const sdVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.sd.cwt'));
-                await fs.writeFile(sdVcOutPath, sdVc.cbor);
-
-                const disclosuresOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.disclosures.json'));
-                await fs.writeJson(disclosuresOutPath, sdVc.disclosures, { spaces: 2 });
-
-                console.log(`  Generated Juminhyo VCs: ${vcOutPath}, ${binVcOutPath}, ${sdVcOutPath}`);
-
-                finalHtml = juminhyoLayout(
-                    data as JuminhyoData,
-                    htmlContent,
-                    fontCss,
-                    safeFontFamilies,
-                    vc,
-                    binaryVc.base64url,
-                    sdVc.disclosures
-                );
-            } else if (data.layout === 'blog') {
-                finalHtml = blogLayout(
-                    data as BlogData,
-                    allPages,
-                    fontCss,
-                    safeFontFamilies
-                );
-            } else {
-                // Default to article
-                finalHtml = articleLayout(
-                    data as ArticleData,
-                    htmlContent,
-                    fontCss,
-                    safeFontFamilies
-                );
-            }
-
-            for (const tFile of targetFiles) {
-                const outPath = path.join(DIST_DIR, tFile);
-                await fs.ensureDir(path.dirname(outPath));
-                await fs.writeFile(outPath, finalHtml);
-                console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
-            }
-        }
-
-
-        // Bundle Client Scripts
-        console.log("Bundling client scripts...");
-        const clientEntry = path.join(process.cwd(), 'src/client/verify-app.ts');
-        if (await fs.pathExists(clientEntry)) {
-            const result = await Bun.build({
-                entrypoints: [clientEntry],
-                outdir: path.join(DIST_DIR, 'assets'),
-                naming: "[name]-bundle.[ext]",
-                minify: true,
-            });
-            if (result.success) {
-                const generated = path.join(DIST_DIR, 'assets', 'verify-app-bundle.js');
-                const target = path.join(DIST_DIR, 'assets', 'verify-bundle.js');
-                if (await fs.pathExists(generated)) {
-                    await fs.move(generated, target, { overwrite: true });
+                let fontPath = path.join(FONTS_DIR, fontFile);
+                if (!await fs.pathExists(fontPath)) {
+                    if (await fs.pathExists(fontPath + '.ttf')) fontPath += '.ttf';
+                    else if (await fs.pathExists(fontPath + '.otf')) fontPath += '.otf';
                 }
-                console.log("  Bundled verify-app.ts -> assets/verify-bundle.js");
-            } else {
-                console.error("  Bundle failed:", result.logs);
+
+                try {
+                    const svg = await getGlyphAsSvg(fontPath, glyphId);
+                    return { original: m[0], replacement: svg };
+                } catch (e) {
+                    console.error(`  Failed to generate SVG for ${glyphId} in ${fontFile}:`, e);
+                    return { original: m[0], replacement: m[0] };
+                }
+            }));
+
+            let newHtml = htmlContent;
+            for (const { original, replacement } of replacers) {
+                newHtml = newHtml.split(original).join(replacement);
             }
+            htmlContent = newHtml;
         }
 
-        // Generate Sitemaps
-        console.log("Generating sitemaps...");
-        const baseUrl = `https://${SITE_DOMAIN}${SITE_PATH}`;
-        const sitemapFiles = [...files.map(f => f.replace('.md', '.html'))];
-        if (!hasIndexMd && files.includes('srn.md')) {
-            sitemapFiles.push('index.html');
+        // Render HTML using Layout System
+        let finalHtml = '';
+        if (data.layout === 'variants') {
+            finalHtml = variantsLayout(
+                data as VariantsData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
+            );
+        } else if (data.layout === 'official') {
+            // Generate VC for official documents
+            console.log("  Generating PQC Hybrid VC...");
+            const plainText = cheerio.load(htmlContent).text();
+
+            const vcPayload = {
+                id: `urn:uuid:${crypto.randomUUID()}`,
+                credentialSubject: {
+                    id: `https://${SITE_DOMAIN}${SITE_PATH}/notices/${file.replace('.md', '')}`,
+                    name: data.title,
+                    recipient: data.recipient,
+                    "srn:buildId": buildId, // Embed Build ID for Revocation Check
+                    contentDigest: Buffer.from(new TextEncoder().encode(plainText)).toString('hex')
+                }
+            };
+
+            // Use the single-source-of-truth keys for this build session
+            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
+
+            // Save VC sidecar
+            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
+            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
+            console.log(`  Generated VC: ${vcOutPath}`);
+
+            finalHtml = officialLayout(
+                data as OfficialData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies,
+                vc
+            );
+        } else if (data.layout === 'grid') {
+            finalHtml = gridLayout(
+                data as GridData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
+            );
+        } else if (data.layout === 'search') {
+            finalHtml = searchLayout(
+                data as SearchData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
+            );
+        } else if (data.layout === 'verifier') {
+            finalHtml = verifierLayout(
+                data as VerifierData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
+            );
+        } else if (data.layout === 'juminhyo') {
+            // Generate VC for Juminhyo
+            console.log("  Generating Juminhyo Hybrid VC...");
+
+            // Construct a structured payload for Juminhyo
+            // In a real scenario, this would match the JSON-LD structure exactly.
+            const vcPayload = {
+                id: `urn:uuid:${crypto.randomUUID()}`,
+                type: ["VerifiableCredential", "ResidentRecord"],
+                credentialSchema: {
+                    id: `https://${SITE_DOMAIN}${SITE_PATH}/schemas/juminhyo-v1.schema.json`,
+                    type: "JsonSchema"
+                },
+                credentialSubject: {
+                    id: `https://${SITE_DOMAIN}${SITE_PATH}/certificates/${file.replace('.md', '')}`,
+                    type: "ResidentRecord",
+                    name: data.certificateTitle,
+                    householder: data.householder,
+                    address: data.address,
+                    "srn:buildId": buildId,
+                    member: (data.items as JuminhyoItem[]).map((item: JuminhyoItem) => ({
+                        name: item.name,
+                        kana: item.kana,
+                        birthDate: item.dob,
+                        gender: item.gender,
+                        relationship: item.relationship,
+                        becameResidentDate: item.becameResident,
+                        becameResidentReason: item.becameResidentReason,
+                        addressSetDate: item.addressDate,
+                        notificationDate: item.notificationDate,
+                        maidenName: item.maidenName,
+                        maidenKana: item.maidenKana,
+                        residentCode: item.residentCode,
+                        individualNumber: item.myNumber,
+                        prevAddress: item.prevAddress,
+                        domiciles: item.domiciles,
+                        remarks: item.remarks
+                    }))
+                }
+            };
+
+            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
+            const binaryVc = await createCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
+            const sdVc = await createSdCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
+
+            // Save VC sidecars
+            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
+            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
+
+            const binVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.cbor'));
+            await fs.writeFile(binVcOutPath, binaryVc.cbor);
+
+            const sdVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.sd.cwt'));
+            await fs.writeFile(sdVcOutPath, sdVc.cbor);
+
+            const disclosuresOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.disclosures.json'));
+            await fs.writeJson(disclosuresOutPath, sdVc.disclosures, { spaces: 2 });
+
+            console.log(`  Generated Juminhyo VCs: ${vcOutPath}, ${binVcOutPath}, ${sdVcOutPath}`);
+
+            finalHtml = juminhyoLayout(
+                data as JuminhyoData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies,
+                vc,
+                binaryVc.base64url,
+                sdVc.disclosures
+            );
+        } else if (data.layout === 'blog') {
+            finalHtml = blogLayout(
+                data as BlogData,
+                allPages,
+                fontCss,
+                safeFontFamilies
+            );
+        } else {
+            // Default to article
+            finalHtml = articleLayout(
+                data as ArticleData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
+            );
         }
 
-        const sitemapItems = sitemapFiles.map(file => {
-            const url = `${baseUrl}/${file}`;
-            return `
+        for (const tFile of targetFiles) {
+            const outPath = path.join(DIST_DIR, tFile);
+            await fs.ensureDir(path.dirname(outPath));
+            await fs.writeFile(outPath, finalHtml);
+            console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
+        }
+    }
+
+
+    // Bundle Client Scripts
+    console.log("Bundling client scripts...");
+    const clientEntry = path.join(process.cwd(), 'src/client/verify-app.ts');
+    if (await fs.pathExists(clientEntry)) {
+        const result = await Bun.build({
+            entrypoints: [clientEntry],
+            outdir: path.join(DIST_DIR, 'assets'),
+            naming: "[name]-bundle.[ext]",
+            minify: true,
+        });
+        if (result.success) {
+            const generated = path.join(DIST_DIR, 'assets', 'verify-app-bundle.js');
+            const target = path.join(DIST_DIR, 'assets', 'verify-bundle.js');
+            if (await fs.pathExists(generated)) {
+                await fs.move(generated, target, { overwrite: true });
+            }
+            console.log("  Bundled verify-app.ts -> assets/verify-bundle.js");
+        } else {
+            console.error("  Bundle failed:", result.logs);
+        }
+    }
+
+    // Generate Sitemaps
+    console.log("Generating sitemaps...");
+    const baseUrl = `https://${SITE_DOMAIN}${SITE_PATH}`;
+    const sitemapFiles = [...files.map(f => f.replace('.md', '.html'))];
+    if (!hasIndexMd && files.includes('srn.md')) {
+        sitemapFiles.push('index.html');
+    }
+
+    const sitemapItems = sitemapFiles.map(file => {
+        const url = `${baseUrl}/${file}`;
+        return `
     <url>
         <loc>${url}</loc>
         <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     </url>`;
-        });
+    });
 
-        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemapItems.join('')}
 </urlset>`;
 
-        await fs.writeFile(path.join(DIST_DIR, 'sitemap.xml'), sitemapXml);
+    await fs.writeFile(path.join(DIST_DIR, 'sitemap.xml'), sitemapXml);
 
-        // Generate llms.txt (AI Friendly Sitemap)
-        const llmsPages = [...files.map(f => ({ title: path.basename(f, '.md'), url: `/${f.replace('.md', '.html')}` }))];
-        if (!hasIndexMd && files.includes('srn.md')) {
-            llmsPages.push({ title: 'Home', url: '/index.html' });
-        }
-        const llmsTxt = llmsPages.map(p => `- [${p.title}](${p.url})`).join('\n');
-
-        await fs.writeFile(path.join(DIST_DIR, 'llms.txt'), llmsTxt);
-        console.log(`Generated sitemap.xml and llms.txt`);
-
-        // Prune stale HTML files
-        console.log("Pruning stale files...");
-        const distHtmls = await glob('**/*.html', { cwd: DIST_DIR });
-        const validPaths = new Set<string>();
-
-        files.forEach(f => {
-            validPaths.add(f.replace(/\.md$/, '.html'));
-        });
-        if (!hasIndexMd && files.includes('srn.md')) {
-            validPaths.add('index.html');
-        }
-
-        const staticHtmls = await glob('**/*.html', { cwd: STATIC_DIR });
-        staticHtmls.forEach(f => validPaths.add(f));
-
-        for (const file of distHtmls) {
-            if (!validPaths.has(file)) {
-                await fs.remove(path.join(DIST_DIR, file));
-                console.log(`  Removed stale file: ${file}`);
-            }
-        }
-
-        console.log('Build complete.');
+    // Generate llms.txt (AI Friendly Sitemap)
+    const llmsPages = [...files.map(f => ({ title: path.basename(f, '.md'), url: `/${f.replace('.md', '.html')}` }))];
+    if (!hasIndexMd && files.includes('srn.md')) {
+        llmsPages.push({ title: 'Home', url: '/index.html' });
     }
+    const llmsTxt = llmsPages.map(p => `- [${p.title}](${p.url})`).join('\n');
+
+    await fs.writeFile(path.join(DIST_DIR, 'llms.txt'), llmsTxt);
+    console.log(`Generated sitemap.xml and llms.txt`);
+
+    // Prune stale HTML files
+    console.log("Pruning stale files...");
+    const distHtmls = await glob('**/*.html', { cwd: DIST_DIR });
+    const validPaths = new Set<string>();
+
+    files.forEach(f => {
+        validPaths.add(f.replace(/\.md$/, '.html'));
+    });
+    if (!hasIndexMd && files.includes('srn.md')) {
+        validPaths.add('index.html');
+    }
+
+    const staticHtmls = await glob('**/*.html', { cwd: STATIC_DIR });
+    staticHtmls.forEach(f => validPaths.add(f));
+
+    for (const file of distHtmls) {
+        if (!validPaths.has(file)) {
+            await fs.remove(path.join(DIST_DIR, file));
+            console.log(`  Removed stale file: ${file}`);
+        }
+    }
+
+    console.log('Build complete.');
 }
 
 build().catch(err => {
