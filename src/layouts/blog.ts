@@ -7,6 +7,7 @@ export interface BlogItem {
     author?: string;
     path: string;
     layout: string;
+    isSystem?: boolean;
 }
 
 export interface BlogData {
@@ -15,8 +16,10 @@ export interface BlogData {
 }
 
 export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, fontFamilies: string[]) {
-    // Filter out index and system pages if desired, or just show everything
-    const articles = items.filter(item => item.layout === 'article' || item.layout === 'official');
+    // Filter out index and system pages, showing only user articles/official docs
+    const articles = items.filter(item =>
+        (item.layout === 'article' || item.layout === 'official') && !item.isSystem
+    );
 
     const articleCards = articles.map(item => `
         <a href="${item.path}" class="blog-card">

@@ -7,9 +7,11 @@
     "bun": ">= 1.0.0"
   },
   "scripts": {
-    "build": "bun run src/index.ts",
+    "build": "bun run build:blog && bun run build:srn",
+    "build:blog": "bun run src/index.ts --site my-blog --clean",
+    "build:srn": "bun run src/index.ts --site srn --clean",
     "dev": "bun --watch src/index.ts",
-    "deploy": "gh-pages -d dist",
+    "deploy": "rm -rf .deploy && mkdir -p .deploy && cp -r dist/my-blog/* .deploy/ && mkdir -p .deploy/srn && cp -r dist/srn/* .deploy/srn/ && gh-pages -d .deploy",
     "grid": "bun run src/generate-grid.ts",
     "db:build": "bun run src/build-db.ts",
     "catalog": "bun run src/generate-catalog.ts",
