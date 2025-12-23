@@ -4,6 +4,26 @@ layout: article
 description: "Sorane（空音）プロジェクトのリリース履歴と主な更新内容。"
 ---
 
+## v1.4.0 - Multi-Tenant Architecture & Build Optimization
+
+**Date:** 2025-12-23
+
+Major restructuring to support managing multiple independent sites (tenants) from a single engine.
+
+* **Multi-Tenant (Multi-Site) Architecture**:
+  * Moved site-specific content, configurations, and data (keys) into `sites/` directory.
+  * Extracted shared assets (fonts, schemas, base CSS) into `shared/` directory.
+  * Added `--site [profile]` CLI argument to target specific sites during build.
+  * Independent `dist/` subdirectories per site for clear separation of build artifacts.
+* **Build & Deployment Optimization**:
+  * **Incremental Builds**: Re-enabled and optimized build logic to skip unchanged files, while ensuring dynamic pages (blog, grid) are always rebuilt.
+  * **Site-Specific Deployment**: Updated `package.json` to allow deploying to different repositories (e.g., personal blog to `masanork.github.io` and Sorane demo to `srn`).
+  * **Migration Tool**: Added `bun run migrate` to automatically add compliant frontmatter to legacy Markdown files.
+* **Core Engine Refinement**:
+  * Unified global assets: Engines now fall back to `shared/style.css` if site-specific styles are missing.
+  * Improved blog layout: Added support for custom Markdown content in the blog header area.
+  * Security: Strengthened `.gitignore` to prevent leaking private site data and secret keys while allowing official demo tracking.
+
 ## v1.3.0 - Branding & Discussion Paper Refinement
 
 **Date:** 2025-12-22

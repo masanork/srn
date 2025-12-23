@@ -8,8 +8,9 @@
   },
   "scripts": {
     "build": "bun run build:blog && bun run build:srn",
-    "build:blog": "bun run src/index.ts --site my-blog --clean",
-    "build:srn": "bun run src/index.ts --site srn --clean",
+    "build:blog": "bun run src/index.ts --site my-blog",
+    "build:srn": "bun run src/index.ts --site srn",
+    "build:full": "bun run src/index.ts --site my-blog --clean && bun run src/index.ts --site srn --clean",
     "dev": "bun --watch src/index.ts",
     "deploy": "bun run deploy:blog && bun run deploy:srn",
     "deploy:blog": "gh-pages -d dist/my-blog -r https://github.com/masanork/masanork.github.io.git -b main",

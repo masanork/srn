@@ -1,177 +1,102 @@
-# srn (Sorane)
+# Sorane (空音 / srn)
 
-srn (Short for Sorane) is a Static Site Generator designed for precision and performance in typography.
-
-## Key Features
-
-## Key Features
-
-### 1. Smart Font Subsetting
-- Automatically detects used characters in Markdown content.
-- Generates minimal font subset (WOFF2) embedded as Data URI.
-- Supports **IVS (Ideographic Variation Sequence)** and Surrogate Pairs perfectly.
-- No need to upload full font files to the server.
-
-### 2. Post-Quantum Cryptography (PQC) Signing [New]
-- **Hybrid Digital Signature**: Incorporates both **ML-DSA-44 (Dilithium)** (NIST PQC Standard) and **Ed25519**.
-- **Verifiable Credentials (VC)**: Generates W3C-compliant Verifiable Credentials (JSON-LD) for each document designated as official content.
-- Ensures long-term authenticity of public documents against future quantum computer attacks.
-
-### 3. Variant Character Database [New]
-- **Unihan-style Management**: Define character variants (Source -> Property -> Target) in Frontmatter.
-- **Visual Comparison**: Dedicated layout to display glyph variants side-by-side using specific fonts.
-- **Data Export**: Auto-generates Unihan-compatible tab-separated text tables.
-
-### 4. Specialized Layouts
-- **Official Documents**: Vertical writing support, formal templates for government/business notices.
-- **Deep Linking**: Direct anchors to specific character definitions.
-
-## はじめに (Introduction in Japanese)
-
-srn (Sorane/空音) は、日本語タイポグラフィの美しさとWebパフォーマンスを両立させるために作られた静的サイトジェネレーターです。
-
-このツール最大の特徴は、**ページコンテンツで使用されている「文字」だけを抽出してフォントファイルを作り直し (サブセット化)、HTMLに直接埋め込む**ことです。
-
-### なぜこれが必要なのか？
-日本語フォントは数MB〜数十MBと巨大です。Webフォントとして使うには重すぎますが、サブセット化（常用漢字のみなど）を行ってもまだ数百KB残ることがあり、表示遅延 (FOIT) やレイアウトズレ (CLS) の原因となります。
-
-srnは「その1ページで使われている文字」**だけ**を含んだ数KB〜数十KBの超軽量フォントを生成します。これをHTMLに埋め込むことで、**ネットワークリクエスト・ゼロ、レイアウトシフト・ゼロ**の完璧なレンダリングを一瞬で実現します。
-
-### 使い方クイックスタート
-
-1.  **セットアップ**: [Bun](https://bun.sh) をインストールし、リポジトリをcloneして依存関係を入れます。
-    ```bash
-    git clone ...
-    bun install
-    ```
-2.  **フォントの準備**: 使いたいフォントファイル (`.otf`, `.ttf`) を `site/fonts/` フォルダに入れます。
-    > ※ フォントファイルは `.gitignore` されているため、ご自身のライセンスを持つフォントをローカルに配置してください。
-3.  **記事を書く**: `site/content/` に Markdown ファイルを作成し、Frontmatterで使用するフォント名を指定します。
-    ```markdown
-    ---
-    title: "私の記事"
-    font: "MyFont.otf"
-    ---
-    ここへ書いた文字だけが、MyFont.otf から抽出されます。
-    ```
-4.  **ビルド**: `bun run build` を実行すると `dist/` フォルダにHTMLが生成されます。
+Sorane (空音) is a Typography-First Static Site Generator (SSG) with baked-in **Post-Quantum Cryptography (PQC)** and **Multi-Tenant** capabilities. Optimized for high-fidelity CJK typesetting and long-term document authenticity.
 
 ---
 
-## Key Features
+## 💎 Key Concepts
 
-Sorane aims to provide a seamless way to generate static sites where typography is paramount. Unlike traditional SSGs, **srn generates a unique, optimized font subset for every single page**, embedding it directly into the HTML.
+### 1. Zero-Jitters Typography (Smart Subsetting)
+Sorane analyzes every single character used in your Markdown content and generates a minimal **WOFF2 subset** on the fly. This subset is embedded directly into the HTML as a Data URI.
+- **Zero network requests** for font files.
+- **Zero Layout Shift (CLS)**: The font is available as soon as the HTML is parsed.
+- **IVS/SVS Support**: Perfect rendering of Kanji variations and Ideographic Variation Sequences.
 
-This approach achieves:
-- **Zero Font Requests**: No external network calls for font files.
-- **Zero Layout Shift (CLS)**: Fonts are available immediately as the DOM parses, guaranteeing perfect rendering from the first frame.
-- **Precision**: Only the glyphs used in that specific page are included, keeping the payload minimal even for heavy CJK fonts.
+### 2. Post-Quantum Trust (PQC Signing)
+Future-proof your official documents with hybrid digital signatures.
+- **Hybrid Signatures**: Concurrent signing with **ML-DSA-44 (Dilithium)** (NIST PQC Standard) and Ed25519.
+- **W3C Verifiable Credentials**: Automatically generates `.vc.json` (JSON-LD), `.vc.cbor` (CBOR/COSE), and SD-CWT for selective disclosure.
+- **Verification Console**: Built-in drag-and-drop verifier for cryptographic integrity checks.
 
-## Architecture
+### 3. Multi-Tenant Architecture
+Manage multiple independent websites (e.g., a personal blog and an official project site) from a single shared engine.
+- Shared asset library (fonts, schemas) vs. Site-specific content and keys.
+- Independent deployment to different GitHub repositories or subdirectories.
 
-1.  **Input**:
-    - **Content**: Markdown/MDX files.
-    - **Templates**: HTML/JS layouts.
-    - **Source Fonts**: Original full-set font files (OTF/TTF/WOFF2).
-2.  **Build Process**:
-    - **Analyze**: Scans the compiled HTML of each page to extract every unique character used.
-    - **Subset**: Generates a minimal font file containing *only* those characters using a Wasm-based subsetter.
-    - **Embed**: Encodes the subsetted font as a Base64 Data URI and injects it into the page's `<style>` block.
-3.  **Output**:
-    - Single HTML files with zero external font dependencies.
+---
 
-## Technical Stack
+## 🚀 Quick Start
 
-- **Runtime**: [Bun](https://bun.sh/) (REQUIRED: This project relies on Bun's built-in APIs and performance)
-- **Font Engine**: `opentype.js` (Pure JavaScript/Wasm subsetting flow)
-- **Database**: `bun:sqlite` (Used for glyph indexing and search)
-- **Bundler/Builder**: Bun (Native TypeScript support)
+### Prerequisites
+- [Bun](https://bun.sh) (Required for the build engine)
 
-## Usage Concept
-**Important**: This project is designed to run with `bun`. While `npm` might install dependencies, the scripts rely on `bun run`.
-
-### 1. Basic Setup
+### Setup
 ```bash
-git clone ...
+git clone https://github.com/masanork/srn.git
+cd srn
 bun install
 ```
 
-### 2. Font Management (New)
-srn now uses a local SQLite database to manage glyph information. This enables advanced search and auto-discovery of glyphs.
-
-1.  **Place Fonts**: Put your `.ttf` / `.otf` / `.woff2` files in `site/fonts/`.
-2.  **Build Database**: Run the indexer to parse fonts and build `site/data/fonts.db`.
-    ```bash
-    bun run db:build
-    ```
-3.  **Generate Catalog**: Create a local-only HTML catalog to browse all available glyphs.
-    ```bash
-    bun run catalog
-    # Output: site/fonts/catalog.html
-    ```
-
-### 3. Writing Content
-Configuration is kept simple. You associate fonts with content in your config or frontmatter.
-
-```markdown
----
-title: "Typography Matters"
-font: "Garamond-Premium.otf"
----
-
-This text will be rendered using a custom subset of Garamond,
-containing only the letters T, h, i, s, t, e, x... and so on.
+### 1. Prepare Fonts (Local Only)
+As font files are often proprietary, they are `.gitignore`ed. Place your `.ttf`/`.otf` files into `shared/fonts/`.
+```bash
+# Index font glyphs into local SQLite DB
+bun run db:build
 ```
 
-The resulting HTML will contain:
-
-```html
-<style>
-@font-face {
-  font-family: 'SubsetFont';
-  src: url('data:font/ttf;base64,d09GMgABAAAA...') format('truetype');
-}
-body {
-  font-family: 'SubsetFont', serif;
-}
-</style>
+### 2. Configuration & Identity
+Create a site profile in `sites/[your-site]/config.yaml`:
+```yaml
+identity:
+  domain: "example.com"
+  path: "/my-blog"
+directories:
+  content: "sites/my-blog/content"
+  data: "sites/my-blog/data" # Your signing keys reside here (ignored by git)
 ```
 
-## Project Structure
+### 3. Build & Deploy
+```bash
+# Build a specific site
+bun run build --site my-blog
 
-Design separates the **Generator Core** from **User Content**.
+# Or build everything defined in package.json
+bun run build
+
+# Deploy to GitHub Pages (targets configured repo/branch)
+bun run deploy:blog
+```
+
+---
+
+## 🛠 Advanced Features
+
+### Content Migration
+Import legacy content from other platforms or standard Markdown files.
+- **Standard Markdown**: `bun run migrate --site my-blog` (Auto-adds frontmatter/dates)
+- **Movable Type (Hatena/MT)**: `bun run migrate --site my-blog --import your-export.txt`
+
+### Glyph Embedding
+Use the specialized syntax to embed specific glyphs by ID without worrying about the encoding:
+`[ipamjm:MJ000001]` -> Renders the specific MJ variant as an optimized subset glyph.
+
+---
+
+## 📂 Project Structure
 
 ```text
 srn/
-├── src/                # Core generator logic (TypeScript)
-│   └── ...
-├── site/               # User content and configuration
-│   ├── content/        # Markdown files (Blog posts, pages)
-│   ├── layouts/        # HTML/JS templates
-│   ├── fonts/          # Source font files (NOTE: .gitignored)
-│   └── static/         # Images, global CSS, etc.
-├── dist/               # Output directory (Generated HTML)
-└── package.json
+├── src/                # Shared Engine logic (TypeScript)
+├── shared/             # Shared Assets (Master fonts, schemas, base CSS)
+├── sites/              # Tenant Directories
+│   └── [site-name]/
+│       ├── config.yaml # Site-specific settings
+│       ├── content/    # Markdown files
+│       ├── data/       # Signing keys & history (Private)
+│       └── static/     # Site-specific assets
+└── dist/               # Build Output
+    └── [site-name]/    # Each site gets its own clean directory
 ```
 
-## Workflow & Deployment
-
-Since font files are often proprietary and local-only (`.gitignored`), **building must happen locally**. The generated HTML (with embedded subsets) is safe to publish.
-
-1.  **Clone & Setup**:
-    ```bash
-    git clone https://github.com/user/srn.git
-    bun install
-    ```
-2.  **Bring Your Own Fonts**:
-    Place your `.otf` or `.ttf` files into `site/fonts/`.
-3.  **Develop**:
-    ```bash
-    bun run dev  # Watches changes and rebuilds locally
-    ```
-4.  **Deploy to GitHub Pages**:
-    Since the CI cannot build the site (it lacks the fonts), you deploy the built artifacts from your machine.
-    ```bash
-    bun run build   # Generates site into /dist
-    bun run deploy  # Pushes /dist to 'gh-pages' branch
-    ```
+## ⚖️ License
+MIT License. Content and fonts used in demos are subject to their respective licenses.
