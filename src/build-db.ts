@@ -4,8 +4,10 @@ import opentype from 'opentype.js';
 import fs from 'fs-extra';
 import path from 'path';
 
-// Ensure data directory exists
-const DATA_DIR = path.resolve(process.cwd(), 'site', 'data');
+import { loadConfig, getAbsolutePaths } from './config.ts';
+
+const config = await loadConfig();
+const { DATA_DIR, FONTS_DIR, DIST_DIR } = getAbsolutePaths(config);
 await fs.ensureDir(DATA_DIR);
 
 const DB_PATH = path.join(DATA_DIR, 'fonts.db');
@@ -120,7 +122,7 @@ async function processFont(filePath: string) {
 }
 
 async function main() {
-    const fontDir = path.resolve(process.cwd(), 'site', 'fonts');
+    const fontDir = FONTS_DIR;
     if (!await fs.pathExists(fontDir)) {
         console.error("Fonts directory not found.");
         return;
@@ -146,9 +148,9 @@ async function main() {
 FROM glyphs g
 JOIN fonts f ON g.font_id = f.id
 WHERE g.name IS NOT NULL OR g.unicode_hex IS NOT NULL
-            `);
+             `);
     const allGlyphs = query.all();
-    const distDir = path.resolve(process.cwd(), 'dist');
+    const distDir = DIST_DIR;
     await fs.ensureDir(distDir);
     await fs.writeJson(path.join(distDir, 'glyph-index.json'), allGlyphs);
     console.log(`Exported ${allGlyphs.length} glyphs to dist/glyph-index.json`);
