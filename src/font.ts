@@ -236,99 +236,13 @@ function generateCmapFormat14(ivsRecords: { vs: number, code: number, gid: numbe
 }
 
 // --- Injection Logic ---
-function injectNativeCmap(subsetBuffer: ArrayBuffer, unicodeMap: { code: number, gid: number }[], ivsRecords: { vs: number, code: number, gid: number }[]): ArrayBuffer {
+// --- Injection Logic ---
+export function injectCustomTables(
+    subsetBuffer: ArrayBuffer,
+    customTables: Record<string, Uint8Array>
+): ArrayBuffer {
     const view = new DataView(subsetBuffer);
     const numTables = view.getUint16(4, false);
-
-    let cmapOffset = 0;
-    let cmapLength = 0;
-    let cmapDirOffset = 0;
-
-    for (let i = 0; i < numTables; i++) {
-        const p = 12 + i * 16;
-        const tag = String.fromCharCode(view.getUint8(p), view.getUint8(p + 1), view.getUint8(p + 2), view.getUint8(p + 3));
-        if (tag === 'cmap') {
-            cmapDirOffset = p;
-            cmapOffset = view.getUint32(p + 8, false);
-            cmapLength = view.getUint32(p + 12, false);
-            break;
-        }
-    }
-
-    if (!cmapOffset) return subsetBuffer;
-
-    // Build New Cmap Table
-    const oldCmapView = new DataView(subsetBuffer, cmapOffset, cmapLength);
-    const numSubtables = oldCmapView.getUint16(2, false);
-
-    interface SubTableRecord { platform: number; encoding: number; data: Uint8Array; }
-    const subtables: SubTableRecord[] = [];
-
-    // 1. Extract Format 4 (BMP) data from opentype.js
-    let f4Data: Uint8Array | null = null;
-    for (let i = 0; i < numSubtables; i++) {
-        const p = 4 + i * 8;
-        const off = oldCmapView.getUint32(p + 4, false);
-        const fmt = oldCmapView.getUint16(off, false);
-        if (fmt === 4) {
-            const len = oldCmapView.getUint16(off + 2, false);
-            f4Data = new Uint8Array(subsetBuffer, cmapOffset + off, len);
-            break;
-        }
-    }
-
-    if (f4Data) {
-        subtables.push({ platform: 0, encoding: 3, data: f4Data }); // Unicode BMP
-        subtables.push({ platform: 3, encoding: 1, data: f4Data }); // Windows BMP
-    }
-
-    // 2. Add Format 12 (Unicode Full Plane)
-    const f12Data = generateCmapFormat12(unicodeMap);
-    subtables.push({ platform: 0, encoding: 4, data: f12Data }); // Unicode Full
-    subtables.push({ platform: 3, encoding: 10, data: f12Data }); // Windows Unicode Full
-
-    // 3. Add Format 14 (IVS)
-    if (ivsRecords.length > 0) {
-        const f14Data = generateCmapFormat14(ivsRecords);
-        subtables.push({ platform: 0, encoding: 5, data: f14Data }); // Unicode Variation Sequences
-    }
-
-    // 4. Sort subtables by Platform ID then Encoding ID (Strictly required)
-    subtables.sort((a, b) => {
-        if (a.platform !== b.platform) return a.platform - b.platform;
-        return a.encoding - b.encoding;
-    });
-
-    // Construct the new cmap table binary
-    const headerSize = 4 + subtables.length * 8;
-    let totalCmapLen = headerSize;
-    for (const t of subtables) totalCmapLen += t.data.length;
-
-    const newCmap = new Uint8Array(totalCmapLen);
-    const ncw = new DataView(newCmap.buffer);
-    ncw.setUint16(0, 0, false);
-    ncw.setUint16(2, subtables.length, false);
-
-    let dataOffset = headerSize;
-    for (let i = 0; i < subtables.length; i++) {
-        const t = subtables[i]!;
-        const p = 4 + i * 8;
-        ncw.setUint16(p, t.platform, false);
-        ncw.setUint16(p + 2, t.encoding, false);
-        ncw.setUint32(p + 4, dataOffset, false);
-        newCmap.set(t.data, dataOffset);
-        dataOffset += t.data.length;
-    }
-
-    // Reconstruct the font binary with the new cmap table
-    const delta = totalCmapLen - cmapLength;
-    const newFontSize = subsetBuffer.byteLength + delta + 1024; // Extra padding
-    const newFont = new Uint8Array(newFontSize);
-    const nfv = new DataView(newFont.buffer);
-
-    // Copy everything up to the first table data
-    const tableDirSize = 12 + 16 * numTables;
-    newFont.set(new Uint8Array(subsetBuffer, 0, tableDirSize), 0);
 
     const tables: { tag: string, offset: number, length: number, dirOffset: number }[] = [];
     for (let i = 0; i < numTables; i++) {
@@ -340,37 +254,61 @@ function injectNativeCmap(subsetBuffer: ArrayBuffer, unicodeMap: { code: number,
             dirOffset: p
         });
     }
-    tables.sort((a, b) => a.offset - b.offset);
+
+    // Merge custom tables
+    const finalTablesMap = new Map<string, Uint8Array>();
+    for (const t of tables) {
+        finalTablesMap.set(t.tag, new Uint8Array(subsetBuffer, t.offset, t.length));
+    }
+    for (const [tag, data] of Object.entries(customTables)) {
+        finalTablesMap.set(tag, data);
+    }
+
+    const sortedTags = Array.from(finalTablesMap.keys()).sort();
+    const newNumTables = sortedTags.length;
+
+    // Reconstruct the font binary
+    const tableDirSize = 12 + 16 * newNumTables;
+    let totalSize = tableDirSize + 2048; // Padding
+    for (const data of finalTablesMap.values()) totalSize += (data.length + 4);
+
+    const newFont = new Uint8Array(totalSize);
+    const nfv = new DataView(newFont.buffer);
+
+    // Initial Header
+    newFont.set(new Uint8Array(subsetBuffer, 0, 12), 0);
+    nfv.setUint16(4, newNumTables, false);
+    // searchRange, entrySelector, rangeShift (simplified, usually not critical for small fonts)
+    const entrySelector = Math.floor(Math.log2(newNumTables));
+    const searchRange = Math.pow(2, entrySelector) * 16;
+    nfv.setUint16(6, searchRange, false);
+    nfv.setUint16(8, entrySelector, false);
+    nfv.setUint16(10, (newNumTables * 16) - searchRange, false);
 
     let writePtr = tableDirSize;
     let headOffset = 0;
 
-    for (const t of tables) {
-        let data: Uint8Array;
-        let len = t.length;
-
-        if (t.tag === 'cmap') {
-            data = newCmap;
-            len = totalCmapLen;
-        } else {
-            data = new Uint8Array(subsetBuffer, t.offset, t.length);
-        }
+    for (let i = 0; i < sortedTags.length; i++) {
+        const tag = sortedTags[i]!;
+        const data = finalTablesMap.get(tag)!;
+        const dirOffset = 12 + i * 16;
 
         // Align to 4 bytes
         while (writePtr % 4 !== 0) writePtr++;
 
         newFont.set(data, writePtr);
 
-        // Update Table Directory
-        nfv.setUint32(t.dirOffset + 8, writePtr, false);
-        nfv.setUint32(t.dirOffset + 12, len, false);
+        // Write Table Directory Entry
+        for (let j = 0; j < 4; j++) nfv.setUint8(dirOffset + j, tag.charCodeAt(j));
+        nfv.setUint32(dirOffset + 8, writePtr, false);
+        nfv.setUint32(dirOffset + 12, data.length, false);
 
-        // Calculate and set table checksum
-        const checksum = calculateChecksum(newFont.subarray(writePtr, writePtr + len));
-        nfv.setUint32(t.dirOffset + 4, checksum, false);
+        // Checksum
+        const checksum = calculateChecksum(newFont.subarray(writePtr, writePtr + data.length));
+        nfv.setUint32(dirOffset + 4, checksum, false);
 
-        if (t.tag === 'head') headOffset = writePtr;
-        writePtr += len;
+        if (tag === 'head') headOffset = writePtr;
+        writePtr += data.length;
     }
 
     // Update 'head' table checksumAdjustment
@@ -384,10 +322,82 @@ function injectNativeCmap(subsetBuffer: ArrayBuffer, unicodeMap: { code: number,
     return newFont.slice(0, writePtr).buffer;
 }
 
+function injectNativeCmap(subsetBuffer: ArrayBuffer, unicodeMap: { code: number, gid: number }[], ivsRecords: { vs: number, code: number, gid: number }[]): ArrayBuffer {
+    const view = new DataView(subsetBuffer);
+    const numTables = view.getUint16(4, false);
+
+    let cmapOffset = 0;
+    let cmapLength = 0;
+
+    for (let i = 0; i < numTables; i++) {
+        const p = 12 + i * 16;
+        const tag = String.fromCharCode(view.getUint8(p), view.getUint8(p + 1), view.getUint8(p + 2), view.getUint8(p + 3));
+        if (tag === 'cmap') {
+            cmapOffset = view.getUint32(p + 8, false);
+            cmapLength = view.getUint32(p + 12, false);
+            break;
+        }
+    }
+
+    if (!cmapOffset) return subsetBuffer;
+
+    const oldCmapView = new DataView(subsetBuffer, cmapOffset, cmapLength);
+    const numSubtables = oldCmapView.getUint16(2, false);
+    const subtables: { platform: number; encoding: number; data: Uint8Array; }[] = [];
+
+    // Extract Format 4
+    let f4Data: Uint8Array | null = null;
+    for (let i = 0; i < numSubtables; i++) {
+        const p = 4 + i * 8;
+        const off = oldCmapView.getUint32(p + 4, false);
+        const fmt = oldCmapView.getUint16(off, false);
+        if (fmt === 4) {
+            const len = oldCmapView.getUint16(off + 2, false);
+            f4Data = new Uint8Array(subsetBuffer, cmapOffset + off, len);
+            break;
+        }
+    }
+
+    if (f4Data) {
+        subtables.push({ platform: 0, encoding: 3, data: f4Data });
+        subtables.push({ platform: 3, encoding: 1, data: f4Data });
+    }
+
+    subtables.push({ platform: 0, encoding: 4, data: generateCmapFormat12(unicodeMap) });
+    subtables.push({ platform: 3, encoding: 10, data: generateCmapFormat12(unicodeMap) });
+
+    if (ivsRecords.length > 0) {
+        subtables.push({ platform: 0, encoding: 5, data: generateCmapFormat14(ivsRecords) });
+    }
+
+    subtables.sort((a, b) => (a.platform !== b.platform) ? a.platform - b.platform : a.encoding - b.encoding);
+
+    const headerSize = 4 + subtables.length * 8;
+    let totalCmapLen = headerSize;
+    for (const t of subtables) totalCmapLen += t.data.length;
+
+    const newCmap = new Uint8Array(totalCmapLen);
+    const ncw = new DataView(newCmap.buffer);
+    ncw.setUint16(2, subtables.length, false);
+
+    let dataOffset = headerSize;
+    for (let i = 0; i < subtables.length; i++) {
+        const t = subtables[i]!;
+        ncw.setUint16(4 + i * 8, t.platform, false);
+        ncw.setUint16(4 + i * 8 + 2, t.encoding, false);
+        ncw.setUint32(4 + i * 8 + 4, dataOffset, false);
+        newCmap.set(t.data, dataOffset);
+        dataOffset += t.data.length;
+    }
+
+    return injectCustomTables(subsetBuffer, { 'cmap': newCmap });
+}
+
 export async function subsetFont(
     fontPath: string,
-    text: string
-): Promise<{ buffer: Buffer, mimeType: string, ivsRecordsCount: number }> {
+    text: string,
+    extraTables?: Record<string, Uint8Array>
+): Promise<{ buffer: Buffer, rawSfnt: Uint8Array, mimeType: string, ivsRecordsCount: number }> {
     const fontBuffer = await fs.readFile(fontPath);
     const arrayBuffer = fontBuffer.buffer.slice(fontBuffer.byteOffset, fontBuffer.byteOffset + fontBuffer.byteLength);
     const font = opentype.parse(arrayBuffer);
@@ -461,11 +471,18 @@ export async function subsetFont(
     const subsetBuffer = subset.toArrayBuffer();
 
     // Inject custom cmap tables (Format 12 and 14)
-    const finalBuffer = injectNativeCmap(subsetBuffer, unicodeMap, ivsRecords);
+    let finalBuffer = injectNativeCmap(subsetBuffer, unicodeMap, ivsRecords);
+
+    // Inject provenance or other extra tables
+    if (extraTables) {
+        finalBuffer = injectCustomTables(finalBuffer, extraTables);
+    }
+
     const woff2Buffer = await wawoff2.compress(new Uint8Array(finalBuffer));
 
     return {
         buffer: Buffer.from(woff2Buffer),
+        rawSfnt: new Uint8Array(finalBuffer),
         mimeType: 'font/woff2',
         ivsRecordsCount: ivsRecords.length
     };
@@ -506,26 +523,17 @@ export async function getGlyphAsSvg(fontPath: string, identifier: string): Promi
     // Try by GID if identifier looks like a number or 'gid:xxx'
     if (!glyph) {
         if (identifier.startsWith('gid:')) {
-            const gid = parseInt(identifier.split(':')[1]);
-            if (!isNaN(gid)) glyph = font.glyphs.get(gid);
+            const parts = identifier.split(':');
+            if (parts.length > 1) {
+                const gid = parseInt(parts[1]!);
+                if (!isNaN(gid)) glyph = font.glyphs.get(gid);
+            }
         }
     }
 
     // As a fallback, check if the identifier is a Unicode string (or IVS sequence)
     // We assume if it contains non-ASCII characters, it's a direct character string.
     if (!glyph && /[^\x00-\x7F]/.test(identifier)) {
-        // Handle IVS? opentype.js charToGlyph might not handle IVS sequence directly.
-        // We extracted logic in subsetFont but charToGlyph takes a single char usually.
-        // But let's check input length.
-
-        // Simple case: Just the first codepoint (Base char)
-        // Ideally we should use the IVS map we parsed in subsetFont, but we don't have it cached here easily.
-        // For PoC, we rely on the font's default charToGlyph behavior for the base char.
-        // OR we map specific IVS if we had the map.
-
-        // Note: For now, we just pass the string. If it's multiple chars (IVS), charToGlyph takes the first?
-        // opentype.js 1.3.4 signature: charToGlyph(c). matches standard unicode binding.
-
         glyph = font.charToGlyph(identifier);
     }
 

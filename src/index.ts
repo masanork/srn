@@ -5,6 +5,7 @@ import { marked } from 'marked';
 import { glob } from 'glob';
 
 import * as cheerio from 'cheerio';
+import crypto from 'node:crypto';
 import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
 import { findGlyphInDb } from './db.ts';
 import { loadConfig, getAbsolutePaths } from './config.ts';
@@ -417,7 +418,23 @@ async function build() {
                 const fontFamilyName = getBaseName(fontName);
                 try {
                     console.log(`  Subsetting font: ${fontName}`);
-                    const { buffer, mimeType, ivsRecordsCount } = await subsetFont(fontPath, fullText);
+                    const { rawSfnt: initialSfnt, ivsRecordsCount } = await subsetFont(fontPath, fullText);
+
+                    // --- C2PA-style Provenance Injection ---
+                    const assetHash = crypto.createHash('sha256').update(initialSfnt).digest('hex');
+                    const provenanceClaim = {
+                        type: "FontProvenance",
+                        name: fontName,
+                        hash: assetHash,
+                        buildId: buildId,
+                        timestamp: new Date().toISOString()
+                    };
+                    const provenanceVc = await createCoseVC(provenanceClaim, currentKeys, SITE_DID, buildId);
+
+                    // Final subsetting with injected SRNC (Sorane Claim) table
+                    const { buffer, mimeType } = await subsetFont(fontPath, fullText, {
+                        'SRNC': provenanceVc.cbor
+                    });
 
                     const format = 'woff2';
                     const dataUrl = bufferToDataUrl(buffer, mimeType);
