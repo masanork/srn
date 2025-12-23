@@ -14,7 +14,8 @@ This list tracks the implementation status of the next-generation architecture f
 
 ## 3. Presentation & Integrity
 - [x] **Native IVS Handling**: Native Cmap Format 14 injection for perfect typography without PUA.
-- [ ] **C2PA Integration**: Implement "Verified Display" by signing the rendered HTML structure hash alongside the data.
+- [x] **C2PA Integration**: Prototype "Verified Font" by injecting COSE provenance manifest (SRNC table) into subsetted fonts.
+- [ ] **Rendered HTML Integrity**: Extend C2PA to sign the rendered HTML structure hash alongside the data.
 
 ## 4. Privacy & Security
 - [ ] **Selective Disclosure**: Implement SD-JWT Support for privacy-preserving attribute sharing.
