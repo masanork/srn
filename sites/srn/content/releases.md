@@ -4,6 +4,29 @@ layout: article
 description: "Release history and major updates for the Sorane project."
 ---
 
+## v1.5.0 - Archival-Grade Web Documents (Web/A) & Trust Chain
+
+**Date:** 2025-12-24
+
+Introduction of a new archival web document format and major enhancements to long-term trust management.
+
+* **Web/A (Archival-Grade Web Documents)**:
+  * **New Layout**: `layout: weba` for creating self-contained, machine-readable documents.
+  * **Human-Machine Duality**: Simultaneous embedding of semantic JSON-LD and human-readable HTML/CSS.
+  * **Multi-Layer Maintenance Model**: Separation of the *Signed Content Layer* (permanent) and the *Portable Viewer Layer* (evolutionary) to ensure 50+ year readability.
+  * **Trust Transition Ready**: Designed for "Signature Refreshment" over evidence hoarding, prioritizing continuous chain of custody.
+  * **Provenance Manifest**: Integration of C2PA-style generator claims to guarantee Human-Machine Parity (HMP).
+* **Advanced Key Management & Security**:
+  * **PassKey Integration**: Support for hardware-backed Root of Trust using WebAuthn/PassKeys.
+  * **Authority Delegation**: Implemented a 2-tier signing model (Root -> Delegate) for secure automated builds.
+  * **In-Font Provenance**: Added `SRNC` table injection to subsetted fonts for asset-level integrity.
+* **Documentation & Site Refinement**:
+  * **New Discussion Papers**: Published comprehensive papers on *Web/A*, *Hybrid Signatures*, and *PassKey Delegation*.
+  * **English Localization**: Updated the Developer Guide and core site metadata to English for global accessibility.
+  * **Project Cleanup**: Migrated architectural docs to the publishing pipeline and removed the legacy `docs/` directory.
+
+## v1.4.0 - Multi-Tenant Architecture & Build Optimization
+
 ## v1.4.0 - Multi-Tenant Architecture & Build Optimization
 
 **Date:** 2025-12-23
