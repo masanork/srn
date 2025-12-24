@@ -1,8 +1,8 @@
 ---
 title: "Technical Articles & Resources"
 layout: blog
-description: "Sorane（空音）プロジェクトの設計詳細や、デジタルタイポグラフィ、暗号化技術に関する解説記事一覧。"
+description: "A collection of articles covering design details, digital typography, and cryptographic techniques of the Sorane project."
 ---
 
-このページは、プロジェクト内の記事を自動的にリストアップしています。
-新しいMarkdownファイルを `site/content/` に追加し、`layout: article` を指定することで、ここに含まれるようになります。
+This page automatically lists articles within the project.
+By adding a new Markdown file to `site/content/` and specifying `layout: article`, it will be included here.

@@ -1,12 +1,12 @@
 ---
-title: "斉・さい"
+title: "Variant Set: SAI (斉)"
 layout: grid
 font: GJM
 ---
 
-「斉」およびその異体字（斎、齊、齋など）のグリッド表示です。
+Grid display of "SAI (斉)" and its variant characters (斎, 齊, 齋, etc.).
 
-| 通番 | 文字図形番号 | UTF-8 |
+| No. | Glyph ID | UTF-8 |
 | :--- | :--- | :--- |
 | 1 | GJ000871 | 􀬎 |
 | 2 | GJ002042 | 􆉠 |

@@ -1,7 +1,7 @@
 ---
-title: "Unihan 異体字コレクション"
+title: "Unihan Variant Collection"
 layout: variants
-description: "様々なタイプの異体字関係（意味、字形、IVS）をUnihan形式で一覧化するテストページ。"
+description: "A test page listing various types of character variants (Semantic, Glyph, IVS) in Unihan format."
 font: GJM
 variants:
   # Semantic Variants
@@ -9,41 +9,41 @@ variants:
     items:
       - property: "kSemanticVariant"
         target: "兇"
-        note: "JIS第1水準/第2水準"
+        note: "JIS Level 1/Level 2"
   
   - source: "猫"
     items:
       - property: "kSemanticVariant"
         target: "貓"
-        note: "旧字体"
+        note: "Traditional/Old style"
 
-  # Z Variants (字形差)
+  # Z Variants (Glyph difference)
   - source: "高"
     items:
       - property: "kZVariant"
         target: "髙"
-        note: "はしご高 (Legacy compatibility)"
+        note: "Hashigo-Taka (Legacy compatibility)"
 
-  # IVS Variants - Grooup "葛"
+  # IVS Variants - Group "葛"
   - source: "葛"
     items:
       - property: "kSrnsIVS"
         target: "葛󠄀"
-        note: "E0100 (標準)"
+        note: "E0100 (Standard)"
       - property: "kSrnsIVS"
         target: "葛󠄂"
-        note: "E0102 (ヒ)"
+        note: "E0102 (Hi-type)"
   
   # IVS Variants - Group "辻"
   - source: "辻"
     items:
       - property: "kSrnsIVS"
         target: "辻󠄀"
-        note: "E0100 (二点)"
+        note: "E0100 (Double dot)"
       - property: "kSrnsIVS"
         target: "辻󠄂"
-        note: "E0102 (一点)"
+        note: "E0102 (Single dot)"
 ---
 
-このページは、MarkdownのFrontmatterに記述されたネスト構造データ (`Source` -> `Items[]`) から生成されています。
-ページ下部には、Unihan Databaseと同様のフラット形式 (`Source` `Property` `Target`) でエクスポートされたテキストデータがあります。
+This page is generated from nested data structures (`Source` -> `Items[]`) defined in the Markdown frontmatter.
+At the bottom of the page, text data exported in a flat format (`Source`, `Property`, `Target`)—similar to the Unihan Database—is available.

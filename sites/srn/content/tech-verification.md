@@ -1,23 +1,23 @@
 ---
 title: "PQC & Verification Specs"
 layout: article
-description: "ポスト量子暗号（PQC）ハイブリッド署名および選択的開示（Selective Disclosure）の技術仕様。"
+description: "Technical specifications for Post-Quantum Cryptography (PQC) hybrid signatures and Selective Disclosure."
 font: hero:ReggaeOne-Regular.ttf
 ---
 
 ## Overview
-既存の楕円曲線暗号 (Ed25519) と将来の量子コンピュータ耐性を持つ **ポスト量子暗号 (ML-DSA-44)** を組み合わせた **ハイブリッド署名** を採用している。これにより、現在の互換性と長期的な真正性を両立させる。また、プライバシー保護のため、**選択的開示 (SD-CWT)** を実装し、必要な項目のみを提示可能としている。
+Sorane adopts **Hybrid Signatures** that combine existing Elliptic Curve Cryptography (Ed25519) with **Post-Quantum Cryptography (ML-DSA-44)**, which is resistant to future quantum computer attacks. This ensures both current compatibility and long-term authenticity. Additionally, for privacy protection, we implement **Selective Disclosure (SD-CWT)**, allowing the presentation of only necessary data items.
 
 ## Cryptographic Primitives
-公認ドキュメントの署名とプライバシー保護に使用されるアルゴリズム：
+Algorithms used for signing official documents and protecting privacy:
 
 | Component | Algorithm | Purpose | Standards Ref |
 |-----------|-----------|---------|---------------|
-| **Primary Signature** | **Ed25519** | 現在の標準規格との互換性確保 | Ed25519Signature2020 |
-| **Quantum Safe** | **ML-DSA-44** | 将来的な量子脅威への耐性確保 | FIPS 204 (Dilithium) |
-| **Privacy (SD)** | **SD-CWT** | 選択的開示によるプライバシー保護 | IETF SD-CWT (CBOR) |
-| **Canonicalization** | **JCS** | 決定論的なJSON署名の生成 | RFC 8785 |
-| **Digests** | **SHA-256** | コンテンツの完全性担保 | NIST FIPS 180-4 |
+| **Primary Signature** | **Ed25519** | Compatibility with current standards | Ed25519Signature2020 |
+| **Quantum Safe** | **ML-DSA-44** | Resistance to future quantum threats | FIPS 204 (Dilithium) |
+| **Privacy (SD)** | **SD-CWT** | Privacy protection via Selective Disclosure | IETF SD-CWT (CBOR) |
+| **Canonicalization** | **JCS** | Deterministic JSON signature generation | RFC 8785 |
+| **Digests** | **SHA-256** | Ensuring content integrity | NIST FIPS 180-4 |
 
 ## Trust Hierarchy
 
@@ -93,7 +93,7 @@ To bridge the trust between the persistent Root and ephemeral Build keys, we imp
     *   Ensure the Document VC's `issuer` (or Build ID) is **NOT** in the revocation list.
 
 ## Practical Proof-of-Concept (PoC)
-これらの技術仕様を実際に適用した実装例として、住民票（Resident Record）のデモを用意している。これは、行政文書のデジタル化におけるPQCの有効性と、高度なタイポグラフィの維持を同時に検証するためのものである。
+As a practical implementation example of these technical specifications, we provide a demo of a Resident Record (Juminhyo). This serves to verify both the effectiveness of PQC in administrative documents and the maintenance of advanced typography.
 
 *   [Resident Record (PoC Demo)](./juminhyo.html)
 

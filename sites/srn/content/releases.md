@@ -1,7 +1,7 @@
 ---
 title: "Sorane (空音) Release Notes"
 layout: article
-description: "Sorane（空音）プロジェクトのリリース履歴と主な更新内容。"
+description: "Release history and major updates for the Sorane project."
 ---
 
 ## v1.4.0 - Multi-Tenant Architecture & Build Optimization

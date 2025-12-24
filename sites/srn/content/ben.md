@@ -1,12 +1,12 @@
 ---
-title: "辺・べん"
+title: "Variant Set: BEN (辺)"
 layout: grid
 font: GJM
 ---
 
-「辺」およびその異体字（邉、邊など）のグリッド表示です。
+Grid display of "BEN (辺)" and its variant characters (邉, 邊, etc.).
 
-| 通番 | 文字図形番号 | UTF-8 |
+| No. | Glyph ID | UTF-8 |
 | :--- | :--- | :--- |
 | 1 | GJ000413 | 􀆜 |
 | 2 | GJ007947 | 􍺒 |
