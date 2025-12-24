@@ -256,7 +256,7 @@ export async function verifyHybridVC(
 export async function createStatusListVC(
     revokedBuildIds: string[],
     rootKeys: HybridKeys,
-    listUrl: string = "https://example.com/status-list.json",
+    listUrl: string = "https://did.example.org/status-list.json",
     issuerDid?: string
 ): Promise<object> {
     const subjects = {
