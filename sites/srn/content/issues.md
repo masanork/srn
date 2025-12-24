@@ -1,14 +1,14 @@
 ---
-title: "公共機関のVC利用にあたっての技術・制度的論点"
+title: "Technical & Institutional Issues for VC Implementation in Public Sectors"
 layout: article
-description: "本PoCを通じて整理された、公共機関がVerifiable Credentials（VC）を発行・運用する際に検討すべき論点の整理。"
+description: "A summary of key challenges identified through this PoC for public institutions to issue and manage Verifiable Credentials."
 ---
 
 本検証プロジェクト（Sorane: 空音）は、高精度なタイポグラフィとポスト量子暗号（PQC）を組み合わせたデータ基盤について、実装レベルの課題を整理するための試行的な取り組みである。本稿は、公的な証明書等をVCとして発行する際の実務的な論点を、実際のコード（本PoC）を通じて洗い出したメモであり、今後の具体的なシステム要件を検討する上での「技術的な叩き台」として作成したものである。
 
 ---
 
-## 本PoCの趣旨と想定スコープ
+## Purpose and Scope of this PoC
 
 本プロジェクトは、特定の完成された製品を目指すものではなく、デジタル証明書の実装において「どこに技術的な壁があるか」を把握するための、実装レベルのサンドボックス（実験場）である。
 
@@ -21,7 +21,7 @@ description: "本PoCを通じて整理された、公共機関がVerifiable Cred
 
 ---
 
-## 制度・ガバナンスと信頼の基点
+## Institutional Governance and Root of Trust
 
 公共機関が発行体となる場合、その「身元」と「権限」をデジタル上でいかに証明し、継続的に管理するかが最大の論点となる。
 
@@ -70,7 +70,7 @@ description: "本PoCを通じて整理された、公共機関がVerifiable Cred
 
 ---
 
-## データの真正性と機械可読性
+## Data Authenticity and Machine Readability
 
 データの改竄防止（数学的真正性）だけでなく、その「意味」が正しく解釈される（セマンティックな真正性）必要がある。
 
@@ -85,7 +85,7 @@ description: "本PoCを通じて整理された、公共機関がVerifiable Cred
 
 ---
 
-## 表記・タイポグラフィの権威性
+## Authority and Typography in Presentation
 
 公的文書には、一目でそれが正当なものであると認識させる「信頼のデザイン」が求められる。
 
@@ -121,7 +121,7 @@ description: "本PoCを通じて整理された、公共機関がVerifiable Cred
 
 ---
 
-## 利用環境とマルチデバイス連携の課題
+## Environment and Multi-Device Coordination
 
 実務的な事務手続きはPCで行われ、証明書の格納やマイナンバーカードの読み取りはスマートフォンで行われるという、デバイス間の乖離をいかに埋めるかが焦点となる。
 
@@ -161,7 +161,7 @@ description: "本PoCを通じて整理された、公共機関がVerifiable Cred
 
 ---
 
-## AIエージェントとの親和性と自動交渉
+## Compatibility with AI Agents and Autonomous Negotiation
 *   **論点**: 人間の介在なしに、AIエージェントが自律的に証明書を提示・検証できるか。
 *   **AIエージェントによる自動提示**:
     *   **委任**: 本人がAIエージェントに対し、特定の条件下で特定のVCを提示する権限を安全に委任する仕組み（Delegation証跡の付与等）が必要である。
@@ -177,7 +177,7 @@ description: "本PoCを通じて整理された、公共機関がVerifiable Cred
 
 ---
 
-## セキュリティとプライバシー
+## Security and Privacy
 
 必要最小限のデータのみを提示するという、デジタルならではのプライバシー保護機能である。
 

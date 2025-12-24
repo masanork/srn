@@ -1,22 +1,22 @@
 ---
-title: "Sorane（空音）Technical Overview & Guide"
+title: "Technical Overview & Developer Guide"
 layout: article
-description: "プロジェクトの設計思想、アーキテクチャ、および開発者向けガイド。"
+description: "Core philosophy, architecture, and guide for developers."
 ---
 
 ## System Concept
 
-Sorane（空音）は、**「高精度なタイポグラフィ」** と **「ポスト量子暗号（PQC）」** を組み合わせたデータ交付基盤のオープンソース参照実装（Reference Implementation）である。特定の完成された製品ではなく、公共機関がVCを発行する際の実装上の難所をクリアするための「技術的な叩き台」を提供することを目的としている。
+Sorane (空音) is an Open Source **Reference Implementation** for a data delivery infrastructure that combines **"Precision Typography"** with **"Post-Quantum Cryptography (PQC)"**. It is not intended as a finished product but as a "Technical Blueprint" to solve implementation challenges when public institutions issue Verifiable Credentials (VCs).
 
-コアとなる2つの柱：
+The two core pillars:
 
 1. **Typography-First (Zero Layout Shift)**:
-    * ページごとに使用文字を解析し、フォントをサブセット化して埋め込むことで、どの端末でも「一文字の狂いもない」レンダリングを実現する。
-    * IVS異体字や行政共通外字をネイティブにサポート。
+    * Analyzes the characters used on each page, then subsets and embeds fonts on-the-fly to ensure "pixel-perfect" rendering on any device.
+    * Native support for IVS variation sequences and administrative external characters.
 2. **Cryptographic Authenticity & Privacy**:
-    * すべての公認ドキュメントに **ポスト量子暗号 (ML-DSA-44)** を含むハイブリッド署名を付与。
-    * **選択的開示 (Selective Disclosure / SD-CWT)** に対応し、プライバシーに配慮した最小限のデータ提示を実現。
-    * e-Seals等に近い「組織の証跡」としての認証モデルを採用。
+    * All official documents are signed with hybrid signatures including **Post-Quantum Cryptography (ML-DSA-44)**.
+    * Supports **Selective Disclosure (SD-CWT)** to realize minimal data presentation with privacy in mind.
+    * Adopts an authentication model similar to "Organizational Evidence" (e-Seals).
 
 ## Directory Structure
 
