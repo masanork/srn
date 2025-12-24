@@ -28,6 +28,8 @@ import { verifierLayout } from './layouts/verifier.ts';
 import type { VerifierData } from './layouts/verifier.ts';
 import { blogLayout } from './layouts/blog.ts';
 import type { BlogItem, BlogData } from './layouts/blog.ts';
+import { webaLayout } from './layouts/weba.ts';
+import type { WebAData } from './layouts/weba.ts';
 import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from './vc.ts';
 import type { HybridKeys } from './vc.ts';
 
@@ -745,6 +747,13 @@ body {
                 fontCss,
                 safeFontFamilies,
                 htmlContent
+            );
+        } else if (data.layout === 'weba') {
+            finalHtml = webaLayout(
+                data as WebAData,
+                htmlContent,
+                fontCss,
+                safeFontFamilies
             );
         } else {
             // Default to article
