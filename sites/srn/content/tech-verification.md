@@ -56,10 +56,10 @@ To bridge the trust between the persistent Root and ephemeral Build keys, we imp
   "issuer": "did:key:zBuildKey...",
   "issuanceDate": "2025-12-21T00:00:00Z",
   "credentialStatus": {
-    "id": "https://example.com/status-list.json#0",
+    "id": "https://masanork.github.io/srn/status-list.json#0",
     "type": "StatusList2021Entry",
     "statusPurpose": "revocation",
-    "statusListCredential": "https://example.com/status-list.json"
+    "statusListCredential": "https://masanork.github.io/srn/status-list.json"
   },
   "credentialSubject": { ... },
   "proof": [
@@ -76,7 +76,7 @@ To bridge the trust between the persistent Root and ephemeral Build keys, we imp
   "type": ["VerifiableCredential", "StatusList2021"],
   "issuer": "did:key:zRootKey...",
   "credentialSubject": {
-    "id": "https://example.com/status-list.json#list",
+    "id": "https://masanork.github.io/srn/status-list.json#list",
     "type": "StatusList2021",
     "statusPurpose": "revocation",
     "srn:revokedBuildIds": ["build-170000000", ...]

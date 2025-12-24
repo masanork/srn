@@ -36,7 +36,7 @@ export function webaLayout(data: WebAData, bodyContent: string, fontCss: string,
                 "type": "Trust-Transition-Ready",
                 "lastVerified": new Date().toISOString(),
                 "timestamp": new Date().toISOString(),
-                "tsa": "https://tsa.sorane.io"
+                "tsa": "https://tsa.example.org"
             }
         }
     };
