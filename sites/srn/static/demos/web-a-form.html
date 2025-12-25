@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web/A 経費精算書 (PoC)</title>
+    <style>
+        /* Base / Reset */
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* A4 Paper Layout */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Screen-only UI */
+        .toolbar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        @media print {
+            body {
+                background: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .page {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+            }
+
+            .toolbar {
+                display: none;
+            }
+        }
+
+        /* Form Styling */
+        h1 {
+            text-align: center;
+            border-bottom: 3px double #333;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .header-info table {
+            border-collapse: collapse;
+        }
+
+        .header-info td,
+        .header-info th {
+            padding: 5px 10px;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .form-label {
+            width: 100px;
+            font-weight: bold;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+            /* for robustness within flex */
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        table.expense-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table.expense-table th,
+        table.expense-table td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        table.expense-table th {
+            background-color: #eee;
+        }
+
+        .input-cell {
+            border: none;
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+            text-align: inherit;
+            font-size: 14px;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Machine Readable Layer (Initial State) -->
+    <script type="application/ld+json" id="data-layer">
+    {
+        "@context": "https://schema.org",
+        "@type": "Invoice",
+        "description": "経費精算書",
+        "customer": {
+            "@type": "Person",
+            "name": "",
+            "jobTitle": ""
+        },
+        "datePublished": "",
+        "totalPaymentDue": {
+            "@type": "PriceSpecification",
+            "price": 0,
+            "priceCurrency": "JPY"
+        }
+    }
+    </script>
+
+    <div class="page" id="document-root">
+        <h1>経費精算書</h1>
+
+        <div class="header-info">
+            <table>
+                <tr>
+                    <td>申請日:</td>
+                    <td><input type="date" id="datePublished" class="form-input" style="width: 150px;"
+                            data-json-path="datePublished"></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="form-section">
+            <div class="form-row">
+                <label class="form-label">氏名</label>
+                <input type="text" id="name" class="form-input" placeholder="氏名を入力" data-json-path="customer.name">
+            </div>
+            <div class="form-row">
+                <label class="form-label">所属/役職</label>
+                <input type="text" id="jobTitle" class="form-input" placeholder="所属部署または役職"
+                    data-json-path="customer.jobTitle">
+            </div>
+        </div>
+
+        <table class="expense-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">日付</th>
+                    <th style="width: 25%;">支払先</th>
+                    <th style="width: 35%;">内容（摘要）</th>
+                    <th style="width: 15%;">金額 (円)</th>
+                </tr>
+            </thead>
+            <tbody id="line-items">
+                <!-- Rows will be dynamic, but for PoC we start with 5 fixed rows -->
+                <tr>
+                    <td><input type="date" class="input-cell" name="item-date"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-payee"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-desc"></td>
+                    <td><input type="number" class="input-cell text-right item-price" name="item-price" placeholder="0">
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="date" class="input-cell" name="item-date"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-payee"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-desc"></td>
+                    <td><input type="number" class="input-cell text-right item-price" name="item-price" placeholder="0">
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="date" class="input-cell" name="item-date"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-payee"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-desc"></td>
+                    <td><input type="number" class="input-cell text-right item-price" name="item-price" placeholder="0">
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="date" class="input-cell" name="item-date"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-payee"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-desc"></td>
+                    <td><input type="number" class="input-cell text-right item-price" name="item-price" placeholder="0">
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="date" class="input-cell" name="item-date"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-payee"></td>
+                    <td><input type="text" class="input-cell text-left" name="item-desc"></td>
+                    <td><input type="number" class="input-cell text-right item-price" name="item-price" placeholder="0">
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3" class="text-right">合計金額</td>
+                    <td class="text-right" id="total-display">¥0</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Web/A Badge -->
+        <div style="margin-top: 50px; text-align: right; opacity: 0.5;">
+            <small>Generated by Web/A Form PoC</small>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="btn btn-secondary" onclick="window.print()">印刷 / PDF保存</button>
+        <button class="btn btn-primary" onclick="saveDocument()">ファイルとして保存 (Web/A)</button>
+    </div>
+
+    <script>
+        // --- Core Logic ---
+
+        // 1. Reactive Calculation
+        const priceInputs = document.querySelectorAll('.item-price');
+        const totalDisplay = document.getElementById('total-display');
+
+        function calculateTotal() {
+            let total = 0;
+            priceInputs.forEach(input => {
+                const val = parseInt(input.value) || 0;
+                total += val;
+            });
+            totalDisplay.textContent = '¥' + total.toLocaleString();
+            return total;
+        }
+
+        priceInputs.forEach(input => {
+            input.addEventListener('input', calculateTotal);
+        });
+
+        // 2. Data Synchronization (HTML to JSON-LD)
+        function updateJsonLd() {
+            const dataScript = document.getElementById('data-layer');
+            const data = JSON.parse(dataScript.textContent);
+
+            // Update simple fields
+            document.querySelectorAll('[data-json-path]').forEach(input => {
+                const path = input.dataset.jsonPath.split('.');
+                let current = data;
+                for (let i = 0; i < path.length - 1; i++) {
+                    current = current[path[i]];
+                }
+                current[path[path.length - 1]] = input.value;
+            });
+
+            // Update total
+            data.totalPaymentDue.price = calculateTotal();
+
+            // Note: For a real app, we would also update the line items array in JSON-LD
+            // But for this PoC, we focus on the header and total.
+
+            dataScript.textContent = JSON.stringify(data, null, 2);
+            return dataScript.textContent; // Return for debug
+        }
+
+        // 3. Save as Self-Contained Web/A
+        function saveDocument() {
+            // Update JSON-LD one last time before saving
+            updateJsonLd();
+
+            // Clone the entire document to manipulate it for saving
+            // We need to bake the current values into the attributes
+            const clone = document.documentElement.cloneNode(true);
+
+            // --- HMP: Bake Input Values ---
+            // The browser's DOM state for inputs isn't automatically reflected in HTML attributes.
+            // We must explicitly set value="..." for input fields so they persist in the saved file.
+            const originalInputs = document.querySelectorAll('input, textarea, select');
+            const clonedInputs = clone.querySelectorAll('input, textarea, select');
+
+            originalInputs.forEach((input, index) => {
+                const clonedInput = clonedInputs[index];
+
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    if (input.checked) {
+                        clonedInput.setAttribute('checked', 'checked');
+                    } else {
+                        clonedInput.removeAttribute('checked');
+                    }
+                } else if (input.tagName === 'TEXTAREA') {
+                    clonedInput.textContent = input.value;
+                } else if (input.tagName === 'SELECT') {
+                    const options = clonedInput.querySelectorAll('option');
+                    options.forEach(opt => {
+                        if (opt.value === input.value) {
+                            opt.setAttribute('selected', 'selected');
+                        } else {
+                            opt.removeAttribute('selected');
+                        }
+                    });
+                } else {
+                    // Text, number, date, etc.
+                    clonedInput.setAttribute('value', input.value);
+                }
+            });
+
+            // Also bake the total display
+            const originalTotal = document.getElementById('total-display');
+            const clonedTotal = clone.querySelector('#total-display');
+            clonedTotal.textContent = originalTotal.textContent;
+
+            // Serialize
+            const serializer = new XMLSerializer();
+            // Add DOCTYPE because XMLSerializer doesn't include it
+            const docStr = "<!DOCTYPE html>\n" + serializer.serializeToString(clone);
+
+            // Create Blob and Download
+            const blob = new Blob([docStr], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+
+            // Generate filename based on date and name if available
+            const dateStr = document.getElementById('datePublished').value || 'date-missing';
+            const nameStr = document.getElementById('name').value || 'name-missing';
+            const filename = `Expense_Claim_${dateStr}_${nameStr}.html`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize total on load (in case opening a saved file)
+        calculateTotal();
+
+        // --- 4. LocalStorage Auto-Save ---
+        const FORM_ID = 'weba_expense_poc_v1'; // Unique ID for this form type
+
+        function saveToLocalStorage() {
+            const data = {};
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                // Skip if no id and no name (cannot identify)
+                const key = el.id || el.name;
+                if (!key) return;
+
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    data[key] = el.checked;
+                } else {
+                    data[key] = el.value;
+                }
+            });
+            localStorage.setItem(FORM_ID, JSON.stringify(data));
+            showAutoSaveStatus('Saved to browser', 2000);
+        }
+
+        function restoreFromLocalStorage() {
+            const char = localStorage.getItem(FORM_ID);
+            if (!char) return;
+
+            try {
+                const data = JSON.parse(char);
+                // Confirm if data exists and is different? For PoC, just restore.
+                if (!confirm('前の入力データが残っています。復元しますか？')) return;
+
+                document.querySelectorAll('input, select, textarea').forEach(el => {
+                    const key = el.id || el.name;
+                    if (!key || data[key] === undefined) return;
+
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        el.checked = data[key];
+                    } else {
+                        el.value = data[key];
+                    }
+                });
+
+                // Recalculate derived values
+                calculateTotal();
+            } catch (e) {
+                console.error('Failed to restore data', e);
+            }
+        }
+
+        // Auto-save on input
+        let debounceTimer;
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('input, select, textarea')) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(saveToLocalStorage, 1000);
+            }
+        });
+
+        // Restore on load
+        window.addEventListener('DOMContentLoaded', restoreFromLocalStorage);
+
+        // Helper UI
+        function showAutoSaveStatus(msg, duration) {
+            let el = document.getElementById('autosave-status');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'autosave-status';
+                el.style.cssText = 'position:fixed; bottom:80px; right:20px; background:#333; color:#fff; padding:5px 10px; border-radius:4px; font-size:12px; opacity:0; transition:opacity 0.5s;';
+                document.body.appendChild(el);
+            }
+            el.textContent = msg;
+            el.style.opacity = '1';
+            if (duration) {
+                setTimeout(() => { el.style.opacity = '0'; }, duration);
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
