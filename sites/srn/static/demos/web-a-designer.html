@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web/A Form Designer (PoC)</title>
+    <style>
+        /* Designer UI Layout */
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #eef2f6;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            /* Fixed height for app-like feel */
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar (Toolbox & Properties) */
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #d1d5db;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #1e293b;
+        }
+
+        .sidebar h3 {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .component-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .component-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: move;
+            /* Draggable indicator */
+            text-align: center;
+            font-size: 13px;
+            color: #334155;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .component-btn:hover {
+            border-color: #007bff;
+            color: #007bff;
+            background: #eff6ff;
+        }
+
+        .properties-panel {
+            flex: 1;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            overflow-y: auto;
+        }
+
+        .prop-group {
+            margin-bottom: 15px;
+        }
+
+        .prop-label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #64748b;
+        }
+
+        .prop-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .action-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: auto;
+        }
+
+        .action-btn:hover {
+            background: #0056b3;
+        }
+
+        /* Canvas Area */
+        .main-area {
+            flex: 1;
+            padding: 40px;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* The Page (Canvas) - Matches web-a-form.html styles */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Interactive Elements on Canvas */
+        .draggable-item {
+            position: relative;
+            border: 2px solid transparent;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .draggable-item:hover {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+            /* Slight highlight */
+        }
+
+        .draggable-item.selected {
+            border-color: #007bff;
+            background: rgba(0, 123, 255, 0.05);
+        }
+
+        .delete-handle {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 20px;
+            height: 20px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .draggable-item.selected .delete-handle {
+            display: block;
+        }
+
+        /* CSS Reused from Output Template for WYSIWYG */
+        .form-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .form-label {
+            width: 120px;
+            font-weight: bold;
+            font-family: sans-serif;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        h1.doc-title {
+            text-align: center;
+            border-bottom: 3px double #333;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            font-family: serif;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2 data-i18n="app_title">Web/A Designer</h2>
+
+        <h3 data-i18n="toolbox_title">Toolbox</h3>
+        <div class="component-list">
+            <div class="component-btn" onclick="addComponent('header')" data-i18n="comp_header">Title Header</div>
+            <div class="component-btn" onclick="addComponent('text')" data-i18n="comp_text">Text Input</div>
+            <div class="component-btn" onclick="addComponent('textarea')" data-i18n="comp_textarea">Multi-line Text
+            </div>
+            <div class="component-btn" onclick="addComponent('number')" data-i18n="comp_number">Number Input</div>
+            <div class="component-btn" onclick="addComponent('radio')" data-i18n="comp_radio">Radio Group</div>
+            <div class="component-btn" onclick="addComponent('date')" data-i18n="comp_date">Date Input</div>
+            <div class="component-btn" onclick="addComponent('paragraph')" data-i18n="comp_paragraph">Static Text</div>
+        </div>
+
+        <h3 data-i18n="props_title">Properties</h3>
+        <div class="properties-panel" id="prop-panel">
+            <div style="color: #94a3b8; text-align: center; margin-top: 20px;" data-i18n="props_placeholder">
+                Select an element to edit properties
+            </div>
+        </div>
+
+        <button class="action-btn" onclick="exportWebA()" data-i18n="btn_download">Download Web/A Form</button>
+    </div>
+
+    <div class="main-area">
+        <div class="page" id="canvas">
+            <!-- Canvas Initial State -->
+            <div class="draggable-item" onclick="selectItem(this)" data-type="header">
+                <h1 class="doc-title" id="e-title">Untitled Document</h1>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- I18N Logic ---
+        const translations = {
+            en: {
+                app_title: "Web/A Designer",
+                toolbox_title: "Toolbox",
+                props_title: "Properties",
+                props_placeholder: "Select an element to edit properties",
+                btn_download: "Download Web/A Form",
+                comp_header: "Title Header",
+                comp_text: "Text Input",
+                comp_textarea: "Multi-line Text",
+                comp_number: "Number Input",
+                comp_radio: "Radio Group",
+                comp_date: "Date Input",
+                comp_paragraph: "Static Text",
+
+                // Defaults & Labels
+                def_title: "Document Title",
+                def_label: "Label",
+                def_opt1: "Option 1",
+                def_opt2: "Option 2",
+                def_placeholder: "Type here...",
+                def_static: "Enter instructions or static text here.",
+
+                plabel_text: "Title Text",
+                plabel_label: "Label",
+                plabel_name: "Group Name (Required)",
+                plabel_opt1: "Label 1",
+                plabel_opt2: "Label 2",
+                plabel_val1: "Value 1",
+                plabel_val2: "Value 2",
+                plabel_placeholder: "Placeholder",
+                plabel_rows: "Rows",
+                plabel_content: "Content",
+                plabel_json: "JSON-LD Key",
+
+                msg_remove: "Remove this element?",
+                msg_saved: "Saved!",
+                msg_restore: "Found unsaved work. Restore?",
+
+                // Form Preview
+                form_save_btn: "Save (Web/A)"
+            },
+            ja: {
+                app_title: "Web/A デザイナー",
+                toolbox_title: "ツールボックス",
+                props_title: "プロパティ",
+                props_placeholder: "編集する要素を選択してください",
+                btn_download: "Web/A フォームを保存",
+                comp_header: "タイトル (Header)",
+                comp_text: "1行テキスト",
+                comp_textarea: "複数行テキスト",
+                comp_number: "数値入力",
+                comp_radio: "ラジオボタン",
+                comp_date: "日付入力",
+                comp_paragraph: "説明文 (Static)",
+
+                def_title: "文書タイトル",
+                def_label: "項目名",
+                def_opt1: "選択肢 1",
+                def_opt2: "選択肢 2",
+                def_placeholder: "ここに入力...",
+                def_static: "説明文や固定テキストをここに入力してください。",
+
+                plabel_text: "タイトル文言",
+                plabel_label: "ラベル",
+                plabel_name: "グループ名 (必須)",
+                plabel_opt1: "選択肢 1 ラベル",
+                plabel_opt2: "選択肢 2 ラベル",
+                plabel_val1: "選択肢 1 値",
+                plabel_val2: "選択肢 2 値",
+                plabel_placeholder: "プレースホルダー",
+                plabel_rows: "行数",
+                plabel_content: "本文",
+                plabel_json: "JSON-LD キー",
+
+                msg_remove: "この要素を削除しますか？",
+                msg_saved: "保存しました",
+                msg_restore: "前回の作業内容を復元しますか？",
+
+                form_save_btn: "保存 (Web/A)"
+            }
+        };
+
+        const userLang = (navigator.language || navigator.userLanguage).substring(0, 2);
+        const lang = translations[userLang] ? userLang : 'en';
+        const t = (key) => translations[lang][key] || key;
+
+        // Apply translations to static elements
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.innerText = t(el.dataset.i18n);
+            });
+        });
+
+        // --- Component Definitions ---
+        // Dynamically build using current language
+        const components = {
+            header: {
+                html: `<h1 class="doc-title">${t('def_title')}</h1>`,
+                props: [
+                    { name: 'text', label: t('plabel_text'), type: 'text', target: 'innerText' }
+                ]
+            },
+            text: {
+                html: `
+                    <div class="form-row">
+                        <label class="form-label">${t('def_label')}</label>
+                        <input type="text" class="form-input" placeholder="${t('def_placeholder')}">
+                    </div>`,
+                props: [
+                    { name: 'label', label: t('plabel_label'), type: 'text', selector: 'label', target: 'innerText' },
+                    { name: 'placeholder', label: t('plabel_placeholder'), type: 'text', selector: 'input', target: 'placeholder' },
+                    { name: 'jsonPath', label: t('plabel_json'), type: 'text', selector: 'input', target: 'dataset.jsonPath' }
+                ]
+            },
+            textarea: {
+                html: `
+                    <div class="form-row" style="align-items: flex-start;">
+                        <label class="form-label" style="padding-top: 5px;">${t('def_label')}</label>
+                        <textarea class="form-input" rows="4" placeholder="${t('def_placeholder')}"></textarea>
+                    </div>`,
+                props: [
+                    { name: 'label', label: t('plabel_label'), type: 'text', selector: 'label', target: 'innerText' },
+                    { name: 'placeholder', label: t('plabel_placeholder'), type: 'text', selector: 'textarea', target: 'placeholder' },
+                    { name: 'rows', label: t('plabel_rows'), type: 'number', selector: 'textarea', target: 'rows' },
+                    { name: 'jsonPath', label: t('plabel_json'), type: 'text', selector: 'textarea', target: 'dataset.jsonPath' }
+                ]
+            },
+            number: {
+                html: `
+                    <div class="form-row">
+                        <label class="form-label">${t('def_label')}</label>
+                        <input type="number" class="form-input" placeholder="0">
+                    </div>`,
+                props: [
+                    { name: 'label', label: t('plabel_label'), type: 'text', selector: 'label', target: 'innerText' },
+                    { name: 'jsonPath', label: t('plabel_json'), type: 'text', selector: 'input', target: 'dataset.jsonPath' }
+                ]
+            },
+            radio: {
+                html: `
+                    <div class="form-row">
+                        <label class="form-label">${t('def_label')}</label>
+                        <div class="radio-group" style="flex: 1;">
+                            <label style="margin-right: 15px;">
+                                <input type="radio" name="r1" value="opt1" data-json-path=""> <span>${t('def_opt1')}</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="r1" value="opt2" data-json-path=""> <span>${t('def_opt2')}</span>
+                            </label>
+                        </div>
+                    </div>`,
+                props: [
+                    { name: 'label', label: t('plabel_label'), type: 'text', selector: '.form-label', target: 'innerText' },
+                    { name: 'name', label: t('plabel_name'), type: 'text', selector: 'input', target: 'name', syncGroup: true },
+                    { name: 'opt1', label: t('plabel_opt1'), type: 'text', selector: 'label:nth-of-type(1) span', target: 'innerText' },
+                    { name: 'val1', label: t('plabel_val1'), type: 'text', selector: 'label:nth-of-type(1) input', target: 'value' },
+                    { name: 'opt2', label: t('plabel_opt2'), type: 'text', selector: 'label:nth-of-type(2) span', target: 'innerText' },
+                    { name: 'val2', label: t('plabel_val2'), type: 'text', selector: 'label:nth-of-type(2) input', target: 'value' },
+                    { name: 'jsonPath', label: t('plabel_json'), type: 'text', selector: 'input', target: 'dataset.jsonPath', syncGroup: true }
+                ]
+            },
+            date: {
+                html: `
+                    <div class="form-row">
+                        <label class="form-label">${t('def_label')}</label>
+                        <input type="date" class="form-input">
+                    </div>`,
+                props: [
+                    { name: 'label', label: t('plabel_label'), type: 'text', selector: 'label', target: 'innerText' },
+                    { name: 'jsonPath', label: t('plabel_json'), type: 'text', selector: 'input', target: 'dataset.jsonPath' }
+                ]
+            },
+            paragraph: {
+                html: `<p>${t('def_static')}</p>`,
+                props: [
+                    { name: 'text', label: t('plabel_content'), type: 'textarea', target: 'innerText' }
+                ]
+            }
+        };
+
+        let selectedElement = null;
+
+        // --- UI Logic ---
+
+        function addComponent(type) {
+            const def = components[type];
+            if (!def) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'draggable-item';
+            wrapper.dataset.type = type;
+            wrapper.onclick = (e) => { e.stopPropagation(); selectItem(wrapper); };
+            wrapper.innerHTML = def.html + '<div class="delete-handle" onclick="deleteItem(this, event)">×</div>';
+
+            // Unique name for radios
+            if (type === 'radio') {
+                const uniqueName = 'radio_' + Date.now();
+                wrapper.querySelectorAll('input[type=radio]').forEach(r => r.name = uniqueName);
+            }
+
+            document.getElementById('canvas').appendChild(wrapper);
+            selectItem(wrapper);
+            // Auto scroll to bottom
+            wrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteItem(handle, e) {
+            e.stopPropagation();
+            if (confirm(t('msg_remove'))) {
+                handle.parentElement.remove();
+                document.getElementById('prop-panel').innerHTML = '';
+            }
+        }
+
+        function selectItem(el) {
+            if (selectedElement) selectedElement.classList.remove('selected');
+            selectedElement = el;
+            el.classList.add('selected');
+            renderProperties(el);
+        }
+
+        function renderProperties(el) {
+            const type = el.dataset.type;
+            const def = components[type];
+            const panel = document.getElementById('prop-panel');
+            panel.innerHTML = '';
+
+            if (!def || !def.props) return;
+
+            def.props.forEach(prop => {
+                const group = document.createElement('div');
+                group.className = 'prop-group';
+
+                const label = document.createElement('label');
+                label.className = 'prop-label';
+                label.textContent = prop.label;
+
+                let input;
+                if (prop.type === 'textarea') {
+                    input = document.createElement('textarea');
+                } else {
+                    input = document.createElement('input');
+                    input.type = prop.type;
+                }
+                input.className = 'prop-input';
+
+                // Get current value
+                const targetEl = prop.selector ? el.querySelector(prop.selector) : el.children[0];
+
+                if (prop.target.startsWith('dataset.')) {
+                    const key = prop.target.split('.')[1];
+                    input.value = targetEl.dataset[key] || '';
+                } else {
+                    input.value = targetEl[prop.target] || '';
+                }
+
+                // Bind update
+                input.oninput = () => {
+                    const newVal = input.value;
+
+                    // Sync Group Logic
+                    if (prop.syncGroup) {
+                        el.querySelectorAll(prop.selector).forEach(subEl => {
+                            if (prop.target.startsWith('dataset.')) {
+                                const key = prop.target.split('.')[1];
+                                subEl.dataset[key] = newVal;
+                            } else {
+                                subEl[prop.target] = newVal;
+                            }
+                        });
+                    } else {
+                        if (prop.target.startsWith('dataset.')) {
+                            const key = prop.target.split('.')[1];
+                            targetEl.dataset[key] = newVal;
+                        } else {
+                            targetEl[prop.target] = newVal;
+                        }
+                    }
+                };
+
+                group.appendChild(label);
+                group.appendChild(input);
+                panel.appendChild(group);
+            });
+        }
+
+        // --- Auto-Save for Designer ---
+        const DESIGNER_STORAGE_KEY = 'weba_designer_state_v1';
+
+        function saveDesignerState() {
+            const canvas = document.getElementById('canvas');
+            const clone = canvas.cloneNode(true);
+            clone.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+
+            const state = {
+                html: clone.innerHTML,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(DESIGNER_STORAGE_KEY, JSON.stringify(state));
+
+            // Visual feedback
+            const btn = document.querySelector('.action-btn');
+            const originalText = btn.textContent;
+            btn.textContent = t('msg_saved');
+            setTimeout(() => btn.textContent = originalText, 1000);
+        }
+
+        function restoreDesignerState() {
+            const char = localStorage.getItem(DESIGNER_STORAGE_KEY);
+            if (!char) {
+                if (!document.querySelector('.draggable-item')) {
+                    addComponent('header');
+                }
+                return;
+            }
+            if (confirm(t('msg_restore'))) {
+                try {
+                    const state = JSON.parse(char);
+                    const canvas = document.getElementById('canvas');
+                    canvas.innerHTML = state.html;
+                } catch (e) {
+                    console.error('Failed to restore designer state', e);
+                }
+            } else {
+                if (!document.querySelector('.draggable-item')) {
+                    addComponent('header');
+                }
+            }
+        }
+
+        const observer = new MutationObserver(() => saveDesignerState());
+        observer.observe(document.getElementById('canvas'), { childList: true, subtree: true, attributes: true, characterData: true });
+        window.addEventListener('DOMContentLoaded', restoreDesignerState);
+
+
+        // --- Export Logic ---
+
+        function exportWebA() {
+            const canvas = document.getElementById('canvas');
+            const clone = canvas.cloneNode(true);
+
+            clone.querySelectorAll('.draggable-item').forEach(item => {
+                item.classList.remove('draggable-item', 'selected');
+                item.removeAttribute('onclick');
+                item.removeAttribute('data-type');
+            });
+            clone.querySelectorAll('.delete-handle').forEach(h => h.remove());
+
+            const jsonStructure = {
+                "@context": "https://schema.org",
+                "@type": "CreativeWork",
+                "name": (clone.querySelector('h1')?.textContent || t('def_title')),
+            };
+
+            const saveBtnLabel = t('form_save_btn');
+
+            const htmlContent = `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${jsonStructure.name}</title>
+    <style>
+        body { font-family: sans-serif; background: #eee; margin: 0; padding: 20px; }
+        .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .form-row { display: flex; margin-bottom: 15px; align-items: center; }
+        .form-label { width: 120px; font-weight: bold; }
+        .form-input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+        h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        
+        .toolbar { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; gap: 10px; }
+        button { padding: 8px 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        @media print { body { background: none; padding: 0; } .page { box-shadow: none; width: 100%; } .toolbar { display: none; } }
+    </style>
+</head>
+<body>
+    <script type="application/ld+json" id="data-layer">
+    ${JSON.stringify(jsonStructure, null, 2)}
+    <\/script>
+
+    <div class="page">
+        ${clone.innerHTML}
+    </div>
+
+    <div class="toolbar">
+        <button onclick="window.print()">Print / PDF</button>
+        <button onclick="saveDocument()">${saveBtnLabel}</button>
+    </div>
+
+    <script>
+        // Web/A Form Runtime
+        const TEMPLATE_ID = 'weba_gen_' + '${Date.now()}';
+        const FORM_ID = TEMPLATE_ID + '_' + (location.pathname || '');
+
+        function updateJsonLd() {
+            const dataScript = document.getElementById('data-layer');
+            const data = JSON.parse(dataScript.textContent);
+            document.querySelectorAll('[data-json-path]').forEach(input => {
+                // For radio, only take checked value
+                if (input.type === 'radio' && !input.checked) return;
+                
+                const path = input.dataset.jsonPath;
+                if(path) data[path] = input.value; 
+            });
+            dataScript.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function saveDocument() {
+            updateJsonLd();
+            const clone = document.documentElement.cloneNode(true);
+            
+            // HMP: Bake values
+            const originalInputs = document.querySelectorAll('input, textarea, select');
+            const clonedInputs = clone.querySelectorAll('input, textarea, select');
+            originalInputs.forEach((input, index) => {
+                const clonedInput = clonedInputs[index];
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    if (input.checked) clonedInput.setAttribute('checked', 'checked'); else clonedInput.removeAttribute('checked');
+                } else if (input.tagName === 'TEXTAREA') {
+                    clonedInput.textContent = input.value;
+                } else {
+                    clonedInput.setAttribute('value', input.value);
+                }
+            });
+
+            // Download
+            const serializer = new XMLSerializer();
+            const docStr = "<!DOCTYPE html>\\n" + serializer.serializeToString(clone);
+            const blob = new Blob([docStr], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '${jsonStructure.name.replace(/\s+/g, '_')}_filled.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function saveToLocalStorage() {
+            const data = {};
+            document.querySelectorAll('[data-json-path], input[type=radio]').forEach(el => {
+                // Only save if it has meaning (json-path or named radio)
+                const key = el.dataset.jsonPath || el.name;
+                if(!key) return;
+
+                if (el.type === 'radio') {
+                    if (el.checked) data[el.name] = el.value;
+                } else {
+                    data[key] = el.value;
+                }
+            });
+            localStorage.setItem(FORM_ID, JSON.stringify(data));
+        }
+
+        function restoreFromLocalStorage() {
+            const char = localStorage.getItem(FORM_ID);
+            if (!char) return;
+            if(!confirm('Restore previous data?')) return;
+            
+            const data = JSON.parse(char);
+            
+            // Restore normal inputs
+            document.querySelectorAll('[data-json-path]').forEach(el => {
+                if (el.type === 'radio') return; // Handled separately
+                const key = el.dataset.jsonPath;
+                if(data[key] !== undefined) el.value = data[key];
+            });
+
+            // Restore radios
+            document.querySelectorAll('input[type=radio]').forEach(el => {
+                 if (data[el.name] === el.value) {
+                     el.checked = true;
+                 }
+            });
+        }
+        
+        let debounceTimer;
+        document.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(saveToLocalStorage, 1000);
+        });
+        
+        window.addEventListener('DOMContentLoaded', restoreFromLocalStorage);
+    <\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'my-web-a-form.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+
+</body>
+
+</html>
+```
