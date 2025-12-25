@@ -9,6 +9,7 @@ import crypto from 'node:crypto';
 import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
 import { findGlyphInDb } from './db.ts';
 import { loadConfig, getAbsolutePaths } from './config.ts';
+import { toWareki, toLegalFormat } from './utils.ts';
 
 // Render HTML using Layout System
 let finalHtml = '';
@@ -182,6 +183,7 @@ async function build() {
 
     await fs.ensureDir(path.join(DIST_DIR, '.well-known'));
     await fs.writeJson(path.join(DIST_DIR, '.well-known', 'did.json'), didDoc, { spaces: 2 });
+    await fs.writeJson(path.join(DIST_DIR, 'did.json'), didDoc, { spaces: 2 });
 
     // 5. Generate Status List VC (Signed by Root Key)
     // Filter revoked build IDs
@@ -239,13 +241,16 @@ async function build() {
         const filePath = path.join(CONTENT_DIR, file);
         const source = await fs.readFile(filePath, 'utf-8');
         const { data } = matter(source);
+        const stats = await fs.stat(filePath);
+        const autoDate = stats.mtime.toISOString().split('T')[0] || '';
+
         allPages.push({
-            title: data.title || file,
-            description: data.description || '',
-            date: data.date ? String(data.date) : '',
-            author: data.author || '',
+            title: String(data.title || file),
+            description: String(data.description || ''),
+            date: data.date ? String(data.date) : autoDate,
+            author: String(data.author || ''),
             path: file.replace('.md', '.html'),
-            layout: data.layout || 'article',
+            layout: String(data.layout || 'article'),
             isSystem: data.isSystem === true
         });
     }
@@ -256,6 +261,10 @@ async function build() {
         const filePath = path.join(CONTENT_DIR, file);
         const source = await fs.readFile(filePath, 'utf-8');
         const { data, content } = matter(source);
+        const stats = await fs.stat(filePath);
+        if (!data.date) {
+            data.date = stats.mtime.toISOString().split('T')[0];
+        }
 
         // Multiple output paths support (e.g. srn.md -> index.html if no index.md)
         const targetFiles = [file.replace('.md', '.html')];
@@ -672,11 +681,31 @@ body {
                 safeFontFamilies
             );
         } else if (data.layout === 'juminhyo') {
-            // Generate VC for Juminhyo
-            console.log("  Generating Juminhyo Hybrid VC...");
+            // Normalization Layer: Map Japanese aliases to English internal keys
+            const normalizePerson = (p: any): JuminhyoItem => {
+                return {
+                    name: p.氏名 || p.name,
+                    kana: p.カナ || p.フリガナ || p.kana,
+                    dob: p.生年月日 || p.dob,
+                    gender: p.性別 || p.gender,
+                    relationship: p.続柄 || p.relationship,
+                    becameResident: p.住民となった日 || p.becameResident,
+                    becameResidentReason: p.住民となった事由 || p.becameResidentReason,
+                    addressDate: p.住所を定めた日 || p.addressDate,
+                    notificationDate: p.届出日 || p.notificationDate,
+                    prevAddress: p.前住所 || p.prevAddress,
+                    domiciles: p.本籍 || p.domiciles,
+                    myNumber: p.個人番号 || p.マイナンバー || p.myNumber,
+                    residentCode: p.住民票コード || p.residentCode,
+                    maidenName: p.旧氏 || p.maidenName,
+                    maidenKana: p.旧氏カナ || p.maidenKana,
+                    remarks: p.備考 || p.remarks
+                };
+            };
 
-            // Construct a structured payload for Juminhyo
-            // In a real scenario, this would match the JSON-LD structure exactly.
+            const normalizedItems = (data.世帯員 || data.項目 || data.items || []).map(normalizePerson);
+
+            // Machine-Readable Data (for VC/JSON-LD) stays in standard/ISO formats
             const vcPayload = {
                 id: `urn:uuid:${crypto.randomUUID()}`,
                 type: ["VerifiableCredential", "ResidentRecord"],
@@ -687,11 +716,11 @@ body {
                 credentialSubject: {
                     id: `https://${SITE_DOMAIN}${SITE_PATH}/certificates/${file.replace('.md', '')}`,
                     type: "ResidentRecord",
-                    name: data.certificateTitle,
-                    householder: data.householder,
-                    address: data.address,
+                    name: data.証明書名称 || data.certificateTitle || "住民票",
+                    householder: data.世帯主氏名 || data.householder,
+                    address: data.世帯住所 || data.address,
                     "srn:buildId": buildId,
-                    member: (data.items as JuminhyoItem[]).map((item: JuminhyoItem) => ({
+                    member: normalizedItems.map((item: JuminhyoItem) => ({
                         name: item.name,
                         kana: item.kana,
                         birthDate: item.dob,
@@ -711,6 +740,32 @@ body {
                     }))
                 }
             };
+
+            // Presentation Data (for HTML) is transformed to Legal/Human formats
+            const presentationData = {
+                ...data,
+                certificateTitle: toLegalFormat(data.証明書名称 || data.certificateTitle || "住民票"),
+                address: toLegalFormat(data.世帯住所 || data.address),
+                householder: toLegalFormat(data.世帯主氏名 || data.householder),
+                issueDate: toLegalFormat(data.交付年月日 || data.issueDate),
+                items: normalizedItems.map((item: JuminhyoItem) => ({
+                    ...item,
+                    name: toLegalFormat(item.name),
+                    dob: toLegalFormat(item.dob),
+                    becameResident: toLegalFormat(item.becameResident),
+                    addressDate: toLegalFormat(item.addressDate),
+                    notificationDate: toLegalFormat(item.notificationDate),
+                    myNumber: toLegalFormat(item.myNumber),
+                    residentCode: toLegalFormat(item.residentCode)
+                })),
+                issuer: {
+                    title: toLegalFormat(data.発行者役職 || data.issuer?.title),
+                    name: toLegalFormat(data.発行者氏名 || data.issuer?.name)
+                }
+            };
+
+            // Generate VC for Juminhyo
+            console.log("  Generating Juminhyo Hybrid VC...");
 
             const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
             const binaryVc = await createCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
@@ -732,7 +787,7 @@ body {
             console.log(`  Generated Juminhyo VCs: ${vcOutPath}, ${binVcOutPath}, ${sdVcOutPath}`);
 
             finalHtml = juminhyoLayout(
-                data as JuminhyoData,
+                presentationData as JuminhyoData,
                 htmlContent,
                 fontCss,
                 safeFontFamilies,
@@ -749,11 +804,32 @@ body {
                 htmlContent
             );
         } else if (data.layout === 'weba') {
+            // Generate VC for Web/A Showcase documents
+            console.log("  Generating Web/A Provenance VC...");
+            const plainText = cheerio.load(htmlContent).text();
+
+            const vcPayload = {
+                id: `urn:uuid:${crypto.randomUUID()}`,
+                type: ["VerifiableCredential", "WebADocument"],
+                credentialSubject: {
+                    id: `https://${SITE_DOMAIN}${SITE_PATH}/${file.replace('.md', '')}`,
+                    type: "WebADocument",
+                    name: data.title,
+                    author: data.author,
+                    date: data.date,
+                    "srn:buildId": buildId,
+                    contentDigest: crypto.createHash('sha256').update(cheerio.load(htmlContent).text().trim()).digest('hex')
+                }
+            };
+
+            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
+
             finalHtml = webaLayout(
                 data as WebAData,
                 htmlContent,
                 fontCss,
-                safeFontFamilies
+                safeFontFamilies,
+                vc
             );
         } else {
             // Default to article
