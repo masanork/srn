@@ -104,7 +104,7 @@ To prevent the "XSLT Problem", Web/A defines two distinct layers within a single
     *   This layer is cryptographically signed by the original issuer.
     *   It represents the "fact" of the document.
 
-2.  **Portable Viewer Layer (The "Wrapper")**:
+2.  **Portable Presentation Layer (The "Wrapper")**:
     *   Contains the CSS, fonts, and any minimal logic needed to render the payload.
     *   **Evolutionary and Decentralized Maintenance**: Long-term preservation requires updates to the wrapper layer for future browser compatibility or security hardening. Web/A anticipates a future where the original issuer may no longer exist, and thus proposes a mechanism where **anyone (archives, libraries, or individual custodians)** can safely modernize the viewer. Documents should embed a non-local URI (e.g., pointing to a decentralized Registry or Standards Body) for distributing the latest trusted viewer. This allows any custodian to adopt a signed, up-to-date viewer without compromising the original integrity of the payload.
 
@@ -114,7 +114,7 @@ The generator tool (e.g., Sorane) is responsible for ensuring that the JSON-LD a
 - **Generator Claims**: Embedding a **C2PA-style manifest** into the document. This manifest contains a hash of the transformation logic and a synchronized assertion.
 
 ### 6.3. Web/A Document Structure and Trust Chain
-The robustness of Web/A lies in the clean separation between the presentation layer (Viewer) and the signed data layer (Payload), with a strict parity (HMP) maintained between them.
+The robustness of Web/A lies in the clean separation between the presentation layer (Wrapper) and the signed data layer (Payload), with a strict parity (HMP) maintained between them.
 
 <div align="center">
 <svg width="600" height="380" viewBox="0 0 600 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
@@ -124,7 +124,7 @@ The robustness of Web/A lies in the clean separation between the presentation la
 
   <!-- Viewer Layer -->
   <rect x="60" y="70" width="480" height="60" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
-  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Viewer Layer (Wrapper)</text>
+  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Presentation Layer (Wrapper)</text>
   <text x="75" y="115" font-family="system-ui" font-size="11" fill="#64748B">CSS, Fonts, etc. (Evolutionary Maintenance: replaceable for future browsers)</text>
 
   <!-- Payload Layer -->
@@ -222,7 +222,7 @@ Traditional official documents are often based on "Fixed-size, Ruled-paper" layo
 With the dominance of smartphones, documents require **Bimodal Presentation**:
 1.  **Archive View (Fixed)**: A traditional form-based layout used for printing and official verification—the "Formal Face" of the document.
 2.  **Wallet View (Adaptive)**: A responsive, mobile-optimized card view for quick reference on small screens—the "Practical Face" of the document.
-Web/A's Viewer layer allows switching between these two views using CSS from a single signed payload, maximizing the mobile experience while maintaining archival integrity.
+Web/A's Presentation layer allows switching between these two views using CSS from a single signed payload, maximizing the mobile experience while maintaining archival integrity.
 
 ---
 
@@ -266,7 +266,7 @@ Targeting documents that prove identity or authority during secondary circulatio
 *   **Response to MIC (Japan) Policy Requirements**: 
     The [Intermediate Report (June 2025) of the Working Group on the Ideal State of Resident Basic Ledger Administration through the Utilization of Digital Technology](https://www.soumu.go.jp/main_content/001018670.pdf) by the Japanese Ministry of Internal Affairs and Communications (MIC) mandates several high-level requirements for VCs as identity documents. Web/A addresses these through native Web standards:
     1.  **Originality & Integrity**: Cryptographic protection against falsification of both visual (HTML) and data (JSON-LD) layers.
-    2.  **Prevention of Personation (Holder Binding)**: Web/A implements **Verifiable Presentation (VP)** logic within its Viewer layer. By invoking the user's hardware-backed keys (e.g., Passkeys) at the moment of presentation, it generates a "presentation-time signature" to prove rightful possession without requiring a dedicated wallet app.
+    2.  **Prevention of Personation (Holder Binding)**: Web/A implements **Verifiable Presentation (VP)** logic within its Presentation layer. By invoking the user's hardware-backed keys (e.g., Passkeys) at the moment of presentation, it generates a "presentation-time signature" to prove rightful possession without requiring a dedicated wallet app.
     3.  **Anti-Copying/Anti-Replay**: Unlike a static image or PDF, a Web/A document is a "live" verifiable asset. Verifiers can trigger the on-document verification UI to confirm authenticity and freshness in real-time.
     4.  **Selective Disclosure**: To address the privacy concerns mentioned in the MIC report, Web/A supports SD-JWT/SD-COSE, allowing a user to disclose only specific fields (e.g., "Address and Name") while keeping the rest of the resident record data confidential.
 *   **Characteristics**: Establishes a "Browser-based Chain of Trust" for cross-sector (public/private) document reuse without specialized verification infrastructure.

@@ -13,7 +13,7 @@ Introduction of a new archival web document format and major enhancements to lon
 * **Web/A (Archival-Grade Web Documents)**:
   * **New Layout**: `layout: weba` for creating self-contained, machine-readable documents.
   * **Human-Machine Duality**: Simultaneous embedding of semantic JSON-LD and human-readable HTML/CSS.
-  * **Multi-Layer Maintenance Model**: Separation of the *Signed Content Layer* (permanent) and the *Portable Viewer Layer* (evolutionary) to ensure 50+ year readability.
+  * **Multi-Layer Maintenance Model**: Separation of the *Signed Content Layer* (permanent) and the *Portable Presentation Layer* (evolutionary) to ensure 50+ year readability.
   * **Trust Transition Ready**: Designed for "Signature Refreshment" over evidence hoarding, prioritizing continuous chain of custody.
   * **Provenance Manifest**: Integration of C2PA-style generator claims to guarantee Human-Machine Parity (HMP).
 * **Advanced Key Management & Security**:
