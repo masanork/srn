@@ -48,14 +48,30 @@ Web/A Maker で使用できる Markdown 記法のあつまりです。
 | `align:C`| 中央寄せ | `(align:C)` |
 | `len:N` | 最大文字数 (maxlength) | `(len:10)` |
 | `val="値"`| 初期値 (デフォルト値) | `(val="東京都")` |
+| `placeholder="値"` | 入力例（プレースホルダー） | `(placeholder="例: 03-1234-5678")` |
+| `hint="値"` | 補足説明（HTMLタグ可） | `(hint="補足：&lt;br&gt;改行も可能です")` |
 
 **組み合わせ例:**
 ```markdown
 - [number:price (align:R val=0)] 金額
-- [text:title (size:XL len:50)] 件名
+- [text:title (size:XL len:50 placeholder="件名を入力")] 件名
 ```
 
-## 4. ラジオボタン
+## 4. マスタデータ参照
+
+テーブル形式で定義されたマスタデータを参照して選択肢を生成できます。
+マスタデータは `[master:key]` で定義します。
+
+### Select Dropdown (Master)
+- `[select:key (src:master_key key:col_idx label:col_idx)]`
+- マスタデータから `<select>` を生成します。
+
+### Datalist (Autocomplete)
+- `[datalist:key (src:master_key label:col_idx)]`
+- マスタデータに基づくサジェスト機能付き入力欄を生成します。
+- リストにない値も自由に入力可能です。
+
+## 5. ラジオボタン
 
 `- [radio:key] ラベル` の直後に、インデントしたリストを書くことで選択肢になります。
 `[x]` を付けると初期選択状態になります。

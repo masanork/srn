@@ -54,9 +54,12 @@
         }
 
         /* Web/A Form Styles (Simplified) */
+        /* Web/A Form Styles (Simplified) */
         .preview-content {
-            max-width: 210mm;
+            /* max-width: 210mm; REMOVED to allow full width tables */
             margin: 0 auto;
+            max-width: 100%;
+            padding: 0 20px;
         }
 
         .form-row {
@@ -90,25 +93,81 @@
             border-radius: 4px;
             box-sizing: border-box;
             font-size: 16px;
+            max-width: 800px;
+            /* Limit width of standard inputs so they don't stretch too much */
         }
 
         /* Table Styles */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
         .data-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
         }
 
         .data-table th,
         .data-table td {
-            border: 1px solid #ccc;
-            padding: 8px;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 4px 8px;
+            /* Condensed padding */
             text-align: left;
+            vertical-align: middle;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table th:last-child,
+        .data-table td:last-child {
+            border-right: none;
         }
 
         .data-table th {
-            background: #f9f9f9;
-            font-weight: bold;
+            background: #f5f7fa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            /* Sticky header if height limited */
+            top: 0;
+        }
+
+        /* Grid-like inputs inside table */
+        .data-table .form-input {
+            border: none;
+            background: transparent;
+            padding: 4px;
+            margin: 0;
+            border-radius: 0;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            box-shadow: none;
+            max-width: none !important;
+            /* Allow full width in tables */
+        }
+
+        .data-table .form-input:focus {
+            background: #eef4ff;
+            /* Highlight focus */
+            box-shadow: inset 0 0 0 2px #4a90e2;
+        }
+
+        .form-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 6px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            /* Preserve newlines */
         }
 
         .add-row-btn {
@@ -161,22 +220,43 @@
             <span>Markdown Definition</span>
             <button class="primary" onclick="downloadWebA()">Download Web/A Form</button>
         </div>
-        <textarea id="editor" spellcheck="false" oninput="parseAndRender()"># 経費精算書
+        <textarea id="editor" spellcheck="false" oninput="parseAndRender()"># 経費精算申請書
+---
 
-これはWeb/A FormのMarkdown定義サンプルです。
-以下のようにリスト形式でフォーム部品を定義できます。
+## 申請人情報
 
-- [text:title] 件名
-- [date:date] 発生日
-- [number:amount] 金額 (円)
-- [textarea:reason] 申請理由 (詳細)
-- [radio:type] 経費種別
-  - 交通費
-  - 宿泊費
-  - 接待交際費
+- [text:employee_id (size:S placeholder="例: 123456")] 社員番号
+- [text:dept (val="営業部" size:S)] 所属部署
+- [text:name (size:L placeholder="氏名を入力してください")] 氏名
+- [date:date] 申請日
 
 ---
-(C) 2025 Sorane Corp.
+
+## 申請詳細
+
+- [radio:type] 経費種別
+  - [x] 交通費
+  - 会議費
+  - 消耗品費
+  - その他
+
+- [textarea:reason (placeholder="例: クライアント訪問のため")] 申請理由（詳細）
+
+---
+
+## 経費明細 (動的テーブル)
+
+[dynamic-table:items]
+| 日付 | 内容 | 金額 | 支払先 | 備考 |
+|---|---|---|---|---|
+| [date:date] | [text:description] | [number:amount (align:R placeholder="0")] | [datalist:payee (src:vendors placeholder="例: ○○商事")] | [text:note] |
+
+[master:vendors]
+| ID | Vendor Name | 
+|---|---|
+| 001 | 山田文具店 |
+| 002 | 鈴木交通 |
+| 003 | 田中商事 |
 </textarea>
         <div class="syntax-help">
             <strong>Syntax Guide:</strong><br>
@@ -286,26 +366,54 @@
         }
 
         const Renderers = {
-            text: (key, label, attrs) => `
-            <div class="form-row">
-                <label class="form-label">${escapeHtml(label)}</label>
-                <input type="text" class="form-input" data-json-path="${key}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}>
-            </div>`,
-            number: (key, label, attrs) => `
-            <div class="form-row">
-                <label class="form-label">${escapeHtml(label)}</label>
-                <input type="number" class="form-input" data-json-path="${key}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}>
-            </div>`,
+            text: (key, label, attrs) => {
+                const valMatch = (attrs || '').match(/val="([^"]+)"/) || (attrs || '').match(/val='([^']+)'/) || (attrs || '').match(/val=([^ ]+)/);
+                const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
+
+                const val = valMatch ? valMatch[1] : '';
+                const placeholder = placeholderMatch ? placeholderMatch[1] : '';
+                const hint = hintMatch ? `<div class="form-hint">${escapeHtml(hintMatch[1]).replace(/&lt;br&gt;/g, '<br>').replace(/&lt;br\/&gt;/g, '<br>')}</div>` : '';
+
+                return `
+                <div class="form-row vertical" style="${getStyle(attrs)}">
+                    <label class="form-label">${escapeHtml(label)}</label>
+                    <input type="text" class="form-input" data-json-path="${key}" value="${escapeHtml(val)}" placeholder="${escapeHtml(placeholder)}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}>
+                    ${hint}
+                </div>`;
+            },
+            number: (key, label, attrs) => {
+                const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
+
+                const placeholder = placeholderMatch ? placeholderMatch[1] : '';
+                const hint = hintMatch ? `<div class="form-hint">${escapeHtml(hintMatch[1]).replace(/&lt;br&gt;/g, '<br>').replace(/&lt;br\/&gt;/g, '<br>')}</div>` : '';
+
+                return `
+                <div class="form-row">
+                    <label class="form-label">${escapeHtml(label)}</label>
+                    <input type="number" class="form-input" data-json-path="${key}" placeholder="${escapeHtml(placeholder)}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}>
+                    ${hint}
+                </div>`;
+            },
             date: (key, label, attrs) => `
             <div class="form-row">
                 <label class="form-label">${escapeHtml(label)}</label>
                 <input type="date" class="form-input" data-json-path="${key}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}>
             </div>`,
-            textarea: (key, label, attrs) => `
-            <div class="form-row vertical">
-                <label class="form-label">${escapeHtml(label)}</label>
-                <textarea class="form-input" rows="5" data-json-path="${key}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}></textarea>
-            </div>`,
+            textarea: (key, label, attrs) => {
+                const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
+
+                const placeholder = placeholderMatch ? placeholderMatch[1] : '';
+                const hint = hintMatch ? `<div class="form-hint">${escapeHtml(hintMatch[1]).replace(/&lt;br&gt;/g, '<br>').replace(/&lt;br\/&gt;/g, '<br>')}</div>` : '';
+                return `
+                <div class="form-row vertical" style="${getStyle(attrs)}">
+                    <label class="form-label">${escapeHtml(label)}</label>
+                    <textarea class="form-input" rows="5" data-json-path="${key}" placeholder="${escapeHtml(placeholder)}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}></textarea>
+                    ${hint}
+                </div>`;
+            },
             radioStart: (key, label, attrs) => `
             <div class="form-row vertical" style="${getStyle(attrs)}">
                 <label class="form-label">${escapeHtml(label)}</label>
@@ -314,24 +422,132 @@
                 <label style="display:block; margin-bottom:5px;">
                     <input type="radio" name="${name}" value="${escapeHtml(val)}" ${checked ? 'checked' : ''}> ${escapeHtml(label)}
                 </label>`,
-            // Static Table Row Renderer
-            tableRow: (cells) => {
+            calc: (key, label, attrs) => {
+                const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
+                const formula = formulaMatch ? formulaMatch[1] : '';
+                return `
+                <div class="form-row">
+                    <label class="form-label">${escapeHtml(label)}</label>
+                    <input type="text" readonly class="form-input" data-json-path="${key}" data-formula="${escapeHtml(formula)}" style="background:#f9f9f9; ${getStyle(attrs)}"${getExtraAttrs(attrs)}>
+                </div>`;
+            },
+            datalist: (key, label, attrs) => {
+                const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+                const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
+                const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
+
+                const placeholder = placeholderMatch ? placeholderMatch[1] : '';
+                const hint = hintMatch ? `<div class="form-hint">${escapeHtml(hintMatch[1]).replace(/&lt;br&gt;/g, '<br>').replace(/&lt;br\/&gt;/g, '<br>')}</div>` : '';
+
+                let optionsHtml = '';
+                if (srcMatch && Renderers._masterData && Renderers._masterData[srcMatch[1]]) {
+                    const data = Renderers._masterData[srcMatch[1]];
+                    const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
+
+                    data.forEach(row => {
+                        if (row.length > lIdx) {
+                            optionsHtml += `<option value="${escapeHtml(row[lIdx])}"></option>`;
+                        }
+                    });
+                }
+
+                const listId = 'list_' + key + '_' + Math.floor(Math.random() * 10000);
+
+                return `
+                <div class="form-row">
+                    <label class="form-label">${escapeHtml(label)}</label>
+                    <input type="text" list="${listId}" class="form-input" data-json-path="${key}" placeholder="${escapeHtml(placeholder)}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist>
+                    ${hint}
+                </div>`;
+            },
+
+            // Static/Dynamic Table Row Renderer
+            tableRow: (cells, isTemplate = false) => {
                 const tds = cells.map(cell => {
                     const trimmed = cell.trim();
-                    // Check if cell is an input definition: [key] or [key:attrs]
-                    // Allowed: [item1], [price:size:S], or just plain text "Total"
-                    const match = trimmed.match(/^\[([a-zA-Z0-9_]+)(?::([^\]]+))?\]$/);
+                    const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\)|:([^\]]+))?\]$/);
+
                     if (match) {
-                        const [_, key, attrs] = match;
-                        return `<td><input type="text" class="form-input" data-json-path="${key}" style="${getStyle(attrs)}"${getExtraAttrs(attrs)}></td>`;
+                        let [_, type, key, attrsParen, attrsColon] = match;
+                        const attrs = attrsParen || attrsColon;
+
+                        const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                        const placeholder = placeholderMatch ? `placeholder="${escapeHtml(placeholderMatch[1])}"` : '';
+
+                        if (type === 'calc') {
+                            const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
+                            const formula = formulaMatch ? formulaMatch[1] : '';
+                            const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
+                            const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+                            return `<td><input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${escapeHtml(formula)}" style="background:#f9f9f9; ${getStyle(attrs)}"${getExtraAttrs(attrs)}></td>`;
+                        }
+
+                        if (type === 'select' || (attrs && attrs.includes('src:') && !type)) {
+                            // ... select logic ...
+                            // (Skipping for brevity, no changes needed here if it's correct)
+                            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+                            const valIndexMatch = (attrs || '').match(/key:(\d+)/);
+                            const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
+                            let optionsHtml = '<option value="">Select...</option>';
+                            if (srcMatch && Renderers._masterData && Renderers._masterData[srcMatch[1]]) {
+                                const data = Renderers._masterData[srcMatch[1]];
+                                const vIdx = valIndexMatch ? parseInt(valIndexMatch[1]) - 1 : 0;
+                                const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
+                                data.forEach(row => {
+                                    if (row.length > vIdx) {
+                                        const val = row[vIdx];
+                                        const txt = (row.length > lIdx) ? row[lIdx] : val;
+                                        optionsHtml += `<option value="${escapeHtml(val)}">${escapeHtml(txt)}</option>`;
+                                    }
+                                });
+                            }
+                            const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
+                            const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+                            return `<td><select class="${commonClass}" ${dataAttr} style="${getStyle(attrs)}"${getExtraAttrs(attrs)}>${optionsHtml}</select></td>`;
+                        }
+
+                        if (type === 'datalist') {
+                            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+                            const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
+                            let optionsHtml = '';
+                            if (srcMatch && Renderers._masterData && Renderers._masterData[srcMatch[1]]) {
+                                const data = Renderers._masterData[srcMatch[1]];
+                                const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
+                                data.forEach(row => {
+                                    if (row.length > lIdx) {
+                                        optionsHtml += `<option value="${escapeHtml(row[lIdx])}"></option>`;
+                                    }
+                                });
+                            }
+                            const listId = 'list_' + key + '_' + Math.floor(Math.random() * 10000);
+                            const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
+                            const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+                            return `<td><input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${getStyle(attrs)}"${getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist></td>`;
+                        }
+
+                        if (type === 'number') {
+                            const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                            const placeholder = placeholderMatch ? `placeholder="${escapeHtml(placeholderMatch[1])}"` : '';
+                            const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
+                            const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+                            return `<td><input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${getStyle(attrs)}"${getExtraAttrs(attrs)}></td>`;
+                        }
+
+                        if (isTemplate) {
+                            return `<td><input type="text" class="form-input template-input" data-base-key="${key}" ${placeholder} style="${getStyle(attrs)}"${getExtraAttrs(attrs)}></td>`;
+                        } else {
+                            return `<td><input type="text" class="form-input" data-json-path="${key}" ${placeholder} style="${getStyle(attrs)}"${getExtraAttrs(attrs)}></td>`;
+                        }
                     } else {
                         return `<td>${escapeHtml(trimmed)}</td>`;
                     }
                 }).join('');
-                return `<tr>${tds}</tr>`;
+                return `<tr ${isTemplate ? 'class="template-row"' : ''}>${tds}</tr>`;
             }
         };
 
+        // ... helper functions ...
         function getStyle(attrs) {
             if (!attrs) return '';
             let style = '';
@@ -340,6 +556,7 @@
             if (attrs.includes('size:XL')) style += 'font-size: 1.5em; font-weight: bold;';
             if (attrs.includes('align:R')) style += 'text-align: right;';
             if (attrs.includes('align:C')) style += 'text-align: center;';
+            if (attrs.includes('bold')) style += 'font-weight: bold;';
             return style;
         }
 
@@ -349,24 +566,39 @@
             // Match len:N or max:N
             const lenMatch = attrs.match(/(?:len|max):(\d+)/);
             if (lenMatch) {
-                extra += ` maxlength="${lenMatch[1]}"`;
+                extra += ` maxlength = "${lenMatch[1]}"`;
             }
-
             // Match default value: val="xxx"
-            // Note: Simple regex, assumes no quotes inside value for now
             const valMatch = attrs.match(/val="([^"]+)"/);
             if (valMatch) {
-                extra += ` value="${escapeHtml(valMatch[1])}"`;
+                extra += ` value = "${escapeHtml(valMatch[1])}"`;
             } else {
-                // Try without quotes for simple strings
                 const valMatchSimple = attrs.match(/val=([^\s\)]+)/);
                 if (valMatchSimple) {
-                    extra += ` value="${escapeHtml(valMatchSimple[1])}"`;
+                    extra += ` value = "${escapeHtml(valMatchSimple[1])}"`;
                 }
             }
-
             return extra;
         }
+
+        // Runtime Add Row Function (for Preview)
+        window.addTableRow = function (btn, tableKey) {
+            const table = document.getElementById('tbl_' + tableKey);
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            // Find first template row to clone. It should be the first row with input.
+            const templateRow = tbody.querySelector('.template-row');
+            if (!templateRow) return;
+
+            const newRow = templateRow.cloneNode(true);
+            // Clear values
+            newRow.querySelectorAll('input').forEach(input => input.value = '');
+            tbody.appendChild(newRow);
+            updatePreviewJson(); // Trigger update
+
+            // Setup listener for new inputs
+            // In preview, we use global listener on #preview container, so no need to bind individually.
+        };
 
         // --- Parser Updated ---
         function parseAndRender() {
@@ -376,30 +608,120 @@
 
             let html = '';
             let jsonStructure = { "@context": "https://schema.org", "@type": "CreativeWork" };
+
+            // Phase 0: Pre-scan for Master Data
+            const masterData = {};
+            let scanInMaster = false;
+            let scanMasterKey = null;
+
+            lines.forEach(line => {
+                const t = line.trim();
+                if (t.match(/^\[master:([a-zA-Z0-9_]+)\]$/)) {
+                    scanMasterKey = t.match(/^\[master:([a-zA-Z0-9_]+)\]$/)[1];
+                    masterData[scanMasterKey] = [];
+                    scanInMaster = true;
+                    return;
+                }
+                if (scanInMaster) {
+                    if (t.startsWith('|')) {
+                        const cells = t.split('|').slice(1, -1).map(c => c.trim());
+                        const isSep = cells.every(c => c.match(/^-+$/));
+                        if (!isSep) {
+                            masterData[scanMasterKey].push(cells);
+                        }
+                    } else {
+                        if (t.length > 0) scanInMaster = false; // End of block if empty line or non-table 
+                    }
+                }
+            });
+            Renderers._masterData = masterData; // Available for renderer
+
             let currentRadioGroup = null;
+            let currentDynamicTableKey = null;
             let inTable = false;
+            let inMasterTable = false;
+            let currentMasterKey = null;
+            // masterData is already populated, but we still need to Skip parsing master tables in main loop so they don't show up as normal text/tables.
 
             lines.forEach((line, index) => {
                 const trimmed = line.trim();
 
-                // 0. Table Logic
+                // 0a. Master Table Marker: [master:key]
+                if (trimmed.match(/^\[master:([a-zA-Z0-9_]+)\]$/)) {
+                    currentMasterKey = trimmed.match(/^\[master:([a-zA-Z0-9_]+)\]$/)[1];
+                    // scan already handled data
+                    return;
+                }
+
+                if (trimmed.match(/^\[dynamic-table:([a-zA-Z0-9_]+)\]$/)) {
+                    currentDynamicTableKey = trimmed.match(/^\[dynamic-table:([a-zA-Z0-9_]+)\]$/)[1];
+                    return;
+                }
+
+                // 0b. Table Logic (shared for Static, Dynamic, and Master)
                 if (trimmed.startsWith('|')) {
-                    if (!inTable) {
-                        html += '<div class="form-row vertical"><table class="data-table"><tbody>';
-                        inTable = true;
+                    if (!inTable && !inMasterTable) {
+                        if (currentMasterKey) {
+                            inMasterTable = true;
+                            // Master tables are hidden
+                        } else {
+                            // ... existing render logic ...
+                            html += `<div class="form-row vertical"><div class="table-wrapper">`;
+                            if (currentDynamicTableKey) {
+                                html += `<table class="data-table dynamic" id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}">`;
+                            } else {
+                                html += `<table class="data-table">`;
+                            }
+                            html += `<tbody>`;
+                            inTable = true;
+                        }
                     }
-                    const cells = trimmed.split('|').slice(1, -1);
-                    const isSeparator = cells.every(c => c.trim().match(/^-+$/));
-                    if (!isSeparator) {
-                        html += Renderers.tableRow(cells);
+
+                    const cells = trimmed.split('|').slice(1, -1).map(c => c.trim());
+                    const isSeparator = cells.every(c => c.match(/^-+$/));
+
+                    if (inMasterTable) {
+                        if (!isSeparator) {
+                            // Already handled in pre-scan
+                        }
+                        return;
+                    }
+
+                    if (isSeparator) {
+                        // ignore separator
+                    } else {
+                        if (currentDynamicTableKey) {
+                            const hasInput = cells.some(c => c.includes('['));
+                            if (!hasInput) {
+                                html += `<tr>${cells.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>`;
+                            } else {
+                                html += Renderers.tableRow(cells, true);
+                            }
+                        } else {
+                            html += Renderers.tableRow(cells);
+                        }
                     }
                     return;
                 } else {
+                    if (inMasterTable) {
+                        inMasterTable = false;
+                        currentMasterKey = null;
+                        return;
+                    }
+
                     if (inTable) {
                         html += '</tbody></table></div>';
+                        if (currentDynamicTableKey) {
+                            html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')">+ Add Row</button>`;
+                            currentDynamicTableKey = null;
+                        }
+                        html += '</div>';
                         inTable = false;
                     }
                 }
+
+                // Pass masterData to Renderers context
+                Renderers._masterData = masterData;
 
                 // 1. Headers (H1 - H6)
                 const headerMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
@@ -456,7 +778,7 @@
                 }
             });
 
-            if (inTable) html += '</tbody></table></div>';
+            if (inTable) html += '</tbody></table></div></div>';
             if (currentRadioGroup) html += '</div></div>';
 
             // Append Debug View for JSON-LD (Web/A requirement)
@@ -469,25 +791,109 @@
             window.generatedJsonStructure = jsonStructure;
 
             // Initial JSON update
-            setTimeout(updatePreviewJson, 100);
+            setTimeout(() => {
+                recalculate();
+                updatePreviewJson();
+            }, 100);
         }
 
         function updatePreviewJson() {
             const data = { ...window.generatedJsonStructure };
-            document.querySelectorAll('#preview [data-json-path]').forEach(input => {
+
+            // 1. Static Inputs
+            document.querySelectorAll('#preview .form-input[data-json-path]').forEach(input => {
                 const key = input.dataset.jsonPath;
                 if (key) data[key] = input.value;
             });
+
+            // 2. Radios (Static)
             document.querySelectorAll('#preview input[type=radio]:checked').forEach(r => {
                 data[r.name] = r.value;
+            });
+
+            // 3. Dynamic Tables
+            document.querySelectorAll('table.data-table.dynamic').forEach(table => {
+                const tableKey = table.dataset.tableKey;
+                if (!tableKey) return;
+
+                const rowsData = [];
+                // Iterate over rows that are NOT the header (th)
+                // Actually we just look for tr having template-input ? 
+                // Wait, all data rows will have inputs with data-base-key.
+
+                table.querySelectorAll('tbody tr').forEach(tr => {
+                    const rowObj = {};
+                    let hasData = false;
+                    tr.querySelectorAll('input.template-input').forEach(input => {
+                        const baseKey = input.dataset.baseKey;
+                        if (baseKey) {
+                            rowObj[baseKey] = input.value;
+                            hasData = true;
+                        }
+                    });
+                    if (hasData) rowsData.push(rowObj);
+                });
+
+                data[tableKey] = rowsData;
             });
 
             const debug = document.getElementById('json-debug');
             if (debug) debug.textContent = JSON.stringify(data, null, 2);
         }
 
+        function recalculate() {
+            document.querySelectorAll('[data-formula]').forEach(calcField => {
+                const formula = calcField.dataset.formula;
+                if (!formula) return;
+                const row = calcField.closest('tr');
+                const table = calcField.closest('table');
+
+                const getValue = (varName) => {
+                    if (row) {
+                        const input = row.querySelector(`[data-base-key="${varName}"]`);
+                        if (input && input.value !== '') return parseFloat(input.value);
+                    }
+                    const staticInput = document.querySelector(`[data-json-path="${varName}"]`);
+                    if (staticInput && staticInput.value !== '') return parseFloat(staticInput.value);
+                    return 0;
+                };
+
+                let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_]+)\)/g, (_, key) => {
+                    let sum = 0;
+                    const scope = table || document;
+                    scope.querySelectorAll(`[data-base-key="${key}"]`).forEach(inp => {
+                        sum += parseFloat(inp.value) || 0;
+                    });
+                    return sum;
+                });
+
+                evalStr = evalStr.replace(/[a-zA-Z0-9_]+/g, (match) => {
+                    if (!isNaN(parseFloat(match))) return match;
+                    const val = getValue(match);
+                    console.log(`[WebA Calc] ${match} resolved to ${val}`);
+                    return val;
+                });
+
+                try {
+                    console.log(`[WebA Calc] Evaluating: ${evalStr}`);
+                    const result = new Function('return ' + evalStr)();
+                    if (typeof result === 'number' && !isNaN(result)) {
+                        calcField.value = Number.isInteger(result) ? result : result.toFixed(2).replace(/\.00$/, '');
+                    } else {
+                        calcField.value = '';
+                    }
+                } catch (e) {
+                    console.error('[WebA Calc Error]', e);
+                    calcField.value = 'Err';
+                }
+            });
+        }
+
         // Bind live update
-        document.getElementById('preview')?.addEventListener('input', updatePreviewJson);
+        document.getElementById('preview')?.addEventListener('input', () => {
+            recalculate();
+            updatePreviewJson();
+        });
 
         function htmlAttribute(str) {
             return (str || '').replace(/"/g, '&quot;');
@@ -518,26 +924,59 @@
             function updateJsonLd() {
                 const dataScript = document.getElementById('data-layer');
                 const data = JSON.parse(dataScript.textContent);
+                
+                // Static
                 document.querySelectorAll('[data-json-path]').forEach(input => {
                     const path = input.dataset.jsonPath;
                     if(path) data[path] = input.value; 
                 });
-                // Find checked radios that are not "data-json-path" driven usually? 
-                // In this Markdown parser, we didn't add data-json-path to radios explicitly in the DOM above?
-                // Wait, radios in Renderers don't have data-json-path. Let's handle them.
                 document.querySelectorAll('input[type=radio]:checked').forEach(r => {
-                    // Use name as key if no json-path
                     data[r.name] = r.value;
+                });
+
+                // Dynamic Tables
+                document.querySelectorAll('table.data-table.dynamic').forEach(table => {
+                    const tableKey = table.dataset.tableKey;
+                    if(!tableKey) return;
+                    const rowsData = [];
+                    table.querySelectorAll('tbody tr').forEach(tr => {
+                         const rowObj = {};
+                         let hasData = false;
+                         tr.querySelectorAll('input.template-input').forEach(input => {
+                             const baseKey = input.dataset.baseKey;
+                             if (baseKey) {
+                                 rowObj[baseKey] = input.value;
+                                 hasData = true;
+                             }
+                         });
+                         if(hasData) rowsData.push(rowObj);
+                    });
+                    data[tableKey] = rowsData;
                 });
                 
                 dataScript.textContent = JSON.stringify(data, null, 2);
+                return data;
             }
 
             function saveDocument() {
-                updateJsonLd();
+                const data = updateJsonLd();
+                
+                // Clone the document state is tricky with dynamic rows.
+                // We need to bake the current DOM state into the HTML.
+                // So we just clone documentElement, but ensure values are set in attributes.
+                
                 const clone = document.documentElement.cloneNode(true);
+                
+                // We need to set 'value' attributes in the clone for all inputs
+                // Because cloneNode doesn't copy current JS values to attributes automatically for text inputs
                 const originalInputs = document.querySelectorAll('input, textarea, select');
                 const clonedInputs = clone.querySelectorAll('input, textarea, select');
+                
+                // This index-based matching might fail if DOM changed? 
+                // Wait, cloneNode(true) copies the exact structure at that moment?
+                // Yes, including dynamic rows!
+                // So the structure matches 1:1.
+                
                 originalInputs.forEach((input, index) => {
                     const clonedInput = clonedInputs[index];
                     if (input.type === 'checkbox' || input.type === 'radio') {
@@ -548,40 +987,145 @@
                         clonedInput.setAttribute('value', input.value);
                     }
                 });
+                
                 const s = new XMLSerializer();
                 const blob = new Blob(["<!DOCTYPE html>\\n" + s.serializeToString(clone)], { type: 'text/html' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = '${(json.name || 'form').replace(/\s+/g, '_')}_filled.html';
+                const a_download_name = '${json.name || 'form'}'.replace(/\\s+/g, '_') + '_filled.html';
+                a.download = a_download_name;
                 a.click();
             }
 
             // LocalStorage Auto-Save
             function saveToLS() {
-                const data = {};
-                document.querySelectorAll('input, textarea').forEach(el => {
-                     const key = el.dataset.jsonPath || el.name;
-                     if(!key) return;
-                     if(el.type === 'radio') { if(el.checked) data[key] = el.value; }
-                     else { data[key] = el.value; }
-                });
+                const data = updateJsonLd(); // Use the structured data
                 localStorage.setItem(FORM_ID, JSON.stringify(data));
             }
+
             function restoreFromLS() {
                 const c = localStorage.getItem(FORM_ID);
                 if(!c || !confirm('Restore?')) return;
                 const d = JSON.parse(c);
-                document.querySelectorAll('input, textarea').forEach(el => {
-                    const key = el.dataset.jsonPath || el.name;
-                    if(d[key] !== undefined) {
-                        if(el.type === 'radio') { el.checked = (d[key] === el.value); }
-                        else { el.value = d[key]; }
+                
+                // Restore logic is complex for dynamic tables.
+                // We need to recreate rows if they are missing.
+                
+                // 1. Static
+                document.querySelectorAll('[data-json-path]').forEach(input => {
+                    const key = input.dataset.jsonPath;
+                    if(d[key] !== undefined) input.value = d[key];
+                });
+                // Radios...
+                
+                // 2. Dynamic Tables
+                document.querySelectorAll('table.data-table.dynamic').forEach(table => {
+                    const tableKey = table.dataset.tableKey;
+                    const rowsData = d[tableKey]; // Array
+                    if(Array.isArray(rowsData)) {
+                        // Clear existing data rows (keep first template?)
+                        // Or just rebuild.
+                        const tbody = table.querySelector('tbody');
+                        const templateRow = tbody.querySelector('.template-row');
+                        if(!templateRow) return;
+                        
+                        // We need N rows. 
+                        // First row is already there. Fill it? Or clear and append?
+                        // Let's keep the existing row 1 if data has row 1.
+                        // If data has more rows, clone.
+                        
+                        // But wait, the user might have partially edited form.
+                        // Resetting to LS state means matching LS rows.
+                        
+                        // Strategy: Remove all template-rows except one, then clone needed amount.
+                        const currentRows = tbody.querySelectorAll('.template-row');
+                        // Remove extras
+                        for(let i=1; i<currentRows.length; i++) currentRows[i].remove();
+                        
+                        rowsData.forEach((rowData, idx) => {
+                            let row;
+                            if (idx === 0) {
+                                row = tbody.querySelector('.template-row'); // The one we kept
+                            } else {
+                                row = tbody.querySelector('.template-row').cloneNode(true);
+                                tbody.appendChild(row);
+                            }
+                            
+                            // Fill row
+                            row.querySelectorAll('input.template-input').forEach(input => {
+                                const k = input.dataset.baseKey;
+                                if(rowData[k] !== undefined) input.value = rowData[k];
+                            });
+                        });
                     }
                 });
             }
+            
+            function recalculate() {
+                document.querySelectorAll('[data-formula]').forEach(calcField => {
+                    const formula = calcField.dataset.formula;
+                    if (!formula) return;
+                    const row = calcField.closest('tr');
+                    const table = calcField.closest('table');
+                    
+                    const getValue = (varName) => {
+                       if (row) {
+                          const input = row.querySelector(\`[data-base-key="\${varName}"]\`);
+                          if (input && input.value !== '') return parseFloat(input.value);
+                       }
+                       const staticInput = document.querySelector(\`[data-json-path="\${varName}"]\`);
+                       if (staticInput && staticInput.value !== '') return parseFloat(staticInput.value);
+                       return 0;
+                    };
+
+                    let evalStr = formula.replace(/SUM\\(([a-zA-Z0-9_]+)\\)/g, (_, key) => {
+                        let sum = 0;
+                        const scope = table || document;
+                        scope.querySelectorAll(\`[data-base-key="\${key}"]\`).forEach(inp => {
+                            sum += parseFloat(inp.value) || 0;
+                        });
+                        return sum;
+                    });
+
+                    evalStr = evalStr.replace(/[a-zA-Z0-9_]+/g, (match) => {
+                        if (!isNaN(parseFloat(match))) return match; 
+                        return getValue(match);
+                    });
+
+                    try {
+                        const result = new Function('return ' + evalStr)();
+                        if (typeof result === 'number' && !isNaN(result)) {
+                             // Simple int check
+                             calcField.value = Number.isInteger(result) ? result : result.toFixed(2).replace(/\.00$/, '');
+                        } else {
+                             calcField.value = '';
+                        }
+                    } catch (e) {}
+                });
+            }
+
+            // Runtime Add Row (Must correspond to what we defined in Window)
+            window.addTableRow = function(btn, tableKey) {
+                 const table = document.getElementById('tbl_' + tableKey);
+                 if (!table) return;
+                 const tbody = table.querySelector('tbody');
+                 const templateRow = tbody.querySelector('.template-row');
+                 if (!templateRow) return;
+                 const newRow = templateRow.cloneNode(true);
+                 newRow.querySelectorAll('input').forEach(input => input.value = '');
+                 tbody.appendChild(newRow);
+            };
+            
             let tm;
-            document.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(saveToLS, 1000); });
-            window.addEventListener('DOMContentLoaded', restoreFromLS);
+            document.addEventListener('input', () => { 
+                recalculate();
+                updateJsonLd();
+                clearTimeout(tm); tm = setTimeout(saveToLS, 1000); 
+            });
+            window.addEventListener('DOMContentLoaded', () => {
+                restoreFromLS();
+                recalculate();
+            });
         <\/script>`;
 
             const fullHtml = `<!DOCTYPE html>
@@ -591,14 +1135,54 @@
     <title>${json.name || 'Form'}</title>
     <style>
         body { font-family: sans-serif; background: #eee; margin: 0; padding: 20px; }
-        .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto; background: white; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .form-row { display: flex; margin-bottom: 15px; }
-        .form-label { width: 150px; font-weight: bold; }
-        .form-input { flex: 1; padding: 5px; font-size: 16px; width: 100%; box-sizing: border-box; }
+        .page { margin: 0 auto; background: white; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20mm; max-width: 100%; box-sizing: border-box; }
+        
+        .form-row { display: flex; margin-bottom: 20px; align-items: center; }
+        .form-row.vertical { display: block; }
+        .form-label { display: block; font-weight: bold; margin-right: 15px; min-width: 140px; }
+        .form-row.vertical .form-label { margin-bottom: 8px; width: 100%; }
+        
+        .form-input { 
+            flex: 1; 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+            max-width: 800px;
+        }
+        
+        .form-hint {
+            font-size: 0.85em; 
+            color: #666; 
+            margin-top: 6px; 
+            line-height: 1.5; 
+            white-space: pre-wrap;
+        }
+
+        /* Table Styles */
+        .table-wrapper { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 20px; }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+        .data-table th, .data-table td { border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 4px 8px; text-align: left; vertical-align: middle; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table th:last-child, .data-table td:last-child { border-right: none; }
+        .data-table th { background: #f5f7fa; font-weight: 600; color: #333; }
+        
+        .data-table .form-input { 
+            border: none; background: transparent; padding: 4px; margin: 0; border-radius: 0; 
+            font-size: 14px; width: 100%; outline: none; box-shadow: none; max-width: none !important; 
+        }
+
         h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .toolbar { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px; }
         button { padding: 10px 20px; cursor: pointer; background: #333; color: white; border: none; font-weight:bold; }
-        @media print { body{ background:none; padding:0; } .page{ box-shadow:none; } .toolbar{ display:none; } }
+        
+        @media print { 
+            body{ background:none; padding:0; } 
+            .page{ box-shadow:none; padding:0; width:100%; max-width:none; } 
+            .toolbar{ display:none; } 
+        }
     </style>
 </head>
 <body>
@@ -620,7 +1204,10 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'web-a-form-markdown.html';
+            const title = json.name || 'web-a-form';
+            // Simple sanitize for filename
+            const filename = title.replace(/\s+/g, '_').replace(/[\\/:*?"<>|]/g, '') || 'web-a-form';
+            a.download = filename + '.html';
             a.click();
         }
     </script>
