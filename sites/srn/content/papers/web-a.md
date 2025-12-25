@@ -187,8 +187,15 @@ Targeting notifications, receipts, and private reports issued to specific indivi
 
 ### Layer 3: Identity & Authorization Documents (Holder Binding Required)
 Targeting documents that prove identity or authority during secondary circulation, such as resident records (Juminhyo), powers of attorney, employee IDs, and professional certifications.
-*   **Technical Requirements**: **Holder Binding**. A cryptographic link between the document and the presenter's identity (e.g., a private key in a secure enclave or JPKI).
-*   **Characteristics**: Requires the highest level of trust to prevent personation and unauthorized use.
+
+*   **Technical Requirements**: **Holder Binding**. A cryptographic link between the document and the presenter's identity (e.g., a private key in a secure enclave).
+*   **Response to MIC (Japan) Policy Requirements**: 
+    The Japanese Ministry of Internal Affairs and Communications (MIC) intermediate report on digitalizing resident records (2024) mandates several high-level requirements for VCs as identity documents. Web/A addresses these through native Web standards:
+    1.  **Originality & Integrity**: Cryptographic protection against falsification of both visual (HTML) and data (JSON-LD) layers.
+    2.  **Prevention of Personation (Holder Binding)**: Web/A implements **Verifiable Presentation (VP)** logic within its Viewer layer. By invoking the user's hardware-backed keys (e.g., Passkeys) at the moment of presentation, it generates a "presentation-time signature" to prove rightful possession without requiring a dedicated wallet app.
+    3.  **Anti-Copying/Anti-Replay**: Unlike a static image or PDF, a Web/A document is a "live" verifiable asset. Verifiers can trigger the on-document verification UI to confirm authenticity and freshness in real-time.
+    4.  **Selective Disclosure**: To address the privacy concerns mentioned in the MIC report, Web/A supports SD-JWT/SD-COSE, allowing a user to disclose only specific fields (e.g., "Address and Name") while keeping the rest of the resident record data confidential.
+*   **Characteristics**: Establishes a "Browser-based Chain of Trust" for cross-sector (public/private) document reuse without specialized verification infrastructure.
 
 ---
 
@@ -200,10 +207,15 @@ Moving a Web/A document from a browser to a mobile wallet or another person's de
 - **Challenge**: Seamless interaction with NFC, BLE, or QR-based transfer protocols directly from within the browser sandbox.
 - **Outlook**: Native browser integration with standards such as ISO/IEC 18013-5 (mDL) and OpenID for Verifiable Presentations (OID4VP).
 
-### 11.2. Practical Holder Binding Implementation
-Linking a document to a person's hardware-backed key (e.g., Secure Enclave) without compromising UX or privacy.
-- **Challenge**: Calling hardware-backed signatures (like Passkeys) and dynamically binding them to web-based document presentations while maintaining the "Self-Contained" nature of Web/A.
-- **Outlook**: Further development of SD-JWT and SD-COSE implementations that allow for selective disclosure and hardware-bound proof-of-possession.
+### 11.2. Practical Holder Binding: Sandbox Limitations and Reality
+For Layer 3 documents, "Prevention of Personation" requires a cryptographic link between the document and the presenter's identity.
+
+- **Sandbox Constraints**: Web browsers operate in a restricted sandbox, preventing direct access to OS-level secure keys. While WebAuthn (Passkeys) can prove "possession of a specific device", linking that device to a "specific legal person" requires an initial registration step using existing high-assurance IDs (e.g., National ID cards).
+- **A Pragmatic "Chain of Possession"**: 
+    1.  **Identity Onboarding**: Linking the document to a user's device-bound Passkey by authenticating with a high-assurance ID (e.g., JPKI/My Number card) at the time of issuance.
+    2.  **VP Generation**: At the time of presentation, the browser invokes the local Passkey to generate a **Verifiable Presentation (VP)**.
+    This combination of a signed Web/A document and a "fresh" presentation-time signature satisfies the requirement for an identity document.
+- **Outlook**: Future standardization of browser-native APIs for smartphone-stored digital IDs will allow for "National ID-level Holder Binding" directly within the browser, eliminating the need for bridge apps or external wallets for verification.
 
 ### 11.3. Native Browser Support for Verification
 For Web/A to be truly trusted, browsers must recognize it as more than just "another web page."
@@ -222,6 +234,11 @@ Web/A does not necessarily aim to fall under the rigid category of "Electronic S
 To jumpstart the developer ecosystem, Web/A prioritizes tools that AI agents and developers can use immediately, rather than waiting for full-featured mobile wallets.
 - **Headless Wallets (CLI / MCP)**: Developing command-line tools and MCP (Model Context Protocol) servers that allow AI agents like Gemini-CLI or Claude Code to autonomously read, request, issue, and verify Web/A documents.
 - **Programmable Trust**: When an AI agent processes a Web/A document, it should be able to instantly verify its provenance via API and calculate a trust score. This creates an automated chain of trust between AI agents long before human-facing UIs reach critical mass.
+
+### 11.7. Defining Conservation Profiles (Safe Subset of Web Tech)
+Since web standards evolve rapidly, some features (like XSLT) may face deprecation.
+- **Challenge**: Reaching a consensus on which subset of HTML/CSS is "Safe for Archival" (i.e., guaranteed to work in browser engines 50+ years from now).
+- **Outlook**: Establishing a "Web/A Basic Profile" restricted to evergreen features (HTML5 Core and stable CSS). Implementation of validation tools that scan Web/A documents for long-term compatibility and provide an "Archivability Score."
 
 ---
 
