@@ -111,6 +111,7 @@ author: "Author Name"
 ```
 * **Architecture**: Implements **HMP (Human-Machine Parity)**. Signs a JSON-LD payload that is cryptographically bound to the HTML content view.
 * **Verification**: Optimized for both browser-side and machine-side (AI) verification.
+* **AI Generation**: To generate Web/A compliant HTML using LLMs, refer to the [Web/A Prompting Guide](./weba-prompt.html).
 
 ### 3. Verified Documents (Official VC)
 
