@@ -22,15 +22,17 @@ The two core pillars:
 
 ```text
 srn/
-├── site/             # Source Content
+├── sites/srn/        # Source Content (Site specific)
 │   ├── content/      # Markdown files (*.md)
 │   ├── fonts/        # Raw font files (*.ttf, *.otf)
 │   ├── static/       # Static assets (images, css)
 │   └── data/         # System data (Keys, DB) - *Do not commit keys!*
-├── dist/             # Generated Output (Git-ignored)
+├── dist/srn/         # Generated Output (Git-ignored)
 ├── src/              # Build Scripts (TypeScript)
-│   ├── layouts/      # HTML Templates (article, official, etc.)
+│   ├── layouts/      # HTML Templates (article, weba, official, etc.)
+│   ├── bin/          # CLI Tools (weba-verify.ts)
 │   ├── vc.ts         # Cryptography & VC Logic
+│   ├── verify-core.ts # Shared Verification Logic
 │   └── index.ts      # Main Build Pipeline
 └── mjq/              # Submodule: Glyph Database (SQLite)
 ```
@@ -96,9 +98,23 @@ font: ipamjm.ttf
 Content goes here.
 ```
 
-### 2. Verified Documents (Official VC)
+### 2. Web/A Documents (Archive-Quality Web)
 
-To certify a document, change the layout to `official`.
+For long-term preservation and archive compatibility, use the `weba` layout.
+
+```markdown
+---
+title: "Whitepaper"
+layout: weba
+author: "Author Name"
+---
+```
+* **Architecture**: Implements **HMP (Human-Machine Parity)**. Signs a JSON-LD payload that is cryptographically bound to the HTML content view.
+* **Verification**: Optimized for both browser-side and machine-side (AI) verification.
+
+### 3. Verified Documents (Official VC)
+
+To certify a document as a traditional VC sidecar, use the `official` layout.
 
 ```markdown
 ---
@@ -119,7 +135,29 @@ SRN allows precise control over font stacking and glyph substitution.
 * **Inline Glyph**: `[font_name:glyph_id]` (e.g., `[ipamjm:MJ000001]`) embeds a specific glyph as SVG.
 * **Auto Lookup**: `[MJ000001]` automatically finds the correct font from the database.
 
-### 4. Trust Management (Advanced)
+### 5. Verification Tools (CLI & AI)
+
+Sorane provides multiple ways to verify Web/A and VC documents without a browser.
+
+#### CLI Validator
+Verify documents directly from your terminal:
+```bash
+# Verify a local file with HMP check
+bun run verify dist/srn/papers/web-a.ja.html --hmp --did dist/srn/did.json
+
+# Verify a remote URL
+bun run verify https://example.com/doc.html --hmp
+```
+
+#### MCP Server (AI Integration)
+Integrate verification into AI models (like Claude or Gemini) via the Model Context Protocol:
+```bash
+# Start the MCP server
+bun run mcp
+```
+*Configure your MCP client to use `bun run src/mcp-server.ts` to enable `verify_weba` tools for your AI assistant.*
+
+### 6. Trust Management (Advanced)
 
 * **Root Key**: Generated automatically on first build in `site/data/root-key.json`. Back up this file to maintain issuer identity!
 * **Revocation**: Status lists are generated in `dist/status-list.json`.

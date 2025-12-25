@@ -384,7 +384,11 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                         ${normalizeText(data.issuer.title)}（職務代理者）<br>
                         ${normalizeText(data.issuer.name)}
                     </div>
-                    <div class="seal-container">
+                        <div class="seal-selection pc-view-only">
+                            <button class="mock-verify-btn" onclick="simulateVerification()">
+                                <span class="btn-icon">🛡️</span> この文書を提示・検証
+                            </button>
+                        </div>
                         <div class="digital-badge">
                             <span class="badge-icon">✓</span> Verifiable Binary Signature (CBOR/COSE) Embedded
                         </div>
@@ -394,6 +398,59 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                         <div class="seal-notice">この印は黒色です。</div>
                     </div>
                 </div>
+            </div>
+
+            <div id="verifier-overlay" class="verifier-overlay" style="display: none;">
+                <div class="verifier-modal">
+                    <div class="modal-header">
+                        <span class="modal-icon">🔍</span>
+                        <h3>窓口検証システム (Verifier Result)</h3>
+                        <button class="close-modal" onclick="closeVerifier()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="verification-status" class="status-pending">
+                            <div class="spinner"></div>
+                            <p>Passkey による署名生成と原本検証中...</p>
+                        </div>
+                        <div id="verification-result" style="display: none;">
+                            <div class="result-header">
+                                <span class="result-icon">✅</span>
+                                <div class="result-title">
+                                    <h4>真正性確認 成功</h4>
+                                    <p>Authenticity Confirmed</p>
+                                </div>
+                            </div>
+                            <div class="result-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">発行自治体</span>
+                                    <span class="detail-value">東京都港区 (LGPKI 署名検証済)</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">提示者本人確認</span>
+                                    <span class="detail-value">成功 (Passkey / Secure Enclave)</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">結合デバイス</span>
+                                    <span class="detail-value">MacBook Pro (M3) - ID: 8A2F...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">改ざん検知</span>
+                                    <span class="detail-value">なし (マニフェスト整合性確認)</span>
+                                </div>
+                            </div>
+                            <div class="ai-agent-summary">
+                                <strong>AI Agent 処理用データ:</strong>
+                                <code>Status: VALID, Holder: "サイトウ タロウ", DOB: "1989-01-01"</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mobile-verify-bar mobile-view-only">
+                <button class="mobile-verify-btn" onclick="simulateVerification()">
+                    🛡️ この文書を窓口で提示 (Passkey)
+                </button>
             </div>
 
             ${vc ? `
@@ -678,7 +735,128 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                     text-align: center;
                 }
             }
+
+            /* Verifier Mock Styles */
+            .mock-verify-btn {
+                background: #2563eb;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 6px;
+                font-weight: bold;
+                cursor: pointer;
+                margin-bottom: 0.5rem;
+                box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+                transition: background 0.2s;
+            }
+            .mock-verify-btn:hover { background: #1d4ed8; }
+            
+            .verifier-overlay {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                backdrop-filter: blur(4px);
+            }
+            .verifier-modal {
+                background: white;
+                width: 90%;
+                max-width: 500px;
+                border-radius: 12px;
+                box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            .modal-header {
+                padding: 1rem;
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .modal-header h3 { margin: 0; font-size: 1rem; }
+            .modal-body { padding: 1.5rem; }
+            
+            .status-pending { text-align: center; padding: 2rem 0; }
+            .spinner {
+                width: 40px; height: 40px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #2563eb;
+                border-radius: 50%;
+                margin: 0 auto 1rem;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+            .result-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+            .result-icon { font-size: 2.5rem; }
+            .result-title h4 { margin: 0; color: #059669; }
+            .result-title p { margin: 0; font-size: 0.8rem; color: #6b7280; }
+            
+            .detail-row {
+                display: flex; gap: 1rem;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid #f1f5f9;
+                font-size: 0.9rem;
+            }
+            .detail-label { color: #64748b; width: 120px; }
+            .detail-value { color: #1e293b; font-weight: 500; }
+            
+            .ai-agent-summary {
+                margin-top: 1.5rem;
+                padding: 0.75rem;
+                background: #f1f5f9;
+                border-radius: 6px;
+                font-size: 0.8rem;
+            }
+            .ai-agent-summary code { display: block; margin-top: 0.5rem; font-family: monospace; }
+            
+            .mobile-verify-bar {
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                padding: 1rem;
+                background: rgba(255,255,255,0.9);
+                backdrop-filter: blur(10px);
+                border-top: 1px solid #e2e8f0;
+                z-index: 1000;
+            }
+            .mobile-verify-btn {
+                width: 100%;
+                background: #2563eb;
+                color: white;
+                border: none;
+                padding: 1rem;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 1rem;
+            }
+            .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8; }
         </style>
+
+        <script>
+            function simulateVerification() {
+                const overlay = document.getElementById('verifier-overlay');
+                overlay.style.display = 'flex';
+                
+                // Reset states
+                document.getElementById('verification-status').style.display = 'block';
+                document.getElementById('verification-result').style.display = 'none';
+                
+                // 1. Simulate Passkey request (Resident side)
+                setTimeout(() => {
+                    // 2. Simulate Success
+                    document.getElementById('verification-status').style.display = 'none';
+                    document.getElementById('verification-result').style.display = 'block';
+                }, 1500);
+            }
+            
+            function closeVerifier() {
+                document.getElementById('verifier-overlay').style.display = 'none';
+            }
+        </script>
     `;
 
     return baseLayout({

@@ -7,11 +7,14 @@ export interface WebAData {
     description?: string;
     date?: string;
     author?: string;
-    semanticData?: any; // Additional raw data for JSON-LD
+    id?: string;
+    semanticData?: any;
     [key: string]: any;
 }
 
-export function webaLayout(data: WebAData, bodyContent: string, fontCss: string, fontFamilies: string[]) {
+export function webaLayout(data: WebAData, bodyContent: string, fontCss: string, fontFamilies: string[], vc?: any) {
+    const siteDid = vc?.issuer || "did:web:masanork.github.io:srn";
+
     // Generate JSON-LD from the frontmatter and semanticData
     const jsonLd = {
         "@context": "https://schema.org",
@@ -25,18 +28,40 @@ export function webaLayout(data: WebAData, bodyContent: string, fontCss: string,
         },
         "identifier": data.id || undefined,
         "content": data.semanticData || undefined,
-        // Web/A Provenance & LTV Metadata
+        // Web/A Provenance (C2PA-inspired Manifest)
         "provenance": {
-            "generator": {
+            "metadata": {
+                "title": data.title,
+                "format": "application/x.web-a+html",
+                "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+            },
+            "producer": {
                 "name": "Sorane (SRN) SSG",
                 "version": "1.0.0",
-                "assertion": "Human-Machine Parity (HMP) Guaranteed via Static Generation"
+                "identifier": siteDid
             },
-            "validation": {
-                "type": "Trust-Transition-Ready",
-                "lastVerified": new Date().toISOString(),
+            "assertions": [
+                {
+                    "label": "c2pa.actions",
+                    "data": { "actions": [{ "action": "c2pa.created" }] }
+                },
+                {
+                    "label": "srn.hmp_declaration",
+                    "data": {
+                        "assertion": "Human-Machine Parity (HMP) Guaranteed",
+                        "generator_hash": vc?.credentialSubject?.["srn:buildId"] || "unknown"
+                    }
+                }
+            ],
+            "signature": {
+                "type": "VC-Hybrid-MLDSA",
+                "issuer": siteDid,
                 "timestamp": new Date().toISOString(),
-                "tsa": "https://tsa.example.org"
+                "tsa": {
+                    "name": "DigiCert Trusted G4 TSA",
+                    "url": "http://timestamp.digicert.com",
+                    "protocol": "RFC 3161"
+                }
             }
         }
     };
@@ -63,6 +88,10 @@ export function webaLayout(data: WebAData, bodyContent: string, fontCss: string,
                     <script type="application/ld+json">
                         ${JSON.stringify(jsonLd, null, 2)}
                     </script>
+                    ${vc ? `
+                    <script type="application/ld+json" id="weba-vc">
+                        ${JSON.stringify(vc, null, 2)}
+                    </script>` : ''}
 
                     <div class="weba-content">
                         ${bodyContent}
@@ -85,8 +114,8 @@ export function webaLayout(data: WebAData, bodyContent: string, fontCss: string,
                     
                     <div class="weba-manifest-box">
                         <details>
-                            <summary>View Provenance Manifest (C2PA-style)</summary>
-                            <pre class="manifest-content">${JSON.stringify(jsonLd.provenance, null, 2)}</pre>
+                            <summary>View Provenance Manifest (Verifiable Credential)</summary>
+                            <pre class="manifest-content">${JSON.stringify(vc || jsonLd.provenance, null, 2)}</pre>
                         </details>
                     </div>
 

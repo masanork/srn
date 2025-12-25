@@ -170,10 +170,10 @@ export async function verifyHybridVC(
 
             const sigHex = edProof.proofValue;
 
-            // If not in DID/suffix, check trustedKeys
-            if ((!pubKeyHex || pubKeyHex === 'root') && options.trustedKeys) {
-                pubKeyHex = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!] || pubKeyHex;
-                // console.log(`Debug: Classic pubKeyHex (post-trusted): ${pubKeyHex}`);
+            // Priority: Trusted Keys
+            if (options.trustedKeys) {
+                const trusted = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!];
+                if (trusted) pubKeyHex = trusted;
             }
 
             if (pubKeyHex && sigHex && pubKeyHex.length >= 64) {
@@ -218,9 +218,9 @@ export async function verifyHybridVC(
 
             const sigHex = pqcProof.proofValue;
 
-            if ((!pubKeyHex || pubKeyHex === 'root') && options.trustedKeys) {
-                pubKeyHex = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!] || pubKeyHex;
-                // console.log(`Debug: PQC pubKeyHex (post-trusted): ${pubKeyHex.slice(0, 20)}...`);
+            if (options.trustedKeys) {
+                const trusted = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!];
+                if (trusted) pubKeyHex = trusted;
             }
 
             if (pubKeyHex && sigHex && pubKeyHex.length > 100) {
