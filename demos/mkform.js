@@ -323,6 +323,12 @@ function parseMarkdown(text) {
     } else if (trimmed.startsWith("---")) {
       html += "<hr>";
       currentRadioGroup = null;
+    } else if (trimmed.startsWith("<")) {
+      if (currentRadioGroup) {
+        html += "</div></div>";
+        currentRadioGroup = null;
+      }
+      html += trimmed;
     } else if (trimmed.length > 0) {
       if (currentRadioGroup) {
         html += "</div></div>";
