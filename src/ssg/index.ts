@@ -833,11 +833,32 @@ body {
                 vc
             );
         } else if (data.layout === 'form') {
+            // Generate VC for Form Template
+            console.log("  Generating Form Template VC...");
+            const formVcPayload = {
+                id: `urn:uuid:${crypto.randomUUID()}`,
+                type: ["VerifiableCredential", "WebAFormTemplate"],
+                credentialSubject: {
+                    id: `https://${SITE_DOMAIN}${SITE_PATH}/${file.replace('.md', '')}`,
+                    type: "WebAFormTemplate",
+                    name: data.title,
+                    description: data.description,
+                    "srn:buildId": buildId,
+                    contentDigest: crypto.createHash('sha256').update(content).digest('hex')
+                }
+            };
+            const vc = await createHybridVC(formVcPayload, currentKeys, SITE_DID, buildId);
+            
+            // Save VC sidecar
+            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
+            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
+
             finalHtml = formLayout(
                 data as any,
                 content,
                 fontCss,
-                safeFontFamilies
+                safeFontFamilies,
+                vc
             );
 
             // Generate Report Page as well
