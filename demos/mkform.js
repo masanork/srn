@@ -374,6 +374,8 @@ function parseMarkdown(text) {
       const activeClass = idx === 0 ? " active" : "";
       navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
     });
+    navHtml += '<div style="flex:1"></div>';
+    navHtml += `<button class="tab-btn" style="color:#007bff; border:1px solid #007bff; border-radius:4px; margin:5px;" onclick="saveDocument()" data-i18n="save_btn">Save</button>`;
     navHtml += "</div>";
     if (mainContentHtml.includes("</h1>")) {
       html = mainContentHtml.replace("</h1>", "</h1>" + navHtml);
