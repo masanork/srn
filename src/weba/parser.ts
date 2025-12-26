@@ -216,7 +216,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
     // Final Assembly: Inject Tab Nav if tabs exist
     if (tabs.length > 0) {
-        let navHtml = '<div class="tabs-nav no-print">';
+        let navHtml = '<div class="tabs-nav">';
         tabs.forEach((tab, idx) => {
             const activeClass = idx === 0 ? ' active' : '';
             navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
