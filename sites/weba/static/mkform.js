@@ -952,7 +952,31 @@ function downloadAggregator() {
 window.parseAndRender = updatePreview;
 window.downloadWebA = downloadWebA;
 window.downloadAggregator = downloadAggregator;
+function applyI18n() {
+  const RESOURCES = {
+    en: {
+      md_def: "Markdown Definition",
+      btn_aggregator: "Download Web/A Aggregator",
+      btn_form: "Download Web/A Form",
+      preview: "Preview"
+    },
+    ja: {
+      md_def: "定義 (Markdown)",
+      btn_aggregator: "集計ツール",
+      btn_form: "入力画面",
+      preview: "プレビュー"
+    }
+  };
+  const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
+  const dict = RESOURCES[lang] || RESOURCES["en"];
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (dict[key])
+      el.textContent = dict[key];
+  });
+}
 window.addEventListener("DOMContentLoaded", () => {
+  applyI18n();
   const editor = document.getElementById("editor");
   if (editor) {
     editor.value = DEFAULT_MARKDOWN;
