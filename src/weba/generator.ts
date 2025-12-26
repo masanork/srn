@@ -238,7 +238,10 @@ function runtime() {
             let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_\-\u0080-\uFFFF]+)\)/g, (_: any, key: string) => {
                 let sum = 0;
                 const scope = table || document;
-                const inputs = scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
+                let inputs = scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
+                if (inputs.length === 0 && scope !== document) {
+                    inputs = document.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
+                }
                 inputs.forEach((inp: any) => {
                     const val = parseFloat(inp.value);
                     if (!isNaN(val)) sum += val;

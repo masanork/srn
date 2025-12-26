@@ -672,17 +672,20 @@ function runtime() {
         }
         return val;
       };
-      let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_\-\u0080-\uFFFF]+)\)/g, (_, key) => {
-        let sum = 0;
-        const scope = table || document;
-        const inputs = scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
-        inputs.forEach((inp) => {
-          const val = parseFloat(inp.value);
-          if (!isNaN(val))
-            sum += val;
+        let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_\-\u0080-\uFFFF]+)\)/g, (_, key) => {
+          let sum = 0;
+          const scope = table || document;
+          let inputs = scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
+          if (inputs.length === 0 && scope !== document) {
+            inputs = document.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
+          }
+          inputs.forEach((inp) => {
+            const val = parseFloat(inp.value);
+            if (!isNaN(val))
+              sum += val;
+          });
+          return sum;
         });
-        return sum;
-      });
       evalStr = evalStr.replace(/([a-zA-Z_\u0080-\uFFFF][a-zA-Z0-9_\-\u0080-\uFFFF]*)/g, (match) => {
         if (["Math", "round", "floor", "ceil", "abs", "min", "max"].includes(match))
           return match;
