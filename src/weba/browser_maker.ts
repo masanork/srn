@@ -19,7 +19,7 @@ declare global {
 import { DEFAULT_MARKDOWN_EN, DEFAULT_MARKDOWN_JA } from './sample';
 
 function updatePreview() {
-    console.log("Web/A Maker v2.3");
+    console.log("Web/A Maker v3.0");
     const editor = document.getElementById('editor') as HTMLTextAreaElement;
     const preview = document.getElementById('preview');
     if (!editor || !preview) return;

@@ -10,13 +10,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     // Phase 0: Pre-scan for Master Data
     const masterData: Record<string, string[][]> = {};
     let scanInMaster = false;
-    let scanMasterKey: string | null = null;
+    let scanMasterKey: string = '';
 
     lines.forEach(line => {
         const t = line.trim();
         const masterMatch = t.match(/^\[master:([^\]]+)\]$/);
         if (masterMatch) {
-            scanMasterKey = masterMatch[1];
+            scanMasterKey = masterMatch[1] || '';
             masterData[scanMasterKey] = [];
             scanInMaster = true;
             return;
@@ -40,7 +40,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     let currentDynamicTableKey: string | null = null;
     let inTable = false;
     let inMasterTable = false;
-    let currentMasterKey: string | null = null;
+    let currentMasterKey: string = '';
 
     // Aggregator Schema
     jsonStructure.fields = [];
@@ -75,13 +75,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         // 0a. Master Table Marker (Allow unicode keys)
         const masterMatch = trimmed.match(/^\[master:([^\]]+)\]$/);
         if (masterMatch) {
-            currentMasterKey = masterMatch[1];
+            currentMasterKey = masterMatch[1] || '';
             return;
         }
 
         const dynTableMatch = trimmed.match(/^\[dynamic-table:([^\]]+)\]$/);
         if (dynTableMatch) {
-            currentDynamicTableKey = dynTableMatch[1];
+            currentDynamicTableKey = dynTableMatch[1] || '';
             jsonStructure.tables[currentDynamicTableKey] = [];
             return;
         }
@@ -172,15 +172,15 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 appendHtml('</div>');
                 inTable = false;
                 inMasterTable = false;
-                currentMasterKey = null; // Clear master key when table ends
+                currentMasterKey = ''; // Clear master key when table ends
             }
         }
 
         // 1. Headers
         const headerMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
         if (headerMatch) {
-            const level = headerMatch[1].length;
-            const content = headerMatch[2];
+            const level = headerMatch[1] ? headerMatch[1].length : 1;
+            const content = headerMatch[2] || '';
 
             if (level === 1) {
                 // H1 is Document Title
@@ -232,8 +232,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
                 // Explicit dispatch to avoid dynamic property access issues
                 if (type === 'radio') {
-                    currentRadioGroup = { key, label: cleanLabel, attrs };
-                    // @ts-ignore
+                    currentRadioGroup = { key, label: cleanLabel, attrs: attrs || '' };
                     appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
                 }
                 else if (type === 'text') appendHtml(Renderers.text(key, cleanLabel, attrs));
@@ -242,10 +241,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 else if (type === 'textarea') appendHtml(Renderers.textarea(key, cleanLabel, attrs));
                 else if (type === 'search') appendHtml(Renderers.search(key, cleanLabel, attrs));
                 else if (type === 'calc') appendHtml(Renderers.calc(key, cleanLabel, attrs));
-                else if (type === 'datalist') appendHtml(Renderers.renderInput(type, key, attrs)); // datalist handled in renderInput logic
-                else if (Renderers[type]) {
-                    // Fallback for custom or future types
-                    // @ts-ignore
+                else if (type === 'datalist') appendHtml(Renderers.renderInput(type, key, attrs));
+                else if (type && Renderers[type]) {
                     appendHtml(Renderers[type](key, cleanLabel, attrs));
                 } else {
                     console.warn(`Unknown type: ${type}`, Object.keys(Renderers));

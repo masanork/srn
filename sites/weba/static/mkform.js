@@ -197,6 +197,10 @@ var Renderers = {
     if (type === "checkbox") {
       return `<input type="checkbox" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
     }
+    if (type === "autonum") {
+      const classList = commonClass + " auto-num";
+      return `<input type="number" readonly class="${classList}" ${dataAttr} style="background:transparent; border:none; text-align:center; width:100%; font-weight:bold; cursor:default; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+    }
     let suggestAttr = "";
     let suggestClass = "";
     if ((attrs || "").includes("suggest:column")) {
@@ -233,12 +237,12 @@ function parseMarkdown(text) {
   let jsonStructure = { "@context": "https://schema.org", "@type": "CreativeWork" };
   const masterData = {};
   let scanInMaster = false;
-  let scanMasterKey = null;
+  let scanMasterKey = "";
   lines.forEach((line) => {
     const t = line.trim();
     const masterMatch = t.match(/^\[master:([^\]]+)\]$/);
     if (masterMatch) {
-      scanMasterKey = masterMatch[1];
+      scanMasterKey = masterMatch[1] || "";
       masterData[scanMasterKey] = [];
       scanInMaster = true;
       return;
@@ -261,7 +265,7 @@ function parseMarkdown(text) {
   let currentDynamicTableKey = null;
   let inTable = false;
   let inMasterTable = false;
-  let currentMasterKey = null;
+  let currentMasterKey = "";
   jsonStructure.fields = [];
   jsonStructure.tables = {};
   jsonStructure.masterData = masterData;
@@ -283,12 +287,12 @@ function parseMarkdown(text) {
     const trimmed = line.trim();
     const masterMatch = trimmed.match(/^\[master:([^\]]+)\]$/);
     if (masterMatch) {
-      currentMasterKey = masterMatch[1];
+      currentMasterKey = masterMatch[1] || "";
       return;
     }
     const dynTableMatch = trimmed.match(/^\[dynamic-table:([^\]]+)\]$/);
     if (dynTableMatch) {
-      currentDynamicTableKey = dynTableMatch[1];
+      currentDynamicTableKey = dynTableMatch[1] || "";
       jsonStructure.tables[currentDynamicTableKey] = [];
       return;
     }
@@ -349,13 +353,13 @@ function parseMarkdown(text) {
         appendHtml("</div>");
         inTable = false;
         inMasterTable = false;
-        currentMasterKey = null;
+        currentMasterKey = "";
       }
     }
     const headerMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
     if (headerMatch) {
-      const level = headerMatch[1].length;
-      const content = headerMatch[2];
+      const level = headerMatch[1] ? headerMatch[1].length : 1;
+      const content = headerMatch[2] || "";
       if (level === 1) {
         appendHtml(`<h1>${Renderers.escapeHtml(content)}</h1>`);
         jsonStructure.name = content;
@@ -390,7 +394,7 @@ function parseMarkdown(text) {
         const cleanLabel = (label || "").trim();
         jsonStructure.fields.push({ key, label: cleanLabel, type });
         if (type === "radio") {
-          currentRadioGroup = { key, label: cleanLabel, attrs };
+          currentRadioGroup = { key, label: cleanLabel, attrs: attrs || "" };
           appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
         } else if (type === "text")
           appendHtml(Renderers.text(key, cleanLabel, attrs));
@@ -406,7 +410,7 @@ function parseMarkdown(text) {
           appendHtml(Renderers.calc(key, cleanLabel, attrs));
         else if (type === "datalist")
           appendHtml(Renderers.renderInput(type, key, attrs));
-        else if (Renderers[type]) {
+        else if (type && Renderers[type]) {
           appendHtml(Renderers[type](key, cleanLabel, attrs));
         } else {
           console.warn(`Unknown type: ${type}`, Object.keys(Renderers));
@@ -466,6 +470,643 @@ function parseMarkdown(text) {
   }
   return { html, jsonStructure };
 }
+
+// src/weba/client/embed.ts
+var CLIENT_BUNDLE = `// src/weba/client/calculator.ts
+class Calculator {
+  runAutoCopy() {
+    document.querySelectorAll("[data-copy-from]").forEach((dest) => {
+      if (!dest.dataset.dirty) {
+        const srcKey = dest.dataset.copyFrom;
+        if (srcKey) {
+          const row = dest.closest("tr");
+          const scope = row || document;
+          const src = scope.querySelector(\`[data-base-key="\${srcKey}"], [data-json-path="\${srcKey}"]\`);
+          if (src && src.value !== dest.value) {
+            dest.value = src.value;
+            dest.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        }
+      }
+    });
+  }
+  recalculate() {
+    document.querySelectorAll("[data-formula]").forEach((calcField) => {
+      const formula = calcField.dataset.formula;
+      if (!formula)
+        return;
+      const row = calcField.closest("tr");
+      const table = calcField.closest("table");
+      const getValue = (varName) => {
+        let val = 0;
+        let foundSource = "none";
+        if (row) {
+          const selector = \`[data-base-key="\${varName}"], [data-json-path="\${varName}"]\`;
+          const input = row.querySelector(selector);
+          if (input) {
+            foundSource = "row-input";
+            if (input.value !== "")
+              val = parseFloat(input.value);
+          }
+        }
+        if (foundSource === "none") {
+          const staticInput = document.querySelector(\`[data-json-path="\${varName}"]\`);
+          if (staticInput) {
+            foundSource = "static-input";
+            if (staticInput.value !== "")
+              val = parseFloat(staticInput.value);
+          }
+        }
+        return val;
+      };
+      let evalStr = formula.replace(/SUM\\(([a-zA-Z0-9_\\-\\u0080-\\uFFFF]+)\\)/g, (_, key) => {
+        let sum = 0;
+        const scope = table || document;
+        let inputs = scope.querySelectorAll(\`[data-base-key="\${key}"], [data-json-path="\${key}"]\`);
+        if (inputs.length === 0 && scope !== document) {
+          inputs = document.querySelectorAll(\`[data-base-key="\${key}"], [data-json-path="\${key}"]\`);
+        }
+        inputs.forEach((inp) => {
+          const val = parseFloat(inp.value);
+          if (!isNaN(val))
+            sum += val;
+        });
+        return sum;
+      });
+      evalStr = evalStr.replace(/([a-zA-Z_\\u0080-\\uFFFF][a-zA-Z0-9_\\-\\u0080-\\uFFFF]*)/g, (match) => {
+        if (["Math", "round", "floor", "ceil", "abs", "min", "max"].includes(match))
+          return match;
+        return String(getValue(match));
+      });
+      try {
+        const result = new Function("return " + evalStr)();
+        if (typeof result === "number" && !isNaN(result)) {
+          calcField.value = Number.isInteger(result) ? result : result.toFixed(0);
+        } else {
+          calcField.value = "";
+        }
+      } catch (e) {
+        console.error("Calc Error:", e);
+        calcField.value = "Err";
+      }
+    });
+    this.runAutoCopy();
+  }
+}
+
+// src/weba/client/data.ts
+class DataManager {
+  formId;
+  constructor() {
+    this.formId = "WebA_" + window.location.pathname;
+  }
+  updateJsonLd() {
+    const w = window;
+    const data = w.generatedJsonStructure || {};
+    document.querySelectorAll("[data-json-path]").forEach((input) => {
+      const key = input.dataset.jsonPath;
+      if (key) {
+        data[key] = input.value;
+      }
+    });
+    document.querySelectorAll('[type="radio"]:checked').forEach((radio) => {
+      data[radio.name] = radio.value;
+    });
+    document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
+      const tableKey = table.dataset.tableKey;
+      if (tableKey) {
+        const rows = [];
+        table.querySelectorAll("tbody tr").forEach((tr) => {
+          const rowData = {};
+          let hasVal = false;
+          tr.querySelectorAll("[data-base-key]").forEach((input) => {
+            if (input.type === "checkbox") {
+              rowData[input.dataset.baseKey] = input.checked;
+              if (input.checked)
+                hasVal = true;
+            } else {
+              rowData[input.dataset.baseKey] = input.value;
+              if (input.value)
+                hasVal = true;
+            }
+          });
+          if (hasVal)
+            rows.push(rowData);
+        });
+        data[tableKey] = rows;
+      }
+    });
+    const scriptBlock = document.getElementById("json-ld");
+    if (scriptBlock) {
+      scriptBlock.textContent = JSON.stringify(data, null, 2);
+    }
+    const debugBlock = document.getElementById("json-debug");
+    if (debugBlock) {
+      debugBlock.textContent = JSON.stringify(data, null, 2);
+    }
+    return data;
+  }
+  saveToLS() {
+    const data = this.updateJsonLd();
+    localStorage.setItem(this.formId, JSON.stringify(data));
+  }
+  restoreFromLS() {
+    const c = localStorage.getItem(this.formId);
+    if (!c)
+      return;
+    try {
+      const d = JSON.parse(c);
+      document.querySelectorAll("[data-json-path]").forEach((input) => {
+        const key = input.dataset.jsonPath;
+        if (d[key] !== undefined)
+          input.value = d[key];
+      });
+      document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
+        const tableKey = table.dataset.tableKey;
+        const rowsData = d[tableKey];
+        if (Array.isArray(rowsData)) {
+          const tbody = table.querySelector("tbody");
+          if (!tbody)
+            return;
+          const currentRows = tbody.querySelectorAll(".template-row");
+          rowsData.forEach((rowData, idx) => {
+            let row;
+            if (idx === 0) {
+              row = tbody.querySelector(".template-row");
+            } else {
+              const tmpl = tbody.querySelector(".template-row");
+              if (tmpl) {
+                row = tmpl.cloneNode(true);
+                row.classList.remove("template-row");
+                const rmBtn = row.querySelector(".remove-row-btn");
+                if (rmBtn)
+                  rmBtn.style.visibility = "visible";
+                tbody.appendChild(row);
+              }
+            }
+            if (row) {
+              row.querySelectorAll("input, select").forEach((input) => {
+                const k = input.dataset.baseKey;
+                if (k && rowData[k] !== undefined) {
+                  if (input.type === "checkbox")
+                    input.checked = !!rowData[k];
+                  else
+                    input.value = rowData[k];
+                }
+              });
+            }
+          });
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  clearData() {
+    if (confirm("Clear all saved data? / 保存されたデータを削除しますか？")) {
+      localStorage.removeItem(this.formId);
+      location.reload();
+    }
+  }
+  bakeValues() {
+    this.updateJsonLd();
+    document.querySelectorAll("input, textarea, select").forEach((el) => {
+      if (el.closest(".template-row"))
+        return;
+      if (el.type === "checkbox" || el.type === "radio") {
+        if (el.checked)
+          el.setAttribute("checked", "checked");
+        else
+          el.removeAttribute("checked");
+      } else {
+        el.setAttribute("value", el.value);
+        if (el.tagName === "TEXTAREA")
+          el.textContent = el.value;
+      }
+    });
+  }
+  downloadHtml(filenameSuffix, isFinal) {
+    const w = window;
+    const htmlContent = document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const title = w.generatedJsonStructure && w.generatedJsonStructure.name || "web-a-form";
+    const now = new Date;
+    const dateStr = now.getFullYear() + ("0" + (now.getMonth() + 1)).slice(-2) + ("0" + now.getDate()).slice(-2) + "-" + ("0" + now.getHours()).slice(-2) + ("0" + now.getMinutes()).slice(-2);
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const filename = \`\${title}_\${dateStr}_\${filenameSuffix}_\${randomId}.html\`;
+    a.download = filename;
+    a.click();
+    if (isFinal) {
+      setTimeout(() => location.reload(), 1000);
+    }
+  }
+  saveDraft() {
+    this.bakeValues();
+    this.downloadHtml("draft", false);
+  }
+  submitDocument() {
+    this.bakeValues();
+    document.querySelectorAll(".search-suggestions").forEach((el) => el.remove());
+    this.downloadHtml("submit", true);
+  }
+}
+
+// src/weba/client/ui.ts
+class UIManager {
+  calc;
+  data;
+  constructor(calc, data) {
+    this.calc = calc;
+    this.data = data;
+  }
+  applyI18n() {
+    const RESOURCES = {
+      en: {
+        add_row: "+ Add Row",
+        work_save_btn: "Save Draft",
+        submit_btn: "Submit",
+        clear_btn: "Clear Data"
+      },
+      ja: {
+        add_row: "+ 行を追加",
+        work_save_btn: "作業保存",
+        submit_btn: "提出",
+        clear_btn: "クリア"
+      }
+    };
+    const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
+    const dict = RESOURCES[lang] || RESOURCES["en"];
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.dataset.i18n;
+      if (dict[key])
+        el.textContent = dict[key];
+    });
+  }
+  initTables() {
+    document.querySelectorAll(".data-table.dynamic tbody").forEach((tbody) => {
+      this.renumberRows(tbody);
+    });
+  }
+  renumberRows(tbody) {
+    const rows = tbody.querySelectorAll("tr");
+    rows.forEach((row, index) => {
+      const num = index + 1;
+      row.querySelectorAll(".auto-num").forEach((input) => {
+        if (input.value != num) {
+          input.value = num.toString();
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      });
+    });
+  }
+  removeTableRow(btn) {
+    const tr = btn.closest("tr");
+    const tbody = tr.parentElement;
+    if (tr.classList.contains("template-row")) {
+      tr.querySelectorAll("input").forEach((inp) => {
+        if (inp.type === "checkbox")
+          inp.checked = false;
+        else
+          inp.value = "";
+      });
+    } else {
+      tr.remove();
+      if (tbody)
+        this.renumberRows(tbody);
+      this.calc.recalculate();
+      this.data.updateJsonLd();
+    }
+  }
+  addTableRow(btn, tableKey) {
+    const table = document.getElementById("tbl_" + tableKey);
+    if (!table)
+      return;
+    const tbody = table.querySelector("tbody");
+    if (!tbody)
+      return;
+    const templateRow = tbody.querySelector(".template-row");
+    if (!templateRow)
+      return;
+    const newRow = templateRow.cloneNode(true);
+    newRow.classList.remove("template-row");
+    newRow.querySelectorAll("input").forEach((input) => {
+      if (input.type === "checkbox") {
+        input.checked = input.hasAttribute("checked");
+      } else {
+        input.value = input.getAttribute("value") || "";
+      }
+    });
+    const rmBtn = newRow.querySelector(".remove-row-btn");
+    if (rmBtn)
+      rmBtn.style.visibility = "visible";
+    newRow.querySelectorAll("[data-copy-from]").forEach((target) => {
+      const srcKey = target.dataset.copyFrom;
+      if (srcKey) {
+        const src = newRow.querySelector(\`[data-base-key="\${srcKey}"]\`);
+        if (src && src.value) {
+          target.value = src.value;
+        }
+      }
+    });
+    tbody.appendChild(newRow);
+    this.renumberRows(tbody);
+    this.calc.recalculate();
+  }
+  switchTab(btn, tabId) {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+    btn.classList.add("active");
+    const content = document.getElementById(tabId);
+    if (content)
+      content.classList.add("active");
+  }
+}
+
+// src/weba/client/runtime.ts
+function initRuntime() {
+  console.log("Web/A Runtime Booting...");
+  const calc = new Calculator;
+  const data = new DataManager;
+  const ui = new UIManager(calc, data);
+  const w = window;
+  w.saveDraft = () => data.saveDraft();
+  w.submitDocument = () => data.submitDocument();
+  w.clearData = () => data.clearData();
+  w.removeTableRow = (btn) => ui.removeTableRow(btn);
+  w.addTableRow = (btn, tableKey) => ui.addTableRow(btn, tableKey);
+  w.switchTab = (btn, tabId) => ui.switchTab(btn, tabId);
+  w.recalculate = () => calc.recalculate();
+  w.escapeHtml = (str) => {
+    if (!str)
+      return "";
+    const map = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    };
+    return str.toString().replace(/[&<>"']/g, (m) => map[m] || m);
+  };
+  data.restoreFromLS();
+  ui.applyI18n();
+  ui.initTables();
+  calc.recalculate();
+  let tm;
+  document.addEventListener("input", (e) => {
+    const input = e.target;
+    if (e.isTrusted) {
+      input.dataset.dirty = "true";
+    }
+    const key = input.dataset.baseKey || input.dataset.jsonPath;
+    if (key) {
+      const row = input.closest("tr");
+      const scope = row || document;
+      scope.querySelectorAll(\`[data-copy-from="\${key}"]\`).forEach((dest) => {
+        if (!dest.dataset.dirty) {
+          if (dest.value !== input.value) {
+            dest.value = input.value;
+            dest.dispatchEvent(new Event("input"));
+          }
+        }
+      });
+    }
+    calc.recalculate();
+    data.updateJsonLd();
+    clearTimeout(tm);
+    tm = setTimeout(() => data.saveToLS(), 1000);
+  });
+  console.log("Web/A Runtime Ready.");
+}
+
+// src/weba/client/search.ts
+class SearchEngine {
+  suggestionsVisible = false;
+  activeSearchInput = null;
+  globalBox = null;
+  constructor() {}
+  init() {
+    console.log("Initializing Search Engine (Bundle)...");
+    const w = window;
+    if (w.generatedJsonStructure && w.generatedJsonStructure.masterData) {
+      const keys = Object.keys(w.generatedJsonStructure.masterData);
+      console.log("Master Data Keys available:", keys.join(", "));
+    }
+    this.setupEventDelegation();
+  }
+  normalize(val) {
+    if (!val)
+      return "";
+    let n = val.toString().toLowerCase();
+    n = n.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
+      return String.fromCharCode(s.charCodeAt(0) - 65248);
+    });
+    n = n.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 65248));
+    return n.trim();
+  }
+  clean(s) {
+    if (!s)
+      return "";
+    let n = this.normalize(s);
+    n = n.replace(/(株式会社|有限会社|合同会社|一般社団法人|公益社団法人|npo法人|学校法人|社会福祉法人)/g, "");
+    n = n.replace(/(\\(株\\)|\\(有\\)|\\(同\\))/g, "");
+    return n.trim();
+  }
+  toIndex(raw) {
+    const parsed = parseInt(raw || "", 10);
+    return Number.isFinite(parsed) ? parsed - 1 : -1;
+  }
+  getGlobalBox() {
+    if (!this.globalBox) {
+      this.globalBox = document.getElementById("web-a-search-suggestions");
+      if (!this.globalBox) {
+        this.globalBox = document.createElement("div");
+        this.globalBox.id = "web-a-search-suggestions";
+        this.globalBox.className = "search-suggestions";
+        Object.assign(this.globalBox.style, {
+          display: "none",
+          position: "absolute",
+          background: "white",
+          border: "1px solid #ccc",
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+          zIndex: "9999",
+          maxHeight: "200px",
+          overflowY: "auto",
+          borderRadius: "4px"
+        });
+        document.body.appendChild(this.globalBox);
+      }
+    }
+    return this.globalBox;
+  }
+  hideSuggestions() {
+    const box = this.getGlobalBox();
+    if (box)
+      box.style.display = "none";
+    this.suggestionsVisible = false;
+    this.activeSearchInput = null;
+  }
+  setupEventDelegation() {
+    document.addEventListener("click", (e) => {
+      if (this.suggestionsVisible && !e.target.closest("#web-a-search-suggestions") && e.target !== this.activeSearchInput) {
+        this.hideSuggestions();
+      }
+    });
+    document.addEventListener("scroll", () => {
+      if (this.suggestionsVisible)
+        this.hideSuggestions();
+    }, true);
+    document.body.addEventListener("input", (e) => {
+      if (e.target.classList.contains("search-input")) {
+        this.handleSearchInput(e.target);
+      }
+    });
+    document.body.addEventListener("click", (e) => {
+      if (e.target.classList.contains("suggestion-item")) {
+        this.handleSelection(e.target);
+      }
+    });
+  }
+  handleSearchInput(input) {
+    this.activeSearchInput = input;
+    const w = window;
+    const srcKey = input.dataset.masterSrc;
+    const suggestSource = input.dataset.suggestSource;
+    if (!srcKey && !suggestSource)
+      return;
+    const labelIdx = this.toIndex(input.dataset.masterLabelIndex);
+    const valueIdx = this.toIndex(input.dataset.masterValueIndex);
+    const query = input.value;
+    if (!query) {
+      this.hideSuggestions();
+      return;
+    }
+    const hits = [];
+    const normQuery = this.normalize(query);
+    if (suggestSource === "column") {
+      const baseKey = input.dataset.baseKey;
+      const table = input.closest("table");
+      if (table && baseKey) {
+        const seen = new Set;
+        table.querySelectorAll(\`[data-base-key="\${baseKey}"]\`).forEach((inp) => {
+          if (inp === input)
+            return;
+          const v = inp.value;
+          if (v && this.normalize(v).includes(normQuery)) {
+            if (!seen.has(v)) {
+              seen.add(v);
+              hits.push({ val: v, row: [v], label: v, score: 10 });
+            }
+          }
+        });
+      }
+    } else if (srcKey) {
+      const master = w.generatedJsonStructure.masterData;
+      if (!master || !master[srcKey])
+        return;
+      const allRows = master[srcKey];
+      allRows.forEach((row, idx) => {
+        if (idx === 0)
+          return;
+        const match = row.some((col) => this.normalize(col || "").includes(normQuery));
+        if (match) {
+          const labelVal = labelIdx >= 0 ? row[labelIdx] || "" : "";
+          const valueVal = valueIdx >= 0 ? row[valueIdx] || "" : "";
+          const val = valueIdx >= 0 ? valueVal : labelIdx >= 0 ? labelVal : row[1] || row[0] || "";
+          hits.push({ val, row, label: labelVal, score: 10, idx });
+        }
+      });
+    }
+    this.renderSuggestions(input, hits, labelIdx);
+  }
+  renderSuggestions(input, hits, labelIdx) {
+    if (hits.length === 0) {
+      this.hideSuggestions();
+      return;
+    }
+    const w = window;
+    const topHits = hits.slice(0, 10);
+    let html = "";
+    topHits.forEach((h) => {
+      const rowJson = w.escapeHtml(JSON.stringify(h.row));
+      const displayLabel = labelIdx >= 0 ? h.label || h.row.join(" : ") : h.row.join(" : ");
+      html += \`<div class="suggestion-item" data-val="\${w.escapeHtml(h.val)}" data-row="\${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">\${w.escapeHtml(displayLabel)}</div>\`;
+    });
+    const box = this.getGlobalBox();
+    box.innerHTML = html;
+    const rect = input.getBoundingClientRect();
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+    box.style.width = Math.max(rect.width, 200) + "px";
+    box.style.left = rect.left + scrollLeft + "px";
+    box.style.top = rect.bottom + scrollTop + "px";
+    box.querySelectorAll(".suggestion-item").forEach((el) => {
+      el.onmouseenter = () => el.style.background = "#f0f8ff";
+      el.onmouseleave = () => el.style.background = "white";
+    });
+    box.style.display = "block";
+    this.suggestionsVisible = true;
+  }
+  handleSelection(item) {
+    if (!this.activeSearchInput)
+      return;
+    const w = window;
+    const input = this.activeSearchInput;
+    const val = item.dataset.val || "";
+    const rowJson = item.dataset.row || "[]";
+    try {
+      const rowData = JSON.parse(rowJson);
+      const srcKey = input.dataset.masterSrc;
+      const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
+      let searchInputFilled = false;
+      if (masterHeaders.length > 0 && rowData.length > 0) {
+        const tr = input.closest("tr");
+        if (tr) {
+          const inputs = Array.from(tr.querySelectorAll("input, select, textarea"));
+          masterHeaders.forEach((header, idx) => {
+            if (!header)
+              return;
+            const targetVal = rowData[idx];
+            this.fillField(inputs, header, targetVal, input, () => {
+              searchInputFilled = true;
+            });
+          });
+        }
+      }
+      if (!searchInputFilled) {
+        input.value = val;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    this.hideSuggestions();
+  }
+  fillField(inputs, header, value, sourceInput, onSelfFilled) {
+    const normHeader = this.normalize(header);
+    const target = inputs.find((inp) => {
+      const k = inp.dataset.baseKey || inp.dataset.jsonPath;
+      const ph = this.normalize(inp.getAttribute("placeholder") || "");
+      return k && this.normalize(k) === normHeader || ph === normHeader;
+    });
+    if (target) {
+      target.value = value || "";
+      target.dispatchEvent(new Event("input", { bubbles: true }));
+      if (target === sourceInput)
+        onSelfFilled();
+    }
+  }
+}
+
+// src/weba/client/index.ts
+var search = new SearchEngine;
+window.GlobalSearch = search;
+initRuntime();
+search.init();
+`;
 
 // src/weba/generator.ts
 var BASE_CSS = `
@@ -557,605 +1198,7 @@ button.primary:hover { background: #0056b3; }
     .tab-content::before { content: attr(data-tab-title); display: block; font-size: 18px; font-weight: bold; margin-bottom: 10px; border-left: 5px solid #333; padding-left: 10px; }
 }
 `;
-function runtime() {
-  const w = window;
-  const FORM_ID = "WebA_" + window.location.pathname;
-  function updateJsonLd() {
-    const data = w.generatedJsonStructure || {};
-    document.querySelectorAll("[data-json-path]").forEach((input) => {
-      const key = input.dataset.jsonPath;
-      if (key) {
-        data[key] = input.value;
-      }
-    });
-    document.querySelectorAll('[type="radio"]:checked').forEach((radio) => {
-      data[radio.name] = radio.value;
-    });
-    document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
-      const tableKey = table.dataset.tableKey;
-      if (tableKey) {
-        const rows = [];
-        table.querySelectorAll("tbody tr").forEach((tr) => {
-          const rowData = {};
-          let hasVal = false;
-          tr.querySelectorAll("[data-base-key]").forEach((input) => {
-            if (input.type === "checkbox") {
-              rowData[input.dataset.baseKey] = input.checked;
-              if (input.checked)
-                hasVal = true;
-            } else {
-              rowData[input.dataset.baseKey] = input.value;
-              if (input.value)
-                hasVal = true;
-            }
-          });
-          if (hasVal)
-            rows.push(rowData);
-        });
-        data[tableKey] = rows;
-      }
-    });
-    const scriptBlock = document.getElementById("json-ld");
-    if (scriptBlock) {
-      scriptBlock.textContent = JSON.stringify(data, null, 2);
-    }
-    const debugBlock = document.getElementById("json-debug");
-    if (debugBlock) {
-      debugBlock.textContent = JSON.stringify(data, null, 2);
-    }
-    return data;
-  }
-  function saveToLS() {
-    const data = updateJsonLd();
-    localStorage.setItem(FORM_ID, JSON.stringify(data));
-  }
-  function restoreFromLS() {
-    const c = localStorage.getItem(FORM_ID);
-    if (!c)
-      return;
-    try {
-      const d = JSON.parse(c);
-      document.querySelectorAll("[data-json-path]").forEach((input) => {
-        const key = input.dataset.jsonPath;
-        if (d[key] !== undefined)
-          input.value = d[key];
-      });
-      document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
-        const tableKey = table.dataset.tableKey;
-        const rowsData = d[tableKey];
-        if (Array.isArray(rowsData)) {
-          const tbody = table.querySelector("tbody");
-          if (!tbody)
-            return;
-          const currentRows = tbody.querySelectorAll(".template-row");
-          for (let i = 1;i < currentRows.length; i++)
-            currentRows[i].remove();
-          rowsData.forEach((rowData, idx) => {
-            let row;
-            if (idx === 0) {
-              row = tbody.querySelector(".template-row");
-            } else {
-              const tmpl = tbody.querySelector(".template-row");
-              if (tmpl) {
-                row = tmpl.cloneNode(true);
-                tbody.appendChild(row);
-              }
-            }
-            if (row) {
-              row.querySelectorAll("input, select").forEach((input) => {
-                const k = input.dataset.baseKey;
-                if (k && rowData[k] !== undefined) {
-                  if (input.type === "checkbox")
-                    input.checked = !!rowData[k];
-                  else
-                    input.value = rowData[k];
-                }
-              });
-            }
-          });
-        }
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  function recalculate() {
-    document.querySelectorAll("[data-formula]").forEach((calcField) => {
-      const formula = calcField.dataset.formula;
-      if (!formula)
-        return;
-      const row = calcField.closest("tr");
-      const table = calcField.closest("table");
-      const getValue = (varName) => {
-        let val = 0;
-        let foundSource = "none";
-        let rawVal = "";
-        if (row) {
-          const selector = `[data-base-key="${varName}"], [data-json-path="${varName}"]`;
-          const input = row.querySelector(selector);
-          if (input) {
-            foundSource = "row-input";
-            rawVal = input.value;
-            if (input.value !== "")
-              val = parseFloat(input.value);
-          }
-        }
-        if (foundSource === "none") {
-          const staticInput = document.querySelector(`[data-json-path="${varName}"]`);
-          if (staticInput) {
-            foundSource = "static-input";
-            rawVal = staticInput.value;
-            if (staticInput.value !== "")
-              val = parseFloat(staticInput.value);
-          }
-        }
-        return val;
-      };
-      let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_\-\u0080-\uFFFF]+)\)/g, (_, key) => {
-        let sum = 0;
-        const scope = table || document;
-        let inputs = scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
-        if (inputs.length === 0 && scope !== document) {
-          inputs = document.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
-        }
-        inputs.forEach((inp) => {
-          const val = parseFloat(inp.value);
-          if (!isNaN(val))
-            sum += val;
-        });
-        return sum;
-      });
-      evalStr = evalStr.replace(/([a-zA-Z_\u0080-\uFFFF][a-zA-Z0-9_\-\u0080-\uFFFF]*)/g, (match) => {
-        if (["Math", "round", "floor", "ceil", "abs", "min", "max"].includes(match))
-          return match;
-        return String(getValue(match));
-      });
-      try {
-        const result = new Function("return " + evalStr)();
-        if (typeof result === "number" && !isNaN(result)) {
-          calcField.value = Number.isInteger(result) ? result : result.toFixed(0);
-        } else {
-          calcField.value = "";
-        }
-      } catch (e) {
-        console.error("Calc Error:", e);
-        calcField.value = "Err";
-      }
-    });
-    runAutoCopy();
-  }
-  function runAutoCopy() {
-    document.querySelectorAll("[data-copy-from]").forEach((dest) => {
-      if (!dest.dataset.dirty) {
-        const srcKey = dest.dataset.copyFrom;
-        if (srcKey) {
-          const row = dest.closest("tr");
-          const scope = row || document;
-          const src = scope.querySelector(`[data-base-key="${srcKey}"], [data-json-path="${srcKey}"]`);
-          if (src && src.value !== dest.value) {
-            dest.value = src.value;
-            dest.dispatchEvent(new Event("input"));
-          }
-        }
-      }
-    });
-  }
-  function applyI18n() {
-    const RESOURCES = {
-      en: {
-        add_row: "+ Add Row",
-        work_save_btn: "Save Draft",
-        submit_btn: "Submit",
-        clear_btn: "Clear Data"
-      },
-      ja: {
-        add_row: "+ 行を追加",
-        work_save_btn: "作業保存",
-        submit_btn: "提出",
-        clear_btn: "クリア"
-      }
-    };
-    const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
-    const dict = RESOURCES[lang] || RESOURCES["en"];
-    document.querySelectorAll("[data-i18n]").forEach((el) => {
-      const key = el.dataset.i18n;
-      if (dict[key])
-        el.textContent = dict[key];
-    });
-  }
-  function bakeValues() {
-    updateJsonLd();
-    document.querySelectorAll("input, textarea, select").forEach((el) => {
-      if (el.closest(".template-row"))
-        return;
-      if (el.type === "checkbox" || el.type === "radio") {
-        if (el.checked)
-          el.setAttribute("checked", "checked");
-        else
-          el.removeAttribute("checked");
-      } else {
-        el.setAttribute("value", el.value);
-        if (el.tagName === "TEXTAREA")
-          el.textContent = el.value;
-      }
-    });
-  }
-  function downloadHtml(filenameSuffix, isFinal) {
-    const htmlContent = document.documentElement.outerHTML;
-    const blob = new Blob([htmlContent], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const title = w.generatedJsonStructure && w.generatedJsonStructure.name || "web-a-form";
-    const now = new Date;
-    const dateStr = now.getFullYear() + ("0" + (now.getMonth() + 1)).slice(-2) + ("0" + now.getDate()).slice(-2) + "-" + ("0" + now.getHours()).slice(-2) + ("0" + now.getMinutes()).slice(-2);
-    const randomId = Math.random().toString(36).substring(2, 8);
-    const filename = `${title}_${dateStr}_${filenameSuffix}_${randomId}.html`;
-    a.download = filename;
-    a.click();
-    if (isFinal) {
-      setTimeout(() => location.reload(), 1000);
-    }
-  }
-  w.saveDraft = function() {
-    bakeValues();
-    downloadHtml("draft", false);
-  };
-  w.submitDocument = function() {
-    bakeValues();
-    document.querySelectorAll(".search-suggestions").forEach((el) => el.remove());
-    downloadHtml("submit", true);
-  };
-  w.clearData = function() {
-    if (confirm("Clear all saved data? / 保存されたデータを削除しますか？")) {
-      localStorage.removeItem(FORM_ID);
-      location.reload();
-    }
-  };
-  w.removeTableRow = function(btn) {
-    const tr = btn.closest("tr");
-    if (tr.classList.contains("template-row")) {
-      tr.querySelectorAll("input").forEach((inp) => {
-        if (inp.type === "checkbox")
-          inp.checked = false;
-        else
-          inp.value = "";
-      });
-    } else {
-      tr.remove();
-      recalculate();
-      updateJsonLd();
-    }
-  };
-  w.addTableRow = function(btn, tableKey) {
-    const table = document.getElementById("tbl_" + tableKey);
-    if (!table)
-      return;
-    const tbody = table.querySelector("tbody");
-    if (!tbody)
-      return;
-    const templateRow = tbody.querySelector(".template-row");
-    if (!templateRow)
-      return;
-    const newRow = templateRow.cloneNode(true);
-    newRow.classList.remove("template-row");
-    newRow.querySelectorAll("input").forEach((input) => {
-      if (input.type === "checkbox") {
-        input.checked = input.hasAttribute("checked");
-      } else {
-        input.value = input.getAttribute("value") || "";
-      }
-    });
-    const rmBtn = newRow.querySelector(".remove-row-btn");
-    if (rmBtn)
-      rmBtn.style.visibility = "visible";
-    newRow.querySelectorAll("[data-copy-from]").forEach((target) => {
-      const srcKey = target.dataset.copyFrom;
-      if (srcKey) {
-        const src = newRow.querySelector(`[data-base-key="${srcKey}"]`);
-        if (src && src.value) {
-          target.value = src.value;
-        }
-      }
-    });
-    tbody.appendChild(newRow);
-  };
-  w.switchTab = function(btn, tabId) {
-    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
-    btn.classList.add("active");
-    const content = document.getElementById(tabId);
-    if (content)
-      content.classList.add("active");
-  };
-  let tm;
-  document.addEventListener("input", (e) => {
-    const input = e.target;
-    if (e.isTrusted) {
-      input.dataset.dirty = "true";
-    }
-    const key = input.dataset.baseKey || input.dataset.jsonPath;
-    if (key) {
-      const row = input.closest("tr");
-      const scope = row || document;
-      scope.querySelectorAll(`[data-copy-from="${key}"]`).forEach((dest) => {
-        if (!dest.dataset.dirty) {
-          if (dest.value !== input.value) {
-            dest.value = input.value;
-            dest.dispatchEvent(new Event("input"));
-          }
-        }
-      });
-    }
-    recalculate();
-    updateJsonLd();
-    clearTimeout(tm);
-    tm = setTimeout(saveToLS, 1000);
-  });
-  w.recalculate = recalculate;
-  w.initSearch = initSearch;
-  console.log("Web/A Runtime Initialized");
-  function initSearch() {
-    console.log("Initializing Search...");
-    if (w.generatedJsonStructure && w.generatedJsonStructure.masterData) {
-      const keys = Object.keys(w.generatedJsonStructure.masterData);
-      console.log("Master Data Keys available:", keys.join(", "));
-    }
-    const normalize = (val) => {
-      if (!val)
-        return "";
-      let n = val.toString().toLowerCase();
-      n = n.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
-        return String.fromCharCode(s.charCodeAt(0) - 65248);
-      });
-      n = n.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 65248));
-      return n.trim();
-    };
-    const clean = (s) => {
-      if (!s)
-        return "";
-      let n = normalize(s);
-      n = n.replace(/(株式会社|有限会社|合同会社|一般社団法人|公益社団法人|npo法人|学校法人|社会福祉法人)/g, "");
-      n = n.replace(/(\(株\)|\(有\)|\(同\))/g, "");
-      return n.trim();
-    };
-    const toIndex = (raw) => {
-      const parsed = parseInt(raw || "", 10);
-      return Number.isFinite(parsed) ? parsed - 1 : -1;
-    };
-    const getScore = (query, targetParsed, targetOriginal) => {
-      const q = clean(query);
-      const t = clean(targetParsed);
-      if (t.includes(q))
-        return 2;
-      if (normalize(targetOriginal).includes(normalize(query)))
-        return 1;
-      return 0;
-    };
-    let suggestionsVisible = false;
-    let activeSearchInput = null;
-    let globalBox = null;
-    const getGlobalBox = () => {
-      if (!globalBox) {
-        globalBox = document.getElementById("web-a-search-suggestions");
-        if (!globalBox) {
-          globalBox = document.createElement("div");
-          globalBox.id = "web-a-search-suggestions";
-          globalBox.className = "search-suggestions";
-          Object.assign(globalBox.style, {
-            display: "none",
-            position: "absolute",
-            background: "white",
-            border: "1px solid #ccc",
-            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-            zIndex: "9999",
-            maxHeight: "200px",
-            overflowY: "auto",
-            borderRadius: "4px"
-          });
-          document.body.appendChild(globalBox);
-        }
-      }
-      return globalBox;
-    };
-    const hideSuggestions = () => {
-      const box = getGlobalBox();
-      if (box)
-        box.style.display = "none";
-      suggestionsVisible = false;
-      activeSearchInput = null;
-    };
-    document.addEventListener("click", (e) => {
-      if (suggestionsVisible && !e.target.closest("#web-a-search-suggestions") && e.target !== activeSearchInput) {
-        hideSuggestions();
-      }
-    });
-    document.addEventListener("scroll", () => {
-      if (suggestionsVisible)
-        hideSuggestions();
-    }, true);
-    document.body.addEventListener("input", (e) => {
-      if (e.target.classList.contains("search-input")) {
-        const input = e.target;
-        activeSearchInput = input;
-        const srcKey = input.dataset.masterSrc;
-        const suggestSource = input.dataset.suggestSource;
-        if (!srcKey && !suggestSource)
-          return;
-        const labelIdx = toIndex(input.dataset.masterLabelIndex);
-        const valueIdx = toIndex(input.dataset.masterValueIndex);
-        const query = input.value;
-        if (!query) {
-          hideSuggestions();
-          return;
-        }
-        const hits = [];
-        const normQuery = normalize(query);
-        if (suggestSource === "column") {
-          const baseKey = input.dataset.baseKey;
-          const table = input.closest("table");
-          if (table && baseKey) {
-            const seen = new Set;
-            table.querySelectorAll(`[data-base-key="${baseKey}"]`).forEach((inp) => {
-              const v = inp.value;
-              if (v && normalize(v).includes(normQuery)) {
-                if (!seen.has(v)) {
-                  seen.add(v);
-                  hits.push({ val: v, row: [v], label: v, score: 10 });
-                }
-              }
-            });
-          }
-        } else if (srcKey) {
-          console.log(`Search: Input '${query}', srcKey: '${srcKey}'`);
-          const master = w.generatedJsonStructure.masterData;
-          if (!master || !master[srcKey]) {
-            console.warn(`Search: masterData key '${srcKey}' not found. Available:`, Object.keys(master || {}));
-            return;
-          }
-          const allRows = master[srcKey];
-          allRows.forEach((row, idx) => {
-            if (idx === 0)
-              return;
-            const match = row.some((col) => {
-              return normalize(col || "").includes(normQuery);
-            });
-            if (match) {
-              const labelVal = labelIdx >= 0 ? row[labelIdx] || "" : "";
-              const valueVal = valueIdx >= 0 ? row[valueIdx] || "" : "";
-              const val = valueIdx >= 0 ? valueVal : labelIdx >= 0 ? labelVal : row[1] || row[0] || "";
-              hits.push({ val, row, label: labelVal, score: 10, idx });
-            }
-          });
-        }
-        console.log(`Search: Found ${hits.length} matches for '${query}' (norm: '${normQuery}') in '${srcKey}'`);
-        hits.sort((a, b) => b.score - a.score);
-        const topHits = hits.slice(0, 10);
-        if (topHits.length > 0) {
-          let html = "";
-          topHits.forEach((h) => {
-            const rowJson = w.escapeHtml(JSON.stringify(h.row));
-            const displayLabel = labelIdx >= 0 ? h.label || h.row.join(" : ") : h.row.join(" : ");
-            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(displayLabel)}</div>`;
-          });
-          const box = getGlobalBox();
-          box.innerHTML = html;
-          const rect = input.getBoundingClientRect();
-          const scrollTop = window.scrollY || document.documentElement.scrollTop;
-          const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-          const viewportHeight = window.innerHeight;
-          const spaceBelow = viewportHeight - rect.bottom;
-          const height = Math.min(topHits.length * 40, 200);
-          box.style.width = Math.max(rect.width, 200) + "px";
-          box.style.left = rect.left + scrollLeft + "px";
-          if (spaceBelow < height && rect.top > height) {
-            box.style.top = rect.top + scrollTop - height - 2 + "px";
-            box.style.maxHeight = height + "px";
-          } else {
-            box.style.top = rect.bottom + scrollTop + "px";
-            box.style.maxHeight = "200px";
-          }
-          box.style.display = "block";
-          suggestionsVisible = true;
-          box.querySelectorAll(".suggestion-item").forEach((el) => {
-            el.onmouseenter = () => el.style.background = "#f0f8ff";
-            el.onmouseleave = () => el.style.background = "white";
-          });
-        } else {
-          hideSuggestions();
-        }
-      }
-    });
-    document.body.addEventListener("click", (e) => {
-      if (e.target.classList.contains("suggestion-item")) {
-        const item = e.target;
-        if (activeSearchInput) {
-          let searchInputFilled = false;
-          const originalVal = item.dataset.val;
-          try {
-            const rowData = JSON.parse(item.dataset.row || "[]");
-            console.log("Auto-Fill: Selected Row:", rowData);
-            const srcKey = activeSearchInput.dataset.masterSrc;
-            const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
-            console.log("Auto-Fill: Master Headers:", masterHeaders);
-            if (masterHeaders.length > 0 && rowData.length > 0) {
-              const tr = activeSearchInput.closest("tr");
-              if (tr) {
-                const inputs = Array.from(tr.querySelectorAll("input, select, textarea"));
-                console.log("Auto-Fill: Inputs in Form Row:", inputs.map((i) => i.dataset.baseKey || i.dataset.jsonPath));
-                masterHeaders.forEach((header, idx) => {
-                  if (!header)
-                    return;
-                  const targetVal = rowData[idx];
-                  const keyMatch = normalize(header);
-                  console.log(`Auto-Fill: Checking '${header}' (norm: '${keyMatch}') against inputs...`);
-                  const targetInput = inputs.find((inp) => {
-                    const k = inp.dataset.baseKey || inp.dataset.jsonPath;
-                    let labelText = "";
-                    const td = inp.closest("td");
-                    if (td) {
-                      const tr2 = td.parentElement;
-                      const index = Array.from(tr2.children).indexOf(td);
-                      const table = tr2.closest("table");
-                      if (table) {
-                        const th = table.querySelectorAll("thead th")[index] || table.querySelectorAll("tr:first-child th")[index];
-                        if (th)
-                          labelText = normalize(th.textContent || "");
-                      }
-                    } else {
-                      const rowDiv = inp.closest(".form-row");
-                      if (rowDiv) {
-                        const labelEl = rowDiv.querySelector(".form-label");
-                        if (labelEl)
-                          labelText = normalize(labelEl.textContent || "");
-                      }
-                    }
-                    const ph = normalize(inp.getAttribute("placeholder") || "");
-                    const matchKey = k && normalize(k) === keyMatch;
-                    const matchPh = ph === keyMatch;
-                    const matchLabel = labelText === keyMatch;
-                    if (header === "ベンダー名" || header === "区") {}
-                    if (matchKey || matchPh || matchLabel)
-                      return true;
-                    return false;
-                  });
-                  if (targetInput) {
-                    console.log(`Auto-Fill: Match found for '${header}' -> Filling '${targetVal}'`);
-                    targetInput.value = targetVal || "";
-                    targetInput.dispatchEvent(new Event("input", { bubbles: true }));
-                    if (targetInput === activeSearchInput) {
-                      searchInputFilled = true;
-                      console.log("Auto-Fill: Search input itself was filled via mapping.");
-                    }
-                  } else {
-                    console.log(`Auto-Fill: No match for '${header}'`);
-                  }
-                });
-              }
-            }
-          } catch (err) {
-            console.error("Auto-fill error", err);
-          }
-          if (!searchInputFilled) {
-            activeSearchInput.value = originalVal || "";
-            activeSearchInput.dispatchEvent(new Event("input", { bubbles: true }));
-          }
-          hideSuggestions();
-        }
-      }
-    });
-  }
-  w.escapeHtml = function(str) {
-    if (!str)
-      return "";
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  };
-  restoreFromLS();
-  applyI18n();
-  initSearch();
-  recalculate();
-}
-var RUNTIME_SCRIPT = `(${runtime.toString()})();`;
+var RUNTIME_SCRIPT = CLIENT_BUNDLE;
 function initRuntime() {
   if (typeof window === "undefined")
     return;
@@ -1163,7 +1206,11 @@ function initRuntime() {
     console.log("Runtime already loaded, skipping init");
     return;
   }
-  runtime();
+  try {
+    eval(RUNTIME_SCRIPT);
+  } catch (e) {
+    console.error("Failed to init runtime from bundle:", e);
+  }
 }
 function generateHtml(markdown) {
   const { html, jsonStructure } = parseMarkdown(markdown);
@@ -1398,7 +1445,7 @@ var DEFAULT_MARKDOWN_JA = `# 請求書（サンプル）
 
 // src/weba/browser_maker.ts
 function updatePreview() {
-  console.log("Web/A Maker v2.3");
+  console.log("Web/A Maker v3.0");
   const editor = document.getElementById("editor");
   const preview = document.getElementById("preview");
   if (!editor || !preview)
