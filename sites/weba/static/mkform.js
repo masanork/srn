@@ -767,56 +767,66 @@ function runtime() {
         hideSuggestions();
       }
     });
+    document.addEventListener("scroll", () => {
+      if (suggestionsVisible)
+        hideSuggestions();
+    }, true);
     document.body.addEventListener("input", (e) => {
       if (e.target.classList.contains("search-input")) {
-        console.log("Search: Input event detected on .search-input", e.target.value);
         const input = e.target;
         activeSearchInput = input;
         const srcKey = input.dataset.masterSrc;
-        if (!srcKey) {
-          console.warn("Search: No src key found", { srcKey });
+        if (!srcKey)
           return;
-        }
         const query = input.value;
         if (!query) {
           hideSuggestions();
           return;
         }
         const master = w.generatedJsonStructure.masterData;
-        if (!master || !master[srcKey]) {
-          console.warn(`Search: masterData key '${srcKey}' not found.`);
+        if (!master || !master[srcKey])
           return;
-        }
-        const data = master[srcKey];
+        const allRows = master[srcKey];
+        const dataRows = allRows.slice(1);
         const hits = [];
-        data.forEach((row) => {
+        dataRows.forEach((row, originalIdx) => {
           const val = row[0] || "";
           const score = getScore(query, val, val);
           if (score > 0) {
-            hits.push({ val, row, score });
+            hits.push({ val, row, score, idx: originalIdx });
           }
         });
         hits.sort((a, b) => b.score - a.score);
         const topHits = hits.slice(0, 10);
-        console.log(`Search: Query '${query}' matched ${hits.length} records. Showing top ${topHits.length}.`);
         if (topHits.length > 0) {
           let html = "";
           topHits.forEach((h) => {
-            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
+            const rowJson = w.escapeHtml(JSON.stringify(h.row));
+            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
           });
           const box = getGlobalBox();
           box.innerHTML = html;
           const rect = input.getBoundingClientRect();
           const scrollTop = window.scrollY || document.documentElement.scrollTop;
           const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-          Object.assign(box.style, {
-            display: "block",
-            top: rect.bottom + scrollTop + "px",
-            left: rect.left + scrollLeft + "px",
-            width: rect.width + "px",
-            minWidth: "200px"
-          });
+          const viewportHeight = window.innerHeight;
+          const spaceBelow = viewportHeight - rect.bottom;
+          const height = Math.min(topHits.length * 40, 200);
+          box.style.width = Math.max(rect.width, 200) + "px";
+          box.style.left = rect.left + scrollLeft + "px";
+          if (spaceBelow < height && rect.top > height) {
+            box.style.top = rect.top + scrollTop - height - 2 + "px";
+            box.style.maxHeight = height + "px";
+          } else {
+            box.style.top = rect.bottom + scrollTop + "px";
+            box.style.maxHeight = "200px";
+          }
+          box.style.display = "block";
           suggestionsVisible = true;
+          box.querySelectorAll(".suggestion-item").forEach((el) => {
+            el.onmouseenter = () => el.style.background = "#f0f8ff";
+            el.onmouseleave = () => el.style.background = "white";
+          });
         } else {
           hideSuggestions();
         }
@@ -827,10 +837,43 @@ function runtime() {
         const item = e.target;
         if (activeSearchInput) {
           activeSearchInput.value = item.dataset.val;
+          try {
+            const rowData = JSON.parse(item.dataset.row || "[]");
+            console.log("Auto-Fill: rowData", rowData);
+            const srcKey = activeSearchInput.dataset.masterSrc;
+            const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
+            console.log("Auto-Fill: headers", masterHeaders);
+            if (masterHeaders.length > 0 && rowData.length > 0) {
+              const tr = activeSearchInput.closest("tr");
+              if (tr) {
+                const inputs = Array.from(tr.querySelectorAll("input, select, textarea"));
+                console.log("Auto-Fill: inputs in row", inputs.map((i) => i.dataset.baseKey || i.dataset.jsonPath));
+                masterHeaders.forEach((header, idx) => {
+                  if (idx === 0)
+                    return;
+                  if (!header)
+                    return;
+                  const targetVal = rowData[idx];
+                  const keyMatch = normalize(header);
+                  console.log(`Auto-Fill: checking header '${header}' (norm: '${keyMatch}') against value '${targetVal}'`);
+                  const targetInput = inputs.find((inp) => {
+                    const k = inp.dataset.baseKey || inp.dataset.jsonPath;
+                    return k && normalize(k) === keyMatch;
+                  });
+                  if (targetInput) {
+                    console.log("Auto-Fill: Found match!", targetInput);
+                    targetInput.value = targetVal || "";
+                  } else {
+                    console.log("Auto-Fill: No match found for", keyMatch);
+                  }
+                });
+              }
+            }
+          } catch (err) {
+            console.error("Auto-fill error", err);
+          }
           activeSearchInput.dispatchEvent(new Event("input", { bubbles: true }));
           hideSuggestions();
-        } else {
-          console.warn("Search: No active input found for selection");
         }
       }
     });

@@ -347,7 +347,6 @@ function runtime() {
                     globalBox = document.createElement('div');
                     globalBox.id = 'web-a-search-suggestions';
                     globalBox.className = 'search-suggestions';
-                    // Base styles for the global box
                     Object.assign(globalBox.style, {
                         display: 'none',
                         position: 'absolute',
@@ -372,25 +371,26 @@ function runtime() {
             activeSearchInput = null;
         };
 
-        // Close suggestions on click outside
+        // Close on click outside
         document.addEventListener('click', (e: any) => {
             if (suggestionsVisible && !e.target.closest('#web-a-search-suggestions') && e.target !== activeSearchInput) {
                 hideSuggestions();
             }
         });
 
+        // Close on scroll (anywhere) to prevent detached popup
+        document.addEventListener('scroll', () => {
+            if (suggestionsVisible) hideSuggestions();
+        }, true);
+
         // Delegate input for search
         document.body.addEventListener('input', (e: any) => {
             if (e.target.classList.contains('search-input')) {
-                console.log("Search: Input event detected on .search-input", e.target.value);
                 const input = e.target as HTMLInputElement;
                 activeSearchInput = input;
 
                 const srcKey = input.dataset.masterSrc;
-                if (!srcKey) {
-                    console.warn("Search: No src key found", { srcKey });
-                    return;
-                }
+                if (!srcKey) return;
 
                 const query = input.value;
                 if (!query) {
@@ -400,49 +400,68 @@ function runtime() {
 
                 // @ts-ignore
                 const master = w.generatedJsonStructure.masterData;
-                if (!master || !master[srcKey]) {
-                    console.warn(`Search: masterData key '${srcKey}' not found.`);
-                    return;
-                }
+                if (!master || !master[srcKey]) return;
 
-                const data = master[srcKey];
+                const allRows = master[srcKey];
+                // Assume Row 0 is Headers
+                const dataRows = allRows.slice(1);
+
                 const hits: any[] = [];
-
-                data.forEach((row: string[]) => {
+                dataRows.forEach((row: string[], originalIdx: number) => {
+                    // originalIdx is index in dataRows. Actual index in allRows is originalIdx + 1
                     const val = row[0] || '';
                     const score = getScore(query, val, val);
                     if (score > 0) {
-                        hits.push({ val, row, score });
+                        hits.push({ val, row, score, idx: originalIdx });
                     }
                 });
 
                 hits.sort((a, b) => b.score - a.score);
                 const topHits = hits.slice(0, 10);
-                console.log(`Search: Query '${query}' matched ${hits.length} records. Showing top ${topHits.length}.`);
 
                 if (topHits.length > 0) {
                     let html = '';
                     topHits.forEach(h => {
-                        html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
+                        // Store row data in data-row attribute (JSON encoded)
+                        const rowJson = w.escapeHtml(JSON.stringify(h.row));
+                        html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
                     });
 
                     const box = getGlobalBox();
                     box.innerHTML = html;
 
-                    // Positioning
+                    // Smart Positioning
                     const rect = input.getBoundingClientRect();
                     const scrollTop = window.scrollY || document.documentElement.scrollTop;
                     const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+                    const viewportHeight = window.innerHeight;
 
-                    Object.assign(box.style, {
-                        display: 'block',
-                        top: (rect.bottom + scrollTop) + 'px',
-                        left: (rect.left + scrollLeft) + 'px',
-                        width: rect.width + 'px', // Match input width
-                        minWidth: '200px' // But at least 200px
+                    const spaceBelow = viewportHeight - rect.bottom;
+                    const height = Math.min(topHits.length * 40, 200); // approx height
+
+                    // Reset common styles
+                    box.style.width = Math.max(rect.width, 200) + 'px';
+                    box.style.left = (rect.left + scrollLeft) + 'px';
+
+                    if (spaceBelow < height && rect.top > height) {
+                        // Flip Up
+                        box.style.top = (rect.top + scrollTop - height - 2) + 'px';
+                        box.style.maxHeight = height + 'px'; // Ensure it fits
+                    } else {
+                        // Standard Down
+                        box.style.top = (rect.bottom + scrollTop) + 'px';
+                        box.style.maxHeight = '200px';
+                    }
+
+                    box.style.display = 'block';
+                    suggestionsVisible = true;
+
+                    // Add hover effect via JS since inline styles are hard for hover
+                    box.querySelectorAll('.suggestion-item').forEach((el: any) => {
+                        el.onmouseenter = () => el.style.background = '#f0f8ff';
+                        el.onmouseleave = () => el.style.background = 'white';
                     });
 
-                    suggestionsVisible = true;
                 } else {
                     hideSuggestions();
                 }
@@ -453,13 +472,54 @@ function runtime() {
         document.body.addEventListener('click', (e: any) => {
             if (e.target.classList.contains('suggestion-item')) {
                 const item = e.target;
-                // Use activeSearchInput captured from input event
                 if (activeSearchInput) {
+                    // 1. Update Search Input
                     activeSearchInput.value = item.dataset.val;
+
+                    // 2. Auto-Fill other fields
+                    try {
+                        const rowData = JSON.parse(item.dataset.row || '[]');
+                        console.log("Auto-Fill: rowData", rowData);
+
+                        const srcKey = activeSearchInput.dataset.masterSrc;
+                        // @ts-ignore
+                        const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
+                        console.log("Auto-Fill: headers", masterHeaders);
+
+                        if (masterHeaders.length > 0 && rowData.length > 0) {
+                            const tr = activeSearchInput.closest('tr');
+                            if (tr) {
+                                const inputs = Array.from(tr.querySelectorAll('input, select, textarea'));
+                                console.log("Auto-Fill: inputs in row", inputs.map((i: any) => i.dataset.baseKey || i.dataset.jsonPath));
+
+                                masterHeaders.forEach((header: string, idx: number) => {
+                                    if (idx === 0) return; // Skip search key itself
+                                    if (!header) return;
+
+                                    const targetVal = rowData[idx];
+                                    const keyMatch = normalize(header);
+                                    console.log(`Auto-Fill: checking header '${header}' (norm: '${keyMatch}') against value '${targetVal}'`);
+
+                                    const targetInput = inputs.find((inp: any) => {
+                                        const k = inp.dataset.baseKey || inp.dataset.jsonPath;
+                                        return k && normalize(k) === keyMatch;
+                                    }) as HTMLInputElement;
+
+                                    if (targetInput) {
+                                        console.log("Auto-Fill: Found match!", targetInput);
+                                        targetInput.value = targetVal || '';
+                                    } else {
+                                        console.log("Auto-Fill: No match found for", keyMatch);
+                                    }
+                                });
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Auto-fill error", err);
+                    }
+
                     activeSearchInput.dispatchEvent(new Event('input', { bubbles: true })); // Trigger recalc & hide
                     hideSuggestions();
-                } else {
-                    console.warn("Search: No active input found for selection");
                 }
             }
         });
