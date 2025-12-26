@@ -1,3 +1,5 @@
+
+import { parseMarkdown } from './parser';
 import { generateHtml, RUNTIME_SCRIPT } from './generator';
 
 // Window global functions for HTML event handlers
@@ -11,7 +13,47 @@ declare global {
         addTableRow: ((btn: HTMLButtonElement, tableKey: string) => void) | undefined;
     }
 }
-// ... (previous content)
+
+const DEFAULT_MARKDOWN = `# 御見積書
+---
+
+## 顧客情報
+
+- [text:client_name (placeholder="株式会社〇〇 御中" size:L)] 顧客名
+- [date:issue_date] 発行日
+- [text:project_name (placeholder="例: Webサイトリニューアル案件")] 件名
+
+---
+
+## 見積明細
+
+[dynamic-table:items]
+| 品目 / 内容 | 単価 | 数量 | 金額 |
+|---|---|---|---|
+| [datalist:item (src:products placeholder="品目を選択または入力")] | [number:price (placeholder="0" align:R)] | [number:qty (placeholder="1" align:R)] | [calc:amount (formula="price * qty" align:R)] |
+
+<div style="text-align: right; margin-top: 20px;">
+
+- [calc:subtotal (formula="SUM(amount)" align:R)] 小計
+- [calc:tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] 消費税 (10%)
+- [calc:total (formula="SUM(amount) + Math.floor(SUM(amount) * 0.1)" size:XL align:R bold)] 合計金額
+
+</div>
+
+---
+
+## 備考
+- [textarea:remarks (placeholder="有効期限: 発行より2週間")] 備考欄
+
+[master:products]
+| Item Name | Unit Price |
+|---|---|
+| システム開発一式 (人月) | 800000 |
+| 初期導入費用 | 150000 |
+| サーバー構築費 | 120000 |
+| UI/UXデザイン費 | 300000 |
+| 月額保守サポート | 30000 |
+`;
 
 function updatePreview() {
     const editor = document.getElementById('editor') as HTMLTextAreaElement;
@@ -34,76 +76,8 @@ function updatePreview() {
 
     // Trigger recalculate manually since DOMContentLoaded already fired
     setTimeout(() => {
-        if ((window as any).recalculate) (window as any).recalculate();
-        // Bind new buttons if any (like Add Row) - handled by global onclick in runtime script?
-        // Runtime script defines window.addTableRow, which is fine.
+        if (window.recalculate) window.recalculate();
     }, 50);
-}
-// ...
-const DEFAULT_MARKDOWN = `# 経費精算申請書
----
-
-## 申請人情報
-
-- [text:employee_id (size:S placeholder="例: 123456")] 社員番号
-- [text:dept (val="営業部" size:S)] 所属部署
-- [text:name (size:L placeholder="氏名を入力してください")] 氏名
-- [date:date] 申請日
-
----
-
-## 申請詳細
-
-- [radio:type] 経費種別
-  - [x] 交通費
-  - 会議費
-  - 消耗品費
-  - その他
-
-- [textarea:reason (placeholder="例: クライアント訪問のため")] 申請理由（詳細）
-
----
-
-## 経費明細 (動的テーブル)
-
-[dynamic-table:items]
-| 日付 | 内容 | 金額 | 支払先 | 備考 |
-|---|---|---|---|---|
-| [date:date] | [text:description] | [number:amount (align:R placeholder="0")] | [datalist:payee (src:vendors placeholder="例: ○○商事")] | [text:note] |
-
-[master:vendors]
-| ID | Vendor Name | 
-|---|---|
-| 001 | 山田文具店 |
-| 002 | 鈴木交通 |
-| 003 | 田中商事 |
-`;
-
-function updatePreview() {
-    const editor = document.getElementById('editor') as HTMLTextAreaElement;
-    const preview = document.getElementById('preview');
-    if (!editor || !preview) return;
-
-    const { html, jsonStructure } = parseMarkdown(editor.value);
-    preview.innerHTML = html;
-
-    // @ts-ignore
-    window.generatedJsonStructure = jsonStructure;
-
-    // Trigger runtime behavior for preview
-    // In the separated version, we might need to inject runtime functions into global scope
-    // or just emulate them. 
-    // Since we are in the Maker, we can define checking logic here.
-    setTimeout(() => {
-        // We need 'recalculate' available globally for the preview to work interactively?
-        // Actually the preview HTML uses standard inputs. 
-        // We need to run recalculate() on the preview DOM.
-        // We can reuse the logic from runtime script but it's stringified in generator.
-        // For simplicity, we can just say "Preview logic is limited" OR copy paste logic.
-        // Ideally we import recalculate from runtime source, but runtime source is a string.
-
-        // Let's rely on the fact that this script effectively runs in the maker page.
-    }, 100);
 }
 
 function downloadWebA() {
