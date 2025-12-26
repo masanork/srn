@@ -1,12 +1,13 @@
 
 import { parseMarkdown } from './parser';
-import { generateHtml, initRuntime } from './generator';
+import { generateHtml, initRuntime, generateAggregatorHtml } from './generator';
 
 // Window global functions for HTML event handlers
 declare global {
     interface Window {
         parseAndRender: () => void;
         downloadWebA: () => void;
+        downloadAggregator: () => void;
         generatedJsonStructure: any;
         isRuntimeLoaded: boolean;
         recalculate: (() => void) | undefined;
@@ -83,16 +84,32 @@ function downloadWebA() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    
+
     // @ts-ignore
     const title = (window.generatedJsonStructure && window.generatedJsonStructure.name) || 'web-a-form';
     a.download = title + '.html';
     a.click();
 }
 
+function downloadAggregator() {
+    const editor = document.getElementById('editor') as HTMLTextAreaElement;
+    const htmlContent = generateAggregatorHtml(editor.value);
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    // @ts-ignore
+    const title = (window.generatedJsonStructure && window.generatedJsonStructure.name) || 'web-a-aggregator';
+    a.download = title + '_aggregator.html';
+    a.click();
+}
+
 // Expose to window
 window.parseAndRender = updatePreview;
 window.downloadWebA = downloadWebA;
+window.downloadAggregator = downloadAggregator;
 
 // Init
 window.addEventListener('DOMContentLoaded', () => {

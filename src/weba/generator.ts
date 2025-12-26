@@ -258,11 +258,11 @@ function runtime() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        
+
         const title = (w.generatedJsonStructure && w.generatedJsonStructure.name) || 'web-a-form';
         const now = new Date();
         const dateStr = now.getFullYear() +
-            ('0' + (now.getMonth()+1)).slice(-2) +
+            ('0' + (now.getMonth() + 1)).slice(-2) +
             ('0' + now.getDate()).slice(-2) + '-' +
             ('0' + now.getHours()).slice(-2) +
             ('0' + now.getMinutes()).slice(-2);
@@ -290,7 +290,7 @@ function runtime() {
     w.switchTab = function (btn: any, tabId: string) {
         document.querySelectorAll('.tab-btn').forEach((b: any) => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach((c: any) => c.classList.remove('active'));
-        
+
         btn.classList.add('active');
         const content = document.getElementById(tabId);
         if (content) content.classList.add('active');
@@ -320,8 +320,8 @@ export const RUNTIME_SCRIPT = `(${runtime.toString()})();`;
 export function initRuntime(): void {
     if (typeof window === 'undefined') return;
     if ((window as any).recalculate) {
-         console.log("Runtime already loaded, skipping init");
-         return;
+        console.log("Runtime already loaded, skipping init");
+        return;
     }
     runtime();
 }
@@ -348,6 +348,154 @@ export function generateHtml(markdown: string): string {
     <script>
         window.generatedJsonStructure = ${JSON.stringify(jsonStructure)};
         ${RUNTIME_SCRIPT}
+    </script>
+</body>
+</html>`;
+}
+
+function aggregatorRuntime() {
+    const w = window as any;
+    const jsonStructure = w.generatedJsonStructure;
+    const fields = jsonStructure.fields || [];
+
+    let allData: any[] = []; // { filename, data: json }
+
+    function renderTable() {
+        const container = document.getElementById('table-container');
+        if (!container) return;
+
+        // Headers
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>Filename</th>';
+        fields.forEach((f: any) => html += `<th>${f.label}</th>`);
+        html += '</tr></thead><tbody>';
+
+        // Rows
+        allData.forEach((row) => {
+            html += '<tr>';
+            html += `<td>${row.filename || '-'}</td>`;
+            const d = row.data || {};
+            fields.forEach((f: any) => {
+                let val = d[f.key];
+                if (typeof val === 'object') val = JSON.stringify(val);
+                html += `<td>${val || ''}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        const countEl = document.getElementById('count');
+        if (countEl) countEl.textContent = allData.length + ' files loaded';
+    }
+
+    async function handleFiles(files: FileList) {
+        let loadedCount = 0;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+                const text = await file.text();
+                const doc = new DOMParser().parseFromString(text, 'text/html');
+                const script = doc.getElementById('json-ld');
+                if (script && script.textContent) {
+                    try {
+                        const json = JSON.parse(script.textContent);
+                        allData.push({ filename: file.name, data: json });
+                        loadedCount++;
+                    } catch (e) { console.error('Error parsing JSON from ' + file.name, e); }
+                }
+            } else if (file.name.endsWith('.json')) {
+                // Maybe it's an archive or raw json?
+                try {
+                    const text = await file.text();
+                    const json = JSON.parse(text);
+                    if (Array.isArray(json) && json.length > 0 && (json[0].filename || json[0].data)) {
+                        // It's likely an archive
+                        // Check for duplicates based on filename?
+                        // For now just append
+                        allData = allData.concat(json);
+                        loadedCount += json.length;
+                    } else if (typeof json === 'object') {
+                        allData.push({ filename: file.name, data: json });
+                        loadedCount++;
+                    }
+                } catch (e) { }
+            }
+        }
+        renderTable();
+        alert(`${loadedCount} files loaded/imported.`);
+    }
+
+    function setup() {
+        const input = document.getElementById('file-input');
+        input?.addEventListener('change', (e: any) => {
+            if (e.target.files) handleFiles(e.target.files);
+        });
+
+        // Drag and Drop
+        const dropZone = document.getElementById('drop-zone');
+        dropZone?.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.background = '#eef'; });
+        dropZone?.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.style.background = ''; });
+        dropZone?.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.background = '';
+            if (e.dataTransfer?.files) handleFiles(e.dataTransfer.files);
+        });
+
+        document.getElementById('btn-download')?.addEventListener('click', () => {
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (jsonStructure.name || 'data') + '_aggregated.json';
+            a.click();
+        });
+    }
+
+    setup();
+}
+
+export const AGGREGATOR_RUNTIME_SCRIPT = `(${aggregatorRuntime.toString()})();`;
+
+export function generateAggregatorHtml(markdown: string): string {
+    const { jsonStructure } = parseMarkdown(markdown);
+    // Reuse BASE_CSS but add some specific styles for aggregator if needed
+    // We reuse BASE_CSS for consistent look
+
+    return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>${jsonStructure.name || 'Web/A Aggregator'}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <style>
+        ${BASE_CSS}
+        #drop-zone { border: 2px dashed #ccc; padding: 40px; text-align: center; margin-bottom: 20px; border-radius: 8px; color: #666; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .stats { margin-left: auto; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="page" style="max-width: 1200px;">
+        <h1>${jsonStructure.name} - Aggregator</h1>
+        
+        <div id="drop-zone">
+            <p>Drop Web/A HTML files or JSON Archive here</p>
+            <p>or</p>
+            <input type="file" id="file-input" multiple webkitdirectory />
+        </div>
+
+        <div class="controls">
+            <button class="primary" id="btn-download">Download Aggregated JSON</button>
+            <div class="stats" id="count">0 files loaded</div>
+        </div>
+
+        <div id="table-container" class="table-wrapper">
+            <p style="padding: 20px; text-align: center; color: #999;">No data loaded</p>
+        </div>
+    </div>
+    <script>
+        window.generatedJsonStructure = ${JSON.stringify(jsonStructure)};
+        ${AGGREGATOR_RUNTIME_SCRIPT}
     </script>
 </body>
 </html>`;
