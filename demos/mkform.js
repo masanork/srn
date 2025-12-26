@@ -226,6 +226,12 @@ function parseMarkdown(text) {
   let inTable = false;
   let inMasterTable = false;
   let currentMasterKey = null;
+  let tabs = [];
+  let currentTabId = null;
+  let mainContentHtml = "";
+  const appendHtml = (str) => {
+    mainContentHtml += str;
+  };
   lines.forEach((line) => {
     const trimmed = line.trim();
     const masterMatch = trimmed.match(/^\[master:([a-zA-Z0-9_]+)\]$/);
@@ -243,13 +249,13 @@ function parseMarkdown(text) {
         if (currentMasterKey) {
           inMasterTable = true;
         } else {
-          html += `<div class="form-row vertical"><div class="table-wrapper">`;
+          appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
           if (currentDynamicTableKey) {
-            html += `<table class="data-table dynamic" id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}">`;
+            appendHtml(`<table class="data-table dynamic" id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}">`);
           } else {
-            html += `<table class="data-table">`;
+            appendHtml(`<table class="data-table">`);
           }
-          html += `<tbody>`;
+          appendHtml(`<tbody>`);
           inTable = true;
         }
       }
@@ -262,12 +268,12 @@ function parseMarkdown(text) {
         if (currentDynamicTableKey) {
           const hasInput = cells.some((c) => c.includes("["));
           if (!hasInput) {
-            html += `<tr>${cells.map((c) => `<th>${Renderers.escapeHtml(c)}</th>`).join("")}</tr>`;
+            appendHtml(`<tr>${cells.map((c) => `<th>${Renderers.escapeHtml(c)}</th>`).join("")}</tr>`);
           } else {
-            html += Renderers.tableRow(cells, true);
+            appendHtml(Renderers.tableRow(cells, true));
           }
         } else {
-          html += Renderers.tableRow(cells);
+          appendHtml(Renderers.tableRow(cells));
         }
       }
       return;
@@ -278,12 +284,12 @@ function parseMarkdown(text) {
         return;
       }
       if (inTable) {
-        html += "</tbody></table></div>";
+        appendHtml("</tbody></table></div>");
         if (currentDynamicTableKey) {
-          html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ Add Row</button>`;
+          appendHtml(`<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ 行を追加</button>`);
           currentDynamicTableKey = null;
         }
-        html += "</div>";
+        appendHtml("</div>");
         inTable = false;
       }
     }
@@ -291,9 +297,21 @@ function parseMarkdown(text) {
     if (headerMatch) {
       const level = headerMatch[1].length;
       const content = headerMatch[2];
-      html += `<h${level}>${Renderers.escapeHtml(content)}</h${level}>`;
-      if (level === 1)
+      if (level === 1) {
+        appendHtml(`<h1>${Renderers.escapeHtml(content)}</h1>`);
         jsonStructure.name = content;
+      } else if (level === 2) {
+        if (currentTabId) {
+          appendHtml("</div>");
+        }
+        const tabId = "tab-" + (tabs.length + 1);
+        tabs.push({ id: tabId, title: content });
+        currentTabId = tabId;
+        const activeClass = tabs.length === 1 ? " active" : "";
+        appendHtml(`<div id="${tabId}" class="tab-content${activeClass}" data-tab-title="${Renderers.escapeHtml(content)}">`);
+      } else {
+        appendHtml(`<h${level}>${Renderers.escapeHtml(content)}</h${level}>`);
+      }
       currentRadioGroup = null;
     } else if (line.startsWith("  - ") || line.startsWith("\t- ")) {
       if (currentRadioGroup) {
@@ -303,7 +321,7 @@ function parseMarkdown(text) {
           checked = true;
           label = label.substring(4);
         }
-        html += Renderers.radioOption(currentRadioGroup.key, label, label, checked);
+        appendHtml(Renderers.radioOption(currentRadioGroup.key, label, label, checked));
       }
     } else if (trimmed.startsWith("- [")) {
       const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
@@ -313,39 +331,58 @@ function parseMarkdown(text) {
         const cleanLabel = (label || "").trim();
         if (type === "radio") {
           currentRadioGroup = { key, label: cleanLabel, attrs };
-          html += Renderers.radioStart(key, cleanLabel, attrs);
+          appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
         } else if (Renderers[type]) {
-          html += Renderers[type](key, cleanLabel, attrs);
+          appendHtml(Renderers[type](key, cleanLabel, attrs));
         } else {
-          html += `<p style="color:red">Unknown type: ${type}</p>`;
+          appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
         }
       }
     } else if (trimmed.startsWith("---")) {
-      html += "<hr>";
+      if (!currentTabId) {
+        appendHtml("<hr>");
+      }
       currentRadioGroup = null;
     } else if (trimmed.startsWith("<")) {
       if (currentRadioGroup) {
-        html += "</div></div>";
+        appendHtml("</div></div>");
         currentRadioGroup = null;
       }
-      html += trimmed;
+      appendHtml(trimmed);
     } else if (trimmed.length > 0) {
       if (currentRadioGroup) {
-        html += "</div></div>";
+        appendHtml("</div></div>");
         currentRadioGroup = null;
       }
-      html += `<p>${Renderers.escapeHtml(trimmed)}</p>`;
+      appendHtml(`<p>${Renderers.escapeHtml(trimmed)}</p>`);
     } else {
       if (currentRadioGroup) {
-        html += "</div></div>";
+        appendHtml("</div></div>");
         currentRadioGroup = null;
       }
     }
   });
   if (inTable)
-    html += "</tbody></table></div></div>";
+    appendHtml("</tbody></table></div></div>");
   if (currentRadioGroup)
-    html += "</div></div>";
+    appendHtml("</div></div>");
+  if (currentTabId)
+    appendHtml("</div>");
+  if (tabs.length > 0) {
+    let navHtml = '<div class="tabs-nav no-print">';
+    tabs.forEach((tab, idx) => {
+      const activeClass = idx === 0 ? " active" : "";
+      navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
+    });
+    navHtml += "</div>";
+    if (mainContentHtml.includes("</h1>")) {
+      html = mainContentHtml.replace("</h1>", "</h1>" + navHtml);
+    } else {
+      html = navHtml + mainContentHtml;
+    }
+  } else {
+    html = mainContentHtml;
+  }
   return { html, jsonStructure };
 }
 
@@ -381,11 +418,37 @@ button.primary { background: #007bff; color: white; border: none; padding: 12px 
 button.primary:hover { background: #0056b3; }
 .add-row-btn { background: #eee; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
 .add-row-btn:hover { background: #ddd; }
+
+/* Tab Styles */
+.tabs-nav { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; overflow-x: auto; }
+.tab-btn { 
+    padding: 10px 20px; 
+    cursor: pointer; 
+    border: none; 
+    background: none; 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #666; 
+    border-bottom: 2px solid transparent; 
+    margin-bottom: -2px; 
+    white-space: nowrap;
+}
+.tab-btn:hover { background: #f9f9f9; }
+.tab-btn.active { color: #007bff; border-bottom: 2px solid #007bff; }
+.tab-content { display: none; animation: fadeIn 0.3s; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 @media print {
     body { background: white; padding: 0; }
     .page { box-shadow: none; padding: 0mm; width: 100%; }
     .no-print { display: none !important; }
     button { display: none !important; }
+    
+    /* Print: Linearize Tabs */
+    .tabs-nav { display: none; }
+    .tab-content { display: block !important; border-bottom: 1px solid #ccc; padding-bottom: 20px; margin-bottom: 20px; }
+    .tab-content::before { content: attr(data-tab-title); display: block; font-size: 18px; font-weight: bold; margin-bottom: 10px; border-left: 5px solid #333; padding-left: 10px; }
 }
 `;
 function runtime() {
@@ -589,6 +652,14 @@ function runtime() {
     const newRow = templateRow.cloneNode(true);
     newRow.querySelectorAll("input").forEach((input) => input.value = "");
     tbody.appendChild(newRow);
+  };
+  w.switchTab = function(btn, tabId) {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+    btn.classList.add("active");
+    const content = document.getElementById(tabId);
+    if (content)
+      content.classList.add("active");
   };
   let tm;
   document.addEventListener("input", () => {
