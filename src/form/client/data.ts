@@ -1,4 +1,6 @@
 
+import { globalSigner } from './signer';
+
 export class DataManager {
     private formId: string;
 
@@ -56,6 +58,42 @@ export class DataManager {
             debugBlock.textContent = JSON.stringify(data, null, 2);
         }
         return data;
+    }
+
+    public async signAndDownload() {
+        const data = this.updateJsonLd();
+        const w = window as any;
+        const formName = (w.generatedJsonStructure && w.generatedJsonStructure.name) || 'Response';
+        
+        // Try to get template ID from document or use URL
+        const templateId = window.location.href.split('#')[0];
+
+        const payload = {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            "type": ["VerifiableCredential", "WebAFormResponse"],
+            "issuer": `did:key:z${globalSigner.getPublicKey()}`,
+            "issuanceDate": new Date().toISOString(),
+            "credentialSubject": {
+                "id": `urn:uuid:${crypto.randomUUID()}`,
+                "type": "WebAFormResponse",
+                "templateId": templateId,
+                "answers": data
+            }
+        };
+
+        try {
+            const signedVc = await globalSigner.sign(payload);
+            
+            const blob = new Blob([JSON.stringify(signedVc, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${formName}_signed.vc.json`;
+            a.click();
+        } catch (e) {
+            console.error(e);
+            alert("Signing failed. Please ensure you are in a secure context (HTTPS/localhost).");
+        }
     }
 
     public saveToLS() {

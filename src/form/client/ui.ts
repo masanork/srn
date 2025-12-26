@@ -16,14 +16,16 @@ export class UIManager {
             "en": {
                 "add_row": "+ Add Row",
                 "work_save_btn": "Save Draft",
-                "submit_btn": "Submit",
+                "submit_btn": "Submit HTML",
                 "clear_btn": "Clear Data",
+                "sign_btn": "Sign & Save (VC)",
             },
             "ja": {
                 "add_row": "+ 行を追加",
-                "work_save_btn": "作業保存",
-                "submit_btn": "提出",
+                "work_save_btn": "一時保存",
+                "submit_btn": "提出用HTML",
                 "clear_btn": "クリア",
+                "sign_btn": "署名して保存 (VC)",
             }
         };
         const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';
