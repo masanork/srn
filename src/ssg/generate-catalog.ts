@@ -6,7 +6,7 @@ import path from 'path';
 // This tool assumes the fonts.db is already built in site/data/fonts.db
 // It will embed the glyph index JS, allowing a local file opening.
 
-import { loadConfig, getAbsolutePaths } from './config.ts';
+import { loadConfig, getAbsolutePaths } from '../core/config.ts';
 
 const config = await loadConfig();
 const { FONTS_DIR, DATA_DIR, DIST_DIR } = getAbsolutePaths(config);

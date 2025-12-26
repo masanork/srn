@@ -6,10 +6,10 @@ import { glob } from 'glob';
 
 import * as cheerio from 'cheerio';
 import crypto from 'node:crypto';
-import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from './font.ts';
-import { findGlyphInDb } from './db.ts';
-import { loadConfig, getAbsolutePaths } from './config.ts';
-import { toWareki, toLegalFormat } from './utils.ts';
+import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from '../core/font.ts';
+import { findGlyphInDb } from '../core/db.ts';
+import { loadConfig, getAbsolutePaths } from '../core/config.ts';
+import { toWareki, toLegalFormat } from '../core/utils.ts';
 
 // Render HTML using Layout System
 let finalHtml = '';
@@ -31,8 +31,8 @@ import { blogLayout } from './layouts/blog.ts';
 import type { BlogItem, BlogData } from './layouts/blog.ts';
 import { webaLayout } from './layouts/weba.ts';
 import type { WebAData } from './layouts/weba.ts';
-import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from './vc.ts';
-import type { HybridKeys } from './vc.ts';
+import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
+import type { HybridKeys } from '../core/vc.ts';
 
 // Configuration
 const config = await loadConfig();
@@ -852,7 +852,7 @@ body {
 
     // Bundle Client Scripts
     console.log("Bundling client scripts...");
-    const clientEntry = path.join(process.cwd(), 'src/client/verify-app.ts');
+    const clientEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
     if (await fs.pathExists(clientEntry)) {
         const result = await Bun.build({
             entrypoints: [clientEntry],
