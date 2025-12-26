@@ -1,6 +1,6 @@
 ---
 title: "検討資料：住民票の写し等の電子交付における要件"
-layout: weba
+layout: article
 author: "楠 正憲"
 description: "総務省デジ技術活用WG中間とりまとめを踏まえた、標準的な Web 技術による住民票電子交付の実装提案。"
 ---

@@ -29,8 +29,6 @@ import { verifierLayout } from './layouts/verifier.ts';
 import type { VerifierData } from './layouts/verifier.ts';
 import { blogLayout } from './layouts/blog.ts';
 import type { BlogItem, BlogData } from './layouts/blog.ts';
-import { webaLayout } from './layouts/weba.ts';
-import type { WebAData } from './layouts/weba.ts';
 import { formLayout, formReportLayout } from './layouts/form.ts';
 import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
 import type { HybridKeys } from '../core/vc.ts';
@@ -804,34 +802,6 @@ body {
                 safeFontFamilies,
                 htmlContent
             );
-        } else if (data.layout === 'weba') {
-            // Generate VC for Web/A Showcase documents
-            console.log("  Generating Web/A Provenance VC...");
-            const plainText = cheerio.load(htmlContent).text();
-
-            const vcPayload = {
-                id: `urn:uuid:${crypto.randomUUID()}`,
-                type: ["VerifiableCredential", "WebADocument"],
-                credentialSubject: {
-                    id: `https://${SITE_DOMAIN}${SITE_PATH}/${file.replace('.md', '')}`,
-                    type: "WebADocument",
-                    name: data.title,
-                    author: data.author,
-                    date: data.date,
-                    "srn:buildId": buildId,
-                    contentDigest: crypto.createHash('sha256').update(cheerio.load(htmlContent).text().trim()).digest('hex')
-                }
-            };
-
-            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
-
-            finalHtml = webaLayout(
-                data as WebAData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies,
-                vc
-            );
         } else if (data.layout === 'form') {
             // Generate VC for Form Template
             console.log("  Generating Form Template VC...");
@@ -872,12 +842,35 @@ body {
             await fs.writeFile(reportPath, reportHtml);
             console.log(`  Generated Report: ${reportPath}`);
         } else {
-            // Default to article
+            // Default to article (Standard Web/A)
+            console.log("  Generating Web/A Provenance VC...");
+            const plainText = cheerio.load(htmlContent).text();
+
+            const vcPayload = {
+                id: `urn:uuid:${crypto.randomUUID()}`,
+                type: ["VerifiableCredential", "WebADocument"],
+                credentialSubject: {
+                    id: `https://${SITE_DOMAIN}${SITE_PATH}/${file.replace('.md', '')}`,
+                    type: "WebADocument",
+                    name: data.title,
+                    author: data.author,
+                    date: data.date,
+                    "srn:buildId": buildId,
+                    contentDigest: crypto.createHash('sha256').update(plainText.trim()).digest('hex')
+                }
+            };
+
+            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
+            
+            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
+            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
+
             finalHtml = articleLayout(
                 data as ArticleData,
                 htmlContent,
                 fontCss,
-                safeFontFamilies
+                safeFontFamilies,
+                vc
             );
         }
 
