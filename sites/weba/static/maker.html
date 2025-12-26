@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web/A Form Maker (Refactored)</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
+    <title>Web/A Form Maker</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -168,8 +169,12 @@
 <body>
     <div class="pane" style="border-right: 1px solid #ddd;">
         <div class="pane-header">
-            <span>Markdown Definition</span>
-            <button class="primary" onclick="downloadWebA()">Download Web/A Form</button>
+            <span data-i18n="md_def">Markdown Definition</span>
+            <div>
+                <button class="primary" onclick="downloadAggregator()" style="background: #28a745; margin-right: 10px;"
+                    data-i18n="btn_aggregator">Download Web/A Aggregator</button>
+                <button class="primary" onclick="downloadWebA()" data-i18n="btn_form">Download Web/A Form</button>
+            </div>
         </div>
         <textarea id="editor" spellcheck="false" oninput="parseAndRender()"></textarea>
         <div class="syntax-help">
@@ -181,7 +186,7 @@
         </div>
     </div>
     <div class="pane">
-        <div class="pane-header">Preview</div>
+        <div class="pane-header" data-i18n="preview">Preview</div>
         <div id="preview-container">
             <div id="preview" class="preview-content"></div>
         </div>
