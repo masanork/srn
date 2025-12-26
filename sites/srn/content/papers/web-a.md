@@ -314,6 +314,27 @@ Since web standards evolve rapidly, some features (like XSLT) may face deprecati
 - **Challenge**: Reaching a consensus on which subset of HTML/CSS is "Safe for Archival" (i.e., guaranteed to work in browser engines 50+ years from now).
 - **Outlook**: Establishing a "Web/A Basic Profile" restricted to evergreen features (HTML5 Core and stable CSS). Implementation of validation tools that scan Web/A documents for long-term compatibility and provide an "Archivability Score."
 
+### 12.8. Interactive Architecture: From "Read-Only" to "Write-Once" Forms
+While the initial Web/A specification focused on static, archival documents ("Read-Only"), real-world administrative workflows require data collection ("Write"). Web/A extends its architecture to support secure, interactive forms without compromising the "Self-Contained" principle.
+
+#### 12.8.1. The 2-Layer Interactive Model
+To maintain the integrity of the original form while allowing user input, Web/A defines a clear separation of concerns:
+
+1.  **Layer 1: Signed Template (Issuer Context)**
+    *   **Role**: Defines the document structure, questions, validation logic, and calculation formulas.
+    *   **Signer**: The Issuer (e.g., Government Agency, Company).
+    *   **Properties**: **Immutable**. The template serves as the "Rule of Law" for the transaction.
+    *   **Artifact**: A `WebAFormTemplate` VC containing the hashed source of the form.
+
+2.  **Layer 2: User Input (Subject Context)**
+    *   **Role**: Contains the specific values entered by the user (answers).
+    *   **Signer**: The User (Subject/Holder) via Passkey or local private key.
+    *   **Properties**: **Binding**. The input layer includes a cryptographic digest of Layer 1, ensuring the answers are inextricably linked to the specific version of the question form.
+    *   **Artifact**: A Verifiable Presentation (VP) or a separate `WebAFormResponse` VC.
+
+#### 12.8.2. "Write-Once" Assurance
+Unlike traditional web forms where the server controls the state, Web/A Forms operate on a "Write-Once" model locally within the user's browser. Once the user signs their input (Layer 2), the combination of Layer 1 + Layer 2 becomes a new, static Web/A document that represents the **"Submitted Application"**. This artifact can be archived by the user as proof of what they submitted, independent of the server's acknowledgment.
+
 ---
 
 ## 13. Alignment with International Standardization
