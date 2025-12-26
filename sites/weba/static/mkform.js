@@ -373,7 +373,7 @@ function parseMarkdown(text) {
   if (currentTabId)
     appendHtml("</div>");
   if (tabs.length > 0) {
-    let navHtml = '<div class="tabs-nav no-print">';
+    let navHtml = '<div class="tabs-nav">';
     tabs.forEach((tab, idx) => {
       const activeClass = idx === 0 ? " active" : "";
       navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
@@ -427,7 +427,7 @@ button.primary:hover { background: #0056b3; }
 .add-row-btn:hover { background: #ddd; }
 
 /* Tab Styles */
-.tabs-nav { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; overflow-x: auto; }
+.tabs-nav { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; overflow-x: auto; overflow-y: hidden; align-items: center; }
 .tab-btn { 
     padding: 10px 20px; 
     cursor: pointer; 
@@ -631,7 +631,7 @@ function runtime() {
           el.textContent = el.value;
       }
     });
-    document.querySelectorAll("button, .no-print").forEach((el) => el.remove());
+    document.querySelectorAll("button.primary, .add-row-btn, .no-print").forEach((el) => el.remove());
     document.querySelectorAll("input, textarea, select").forEach((el) => el.setAttribute("readonly", "readonly"));
     const htmlContent = document.documentElement.outerHTML;
     const blob = new Blob([htmlContent], { type: "text/html" });
