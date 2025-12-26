@@ -1,6 +1,6 @@
 ---
 title: "Discussion Paper: Web/A - Archival-Grade Web Documents"
-layout: weba
+layout: article
 author: "Masanori Kusunoki"
 date: 2025-12-27
 ---
