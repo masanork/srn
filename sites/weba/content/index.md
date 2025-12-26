@@ -12,7 +12,7 @@ layout: article
     Markdownで定義し、配布・入力・集計までをローカルファーストで実現します。
   </p>
   <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-    <a href="./demos/web-a-maker.html" class="button primary" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Maker を試す</a>
+    <a href="./maker.html" class="button primary" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Maker を試す</a>
     <a href="./papers/web-a-form.ja.html" class="button" style="background: white; color: #333; border: 1px solid #ccc; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Whitepaper を読む</a>
   </div>
 </div>
@@ -41,7 +41,7 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🛠️ Web/A Maker</h3>
     <p>ブラウザ上で Markdown を記述し、リアルタイムにフォームをプレビュー・生成できるツールです。</p>
-    <a href="./demos/web-a-maker.html">Maker を起動 →</a>
+    <a href="./maker.html">Maker を起動 →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">

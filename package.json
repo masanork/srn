@@ -10,7 +10,7 @@
     "build": "bun run build:blog && bun run build:srn && bun run build:weba",
     "build:blog": "bun run src/index.ts --site my-blog",
     "build:srn": "bun run src/index.ts --site srn",
-    "build:weba": "bun run src/index.ts --site weba",
+    "build:weba": "bun build src/weba/browser_maker.ts --outfile sites/weba/static/mkform.js && bun run src/index.ts --site weba",
     "build:full": "bun run src/index.ts --site my-blog --clean && bun run src/index.ts --site srn --clean && bun run src/index.ts --site weba --clean",
     "dev": "bun --watch src/index.ts",
     "deploy": "bun run deploy:blog && bun run deploy:srn && bun run deploy:weba",

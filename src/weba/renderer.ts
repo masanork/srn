@@ -163,7 +163,7 @@ export const Renderers: Record<string, any> = {
     tableRow(cells: string[], isTemplate = false) {
         const tds = cells.map(cell => {
             const trimmed = cell.trim();
-            const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\)|:([^\]]+))?\]$/);
+            const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
 
             if (match) {
                 let [_, type, key, attrsParen, attrsColon] = match;

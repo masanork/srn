@@ -109,7 +109,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             if (inTable) {
                 html += '</tbody></table></div>';
                 if (currentDynamicTableKey) {
-                    html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')">+ Add Row</button>`;
+                    html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ Add Row</button>`;
                     currentDynamicTableKey = null;
                 }
                 html += '</div>';
@@ -141,7 +141,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
         // 3. Syntax: - [type:key (attrs)] Label
         else if (trimmed.startsWith('- [')) {
-            const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\))?\]\s*(.*)$/);
+            const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
 
             if (match) {
                 const [_, type, key, attrs, label] = match;
@@ -163,6 +163,11 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         else if (trimmed.startsWith('---')) {
             html += '<hr>';
             currentRadioGroup = null;
+        }
+        // HTML Passthrough for layout
+        else if (trimmed.startsWith('<')) {
+            if (currentRadioGroup) { html += '</div></div>'; currentRadioGroup = null; }
+            html += trimmed;
         }
         else if (trimmed.length > 0) {
             if (currentRadioGroup) { html += '</div></div>'; currentRadioGroup = null; }

@@ -35,6 +35,17 @@ describe("Web/A Parser", () => {
         expect(result.html).toContain('data-base-key="item"'); // template row (first one)
         expect(result.html).toContain('class="template-row"'); // Note: implementation details might vary depending on how first row is handled
     });
+
+    test("parses calc formulas containing parentheses", () => {
+        const md = `- [calc:tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] Tax
+[dynamic-table:items]
+| Item | Tax |
+|---|---|
+| [text:item] | [calc:row_tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] |`;
+        const result = parseMarkdown(md);
+        expect(result.html).toContain('data-formula="Math.floor(SUM(amount) * 0.1)"');
+        expect(result.html).toContain('data-base-key="row_tax"');
+    });
 });
 
 describe("Web/A Renderer", () => {
