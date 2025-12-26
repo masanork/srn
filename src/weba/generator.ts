@@ -541,7 +541,7 @@ function runtime() {
                     if (match) {
                         const labelVal = labelIdx >= 0 ? row[labelIdx] || '' : '';
                         const valueVal = valueIdx >= 0 ? row[valueIdx] || '' : '';
-                        const val = valueIdx >= 0 ? valueVal : (labelIdx >= 0 ? labelVal : (row[0] || ''));
+                        const val = valueIdx >= 0 ? valueVal : (labelIdx >= 0 ? labelVal : (row[1] || row[0] || ''));
                         // Score could be improved if we checked which column matched, but simple existence is enough for now
                         hits.push({ val, row, label: labelVal, score: 10, idx });
                     }
