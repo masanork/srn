@@ -170,40 +170,58 @@ function runtime() {
     }
 
     function recalculate() {
-        // console.log("Recalculating...");
         document.querySelectorAll('[data-formula]').forEach((calcField: any) => {
             const formula = calcField.dataset.formula;
             if (!formula) return;
             const row = calcField.closest('tr');
             const table = calcField.closest('table');
+            // console.log(`Calc processing: [${formula}] in row:`, row ? 'Yes' : 'No');
 
             const getValue = (varName: string) => {
+                let val = 0;
+                let foundSource = 'none';
+                let rawVal = '';
+
                 if (row) {
-                    const input = row.querySelector(`[data-base-key="${varName}"], [data-json-path="${varName}"]`) as HTMLInputElement;
-                    if (input && input.value !== '') return parseFloat(input.value);
+                    const selector = `[data-base-key="${varName}"], [data-json-path="${varName}"]`;
+                    const input = row.querySelector(selector) as HTMLInputElement;
+                    if (input) {
+                        foundSource = 'row-input';
+                        rawVal = input.value;
+                        if (input.value !== '') val = parseFloat(input.value);
+                    }
                 }
-                const staticInput = document.querySelector(`[data-json-path="${varName}"]`) as HTMLInputElement;
-                if (staticInput && staticInput.value !== '') return parseFloat(staticInput.value);
-                return 0;
+
+                if (foundSource === 'none') {
+                    const staticInput = document.querySelector(`[data-json-path="${varName}"]`) as HTMLInputElement;
+                    if (staticInput) {
+                        foundSource = 'static-input';
+                        rawVal = staticInput.value;
+                        if (staticInput.value !== '') val = parseFloat(staticInput.value);
+                    }
+                }
+
+                return val;
             };
 
-            let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_]+)\)/g, (_: any, key: string) => {
+            let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_\-\u0080-\uFFFF]+)\)/g, (_: any, key: string) => {
                 let sum = 0;
                 const scope = table || document;
-                scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`).forEach((inp: any) => {
+                const inputs = scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
+                inputs.forEach((inp: any) => {
                     const val = parseFloat(inp.value);
                     if (!isNaN(val)) sum += val;
                 });
                 return sum;
             });
 
-            evalStr = evalStr.replace(/[a-zA-Z_][a-zA-Z0-9_]*/g, (match: string) => {
+            // Match vars (non-digits/operators/paren) to replace with getValue(var)
+            evalStr = evalStr.replace(/([a-zA-Z_\u0080-\uFFFF][a-zA-Z0-9_\-\u0080-\uFFFF]*)/g, (match: string) => {
                 if (['Math', 'round', 'floor', 'ceil', 'abs', 'min', 'max'].includes(match)) return match;
                 return String(getValue(match));
             });
 
             try {
-                // console.log("Eval:", formula, "->", evalStr);
                 const result = new Function('return ' + evalStr)();
                 if (typeof result === 'number' && !isNaN(result)) {
                     calcField.value = Number.isInteger(result) ? result : result.toFixed(0);
@@ -283,7 +301,11 @@ function runtime() {
         const templateRow = tbody.querySelector('.template-row');
         if (!templateRow) return;
         const newRow = templateRow.cloneNode(true) as HTMLElement;
-        newRow.querySelectorAll('input').forEach(input => input.value = '');
+        newRow.classList.remove('template-row');
+        // Reset inputs to default value (from attribute) or empty
+        newRow.querySelectorAll('input').forEach(input => {
+            input.value = input.getAttribute('value') || '';
+        });
         tbody.appendChild(newRow);
     };
 
@@ -297,7 +319,7 @@ function runtime() {
     };
 
     let tm: any;
-    document.addEventListener('input', () => {
+    document.addEventListener('input', (e) => {
         recalculate();
         updateJsonLd();
         clearTimeout(tm); tm = setTimeout(saveToLS, 1000);
@@ -479,26 +501,20 @@ function runtime() {
                     // 2. Auto-Fill other fields
                     try {
                         const rowData = JSON.parse(item.dataset.row || '[]');
-                        console.log("Auto-Fill: rowData", rowData);
-
                         const srcKey = activeSearchInput.dataset.masterSrc;
                         // @ts-ignore
                         const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
-                        console.log("Auto-Fill: headers", masterHeaders);
 
                         if (masterHeaders.length > 0 && rowData.length > 0) {
                             const tr = activeSearchInput.closest('tr');
                             if (tr) {
                                 const inputs = Array.from(tr.querySelectorAll('input, select, textarea'));
-                                console.log("Auto-Fill: inputs in row", inputs.map((i: any) => i.dataset.baseKey || i.dataset.jsonPath));
-
                                 masterHeaders.forEach((header: string, idx: number) => {
                                     if (idx === 0) return; // Skip search key itself
                                     if (!header) return;
 
                                     const targetVal = rowData[idx];
                                     const keyMatch = normalize(header);
-                                    console.log(`Auto-Fill: checking header '${header}' (norm: '${keyMatch}') against value '${targetVal}'`);
 
                                     const targetInput = inputs.find((inp: any) => {
                                         const k = inp.dataset.baseKey || inp.dataset.jsonPath;
@@ -506,10 +522,9 @@ function runtime() {
                                     }) as HTMLInputElement;
 
                                     if (targetInput) {
-                                        console.log("Auto-Fill: Found match!", targetInput);
                                         targetInput.value = targetVal || '';
-                                    } else {
-                                        console.log("Auto-Fill: No match found for", keyMatch);
+                                        // Trigger input event for this field so calculations dependent on it update
+                                        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
                                     }
                                 });
                             }
