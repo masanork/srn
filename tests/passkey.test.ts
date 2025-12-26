@@ -2,7 +2,7 @@ import { expect, test, describe } from "bun:test";
 import { p256 } from "@noble/curves/nist.js";
 import { ml_dsa44 } from "@noble/post-quantum/ml-dsa.js";
 import canonicalize from 'canonicalize';
-import { verifyHybridVC, generateHybridKeys } from "../src/vc.ts";
+import { verifyHybridVC, generateHybridKeys } from "../src/core/vc.ts";
 
 describe("PassKey (P-256) Integration", () => {
 

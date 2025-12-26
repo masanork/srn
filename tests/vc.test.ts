@@ -6,7 +6,7 @@ import {
     createStatusListVC,
     createCoseVC,
     createSdCoseVC
-} from "../src/vc.ts";
+} from "../src/core/vc.ts";
 import { decode } from "cbor-x";
 
 describe("VC & Signing Tests", () => {

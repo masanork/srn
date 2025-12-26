@@ -4,7 +4,7 @@ import {
     createHybridVC,
     createDelegateCertificate,
     verifyDelegateChain
-} from "../src/vc.ts";
+} from "../src/core/vc.ts";
 
 describe("Delegation Chain Tests (PassKey Architecture)", () => {
 
