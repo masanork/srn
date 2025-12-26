@@ -280,7 +280,7 @@ function parseMarkdown(text) {
       if (inTable) {
         html += "</tbody></table></div>";
         if (currentDynamicTableKey) {
-          html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')">+ Add Row</button>`;
+          html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ Add Row</button>`;
           currentDynamicTableKey = null;
         }
         html += "</div>";
@@ -481,6 +481,7 @@ function runtime() {
     }
   }
   function recalculate() {
+    console.log("Recalculating...");
     document.querySelectorAll("[data-formula]").forEach((calcField) => {
       const formula = calcField.dataset.formula;
       if (!formula)
@@ -502,7 +503,9 @@ function runtime() {
         let sum = 0;
         const scope = table || document;
         scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`).forEach((inp) => {
-          sum += parseFloat(inp.value) || 0;
+          const val = parseFloat(inp.value);
+          if (!isNaN(val))
+            sum += val;
         });
         return sum;
       });
@@ -519,9 +522,28 @@ function runtime() {
           calcField.value = "";
         }
       } catch (e) {
-        console.error(e);
+        console.error("Calc Error:", e);
         calcField.value = "Err";
       }
+    });
+  }
+  function applyI18n() {
+    const RESOURCES = {
+      en: {
+        add_row: "+ Add Row",
+        save_btn: "Save"
+      },
+      ja: {
+        add_row: "+ 行を追加",
+        save_btn: "保存"
+      }
+    };
+    const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
+    const dict = RESOURCES[lang] || RESOURCES["en"];
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.dataset.i18n;
+      if (dict[key])
+        el.textContent = dict[key];
     });
   }
   function saveDocument() {
@@ -545,7 +567,12 @@ function runtime() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "form_filled.html";
+    const title = w.generatedJsonStructure && w.generatedJsonStructure.name || "web-a-form";
+    const now = new Date;
+    const dateStr = now.getFullYear() + ("0" + (now.getMonth() + 1)).slice(-2) + ("0" + now.getDate()).slice(-2) + "-" + ("0" + now.getHours()).slice(-2) + ("0" + now.getMinutes()).slice(-2);
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const filename = `${title}_${dateStr}_${randomId}.html`;
+    a.download = filename;
     a.click();
     setTimeout(() => location.reload(), 1000);
   }
@@ -572,15 +599,19 @@ function runtime() {
   });
   w.saveDocument = saveDocument;
   w.recalculate = recalculate;
+  console.log("Web/A Runtime Initialized");
   restoreFromLS();
+  applyI18n();
   recalculate();
 }
 var RUNTIME_SCRIPT = `(${runtime.toString()})();`;
 function initRuntime() {
   if (typeof window === "undefined")
     return;
-  if (window.recalculate)
+  if (window.recalculate) {
+    console.log("Runtime already loaded, skipping init");
     return;
+  }
   runtime();
 }
 function generateHtml(markdown) {
@@ -590,12 +621,13 @@ function generateHtml(markdown) {
 <head>
     <meta charset="UTF-8">
     <title>${jsonStructure.name || "Web/A Form"}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>\uD83D\uDCC4</text></svg>">
     <style>${BASE_CSS}</style>
 </head>
 <body>
     <div class="page">
         ${html}
-        <button class="primary no-print" onclick="saveDocument()">Complete & Save (Bake)</button>
+        <button class="primary no-print" onclick="saveDocument()" data-i18n="save_btn">Save</button>
     </div>
     <script type="application/ld+json" id="json-ld">
         ${JSON.stringify(jsonStructure, null, 2)}
@@ -670,7 +702,8 @@ function downloadWebA() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "web-a-form.html";
+  const title = window.generatedJsonStructure && window.generatedJsonStructure.name || "web-a-form";
+  a.download = title + ".html";
   a.click();
 }
 window.parseAndRender = updatePreview;
