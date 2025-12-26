@@ -57,6 +57,18 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         mainContentHtml += str;
     };
 
+    const processInlineTags = (text: string) => {
+        return text.replace(/\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*?)\))?\]/g, (match, type, key, attrs) => {
+            // Register field
+            const label = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+            const cleanLabel = label ? label[1] : key;
+            jsonStructure.fields.push({ key, label: cleanLabel, type: type || 'text' });
+
+            // Render inline
+            return Renderers.renderInput(type || 'text', key, attrs || '');
+        });
+    };
+
     lines.forEach((line) => {
         const trimmed = line.trim();
 
@@ -220,11 +232,11 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         // HTML Passthrough for layout
         else if (trimmed.startsWith('<')) {
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
-            appendHtml(trimmed);
+            appendHtml(processInlineTags(trimmed));
         }
         else if (trimmed.length > 0) {
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
-            appendHtml(`<p>${Renderers.escapeHtml(trimmed)}</p>`);
+            appendHtml(`<p>${Renderers.escapeHtml(processInlineTags(trimmed))}</p>`);
         } else {
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
         }

@@ -159,6 +159,55 @@ export const Renderers: Record<string, any> = {
         </div>`;
     },
 
+    renderInput(type: string, key: string, attrs: string | undefined, isTemplate: boolean = false): string {
+        const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+        const placeholder = placeholderMatch ? `placeholder="${this.escapeHtml(placeholderMatch[1])}"` : '';
+        const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
+        const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+
+        if (type === 'calc') {
+            const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
+            const formula = formulaMatch ? formulaMatch[1] : '';
+            return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+        }
+
+        if (type === 'datalist') {
+            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+            const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
+            let optionsHtml = '';
+            const srcKey = srcMatch ? srcMatch[1] : '';
+            if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
+                const data = this._context.masterData[srcKey];
+                const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
+                data.forEach((row: string[]) => {
+                    if (row.length > lIdx) {
+                        optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || '')}"></option>`;
+                    }
+                });
+            }
+            const listId = 'list_' + key + '_' + Math.floor(Math.random() * 10000);
+            return `<input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist>`;
+        }
+
+        if (type === 'search') {
+            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+            const srcKey = srcMatch ? srcMatch[1] : '';
+            const searchClass = commonClass + ' search-input';
+
+            // Note: search-suggestions are now global, no need for inner div
+            return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
+                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                    </div>`;
+        }
+
+        if (type === 'number') {
+            return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+        }
+
+        // Default text
+        return `<input type="text" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+    },
+
     tableRow(cells: string[], isTemplate = false) {
         const tds = cells.map(cell => {
             const trimmed = cell.trim();
@@ -167,64 +216,8 @@ export const Renderers: Record<string, any> = {
             if (match) {
                 let [_, type, key, attrsParen, attrsColon] = match;
                 const attrs = attrsParen || attrsColon;
-
-                const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
-                const placeholder = placeholderMatch ? `placeholder="${this.escapeHtml(placeholderMatch[1])}"` : '';
-
-                if (type === 'calc') {
-                    const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
-                    const formula = formulaMatch ? formulaMatch[1] : '';
-                    const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
-                    const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-                    return `<td><input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-                }
-
-                if (type === 'datalist') {
-                    const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
-                    const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
-                    let optionsHtml = '';
-                    const srcKey = srcMatch ? srcMatch[1] : '';
-                    if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
-                        const data = this._context.masterData[srcKey];
-                        const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
-                        data.forEach((row: string[]) => {
-                            if (row.length > lIdx) {
-                                optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || '')}"></option>`;
-                            }
-                        });
-                    }
-                    const listId = 'list_' + key + '_' + Math.floor(Math.random() * 10000);
-                    const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
-                    const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-                    return `<td><input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist></td>`;
-                }
-
-                if (type === 'search') {
-                    const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
-                    const srcKey = srcMatch ? srcMatch[1] : '';
-                    const commonClass = isTemplate ? 'form-input template-input search-input' : 'form-input search-input';
-                    const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-                    // Table search needs special handling for positioning if absolute, but simpler to use simple input then attach JS
-                    // For now, simplify structure for table
-                    return `<td>
-                        <div style="position:relative;">
-                            <input type="text" class="${commonClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
-                            <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1001;"></div>
-                        </div>
-                    </td>`;
-                }
-
-                if (type === 'number') {
-                    const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
-                    const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-                    return `<td><input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-                }
-
-                if (isTemplate) {
-                    return `<td><input type="text" class="form-input template-input" data-base-key="${key}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-                } else {
-                    return `<td><input type="text" class="form-input" data-json-path="${key}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-                }
+                const inputHtml = this.renderInput(type || 'text', key, attrs, isTemplate);
+                return `<td>${inputHtml}</td>`;
             } else {
                 return `<td>${this.escapeHtml(trimmed)}</td>`;
             }
