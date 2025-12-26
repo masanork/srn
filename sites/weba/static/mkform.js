@@ -652,11 +652,15 @@ function runtime() {
     const RESOURCES = {
       en: {
         add_row: "+ Add Row",
-        save_btn: "Save"
+        work_save_btn: "Save Draft",
+        submit_btn: "Submit",
+        clear_btn: "Clear Data"
       },
       ja: {
         add_row: "+ 行を追加",
-        save_btn: "保存"
+        work_save_btn: "作業保存",
+        submit_btn: "提出",
+        clear_btn: "クリア"
       }
     };
     const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
@@ -667,7 +671,7 @@ function runtime() {
         el.textContent = dict[key];
     });
   }
-  function saveDocument() {
+  function bakeValues() {
     updateJsonLd();
     document.querySelectorAll("input, textarea, select").forEach((el) => {
       if (el.type === "checkbox" || el.type === "radio") {
@@ -681,8 +685,8 @@ function runtime() {
           el.textContent = el.value;
       }
     });
-    document.querySelectorAll("button.primary, .add-row-btn, .no-print").forEach((el) => el.remove());
-    document.querySelectorAll("input, textarea, select").forEach((el) => el.setAttribute("readonly", "readonly"));
+  }
+  function downloadHtml(filenameSuffix, isFinal) {
     const htmlContent = document.documentElement.outerHTML;
     const blob = new Blob([htmlContent], { type: "text/html" });
     const url = URL.createObjectURL(blob);
@@ -692,11 +696,30 @@ function runtime() {
     const now = new Date;
     const dateStr = now.getFullYear() + ("0" + (now.getMonth() + 1)).slice(-2) + ("0" + now.getDate()).slice(-2) + "-" + ("0" + now.getHours()).slice(-2) + ("0" + now.getMinutes()).slice(-2);
     const randomId = Math.random().toString(36).substring(2, 8);
-    const filename = `${title}_${dateStr}_${randomId}.html`;
+    const filename = `${title}_${dateStr}_${filenameSuffix}_${randomId}.html`;
     a.download = filename;
     a.click();
-    setTimeout(() => location.reload(), 1000);
+    if (isFinal) {
+      setTimeout(() => location.reload(), 1000);
+    }
   }
+  w.saveDraft = function() {
+    bakeValues();
+    downloadHtml("draft", false);
+  };
+  w.submitDocument = function() {
+    bakeValues();
+    document.querySelectorAll("button, .add-row-btn, .no-print").forEach((el) => el.remove());
+    document.querySelectorAll("input, textarea, select").forEach((el) => el.setAttribute("readonly", "readonly"));
+    document.querySelectorAll(".search-suggestions").forEach((el) => el.remove());
+    downloadHtml("submit", true);
+  };
+  w.clearData = function() {
+    if (confirm("Clear all saved data? / 保存されたデータを削除しますか？")) {
+      localStorage.removeItem(FORM_ID);
+      location.reload();
+    }
+  };
   w.addTableRow = function(btn, tableKey) {
     const table = document.getElementById("tbl_" + tableKey);
     if (!table)
@@ -729,7 +752,6 @@ function runtime() {
     clearTimeout(tm);
     tm = setTimeout(saveToLS, 1000);
   });
-  w.saveDocument = saveDocument;
   w.recalculate = recalculate;
   w.initSearch = initSearch;
   console.log("Web/A Runtime Initialized");
@@ -998,7 +1020,11 @@ function generateHtml(markdown) {
 <body>
     <div class="page">
         ${html}
-        <button class="primary no-print" onclick="saveDocument()" data-i18n="save_btn">Save</button>
+        <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button class="primary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Draft</button>
+            <button class="primary" onclick="window.submitDocument()" style="background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
+            <button onclick="window.clearData()" style="margin-left:auto; background-color: #999;" data-i18n="clear_btn">Clear</button>
+        </div>
     </div>
     <script type="application/ld+json" id="json-ld">
         ${JSON.stringify(jsonStructure, null, 2)}
