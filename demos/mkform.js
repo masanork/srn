@@ -577,6 +577,10 @@ function runtime() {
 }
 var RUNTIME_SCRIPT = `(${runtime.toString()})();`;
 function initRuntime() {
+  if (typeof window === "undefined")
+    return;
+  if (window.recalculate)
+    return;
   runtime();
 }
 function generateHtml(markdown) {
@@ -654,7 +658,7 @@ function updatePreview() {
   const { html, jsonStructure } = parseMarkdown(editor.value);
   preview.innerHTML = html;
   window.generatedJsonStructure = jsonStructure;
-  if (!window.isRuntimeLoaded) {
+  if (!window.recalculate) {
     initRuntime();
     window.isRuntimeLoaded = true;
   }
