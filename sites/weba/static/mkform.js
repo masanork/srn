@@ -48,7 +48,7 @@ var Renderers = {
     }
     return extra;
   },
-  text(key, label, attrs) {
+  text: function(key, label, attrs) {
     const valMatch = (attrs || "").match(/val="([^"]+)"/) || (attrs || "").match(/val='([^']+)'/) || (attrs || "").match(/val=([^ ]+)/);
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
@@ -62,11 +62,11 @@ var Renderers = {
             ${hint}
         </div>`;
   },
-  number(key, label, attrs) {
+  number: function(key, label, attrs) {
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
-    const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : "";
+    const hint = hintMatch ? `<div class="form-row"><div class="form-hint">${this.formatHint(hintMatch[1])}</div></div>` : "";
     return `
         <div class="form-row">
             <label class="form-label">${this.escapeHtml(label)}</label>
@@ -74,14 +74,14 @@ var Renderers = {
             ${hint}
         </div>`;
   },
-  date(key, label, attrs) {
+  date: function(key, label, attrs) {
     return `
         <div class="form-row">
             <label class="form-label">${this.escapeHtml(label)}</label>
             <input type="date" class="form-input" data-json-path="${key}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
         </div>`;
   },
-  textarea(key, label, attrs) {
+  textarea: function(key, label, attrs) {
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
@@ -93,19 +93,19 @@ var Renderers = {
             ${hint}
         </div>`;
   },
-  radioStart(key, label, attrs) {
+  radioStart: function(key, label, attrs) {
     return `
         <div class="form-row vertical" style="${this.getStyle(attrs)}">
             <label class="form-label">${this.escapeHtml(label)}</label>
             <div class="radio-group" style="padding-left: 10px;">`;
   },
-  radioOption(name, val, label, checked) {
+  radioOption: function(name, val, label, checked) {
     return `
             <label style="display:block; margin-bottom:5px;">
                 <input type="radio" name="${name}" value="${this.escapeHtml(val)}" ${checked ? "checked" : ""}> ${this.escapeHtml(label)}
             </label>`;
   },
-  calc(key, label, attrs) {
+  calc: function(key, label, attrs) {
     const formulaMatch = (attrs || "").match(/formula="([^"]+)"/) || (attrs || "").match(/formula='([^']+)'/);
     const formula = formulaMatch ? formulaMatch[1] : "";
     return `
@@ -114,20 +114,24 @@ var Renderers = {
             <input type="text" readonly class="form-input" data-json-path="${key}" data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
         </div>`;
   },
-  search(key, label, attrs) {
+  search: function(key, label, attrs) {
     const srcMatch = (attrs || "").match(/src:([^\s)]+)/);
+    const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
+    const valueIndexMatch = (attrs || "").match(/value:(\d+)/);
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const srcKey = srcMatch ? srcMatch[1] : "";
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
     const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : "";
+    const labelIndexAttr = labelIndexMatch ? ` data-master-label-index="${labelIndexMatch[1]}"` : "";
+    const valueIndexAttr = valueIndexMatch ? ` data-master-value-index="${valueIndexMatch[1]}"` : "";
     return `
         <div class="form-row autocomplete-container" style="position:relative; z-index:100;">
             <label class="form-label">${this.escapeHtml(label)}</label>
             <div style="flex:1; position:relative;">
                 <input type="text" class="form-input search-input" autocomplete="off" 
                     data-json-path="${key}" 
-                    data-master-src="${srcKey}"
+                    data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr}
                     placeholder="${this.escapeHtml(placeholder)}" 
                     style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
                 <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:0 0 4px 4px; z-index:1001;"></div>
@@ -164,10 +168,14 @@ var Renderers = {
     }
     if (type === "search") {
       const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
+      const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
+      const valueIndexMatch = (attrs || "").match(/value:(\d+)/);
       const srcKey = srcMatch ? srcMatch[1] : "";
+      const labelIndexAttr = labelIndexMatch ? ` data-master-label-index="${labelIndexMatch[1]}"` : "";
+      const valueIndexAttr = valueIndexMatch ? ` data-master-value-index="${valueIndexMatch[1]}"` : "";
       const searchClass = commonClass + " search-input";
       return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
-                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
                     </div>`;
     }
     if (type === "number") {
@@ -357,10 +365,24 @@ function parseMarkdown(text) {
         if (type === "radio") {
           currentRadioGroup = { key, label: cleanLabel, attrs };
           appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
-        } else if (Renderers[type]) {
+        } else if (type === "text")
+          appendHtml(Renderers.text(key, cleanLabel, attrs));
+        else if (type === "number")
+          appendHtml(Renderers.number(key, cleanLabel, attrs));
+        else if (type === "date")
+          appendHtml(Renderers.date(key, cleanLabel, attrs));
+        else if (type === "textarea")
+          appendHtml(Renderers.textarea(key, cleanLabel, attrs));
+        else if (type === "search")
+          appendHtml(Renderers.search(key, cleanLabel, attrs));
+        else if (type === "calc")
+          appendHtml(Renderers.calc(key, cleanLabel, attrs));
+        else if (type === "datalist")
+          appendHtml(Renderers.renderInput(type, key, attrs));
+        else if (Renderers[type]) {
           appendHtml(Renderers[type](key, cleanLabel, attrs));
         } else {
-          console.warn(`Renderers keys available:`, Object.keys(Renderers));
+          console.warn(`Unknown type: ${type}`, Object.keys(Renderers));
           appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
         }
       }
@@ -743,6 +765,10 @@ function runtime() {
       n = n.replace(/(\(株\)|\(有\)|\(同\))/g, "");
       return n.trim();
     };
+    const toIndex = (raw) => {
+      const parsed = parseInt(raw || "", 10);
+      return Number.isFinite(parsed) ? parsed - 1 : -1;
+    };
     const getScore = (query, targetParsed, targetOriginal) => {
       const q = clean(query);
       const t = clean(targetParsed);
@@ -801,6 +827,8 @@ function runtime() {
         const srcKey = input.dataset.masterSrc;
         if (!srcKey)
           return;
+        const labelIdx = toIndex(input.dataset.masterLabelIndex);
+        const valueIdx = toIndex(input.dataset.masterValueIndex);
         const query = input.value;
         if (!query) {
           hideSuggestions();
@@ -822,8 +850,10 @@ function runtime() {
             return normalize(col || "").includes(normQuery);
           });
           if (match) {
-            const val = row[0] || "";
-            hits.push({ val, row, score: 10, idx });
+            const labelVal = labelIdx >= 0 ? row[labelIdx] || "" : "";
+            const valueVal = valueIdx >= 0 ? row[valueIdx] || "" : "";
+            const val = valueIdx >= 0 ? valueVal : labelIdx >= 0 ? labelVal : row[0] || "";
+            hits.push({ val, row, label: labelVal, score: 10, idx });
           }
         });
         console.log(`Search: Found ${hits.length} matches for '${query}' (norm: '${normQuery}') in '${srcKey}'`);
@@ -833,7 +863,7 @@ function runtime() {
           let html = "";
           topHits.forEach((h) => {
             const rowJson = w.escapeHtml(JSON.stringify(h.row));
-            const displayLabel = h.row.join(" : ");
+            const displayLabel = labelIdx >= 0 ? h.label || h.row.join(" : ") : h.row.join(" : ");
             html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(displayLabel)}</div>`;
           });
           const box = getGlobalBox();
@@ -868,7 +898,8 @@ function runtime() {
       if (e.target.classList.contains("suggestion-item")) {
         const item = e.target;
         if (activeSearchInput) {
-          activeSearchInput.value = item.dataset.val;
+          let searchInputFilled = false;
+          const originalVal = item.dataset.val;
           try {
             const rowData = JSON.parse(item.dataset.row || "[]");
             console.log("Auto-Fill: Selected Row:", rowData);
@@ -881,8 +912,6 @@ function runtime() {
                 const inputs = Array.from(tr.querySelectorAll("input, select, textarea"));
                 console.log("Auto-Fill: Inputs in Form Row:", inputs.map((i) => i.dataset.baseKey || i.dataset.jsonPath));
                 masterHeaders.forEach((header, idx) => {
-                  if (idx === 0)
-                    return;
                   if (!header)
                     return;
                   const targetVal = rowData[idx];
@@ -890,10 +919,31 @@ function runtime() {
                   console.log(`Auto-Fill: Checking '${header}' (norm: '${keyMatch}') against inputs...`);
                   const targetInput = inputs.find((inp) => {
                     const k = inp.dataset.baseKey || inp.dataset.jsonPath;
-                    if (k && normalize(k) === keyMatch)
-                      return true;
+                    let labelText = "";
+                    const td = inp.closest("td");
+                    if (td) {
+                      const tr2 = td.parentElement;
+                      const index = Array.from(tr2.children).indexOf(td);
+                      const table = tr2.closest("table");
+                      if (table) {
+                        const th = table.querySelectorAll("thead th")[index] || table.querySelectorAll("tr:first-child th")[index];
+                        if (th)
+                          labelText = normalize(th.textContent || "");
+                      }
+                    } else {
+                      const rowDiv = inp.closest(".form-row");
+                      if (rowDiv) {
+                        const labelEl = rowDiv.querySelector(".form-label");
+                        if (labelEl)
+                          labelText = normalize(labelEl.textContent || "");
+                      }
+                    }
                     const ph = normalize(inp.getAttribute("placeholder") || "");
-                    if (ph === keyMatch)
+                    const matchKey = k && normalize(k) === keyMatch;
+                    const matchPh = ph === keyMatch;
+                    const matchLabel = labelText === keyMatch;
+                    if (header === "ベンダー名" || header === "区") {}
+                    if (matchKey || matchPh || matchLabel)
                       return true;
                     return false;
                   });
@@ -901,6 +951,10 @@ function runtime() {
                     console.log(`Auto-Fill: Match found for '${header}' -> Filling '${targetVal}'`);
                     targetInput.value = targetVal || "";
                     targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+                    if (targetInput === activeSearchInput) {
+                      searchInputFilled = true;
+                      console.log("Auto-Fill: Search input itself was filled via mapping.");
+                    }
                   } else {
                     console.log(`Auto-Fill: No match for '${header}'`);
                   }
@@ -910,7 +964,10 @@ function runtime() {
           } catch (err) {
             console.error("Auto-fill error", err);
           }
-          activeSearchInput.dispatchEvent(new Event("input", { bubbles: true }));
+          if (!searchInputFilled) {
+            activeSearchInput.value = originalVal || "";
+            activeSearchInput.dispatchEvent(new Event("input", { bubbles: true }));
+          }
           hideSuggestions();
         }
       }

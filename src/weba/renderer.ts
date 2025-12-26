@@ -57,7 +57,7 @@ export const Renderers: Record<string, any> = {
 
     // --- Component Renderers ---
 
-    text(key: string, label: string, attrs: string | undefined) {
+    'text': function (key: string, label: string, attrs: string | undefined) {
         const valMatch = (attrs || '').match(/val="([^"]+)"/) || (attrs || '').match(/val='([^']+)'/) || (attrs || '').match(/val=([^ ]+)/);
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
@@ -74,12 +74,12 @@ export const Renderers: Record<string, any> = {
         </div>`;
     },
 
-    number(key: string, label: string, attrs: string | undefined) {
+    'number': function (key: string, label: string, attrs: string | undefined) {
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
+        const hint = hintMatch ? `<div class="form-row"><div class="form-hint">${this.formatHint(hintMatch[1])}</div></div>` : '';
 
         return `
         <div class="form-row">
@@ -89,7 +89,7 @@ export const Renderers: Record<string, any> = {
         </div>`;
     },
 
-    date(key: string, label: string, attrs: string | undefined) {
+    'date': function (key: string, label: string, attrs: string | undefined) {
         return `
         <div class="form-row">
             <label class="form-label">${this.escapeHtml(label)}</label>
@@ -97,7 +97,7 @@ export const Renderers: Record<string, any> = {
         </div>`;
     },
 
-    textarea(key: string, label: string, attrs: string | undefined) {
+    'textarea': function (key: string, label: string, attrs: string | undefined) {
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
@@ -111,21 +111,21 @@ export const Renderers: Record<string, any> = {
         </div>`;
     },
 
-    radioStart(key: string, label: string, attrs: string | undefined) {
+    'radioStart': function (key: string, label: string, attrs: string | undefined) {
         return `
         <div class="form-row vertical" style="${this.getStyle(attrs)}">
             <label class="form-label">${this.escapeHtml(label)}</label>
             <div class="radio-group" style="padding-left: 10px;">`;
     },
 
-    radioOption(name: string, val: string, label: string, checked: boolean) {
+    'radioOption': function (name: string, val: string, label: string, checked: boolean) {
         return `
             <label style="display:block; margin-bottom:5px;">
                 <input type="radio" name="${name}" value="${this.escapeHtml(val)}" ${checked ? 'checked' : ''}> ${this.escapeHtml(label)}
             </label>`;
     },
 
-    calc(key: string, label: string, attrs: string | undefined) {
+    'calc': function (key: string, label: string, attrs: string | undefined) {
         const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
         const formula = formulaMatch ? formulaMatch[1] : '';
         return `
@@ -135,7 +135,7 @@ export const Renderers: Record<string, any> = {
         </div>`;
     },
 
-    search(key: string, label: string, attrs: string | undefined) {
+    'search': function (key: string, label: string, attrs: string | undefined) {
         // Allow dots, slashes, colons, etc. in src key. Stop at space or closing paren.
         const srcMatch = (attrs || '').match(/src:([^\s)]+)/);
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
