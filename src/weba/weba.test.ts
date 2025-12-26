@@ -59,6 +59,23 @@ describe("Web/A Renderer", () => {
         expect(row).toContain('data-base-key="foo"');
         expect(row).toContain('class="template-row"');
     });
+
+    test("renders search input with suggest:column", () => {
+        const html = Renderers.renderInput('search', 's1', 'src:m suggest:column');
+        expect(html).toContain('data-master-src="m"');
+        expect(html).toContain('data-suggest-source="column"');
+    });
+
+    test("renders input with auto-copy attribute", () => {
+        const html = Renderers.renderInput('text', 't1', 'copy:src_key');
+        expect(html).toContain('data-copy-from="src_key"');
+        expect(html).toContain('background-color: #ffffea');
+    });
+
+    test("renders number input with default right alignment", () => {
+        const html = Renderers.renderInput('number', 'n1', '');
+        expect(html).toContain('text-align:right');
+    });
 });
 
 describe("Web/A Generator", () => {

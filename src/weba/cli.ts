@@ -9,6 +9,10 @@ if (args.length === 0) {
 }
 
 const inputFile = args[0];
+if (!inputFile) {
+    console.error('No input file specified.');
+    process.exit(1);
+}
 try {
     const markdown = readFileSync(inputFile, 'utf-8');
     const html = generateHtml(markdown);

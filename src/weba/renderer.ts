@@ -232,6 +232,11 @@ export const Renderers: Record<string, any> = {
             return `<input type="checkbox" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
         }
 
+        if (type === 'autonum') {
+            const classList = commonClass + ' auto-num';
+            return `<input type="number" readonly class="${classList}" ${dataAttr} style="background:transparent; border:none; text-align:center; width:100%; font-weight:bold; cursor:default; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+        }
+
         // Default text
         let suggestAttr = '';
         let suggestClass = '';
