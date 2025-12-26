@@ -2,11 +2,18 @@
 title: "Discussion Paper: Web/A - Archival-Grade Web Documents"
 layout: weba
 author: "Masanori Kusunoki"
+date: 2025-12-27
 ---
 
 # Web/A: A Portable, Machine-Readable, and Long-Term Archival Web Document Format
 
 [日本語版 (Japanese version)](./web-a.ja.html)
+
+**Date:** December 27, 2025
+
+### Revision History
+- **2025-12-24**: Initial Draft (v1.0)
+- **2025-12-27**: Expanded to 3-Layer Trust Architecture to support interactive forms (v1.1)
 
 ## 1. Abstract
 This paper proposes **Web/A**, a specification for archival-grade web documents. While PDF/A is widely used for long-term visual preservation, it often becomes a "data silo" where structure and semantic meaning are difficult to extract. Web/A leverages standard web technologies—HTML5, CSS, and JSON-LD—to create a format that is universally readable by humans and machines, portable as a single file, and digitally verifiable.
