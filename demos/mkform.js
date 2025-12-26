@@ -489,7 +489,7 @@ function runtime() {
       const table = calcField.closest("table");
       const getValue = (varName) => {
         if (row) {
-          const input = row.querySelector(`[data-base-key="${varName}"]`);
+          const input = row.querySelector(`[data-base-key="${varName}"], [data-json-path="${varName}"]`);
           if (input && input.value !== "")
             return parseFloat(input.value);
         }
@@ -501,7 +501,7 @@ function runtime() {
       let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_]+)\)/g, (_, key) => {
         let sum = 0;
         const scope = table || document;
-        scope.querySelectorAll(`[data-base-key="${key}"]`).forEach((inp) => {
+        scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`).forEach((inp) => {
           sum += parseFloat(inp.value) || 0;
         });
         return sum;
