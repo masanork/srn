@@ -190,7 +190,7 @@ var Renderers = {
 };
 
 // src/weba/parser.ts
-function parseMarkdown2(text) {
+function parseMarkdown(text) {
   const lines = text.split(`
 `);
   let html = "";
@@ -589,7 +589,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 `;
 function generateHtml(markdown) {
-  const { html, jsonStructure } = parseMarkdown2(markdown);
+  const { html, jsonStructure } = parseMarkdown(markdown);
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -660,7 +660,16 @@ function updatePreview() {
   const { html, jsonStructure } = parseMarkdown(editor.value);
   preview.innerHTML = html;
   window.generatedJsonStructure = jsonStructure;
-  setTimeout(() => {}, 100);
+  if (!window.isRuntimeLoaded) {
+    const script = document.createElement("script");
+    script.textContent = RUNTIME_SCRIPT;
+    document.body.appendChild(script);
+    window.isRuntimeLoaded = true;
+  }
+  setTimeout(() => {
+    if (window.recalculate)
+      window.recalculate();
+  }, 50);
 }
 function downloadWebA() {
   const editor = document.getElementById("editor");
