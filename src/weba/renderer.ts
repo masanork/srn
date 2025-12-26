@@ -136,7 +136,7 @@ export const Renderers: Record<string, any> = {
     },
 
     search(key: string, label: string, attrs: string | undefined) {
-        const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+        const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
@@ -172,7 +172,7 @@ export const Renderers: Record<string, any> = {
         }
 
         if (type === 'datalist') {
-            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
             const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
             let optionsHtml = '';
             const srcKey = srcMatch ? srcMatch[1] : '';
@@ -190,7 +190,7 @@ export const Renderers: Record<string, any> = {
         }
 
         if (type === 'search') {
-            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
             const srcKey = srcMatch ? srcMatch[1] : '';
             const searchClass = commonClass + ' search-input';
 
@@ -211,7 +211,7 @@ export const Renderers: Record<string, any> = {
     tableRow(cells: string[], isTemplate = false) {
         const tds = cells.map(cell => {
             const trimmed = cell.trim();
-            const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+            const match = trimmed.match(/^\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
 
             if (match) {
                 let [_, type, key, attrsParen, attrsColon] = match;

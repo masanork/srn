@@ -115,7 +115,7 @@ var Renderers = {
         </div>`;
   },
   search(key, label, attrs) {
-    const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
+    const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const srcKey = srcMatch ? srcMatch[1] : "";
@@ -146,7 +146,7 @@ var Renderers = {
       return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
     }
     if (type === "datalist") {
-      const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
+      const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
       const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
       let optionsHtml = "";
       const srcKey = srcMatch ? srcMatch[1] : "";
@@ -163,7 +163,7 @@ var Renderers = {
       return `<input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist>`;
     }
     if (type === "search") {
-      const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
+      const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
       const srcKey = srcMatch ? srcMatch[1] : "";
       const searchClass = commonClass + " search-input";
       return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
@@ -178,7 +178,7 @@ var Renderers = {
   tableRow(cells, isTemplate = false) {
     const tds = cells.map((cell) => {
       const trimmed = cell.trim();
-      const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+      const match = trimmed.match(/^\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
       if (match) {
         let [_, type, key, attrsParen, attrsColon] = match;
         const attrs = attrsParen || attrsColon;
@@ -203,7 +203,7 @@ function parseMarkdown(text) {
   let scanMasterKey = null;
   lines.forEach((line) => {
     const t = line.trim();
-    const masterMatch = t.match(/^\[master:([a-zA-Z0-9_]+)\]$/);
+    const masterMatch = t.match(/^\[master:([^\]]+)\]$/);
     if (masterMatch) {
       scanMasterKey = masterMatch[1];
       masterData[scanMasterKey] = [];
@@ -214,7 +214,7 @@ function parseMarkdown(text) {
       if (t.startsWith("|")) {
         const cells = t.split("|").slice(1, -1).map((c) => c.trim());
         const isSep = cells.every((c) => c.match(/^-+$/));
-        if (!isSep) {
+        if (!isSep && scanMasterKey && masterData[scanMasterKey]) {
           masterData[scanMasterKey].push(cells);
         }
       } else {
@@ -239,7 +239,7 @@ function parseMarkdown(text) {
     mainContentHtml += str;
   };
   const processInlineTags = (text2) => {
-    return text2.replace(/\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*?)\))?\]/g, (match, type, key, attrs) => {
+    return text2.replace(/\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/g, (match, type, key, attrs) => {
       const label = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
       const cleanLabel = label ? label[1] : key;
       jsonStructure.fields.push({ key, label: cleanLabel, type: type || "text" });
@@ -248,12 +248,12 @@ function parseMarkdown(text) {
   };
   lines.forEach((line) => {
     const trimmed = line.trim();
-    const masterMatch = trimmed.match(/^\[master:([a-zA-Z0-9_]+)\]$/);
+    const masterMatch = trimmed.match(/^\[master:([^\]]+)\]$/);
     if (masterMatch) {
       currentMasterKey = masterMatch[1];
       return;
     }
-    const dynTableMatch = trimmed.match(/^\[dynamic-table:([a-zA-Z0-9_]+)\]$/);
+    const dynTableMatch = trimmed.match(/^\[dynamic-table:([^\]]+)\]$/);
     if (dynTableMatch) {
       currentDynamicTableKey = dynTableMatch[1];
       jsonStructure.tables[currentDynamicTableKey] = [];
@@ -287,7 +287,7 @@ function parseMarkdown(text) {
           } else {
             const tableKey = currentDynamicTableKey;
             cells.forEach((cell) => {
-              const match = cell.trim().match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+              const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
               if (match) {
                 const [_, type, key, attrsParen, attrsColon] = match;
                 const attrs = attrsParen || attrsColon;
@@ -350,7 +350,7 @@ function parseMarkdown(text) {
         appendHtml(Renderers.radioOption(currentRadioGroup.key, label, label, checked));
       }
     } else if (trimmed.startsWith("- [")) {
-      const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
+      const match = trimmed.match(/^-\s*\[([a-z]+):([^\]\s:\(\)]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
       if (match) {
         const [_, type, key, attrs, label] = match;
         currentRadioGroup = null;
@@ -359,8 +359,11 @@ function parseMarkdown(text) {
         if (type === "radio") {
           currentRadioGroup = { key, label: cleanLabel, attrs };
           appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
-        } else if (Renderers[type]) {
-          appendHtml(Renderers[type](key, cleanLabel, attrs));
+          if (typeof Renderers[type] === "function") {
+            appendHtml(Renderers[type](key, cleanLabel, attrs));
+          } else {
+            appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
+          }
         } else {
           appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
         }
@@ -582,27 +585,42 @@ function runtime() {
       const row = calcField.closest("tr");
       const table = calcField.closest("table");
       const getValue = (varName) => {
+        let val = 0;
+        let foundSource = "none";
+        let rawVal = "";
         if (row) {
-          const input = row.querySelector(`[data-base-key="${varName}"], [data-json-path="${varName}"]`);
-          if (input && input.value !== "")
-            return parseFloat(input.value);
+          const selector = `[data-base-key="${varName}"], [data-json-path="${varName}"]`;
+          const input = row.querySelector(selector);
+          if (input) {
+            foundSource = "row-input";
+            rawVal = input.value;
+            if (input.value !== "")
+              val = parseFloat(input.value);
+          }
         }
-        const staticInput = document.querySelector(`[data-json-path="${varName}"]`);
-        if (staticInput && staticInput.value !== "")
-          return parseFloat(staticInput.value);
-        return 0;
+        if (foundSource === "none") {
+          const staticInput = document.querySelector(`[data-json-path="${varName}"]`);
+          if (staticInput) {
+            foundSource = "static-input";
+            rawVal = staticInput.value;
+            if (staticInput.value !== "")
+              val = parseFloat(staticInput.value);
+          }
+        }
+        return val;
       };
-      let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_]+)\)/g, (_, key) => {
+      let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_\-\u0080-\uFFFF]+)\)/g, (_, key) => {
         let sum = 0;
         const scope = table || document;
-        scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`).forEach((inp) => {
+        const inputs = scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`);
+        inputs.forEach((inp) => {
           const val = parseFloat(inp.value);
           if (!isNaN(val))
             sum += val;
         });
         return sum;
       });
-      evalStr = evalStr.replace(/[a-zA-Z_][a-zA-Z0-9_]*/g, (match) => {
+      evalStr = evalStr.replace(/([a-zA-Z_\u0080-\uFFFF][a-zA-Z0-9_\-\u0080-\uFFFF]*)/g, (match) => {
         if (["Math", "round", "floor", "ceil", "abs", "min", "max"].includes(match))
           return match;
         return String(getValue(match));
@@ -680,7 +698,10 @@ function runtime() {
     if (!templateRow)
       return;
     const newRow = templateRow.cloneNode(true);
-    newRow.querySelectorAll("input").forEach((input) => input.value = "");
+    newRow.classList.remove("template-row");
+    newRow.querySelectorAll("input").forEach((input) => {
+      input.value = input.getAttribute("value") || "";
+    });
     tbody.appendChild(newRow);
   };
   w.switchTab = function(btn, tabId) {
@@ -692,7 +713,7 @@ function runtime() {
       content.classList.add("active");
   };
   let tm;
-  document.addEventListener("input", () => {
+  document.addEventListener("input", (e) => {
     recalculate();
     updateJsonLd();
     clearTimeout(tm);
@@ -839,15 +860,12 @@ function runtime() {
           activeSearchInput.value = item.dataset.val;
           try {
             const rowData = JSON.parse(item.dataset.row || "[]");
-            console.log("Auto-Fill: rowData", rowData);
             const srcKey = activeSearchInput.dataset.masterSrc;
             const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
-            console.log("Auto-Fill: headers", masterHeaders);
             if (masterHeaders.length > 0 && rowData.length > 0) {
               const tr = activeSearchInput.closest("tr");
               if (tr) {
                 const inputs = Array.from(tr.querySelectorAll("input, select, textarea"));
-                console.log("Auto-Fill: inputs in row", inputs.map((i) => i.dataset.baseKey || i.dataset.jsonPath));
                 masterHeaders.forEach((header, idx) => {
                   if (idx === 0)
                     return;
@@ -855,16 +873,13 @@ function runtime() {
                     return;
                   const targetVal = rowData[idx];
                   const keyMatch = normalize(header);
-                  console.log(`Auto-Fill: checking header '${header}' (norm: '${keyMatch}') against value '${targetVal}'`);
                   const targetInput = inputs.find((inp) => {
                     const k = inp.dataset.baseKey || inp.dataset.jsonPath;
                     return k && normalize(k) === keyMatch;
                   });
                   if (targetInput) {
-                    console.log("Auto-Fill: Found match!", targetInput);
                     targetInput.value = targetVal || "";
-                  } else {
-                    console.log("Auto-Fill: No match found for", keyMatch);
+                    targetInput.dispatchEvent(new Event("input", { bubbles: true }));
                   }
                 });
               }
@@ -1065,7 +1080,7 @@ function generateAggregatorHtml(markdown) {
 }
 
 // src/weba/sample.ts
-var DEFAULT_MARKDOWN = `# Simple Search & Calc Test
+var DEFAULT_MARKDOWN_EN = `# Simple Search & Calc Test
 ---
 
 ## 1. Master Data Definition
@@ -1091,10 +1106,37 @@ We want to verify:
 [dynamic-table:items]
 | Product (Search) | Unit Price | Qty | Total |
 |---|---|---|---|
-| [search:item_name (src:products placeholder="Search fruit...")] | [number:price (placeholder="0")] | [number:qty (placeholder="1")] | [calc:amount (formula="price * qty")] |
+| [search:item_name (src:products placeholder="Search fruit...")] | [number:price (placeholder="0")] | [number:qty (placeholder="1" val="1")] | [calc:amount (formula="price * qty")] |
 
 <div style="text-align: right; margin-top: 10px;">
   <b>Grand Total:</b> [calc:grand_total (formula="SUM(amount)" size:L bold)]
+</div>
+`;
+var DEFAULT_MARKDOWN_JA = `# 請求書（サンプル）
+---
+
+## 1. マスタ定義
+(画面には表示されませんが、検索候補として使用されます)
+
+[master:商品]
+| 商品名 | 単価 |
+|---|---|
+| りんご | 100 |
+| バナナ | 200 |
+| みかん | 150 |
+| 高級メロン | 5000 |
+
+---
+
+## 2. 入力フォーム
+
+[dynamic-table:items]
+| 商品名 (検索) | 単価 | 数量 | 小計 |
+|---|---|---|---|
+| [search:商品名 (src:商品 placeholder="商品を検索")] | [number:単価 (placeholder="0")] | [number:数量 (placeholder="1" val="1")] | [calc:小計 (formula="単価 * 数量")] |
+
+<div style="text-align: right; margin-top: 10px;">
+  <b>合計金額:</b> [calc:総合計 (formula="SUM(小計)" size:L bold)]
 </div>
 `;
 
@@ -1113,8 +1155,11 @@ function updatePreview() {
     window.isRuntimeLoaded = true;
   }
   setTimeout(() => {
-    if (window.recalculate)
+    if (window.recalculate) {
+      if (window.initSearch)
+        window.initSearch();
       window.recalculate();
+    }
   }, 50);
 }
 function downloadWebA() {
@@ -1169,7 +1214,15 @@ window.addEventListener("DOMContentLoaded", () => {
   applyI18n();
   const editor = document.getElementById("editor");
   if (editor) {
-    editor.value = DEFAULT_MARKDOWN;
+    const navLang = navigator.language || "en";
+    const lang = navLang.startsWith("ja") ? "ja" : "en";
+    console.log(`Language detection: navigator.language='${navLang}' -> using '${lang}' sample.`);
+    const currentVal = editor.value.trim();
+    const isDefaultEn = currentVal === DEFAULT_MARKDOWN_EN.trim();
+    const isDefaultJa = currentVal === DEFAULT_MARKDOWN_JA.trim();
+    if (!currentVal || lang === "ja" && isDefaultEn || lang === "en" && isDefaultJa) {
+      editor.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
+    }
     updatePreview();
   }
 });

@@ -14,7 +14,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
     lines.forEach(line => {
         const t = line.trim();
-        const masterMatch = t.match(/^\[master:([a-zA-Z0-9_]+)\]$/);
+        const masterMatch = t.match(/^\[master:([^\]]+)\]$/);
         if (masterMatch) {
             scanMasterKey = masterMatch[1];
             masterData[scanMasterKey] = [];
@@ -25,7 +25,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             if (t.startsWith('|')) {
                 const cells = t.split('|').slice(1, -1).map(c => c.trim());
                 const isSep = cells.every(c => c.match(/^-+$/));
-                if (!isSep) {
+                if (!isSep && scanMasterKey && masterData[scanMasterKey]) {
                     masterData[scanMasterKey].push(cells);
                 }
             } else {
@@ -58,7 +58,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     };
 
     const processInlineTags = (text: string) => {
-        return text.replace(/\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*?)\))?\]/g, (match, type, key, attrs) => {
+        return text.replace(/\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/g, (match, type, key, attrs) => {
             // Register field
             const label = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
             const cleanLabel = label ? label[1] : key;
@@ -72,14 +72,14 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     lines.forEach((line) => {
         const trimmed = line.trim();
 
-        // 0a. Master Table Marker
-        const masterMatch = trimmed.match(/^\[master:([a-zA-Z0-9_]+)\]$/);
+        // 0a. Master Table Marker (Allow unicode keys)
+        const masterMatch = trimmed.match(/^\[master:([^\]]+)\]$/);
         if (masterMatch) {
             currentMasterKey = masterMatch[1];
             return;
         }
 
-        const dynTableMatch = trimmed.match(/^\[dynamic-table:([a-zA-Z0-9_]+)\]$/);
+        const dynTableMatch = trimmed.match(/^\[dynamic-table:([^\]]+)\]$/);
         if (dynTableMatch) {
             currentDynamicTableKey = dynTableMatch[1];
             jsonStructure.tables[currentDynamicTableKey] = [];
@@ -121,7 +121,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                         // Extract schema
                         const tableKey = currentDynamicTableKey!;
                         cells.forEach(cell => {
-                            const match = cell.trim().match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+                            const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
                             if (match) {
                                 const [_, type, key, attrsParen, attrsColon] = match;
                                 const attrs = attrsParen || attrsColon;
@@ -202,7 +202,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
         // 3. Syntax: - [type:key (attrs)] Label
         else if (trimmed.startsWith('- [')) {
-            const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
+            const match = trimmed.match(/^-\s*\[([a-z]+):([^\]\s:\(\)]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
 
             if (match) {
                 const [_, type, key, attrs, label] = match;
@@ -215,9 +215,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     currentRadioGroup = { key, label: cleanLabel, attrs };
                     // @ts-ignore
                     appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
-                } else if (Renderers[type]) {
                     // @ts-ignore
-                    appendHtml(Renderers[type](key, cleanLabel, attrs));
+                    if (typeof Renderers[type] === 'function') {
+                        // @ts-ignore
+                        appendHtml(Renderers[type](key, cleanLabel, attrs));
+                    } else {
+                        appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
+                    }
                 } else {
                     appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
                 }

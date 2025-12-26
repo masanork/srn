@@ -11,11 +11,12 @@ declare global {
         generatedJsonStructure: any;
         isRuntimeLoaded: boolean;
         recalculate: (() => void) | undefined;
+        initSearch: (() => void) | undefined;
         addTableRow: ((btn: HTMLButtonElement, tableKey: string) => void) | undefined;
     }
 }
 
-import { DEFAULT_MARKDOWN } from './sample';
+import { DEFAULT_MARKDOWN_EN, DEFAULT_MARKDOWN_JA } from './sample';
 
 function updatePreview() {
     console.log("Web/A Maker v2.3");
@@ -38,7 +39,10 @@ function updatePreview() {
 
     // Trigger recalculate manually since DOMContentLoaded already fired
     setTimeout(() => {
-        if (window.recalculate) window.recalculate();
+        if (window.recalculate) {
+            if (window.initSearch) window.initSearch(); // Re-bind search
+            window.recalculate();
+        }
     }, 50);
 }
 
@@ -106,7 +110,20 @@ window.addEventListener('DOMContentLoaded', () => {
     applyI18n();
     const editor = document.getElementById('editor') as HTMLTextAreaElement;
     if (editor) {
-        editor.value = DEFAULT_MARKDOWN;
+        const navLang = navigator.language || 'en';
+        const lang = navLang.startsWith('ja') ? 'ja' : 'en';
+        console.log(`Language detection: navigator.language='${navLang}' -> using '${lang}' sample.`);
+
+        const currentVal = editor.value.trim();
+        const isDefaultEn = currentVal === DEFAULT_MARKDOWN_EN.trim();
+        const isDefaultJa = currentVal === DEFAULT_MARKDOWN_JA.trim();
+
+        // If empty, or if it matches the OTHER language's default, switch it.
+        // This overrides browser form restore if the user hasn't made custom edits (assumed by matching default).
+        if (!currentVal || (lang === 'ja' && isDefaultEn) || (lang === 'en' && isDefaultJa)) {
+            editor.value = lang === 'ja' ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
+        }
+
         updatePreview();
     }
 });
