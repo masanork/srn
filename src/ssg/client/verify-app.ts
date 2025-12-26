@@ -1,5 +1,5 @@
 
-import { verifyHybridVC } from '../vc.ts';
+import { verifyHybridVC } from '../../core/vc.ts';
 
 // Main entry point for browser-side verification
 document.addEventListener('DOMContentLoaded', () => {
