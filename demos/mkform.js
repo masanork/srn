@@ -472,7 +472,7 @@ function restoreFromLS() {
                         tbody.appendChild(row);
                     }
                     if(row) {
-                        row.querySelectorAll('input, select').forEach((input: any) => {
+                        row.querySelectorAll('input, select').forEach((input) => {
                              const k = input.dataset.baseKey;
                              if(k && rowData[k] !== undefined) input.value = rowData[k];
                         });
@@ -484,7 +484,7 @@ function restoreFromLS() {
 }
 
 function recalculate() {
-    document.querySelectorAll('[data-formula]').forEach((calcField: any) => {
+    document.querySelectorAll('[data-formula]').forEach((calcField) => {
         const formula = calcField.dataset.formula;
         if (!formula) return;
         const row = calcField.closest('tr');
@@ -505,7 +505,7 @@ function recalculate() {
         let evalStr = formula.replace(/SUM\\(([a-zA-Z0-9_]+)\\)/g, (_, key) => {
             let sum = 0;
             const scope = table || document;
-            scope.querySelectorAll(\`[data-base-key="\${key}"]\`).forEach((inp: any) => {
+            scope.querySelectorAll(\`[data-base-key="\${key}"]\`).forEach((inp) => {
                 sum += parseFloat(inp.value) || 0;
             });
             return sum;
@@ -538,7 +538,7 @@ function recalculate() {
 function saveDocument() {
     updateJsonLd();
     // Bake values into attributes
-    document.querySelectorAll('input, textarea, select').forEach((el: any) => {
+    document.querySelectorAll('input, textarea, select').forEach((el) => {
         if(el.type === 'checkbox' || el.type === 'radio') {
             if(el.checked) el.setAttribute('checked', 'checked');
             else el.removeAttribute('checked');
@@ -552,7 +552,7 @@ function saveDocument() {
     document.querySelectorAll('button, .no-print').forEach(el => el.remove());
     
     // Disable inputs
-    document.querySelectorAll('input, textarea, select').forEach((el: any) => el.setAttribute('readonly', 'readonly'));
+    document.querySelectorAll('input, textarea, select').forEach((el) => el.setAttribute('readonly', 'readonly'));
 
     // Create blobs
     const htmlContent = document.documentElement.outerHTML;
