@@ -96,17 +96,24 @@ Similar to PDF/A-1a or 1b, Web/A defines levels of technical rigor:
 
 ## 6. Technical Architecture
 
-### 6.1. Multi-Layer Maintenance Model
-To prevent the "XSLT Problem", Web/A defines two distinct layers within a single file:
+### 6.1. The 3-Layer Trust Architecture
+To unify the handling of static archives and interactive forms, Web/A defines a hierarchical **3-Layer Trust Architecture**. This ensures that the "Issuer's Intent" and the "User's Response" are cryptographically distinct yet seamlessly integrated for presentation.
 
-1.  **Signed Content Layer (The "Payload")**:
-    *   Contains the semantic HTML and JSON-LD. 
-    *   This layer is cryptographically signed by the original issuer.
-    *   It represents the "fact" of the document.
+1.  **Layer 1: Issuer-Signed Core (The "Law")**
+    *   **Content**: The fundamental structure, semantic data (JSON-LD), and static text/questions of the document. For a form, this is the "Template".
+    *   **Signer**: The **Issuer**.
+    *   **Trust**: Represents the immutable "Truth" or "Question" established by the authority.
+    *   **Artifact**: A detached VC or embedded signature covering the core HTML/JSON-LD.
 
-2.  **Portable Presentation Layer (The "Wrapper")**:
-    *   Contains the CSS, fonts, and any minimal logic needed to render the payload.
-    *   **Evolutionary and Decentralized Maintenance**: Long-term preservation requires updates to the wrapper layer for future browser compatibility or security hardening. Web/A anticipates a future where the original issuer may no longer exist, and thus proposes a mechanism where **anyone (archives, libraries, or individual custodians)** can safely modernize the viewer. Documents should embed a non-local URI (e.g., pointing to a decentralized Registry or Standards Body) for distributing the latest trusted viewer. This allows any custodian to adopt a signed, up-to-date viewer without compromising the original integrity of the payload.
+2.  **Layer 2: User-Signed Context (The "Fact")**
+    *   **Content**: User inputs, answers, or agreements that reference Layer 1. For read-only documents, this layer may be empty or contain "Acknowledgement" metadata.
+    *   **Signer**: The **User (Subject)** via Passkey or local keys.
+    *   **Trust**: Represents the user's specific instantiation or agreement. It includes a cryptographic digest of Layer 1, binding the "Answer" to the specific "Question".
+    *   **Artifact**: A VP or VC that wraps or references Layer 1.
+
+3.  **Layer 3: Portable Presentation (The "View")**
+    *   **Content**: CSS, Fonts, and minimal rendering logic (JavaScript) required to visualize Layers 1 and 2.
+    *   **Role**: **Evolutionary Adaptation**. Unlike the signed layers, this layer can be updated by custodians (Long-Term Validation) to ensure readability on future devices without breaking the cryptographic integrity of the data.
 
 ### 6.2. Human-Machine Parity (HMP) Guarantee
 The generator tool (e.g., Sorane) is responsible for ensuring that the JSON-LD and HTML do not diverge. This is guaranteed via:
@@ -114,47 +121,46 @@ The generator tool (e.g., Sorane) is responsible for ensuring that the JSON-LD a
 - **Generator Claims**: Embedding a **C2PA-style manifest** into the document. This manifest contains a hash of the transformation logic and a synchronized assertion.
 
 ### 6.3. Web/A Document Structure and Trust Chain
-The robustness of Web/A lies in the clean separation between the presentation layer (Wrapper) and the signed data layer (Payload), with a strict parity (HMP) maintained between them.
+The robustness of Web/A lies in the strict separation and binding between these three layers.
 
 <div align="center">
-<svg width="600" height="380" viewBox="0 0 600 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
-  <rect width="600" height="380" fill="#F8FAFC"/>
-  <rect x="40" y="30" width="520" height="320" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+<svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+  <rect width="600" height="460" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
   <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
 
-  <!-- Viewer Layer -->
-  <rect x="60" y="70" width="480" height="60" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
-  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Presentation Layer (Wrapper)</text>
-  <text x="75" y="115" font-family="system-ui" font-size="11" fill="#64748B">CSS, Fonts, etc. (Evolutionary Maintenance: replaceable for future browsers)</text>
+  <!-- Layer 3: Presentation -->
+  <rect x="60" y="70" width="480" height="50" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Layer 3: Portable Presentation (View)</text>
+  <text x="75" y="110" font-family="system-ui" font-size="10" fill="#64748B">CSS, Fonts (Replaceable for Future Compatibility)</text>
 
-  <!-- Payload Layer -->
-  <rect x="60" y="150" width="480" height="180" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
-  <text x="75" y="175" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Signed Payload (Immutable Fact)</text>
+  <!-- Layer 2: User Signed -->
+  <rect x="60" y="130" width="480" height="80" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="155" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: User-Signed Context (Input/Fact)</text>
+  <text x="75" y="175" font-family="system-ui" font-size="11" fill="#065F46">User Answers / Agreement</text>
+  <text x="75" y="190" font-family="system-ui" font-size="11" fill="#065F46">Passkey Signature (VP)</text>
+  <!-- Link to Layer 1 -->
+  <path d="M300 210V220" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <rect x="80" y="190" width="200" height="80" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="90" y="210" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Human Readable (HTML)</text>
-  <text x="90" y="230" font-family="system-ui" font-size="11" fill="#64748B">Semantic HTML</text>
-  <text x="90" y="245" font-family="system-ui" font-size="11" fill="#64748B">Accessibility Standards</text>
+  <!-- Layer 1: Issuer Signed -->
+  <rect x="60" y="220" width="480" height="150" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="245" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: Issuer-Signed Core (Template/Law)</text>
 
-  <rect x="320" y="190" width="200" height="80" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="330" y="210" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Machine Readable (JSON-LD)</text>
-  <text x="330" y="230" font-family="system-ui" font-size="11" fill="#64748B">Structured Data / Properties</text>
-  <text x="330" y="245" font-family="system-ui" font-size="11" fill="#64748B">VC / C2PA Manifest</text>
+  <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Human Readable</text>
+  <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / Questions</text>
 
-  <!-- HMP Connection -->
-  <path d="M280 230H320" stroke="#6366F1" stroke-width="2" stroke-dasharray="2 2"/>
-  <text x="300" y="285" font-family="system-ui" font-size="11" font-weight="700" fill="#6366F1" text-anchor="middle">HMP (Human-Machine Parity)</text>
+  <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Machine Readable</text>
+  <text x="330" y="300" font-family="system-ui" font-size="11" fill="#64748B">JSON-LD / Logic</text>
 
-  <!-- Hybrid Signature -->
-  <rect x="80" y="295" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
-  <text x="300" y="312" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">Hybrid Signature: Ed25519 + ML-DSA-44 (Post-Quantum)</text>
+  <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">Issuer Signature: Ed25519 + PQC</text>
 </svg>
 </div>
 
 #### 6.3.1. Micro-Mapping for Auditability
-To enhance third-party verifiability, Web/A encourages the use of semantic attributes (e.g., `data-weba-field`) within the HTML to explicitly map display elements to JSON-LD properties.
-- **Example**: `<span data-weba-field="datePublished">2025-12-24</span>`
-This transparent mapping allows auditors and scripts to confirm that visualized data matches the machine-readable layer within the signed payload.
+To enhance third-party verifiability, Web/A encourages the use of semantic attributes (e.g., `data-weba-field`) within the HTML to explicitly map display elements to JSON-LD properties. This allows auditors to confirm that visualized data matches the machine-readable layer within the signed payload.
 
 
 
@@ -313,27 +319,6 @@ To jumpstart the developer ecosystem, Web/A prioritizes tools that AI agents and
 Since web standards evolve rapidly, some features (like XSLT) may face deprecation.
 - **Challenge**: Reaching a consensus on which subset of HTML/CSS is "Safe for Archival" (i.e., guaranteed to work in browser engines 50+ years from now).
 - **Outlook**: Establishing a "Web/A Basic Profile" restricted to evergreen features (HTML5 Core and stable CSS). Implementation of validation tools that scan Web/A documents for long-term compatibility and provide an "Archivability Score."
-
-### 12.8. Interactive Architecture: From "Read-Only" to "Write-Once" Forms
-While the initial Web/A specification focused on static, archival documents ("Read-Only"), real-world administrative workflows require data collection ("Write"). Web/A extends its architecture to support secure, interactive forms without compromising the "Self-Contained" principle.
-
-#### 12.8.1. The 2-Layer Interactive Model
-To maintain the integrity of the original form while allowing user input, Web/A defines a clear separation of concerns:
-
-1.  **Layer 1: Signed Template (Issuer Context)**
-    *   **Role**: Defines the document structure, questions, validation logic, and calculation formulas.
-    *   **Signer**: The Issuer (e.g., Government Agency, Company).
-    *   **Properties**: **Immutable**. The template serves as the "Rule of Law" for the transaction.
-    *   **Artifact**: A `WebAFormTemplate` VC containing the hashed source of the form.
-
-2.  **Layer 2: User Input (Subject Context)**
-    *   **Role**: Contains the specific values entered by the user (answers).
-    *   **Signer**: The User (Subject/Holder) via Passkey or local private key.
-    *   **Properties**: **Binding**. The input layer includes a cryptographic digest of Layer 1, ensuring the answers are inextricably linked to the specific version of the question form.
-    *   **Artifact**: A Verifiable Presentation (VP) or a separate `WebAFormResponse` VC.
-
-#### 12.8.2. "Write-Once" Assurance
-Unlike traditional web forms where the server controls the state, Web/A Forms operate on a "Write-Once" model locally within the user's browser. Once the user signs their input (Layer 2), the combination of Layer 1 + Layer 2 becomes a new, static Web/A document that represents the **"Submitted Application"**. This artifact can be archived by the user as proof of what they submitted, independent of the server's acknowledgment.
 
 ---
 
