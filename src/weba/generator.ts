@@ -509,7 +509,9 @@ function runtime() {
                 activeSearchInput = input;
 
                 const srcKey = input.dataset.masterSrc;
-                if (!srcKey) return;
+                const suggestSource = input.dataset.suggestSource;
+                if (!srcKey && !suggestSource) return;
+
                 const labelIdx = toIndex(input.dataset.masterLabelIndex);
                 const valueIdx = toIndex(input.dataset.masterValueIndex);
 
@@ -519,36 +521,56 @@ function runtime() {
                     return;
                 }
 
-                console.log(`Search: Input '${query}', srcKey: '${srcKey}'`);
-
-                // @ts-ignore
-                const master = w.generatedJsonStructure.masterData;
-                if (!master || !master[srcKey]) {
-                    console.warn(`Search: masterData key '${srcKey}' not found. Available:`, Object.keys(master || {}));
-                    return;
-                }
-
-                const allRows = master[srcKey];
-                // Assume Row 0 is Headers
                 const hits: any[] = [];
                 const normQuery = normalize(query);
 
-                allRows.forEach((row: string[], idx: number) => {
-                    if (idx === 0) return; // Skip header
-
-                    // Search all columns
-                    const match = row.some(col => {
-                        return normalize(col || '').includes(normQuery);
-                    });
-
-                    if (match) {
-                        const labelVal = labelIdx >= 0 ? row[labelIdx] || '' : '';
-                        const valueVal = valueIdx >= 0 ? row[valueIdx] || '' : '';
-                        const val = valueIdx >= 0 ? valueVal : (labelIdx >= 0 ? labelVal : (row[1] || row[0] || ''));
-                        // Score could be improved if we checked which column matched, but simple existence is enough for now
-                        hits.push({ val, row, label: labelVal, score: 10, idx });
+                if (suggestSource === 'column') {
+                    const baseKey = input.dataset.baseKey;
+                    const table = input.closest('table');
+                    if (table && baseKey) {
+                        const seen = new Set<string>();
+                        table.querySelectorAll(`[data-base-key="${baseKey}"]`).forEach((inp: any) => {
+                            const v = inp.value;
+                            // Suggest values that match query, exclude exact current value to avoid redundancy? 
+                            // Actually showing exact match is fine if it acts as a "this is valid" confirmation, 
+                            // but usually we want OTHERS. 
+                            // Let's suggest if it contains the query.
+                            if (v && normalize(v).includes(normQuery)) {
+                                if (!seen.has(v)) {
+                                    seen.add(v);
+                                    hits.push({ val: v, row: [v], label: v, score: 10 });
+                                }
+                            }
+                        });
                     }
-                });
+                } else if (srcKey) {
+                    console.log(`Search: Input '${query}', srcKey: '${srcKey}'`);
+
+                    // @ts-ignore
+                    const master = w.generatedJsonStructure.masterData;
+                    if (!master || !master[srcKey]) {
+                        console.warn(`Search: masterData key '${srcKey}' not found. Available:`, Object.keys(master || {}));
+                        return;
+                    }
+
+                    const allRows = master[srcKey];
+                    // Assume Row 0 is Headers
+                    allRows.forEach((row: string[], idx: number) => {
+                        if (idx === 0) return; // Skip header
+
+                        // Search all columns
+                        const match = row.some(col => {
+                            return normalize(col || '').includes(normQuery);
+                        });
+
+                        if (match) {
+                            const labelVal = labelIdx >= 0 ? row[labelIdx] || '' : '';
+                            const valueVal = valueIdx >= 0 ? row[valueIdx] || '' : '';
+                            const val = valueIdx >= 0 ? valueVal : (labelIdx >= 0 ? labelVal : (row[1] || row[0] || ''));
+                            hits.push({ val, row, label: labelVal, score: 10, idx });
+                        }
+                    });
+                }
                 console.log(`Search: Found ${hits.length} matches for '${query}' (norm: '${normQuery}') in '${srcKey}'`);
 
                 hits.sort((a, b) => b.score - a.score);

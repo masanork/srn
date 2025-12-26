@@ -222,7 +222,13 @@ export const Renderers: Record<string, any> = {
         }
 
         // Default text
-        return `<input type="text" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+        let suggestAttr = '';
+        let suggestClass = '';
+        if ((attrs || '').includes('suggest:column')) {
+            suggestClass = ' search-input';
+            suggestAttr = ' data-suggest-source="column"';
+        }
+        return `<input type="text" class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}>`;
     },
 
     tableRow(cells: string[], isTemplate = false) {
