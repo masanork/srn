@@ -114,29 +114,24 @@ var Renderers = {
             <input type="text" readonly class="form-input" data-json-path="${key}" data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
         </div>`;
   },
-  datalist(key, label, attrs) {
+  search(key, label, attrs) {
     const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
-    const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
+    const srcKey = srcMatch ? srcMatch[1] : "";
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
     const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : "";
-    let optionsHtml = "";
-    const srcKey = srcMatch ? srcMatch[1] : "";
-    if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
-      const data = this._context.masterData[srcKey];
-      const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
-      data.forEach((row) => {
-        if (row.length > lIdx) {
-          optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || "")}"></option>`;
-        }
-      });
-    }
-    const listId = "list_" + key + "_" + Math.floor(Math.random() * 1e4);
     return `
-        <div class="form-row">
+        <div class="form-row autocomplete-container" style="position:relative; z-index:100;">
             <label class="form-label">${this.escapeHtml(label)}</label>
-            <input type="text" list="${listId}" class="form-input" data-json-path="${key}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist>
+            <div style="flex:1; position:relative;">
+                <input type="text" class="form-input search-input" autocomplete="off" 
+                    data-json-path="${key}" 
+                    data-master-src="${srcKey}"
+                    placeholder="${this.escapeHtml(placeholder)}" 
+                    style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:0 0 4px 4px; z-index:1001;"></div>
+            </div>
             ${hint}
         </div>`;
   },
@@ -174,6 +169,18 @@ var Renderers = {
           const commonClass = isTemplate ? "form-input template-input" : "form-input";
           const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
           return `<td><input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist></td>`;
+        }
+        if (type === "search") {
+          const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
+          const srcKey = srcMatch ? srcMatch[1] : "";
+          const commonClass = isTemplate ? "form-input template-input search-input" : "form-input search-input";
+          const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+          return `<td>
+                        <div style="position:relative;">
+                            <input type="text" class="${commonClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                            <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1001;"></div>
+                        </div>
+                    </td>`;
         }
         if (type === "number") {
           const commonClass = isTemplate ? "form-input template-input" : "form-input";
@@ -232,6 +239,7 @@ function parseMarkdown(text) {
   let currentMasterKey = null;
   jsonStructure.fields = [];
   jsonStructure.tables = {};
+  jsonStructure.masterData = masterData;
   let tabs = [];
   let currentTabId = null;
   let mainContentHtml = "";
@@ -694,8 +702,96 @@ function runtime() {
   w.saveDocument = saveDocument;
   w.recalculate = recalculate;
   console.log("Web/A Runtime Initialized");
+  function initSearch() {
+    const normalize = (s) => {
+      if (!s)
+        return "";
+      let n = s.trim();
+      n = n.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 65248));
+      n = n.replace(/\s+/g, " ").toLowerCase();
+      return n;
+    };
+    const clean = (s) => {
+      if (!s)
+        return "";
+      let n = normalize(s);
+      n = n.replace(/(株式会社|有限会社|合同会社|一般社団法人|公益社団法人|npo法人|学校法人|社会福祉法人)/g, "");
+      n = n.replace(/(\(株\)|\(有\)|\(同\))/g, "");
+      return n.trim();
+    };
+    const getScore = (query, targetParsed, targetOriginal) => {
+      const q = clean(query);
+      const t = clean(targetParsed);
+      if (t.includes(q))
+        return 2;
+      if (normalize(targetOriginal).includes(normalize(query)))
+        return 1;
+      return 0;
+    };
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".autocomplete-container") && !e.target.closest("td")) {
+        document.querySelectorAll(".search-suggestions").forEach((el) => el.style.display = "none");
+      }
+    });
+    document.body.addEventListener("input", (e) => {
+      if (e.target.classList.contains("search-input")) {
+        const input = e.target;
+        const container = input.parentElement;
+        const suggestionsBox = container.querySelector(".search-suggestions");
+        const srcKey = input.dataset.masterSrc;
+        if (!srcKey || !suggestionsBox)
+          return;
+        const query = input.value;
+        if (!query) {
+          suggestionsBox.style.display = "none";
+          return;
+        }
+        const master = w.generatedJsonStructure.masterData;
+        if (!master || !master[srcKey])
+          return;
+        const data = master[srcKey];
+        const hits = [];
+        data.forEach((row) => {
+          const val = row[0] || "";
+          const score = getScore(query, val, val);
+          if (score > 0) {
+            hits.push({ val, row, score });
+          }
+        });
+        hits.sort((a, b) => b.score - a.score);
+        const topHits = hits.slice(0, 10);
+        if (topHits.length > 0) {
+          let html = "";
+          topHits.forEach((h) => {
+            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:6px; cursor:pointer; border-bottom:1px solid #eee;">${w.escapeHtml(h.val)}</div>`;
+          });
+          suggestionsBox.innerHTML = html;
+          suggestionsBox.style.display = "block";
+        } else {
+          suggestionsBox.style.display = "none";
+        }
+      }
+    });
+    document.body.addEventListener("click", (e) => {
+      if (e.target.classList.contains("suggestion-item")) {
+        const item = e.target;
+        const box = item.closest(".search-suggestions");
+        const container = box.parentElement;
+        const input = container.querySelector("input");
+        input.value = item.dataset.val;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        box.style.display = "none";
+      }
+    });
+  }
+  w.escapeHtml = function(str) {
+    if (!str)
+      return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  };
   restoreFromLS();
   applyI18n();
+  initSearch();
   recalculate();
 }
 var RUNTIME_SCRIPT = `(${runtime.toString()})();`;

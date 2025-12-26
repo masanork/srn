@@ -309,9 +309,113 @@ function runtime() {
 
     console.log("Web/A Runtime Initialized");
 
+    function initSearch() {
+        const normalize = (s: string) => {
+            if (!s) return '';
+            let n = s.trim();
+            // Full-width to Half-width (alphanumeric)
+            n = n.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+            // Space normalization
+            n = n.replace(/\s+/g, ' ').toLowerCase();
+            return n;
+        };
+
+        const clean = (s: string) => {
+            if (!s) return '';
+            let n = normalize(s);
+            // Remove corporate prefixes/suffixes (partial list)
+            n = n.replace(/(株式会社|有限会社|合同会社|一般社団法人|公益社団法人|npo法人|学校法人|社会福祉法人)/g, '');
+            n = n.replace(/(\(株\)|\(有\)|\(同\))/g, '');
+            return n.trim();
+        };
+
+        const getScore = (query: string, targetParsed: string, targetOriginal: string) => {
+            const q = clean(query);
+            const t = clean(targetParsed);
+            if (t.includes(q)) return 2; // Exact partial match after cleaning
+            if (normalize(targetOriginal).includes(normalize(query))) return 1; // Basic partial match
+            return 0;
+        };
+
+        // Close suggestions on click outside
+        document.addEventListener('click', (e: any) => {
+            if (!e.target.closest('.autocomplete-container') && !e.target.closest('td')) {
+                document.querySelectorAll('.search-suggestions').forEach((el: any) => el.style.display = 'none');
+            }
+        });
+
+        // Delegate input for search
+        document.body.addEventListener('input', (e: any) => {
+            if (e.target.classList.contains('search-input')) {
+                const input = e.target;
+                const container = input.parentElement;
+                const suggestionsBox = container.querySelector('.search-suggestions');
+                const srcKey = input.dataset.masterSrc;
+                if (!srcKey || !suggestionsBox) return;
+
+                const query = input.value;
+                if (!query) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+
+                // @ts-ignore
+                const master = w.generatedJsonStructure.masterData;
+                if (!master || !master[srcKey]) return;
+
+                const data = master[srcKey];
+                const hits: any[] = [];
+
+                data.forEach((row: string[]) => {
+                    // Assuming col 0 is value/label. Or if multiple cols, search all or specific?
+                    // Let's assume col 0 is the primary label/value
+                    const val = row[0] || '';
+                    const score = getScore(query, val, val);
+                    if (score > 0) {
+                        hits.push({ val, row, score });
+                    }
+                });
+
+                hits.sort((a, b) => b.score - a.score);
+                const topHits = hits.slice(0, 10); // Match limit
+
+                if (topHits.length > 0) {
+                    let html = '';
+                    topHits.forEach(h => {
+                        html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:6px; cursor:pointer; border-bottom:1px solid #eee;">${w.escapeHtml(h.val)}</div>`;
+                    });
+                    suggestionsBox.innerHTML = html;
+                    suggestionsBox.style.display = 'block';
+                } else {
+                    suggestionsBox.style.display = 'none';
+                }
+            }
+        });
+
+        // Delegate click for suggestion selection
+        document.body.addEventListener('click', (e: any) => {
+            if (e.target.classList.contains('suggestion-item')) {
+                const item = e.target;
+                const box = item.closest('.search-suggestions');
+                const container = box.parentElement;
+                const input = container.querySelector('input');
+
+                input.value = item.dataset.val;
+                input.dispatchEvent(new Event('input', { bubbles: true })); // Trigger recalc
+                box.style.display = 'none';
+            }
+        });
+    }
+
+    w.escapeHtml = function (str: string) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    };
+
     // Init
     restoreFromLS();
     applyI18n();
+    initSearch();
     recalculate();
 }
 
