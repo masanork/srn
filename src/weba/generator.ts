@@ -360,6 +360,10 @@ function runtime() {
             n = n.replace(/(\(株\)|\(有\)|\(同\))/g, '');
             return n.trim();
         };
+        const toIndex = (raw?: string) => {
+            const parsed = parseInt(raw || '', 10);
+            return Number.isFinite(parsed) ? parsed - 1 : -1;
+        };
 
         const getScore = (query: string, targetParsed: string, targetOriginal: string) => {
             const q = clean(query);
@@ -424,6 +428,8 @@ function runtime() {
 
                 const srcKey = input.dataset.masterSrc;
                 if (!srcKey) return;
+                const labelIdx = toIndex(input.dataset.masterLabelIndex);
+                const valueIdx = toIndex(input.dataset.masterValueIndex);
 
                 const query = input.value;
                 if (!query) {
@@ -454,9 +460,11 @@ function runtime() {
                     });
 
                     if (match) {
-                        const val = row[0] || ''; // Value to fill into the input (ID/Key)
+                        const labelVal = labelIdx >= 0 ? row[labelIdx] || '' : '';
+                        const valueVal = valueIdx >= 0 ? row[valueIdx] || '' : '';
+                        const val = valueIdx >= 0 ? valueVal : (labelIdx >= 0 ? labelVal : (row[0] || ''));
                         // Score could be improved if we checked which column matched, but simple existence is enough for now
-                        hits.push({ val, row, score: 10, idx });
+                        hits.push({ val, row, label: labelVal, score: 10, idx });
                     }
                 });
                 console.log(`Search: Found ${hits.length} matches for '${query}' (norm: '${normQuery}') in '${srcKey}'`);
@@ -470,7 +478,7 @@ function runtime() {
                         // Store row data in data-row attribute (JSON encoded)
                         const rowJson = w.escapeHtml(JSON.stringify(h.row));
                         // Display joined row for context (e.g. "1 : Acrocity...")
-                        const displayLabel = h.row.join(' : ');
+                        const displayLabel = labelIdx >= 0 ? (h.label || h.row.join(' : ')) : h.row.join(' : ');
                         html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(displayLabel)}</div>`;
                     });
 
@@ -520,8 +528,9 @@ function runtime() {
             if (e.target.classList.contains('suggestion-item')) {
                 const item = e.target;
                 if (activeSearchInput) {
-                    // 1. Update Search Input
-                    activeSearchInput.value = item.dataset.val;
+                    let searchInputFilled = false;
+                    // 1. Default Update Search Input (will be overridden if matched in loop)
+                    const originalVal = item.dataset.val;
 
                     // 2. Auto-Fill other fields
                     try {
@@ -540,7 +549,7 @@ function runtime() {
                                 console.log("Auto-Fill: Inputs in Form Row:", inputs.map((i: any) => i.dataset.baseKey || i.dataset.jsonPath));
 
                                 masterHeaders.forEach((header: string, idx: number) => {
-                                    if (idx === 0) return; // Skip search key itself
+                                    // if (idx === 0) return; // Allow search key itself to be matched/filled if header matches label
                                     if (!header) return;
 
                                     const targetVal = rowData[idx];
@@ -550,12 +559,40 @@ function runtime() {
 
                                     const targetInput = inputs.find((inp: any) => {
                                         const k = inp.dataset.baseKey || inp.dataset.jsonPath;
-                                        // 1. Check Key Match
-                                        if (k && normalize(k) === keyMatch) return true;
-                                        // 2. Check Placeholder/Label Match (common fallback for Japanese headers vs English keys)
-                                        const ph = normalize(inp.getAttribute('placeholder') || '');
-                                        if (ph === keyMatch) return true;
 
+                                        // 3. Check Visible Label (Robust fallback for Forms and Tables)
+                                        let labelText = '';
+                                        const td = inp.closest('td');
+                                        if (td) {
+                                            // Table Mode: Get header from th
+                                            const tr = td.parentElement;
+                                            const index = Array.from(tr.children).indexOf(td);
+                                            const table = tr.closest('table');
+                                            if (table) {
+                                                // Assuming simple table with one header row
+                                                const th = table.querySelectorAll('thead th')[index] || table.querySelectorAll('tr:first-child th')[index];
+                                                if (th) labelText = normalize(th.textContent || '');
+                                            }
+                                        } else {
+                                            // Form Mode: Get label from form-row
+                                            const rowDiv = inp.closest('.form-row');
+                                            if (rowDiv) {
+                                                const labelEl = rowDiv.querySelector('.form-label');
+                                                if (labelEl) labelText = normalize(labelEl.textContent || '');
+                                            }
+                                        }
+
+                                        const ph = normalize(inp.getAttribute('placeholder') || '');
+
+                                        const matchKey = (k && normalize(k) === keyMatch);
+                                        const matchPh = (ph === keyMatch);
+                                        const matchLabel = (labelText === keyMatch);
+
+                                        if (header === 'ベンダー名' || header === '区') {
+                                            // console.log(`Debug Match: Header='${keyMatch}' InputKey='${k}' Ph='${ph}' Label='${labelText}' -> ${matchKey||matchPh||matchLabel}`);
+                                        }
+
+                                        if (matchKey || matchPh || matchLabel) return true;
                                         return false;
                                     }) as HTMLInputElement;
 
@@ -564,6 +601,11 @@ function runtime() {
                                         targetInput.value = targetVal || '';
                                         // Trigger input event for this field so calculations dependent on it update
                                         targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+                                        if (targetInput === activeSearchInput) {
+                                            searchInputFilled = true;
+                                            console.log("Auto-Fill: Search input itself was filled via mapping.");
+                                        }
                                     } else {
                                         console.log(`Auto-Fill: No match for '${header}'`);
                                     }
@@ -574,7 +616,11 @@ function runtime() {
                         console.error("Auto-fill error", err);
                     }
 
-                    activeSearchInput.dispatchEvent(new Event('input', { bubbles: true })); // Trigger recalc & hide
+                    if (!searchInputFilled) {
+                        // Fallback to default ID if no specific mapping found for search input
+                        activeSearchInput.value = originalVal || '';
+                        activeSearchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                     hideSuggestions();
                 }
             }

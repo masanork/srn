@@ -227,16 +227,25 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
                 jsonStructure.fields.push({ key, label: cleanLabel, type });
 
+                // Explicit dispatch to avoid dynamic property access issues
                 if (type === 'radio') {
                     currentRadioGroup = { key, label: cleanLabel, attrs };
                     // @ts-ignore
                     appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
-                    // @ts-ignore
-                } else if (Renderers[type]) {
+                }
+                else if (type === 'text') appendHtml(Renderers.text(key, cleanLabel, attrs));
+                else if (type === 'number') appendHtml(Renderers.number(key, cleanLabel, attrs));
+                else if (type === 'date') appendHtml(Renderers.date(key, cleanLabel, attrs));
+                else if (type === 'textarea') appendHtml(Renderers.textarea(key, cleanLabel, attrs));
+                else if (type === 'search') appendHtml(Renderers.search(key, cleanLabel, attrs));
+                else if (type === 'calc') appendHtml(Renderers.calc(key, cleanLabel, attrs));
+                else if (type === 'datalist') appendHtml(Renderers.renderInput(type, key, attrs)); // datalist handled in renderInput logic
+                else if (Renderers[type]) {
+                    // Fallback for custom or future types
                     // @ts-ignore
                     appendHtml(Renderers[type](key, cleanLabel, attrs));
                 } else {
-                    console.warn(`Renderers keys available:`, Object.keys(Renderers));
+                    console.warn(`Unknown type: ${type}`, Object.keys(Renderers));
                     appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
                 }
             }
