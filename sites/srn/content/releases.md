@@ -4,6 +4,26 @@ layout: article
 description: "Release history and major updates for the Sorane project."
 ---
 
+## v1.6.0 - Web/A Form & Core Refactoring
+
+**Date:** 2025-12-27
+
+Introduction of **Web/A Form** for interactive, calculable documents and a major codebase reorganization.
+
+* **Web/A Form (Interactive Documents)**:
+  * **Client-Side Engine**: New `src/form/` module delivering rich interactivity within static Web/A documents.
+  * **Spreadsheet Logic**: Implemented `Calculator` class for Excel-like formula evaluation (SUM, field references) and automatic recalculation.
+  * **Dynamic UI**:
+    * **Table Operations**: Support for adding/removing rows in dynamic tables.
+    * **Smart Suggestions**: Column-based autocomplete for repetitive data entry.
+    * **Workflow**: Built-in "Save Draft", "Clear", and "Submit" actions with LocalStorage persistence.
+  * **Input Enhancements**: Right-aligned numeric inputs, date pickers, and auto-copy functionality.
+* **System Architecture**:
+  * **Modular Split**: Refactored `src/` into `core` (shared), `ssg` (build-time), and `form` (runtime) for better separation of concerns.
+  * **Client Bundling**: Added dedicated build scripts for the Web/A client runtime.
+* **Documentation**:
+  * **Web/A Form Guide**: Added detailed specifications and usage guides for the new form capabilities (Japanese/English).
+
 ## v1.5.0 - Archival-Grade Web Documents (Web/A) & Trust Chain
 
 **Date:** 2025-12-24
