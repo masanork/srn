@@ -132,6 +132,14 @@ The robustness of Web/A lies in the strict separation and binding between these 
 
 <div align="center">
 <svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#6366F1" />
+    </marker>
+  </defs>
   <rect width="600" height="460" fill="#F8FAFC"/>
   <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
   <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
@@ -156,6 +164,10 @@ The robustness of Web/A lies in the strict separation and binding between these 
   <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
   <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Human Readable</text>
   <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / Questions</text>
+
+  <!-- Semantic Mapping -->
+  <path d="M280 290H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
+  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">Micro-Mapping</text>
 
   <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
   <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Machine Readable</text>
