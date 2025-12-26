@@ -115,7 +115,7 @@ var Renderers = {
         </div>`;
   },
   search(key, label, attrs) {
-    const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
+    const srcMatch = (attrs || "").match(/src:([^\s)]+)/);
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const srcKey = srcMatch ? srcMatch[1] : "";
@@ -260,25 +260,24 @@ function parseMarkdown(text) {
       return;
     }
     if (trimmed.startsWith("|")) {
-      if (!inTable && !inMasterTable) {
-        if (currentMasterKey) {
-          inMasterTable = true;
-        } else {
-          appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
-          if (currentDynamicTableKey) {
-            appendHtml(`<table class="data-table dynamic" id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}">`);
-          } else {
-            appendHtml(`<table class="data-table">`);
-          }
-          appendHtml(`<tbody>`);
-          inTable = true;
+      if (!inTable) {
+        appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
+        let tableClass = "data-table";
+        let extraAttrs = "";
+        if (currentDynamicTableKey) {
+          tableClass += " dynamic";
+          extraAttrs = `id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}"`;
+        } else if (currentMasterKey) {
+          tableClass += " master";
+          extraAttrs = `data-master-key="${currentMasterKey}"`;
         }
+        appendHtml(`<table class="${tableClass}" ${extraAttrs}>`);
+        appendHtml(`<tbody>`);
+        inTable = true;
+        inMasterTable = !!currentMasterKey;
       }
       const cells = trimmed.split("|").slice(1, -1).map((c) => c.trim());
       const isSeparator = cells.every((c) => c.match(/^-+$/));
-      if (inMasterTable) {
-        return;
-      }
       if (isSeparator) {} else {
         if (currentDynamicTableKey) {
           const hasInput = cells.some((c) => c.includes("["));
@@ -298,17 +297,14 @@ function parseMarkdown(text) {
             });
             appendHtml(Renderers.tableRow(cells, true));
           }
+        } else if (inMasterTable) {
+          appendHtml(Renderers.tableRow(cells));
         } else {
           appendHtml(Renderers.tableRow(cells));
         }
       }
       return;
     } else {
-      if (inMasterTable) {
-        inMasterTable = false;
-        currentMasterKey = null;
-        return;
-      }
       if (inTable) {
         appendHtml("</tbody></table></div>");
         if (currentDynamicTableKey) {
@@ -317,6 +313,8 @@ function parseMarkdown(text) {
         }
         appendHtml("</div>");
         inTable = false;
+        inMasterTable = false;
+        currentMasterKey = null;
       }
     }
     const headerMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
@@ -359,12 +357,10 @@ function parseMarkdown(text) {
         if (type === "radio") {
           currentRadioGroup = { key, label: cleanLabel, attrs };
           appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
-          if (typeof Renderers[type] === "function") {
-            appendHtml(Renderers[type](key, cleanLabel, attrs));
-          } else {
-            appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
-          }
+        } else if (Renderers[type]) {
+          appendHtml(Renderers[type](key, cleanLabel, attrs));
         } else {
+          console.warn(`Renderers keys available:`, Object.keys(Renderers));
           appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
         }
       }
@@ -725,13 +721,19 @@ function runtime() {
   console.log("Web/A Runtime Initialized");
   function initSearch() {
     console.log("Initializing Search...");
-    const normalize = (s) => {
-      if (!s)
+    if (w.generatedJsonStructure && w.generatedJsonStructure.masterData) {
+      const keys = Object.keys(w.generatedJsonStructure.masterData);
+      console.log("Master Data Keys available:", keys.join(", "));
+    }
+    const normalize = (val) => {
+      if (!val)
         return "";
-      let n = s.trim();
+      let n = val.toString().toLowerCase();
+      n = n.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
+        return String.fromCharCode(s.charCodeAt(0) - 65248);
+      });
       n = n.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 65248));
-      n = n.replace(/\s+/g, " ").toLowerCase();
-      return n;
+      return n.trim();
     };
     const clean = (s) => {
       if (!s)
@@ -804,26 +806,35 @@ function runtime() {
           hideSuggestions();
           return;
         }
+        console.log(`Search: Input '${query}', srcKey: '${srcKey}'`);
         const master = w.generatedJsonStructure.masterData;
-        if (!master || !master[srcKey])
+        if (!master || !master[srcKey]) {
+          console.warn(`Search: masterData key '${srcKey}' not found. Available:`, Object.keys(master || {}));
           return;
+        }
         const allRows = master[srcKey];
-        const dataRows = allRows.slice(1);
         const hits = [];
-        dataRows.forEach((row, originalIdx) => {
-          const val = row[0] || "";
-          const score = getScore(query, val, val);
-          if (score > 0) {
-            hits.push({ val, row, score, idx: originalIdx });
+        const normQuery = normalize(query);
+        allRows.forEach((row, idx) => {
+          if (idx === 0)
+            return;
+          const match = row.some((col) => {
+            return normalize(col || "").includes(normQuery);
+          });
+          if (match) {
+            const val = row[0] || "";
+            hits.push({ val, row, score: 10, idx });
           }
         });
+        console.log(`Search: Found ${hits.length} matches for '${query}' (norm: '${normQuery}') in '${srcKey}'`);
         hits.sort((a, b) => b.score - a.score);
         const topHits = hits.slice(0, 10);
         if (topHits.length > 0) {
           let html = "";
           topHits.forEach((h) => {
             const rowJson = w.escapeHtml(JSON.stringify(h.row));
-            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
+            const displayLabel = h.row.join(" : ");
+            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(displayLabel)}</div>`;
           });
           const box = getGlobalBox();
           box.innerHTML = html;
@@ -860,12 +871,15 @@ function runtime() {
           activeSearchInput.value = item.dataset.val;
           try {
             const rowData = JSON.parse(item.dataset.row || "[]");
+            console.log("Auto-Fill: Selected Row:", rowData);
             const srcKey = activeSearchInput.dataset.masterSrc;
             const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
+            console.log("Auto-Fill: Master Headers:", masterHeaders);
             if (masterHeaders.length > 0 && rowData.length > 0) {
               const tr = activeSearchInput.closest("tr");
               if (tr) {
                 const inputs = Array.from(tr.querySelectorAll("input, select, textarea"));
+                console.log("Auto-Fill: Inputs in Form Row:", inputs.map((i) => i.dataset.baseKey || i.dataset.jsonPath));
                 masterHeaders.forEach((header, idx) => {
                   if (idx === 0)
                     return;
@@ -873,13 +887,22 @@ function runtime() {
                     return;
                   const targetVal = rowData[idx];
                   const keyMatch = normalize(header);
+                  console.log(`Auto-Fill: Checking '${header}' (norm: '${keyMatch}') against inputs...`);
                   const targetInput = inputs.find((inp) => {
                     const k = inp.dataset.baseKey || inp.dataset.jsonPath;
-                    return k && normalize(k) === keyMatch;
+                    if (k && normalize(k) === keyMatch)
+                      return true;
+                    const ph = normalize(inp.getAttribute("placeholder") || "");
+                    if (ph === keyMatch)
+                      return true;
+                    return false;
                   });
                   if (targetInput) {
+                    console.log(`Auto-Fill: Match found for '${header}' -> Filling '${targetVal}'`);
                     targetInput.value = targetVal || "";
                     targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+                  } else {
+                    console.log(`Auto-Fill: No match for '${header}'`);
                   }
                 });
               }
@@ -1083,21 +1106,7 @@ function generateAggregatorHtml(markdown) {
 var DEFAULT_MARKDOWN_EN = `# Simple Search & Calc Test
 ---
 
-## 1. Master Data Definition
-(This will be hidden in the UI but used for search)
-
-[master:products]
-| Item Name | Price |
-|---|---|
-| Apple | 100 |
-| Banana | 200 |
-| Cherry | 300 |
-| Durian | 5000 |
-| Elderberry | 400 |
-
----
-
-## 2. Input Form
+## 1. Input Form
 
 We want to verify:
 1. Search suggestion works for "Product"
@@ -1111,24 +1120,25 @@ We want to verify:
 <div style="text-align: right; margin-top: 10px;">
   <b>Grand Total:</b> [calc:grand_total (formula="SUM(amount)" size:L bold)]
 </div>
+
+---
+
+## 2. Master Data Definition
+(Reference Data)
+
+[master:products]
+| Item Name | Price |
+|---|---|
+| Apple | 100 |
+| Banana | 200 |
+| Cherry | 300 |
+| Durian | 5000 |
+| Elderberry | 400 |
 `;
 var DEFAULT_MARKDOWN_JA = `# 請求書（サンプル）
 ---
 
-## 1. マスタ定義
-(画面には表示されませんが、検索候補として使用されます)
-
-[master:商品]
-| 商品名 | 単価 |
-|---|---|
-| りんご | 100 |
-| バナナ | 200 |
-| みかん | 150 |
-| 高級メロン | 5000 |
-
----
-
-## 2. 入力フォーム
+## 1. 入力フォーム
 
 [dynamic-table:items]
 | 商品名 (検索) | 単価 | 数量 | 小計 |
@@ -1138,6 +1148,19 @@ var DEFAULT_MARKDOWN_JA = `# 請求書（サンプル）
 <div style="text-align: right; margin-top: 10px;">
   <b>合計金額:</b> [calc:総合計 (formula="SUM(小計)" size:L bold)]
 </div>
+
+---
+
+## 2. マスタ定義
+(参照用データ)
+
+[master:商品]
+| 商品名 | 単価 |
+|---|---|
+| りんご | 100 |
+| バナナ | 200 |
+| みかん | 150 |
+| 高級メロン | 5000 |
 `;
 
 // src/weba/browser_maker.ts

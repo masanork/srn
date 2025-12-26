@@ -87,31 +87,35 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
 
         // 0b. Table Logic
+        // 0b. Table Logic
         if (trimmed.startsWith('|')) {
-            if (!inTable && !inMasterTable) {
-                if (currentMasterKey) {
-                    inMasterTable = true;
-                } else {
-                    appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
-                    if (currentDynamicTableKey) {
-                        appendHtml(`<table class="data-table dynamic" id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}">`);
-                    } else {
-                        appendHtml(`<table class="data-table">`);
-                    }
-                    appendHtml(`<tbody>`);
-                    inTable = true;
+            if (!inTable) { // Start a new table if we aren't in one
+                appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
+
+                let tableClass = 'data-table';
+                let extraAttrs = '';
+
+                if (currentDynamicTableKey) {
+                    tableClass += ' dynamic';
+                    extraAttrs = `id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}"`;
+                } else if (currentMasterKey) {
+                    tableClass += ' master';
+                    extraAttrs = `data-master-key="${currentMasterKey}"`;
                 }
+
+                appendHtml(`<table class="${tableClass}" ${extraAttrs}>`);
+                appendHtml(`<tbody>`);
+
+                inTable = true;
+                // We track if this specific table session is a master table, mostly for structure logic if needed
+                inMasterTable = !!currentMasterKey;
             }
 
             const cells = trimmed.split('|').slice(1, -1).map(c => c.trim());
             const isSeparator = cells.every(c => c.match(/^-+$/));
 
-            if (inMasterTable) {
-                return;
-            }
-
             if (isSeparator) {
-                // ignore
+                // ignore separator lines in HTML usually, or could render them if strictly following MD-to-HTML but usually skipped in custom parsers
             } else {
                 if (currentDynamicTableKey) {
                     const hasInput = cells.some(c => c.includes('['));
@@ -133,19 +137,29 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                         // @ts-ignore
                         appendHtml(Renderers.tableRow(cells, true));
                     }
+                } else if (inMasterTable) {
+                    // Check if header row (heuristic: usually first row, but here we can check if it looks like a header or data)
+                    // Simple heuristic: if we just started the table (masterData entry is empty or just initialized), treat first row as header?
+                    // Actually, parser.ts "Phase 0" already consumed master data into JSON.
+                    // Here we just want to render it visually.
+                    // Let's treat the first row of any table (if not separator) as header if it doesn't contain inputs?
+                    // Or simplified: Just render everything as rows. The CSS will style the first row if needed, 
+                    // OR we can explicitly detect headers.
+                    // Standard MD tables: Row 1 = Header, Row 2 = Sep, Row 3+ = Data.
+                    // Since we are iterating line by line, detecting header vs body is stateful.
+                    // For now, let's just use Renderers.tableRow. To make it look like a header, we might want <th>.
+                    // But Renderers.tableRow uses <td>.
+                    // Let's just render as normal rows for visibility.
+                    // @ts-ignore
+                    appendHtml(Renderers.tableRow(cells));
                 } else {
+                    // Static table (no master, no dynamic)
                     // @ts-ignore
                     appendHtml(Renderers.tableRow(cells));
                 }
             }
             return;
         } else {
-            if (inMasterTable) {
-                inMasterTable = false;
-                currentMasterKey = null;
-                return;
-            }
-
             if (inTable) {
                 appendHtml('</tbody></table></div>');
                 if (currentDynamicTableKey) {
@@ -154,6 +168,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 }
                 appendHtml('</div>');
                 inTable = false;
+                inMasterTable = false;
+                currentMasterKey = null; // Clear master key when table ends
             }
         }
 
@@ -216,13 +232,11 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     // @ts-ignore
                     appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
                     // @ts-ignore
-                    if (typeof Renderers[type] === 'function') {
-                        // @ts-ignore
-                        appendHtml(Renderers[type](key, cleanLabel, attrs));
-                    } else {
-                        appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
-                    }
+                } else if (Renderers[type]) {
+                    // @ts-ignore
+                    appendHtml(Renderers[type](key, cleanLabel, attrs));
                 } else {
+                    console.warn(`Renderers keys available:`, Object.keys(Renderers));
                     appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
                 }
             }

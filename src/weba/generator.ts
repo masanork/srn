@@ -334,12 +334,23 @@ function runtime() {
 
     function initSearch() {
         console.log("Initializing Search...");
-        const normalize = (s: string) => {
-            if (!s) return '';
-            let n = s.trim();
+        // @ts-ignore
+        if (w.generatedJsonStructure && w.generatedJsonStructure.masterData) {
+            // @ts-ignore
+            const keys = Object.keys(w.generatedJsonStructure.masterData);
+            console.log("Master Data Keys available:", keys.join(', '));
+        }
+
+        const normalize = (val: string) => {
+            if (!val) return '';
+            // For simple ASCII search, lowercase is enough usually, but we keep full-width conversion for JA support
+            let n = val.toString().toLowerCase();
+            n = n.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
+                return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+            });
             n = n.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-            n = n.replace(/\s+/g, ' ').toLowerCase();
-            return n;
+            // n = n.replace(/\s+/g, ' ').trim(); // Removing space normalization for strict check might help debug?
+            return n.trim();
         };
 
         const clean = (s: string) => {
@@ -420,23 +431,35 @@ function runtime() {
                     return;
                 }
 
+                console.log(`Search: Input '${query}', srcKey: '${srcKey}'`);
+
                 // @ts-ignore
                 const master = w.generatedJsonStructure.masterData;
-                if (!master || !master[srcKey]) return;
+                if (!master || !master[srcKey]) {
+                    console.warn(`Search: masterData key '${srcKey}' not found. Available:`, Object.keys(master || {}));
+                    return;
+                }
 
                 const allRows = master[srcKey];
                 // Assume Row 0 is Headers
-                const dataRows = allRows.slice(1);
-
                 const hits: any[] = [];
-                dataRows.forEach((row: string[], originalIdx: number) => {
-                    // originalIdx is index in dataRows. Actual index in allRows is originalIdx + 1
-                    const val = row[0] || '';
-                    const score = getScore(query, val, val);
-                    if (score > 0) {
-                        hits.push({ val, row, score, idx: originalIdx });
+                const normQuery = normalize(query);
+
+                allRows.forEach((row: string[], idx: number) => {
+                    if (idx === 0) return; // Skip header
+
+                    // Search all columns
+                    const match = row.some(col => {
+                        return normalize(col || '').includes(normQuery);
+                    });
+
+                    if (match) {
+                        const val = row[0] || ''; // Value to fill into the input (ID/Key)
+                        // Score could be improved if we checked which column matched, but simple existence is enough for now
+                        hits.push({ val, row, score: 10, idx });
                     }
                 });
+                console.log(`Search: Found ${hits.length} matches for '${query}' (norm: '${normQuery}') in '${srcKey}'`);
 
                 hits.sort((a, b) => b.score - a.score);
                 const topHits = hits.slice(0, 10);
@@ -446,7 +469,9 @@ function runtime() {
                     topHits.forEach(h => {
                         // Store row data in data-row attribute (JSON encoded)
                         const rowJson = w.escapeHtml(JSON.stringify(h.row));
-                        html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
+                        // Display joined row for context (e.g. "1 : Acrocity...")
+                        const displayLabel = h.row.join(' : ');
+                        html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(displayLabel)}</div>`;
                     });
 
                     const box = getGlobalBox();
@@ -501,14 +526,19 @@ function runtime() {
                     // 2. Auto-Fill other fields
                     try {
                         const rowData = JSON.parse(item.dataset.row || '[]');
+                        console.log("Auto-Fill: Selected Row:", rowData);
+
                         const srcKey = activeSearchInput.dataset.masterSrc;
                         // @ts-ignore
                         const masterHeaders = srcKey ? w.generatedJsonStructure.masterData[srcKey][0] : [];
+                        console.log("Auto-Fill: Master Headers:", masterHeaders);
 
                         if (masterHeaders.length > 0 && rowData.length > 0) {
                             const tr = activeSearchInput.closest('tr');
                             if (tr) {
                                 const inputs = Array.from(tr.querySelectorAll('input, select, textarea'));
+                                console.log("Auto-Fill: Inputs in Form Row:", inputs.map((i: any) => i.dataset.baseKey || i.dataset.jsonPath));
+
                                 masterHeaders.forEach((header: string, idx: number) => {
                                     if (idx === 0) return; // Skip search key itself
                                     if (!header) return;
@@ -516,15 +546,26 @@ function runtime() {
                                     const targetVal = rowData[idx];
                                     const keyMatch = normalize(header);
 
+                                    console.log(`Auto-Fill: Checking '${header}' (norm: '${keyMatch}') against inputs...`);
+
                                     const targetInput = inputs.find((inp: any) => {
                                         const k = inp.dataset.baseKey || inp.dataset.jsonPath;
-                                        return k && normalize(k) === keyMatch;
+                                        // 1. Check Key Match
+                                        if (k && normalize(k) === keyMatch) return true;
+                                        // 2. Check Placeholder/Label Match (common fallback for Japanese headers vs English keys)
+                                        const ph = normalize(inp.getAttribute('placeholder') || '');
+                                        if (ph === keyMatch) return true;
+
+                                        return false;
                                     }) as HTMLInputElement;
 
                                     if (targetInput) {
+                                        console.log(`Auto-Fill: Match found for '${header}' -> Filling '${targetVal}'`);
                                         targetInput.value = targetVal || '';
                                         // Trigger input event for this field so calculations dependent on it update
                                         targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                    } else {
+                                        console.log(`Auto-Fill: No match for '${header}'`);
                                     }
                                 });
                             }

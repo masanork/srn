@@ -136,7 +136,8 @@ export const Renderers: Record<string, any> = {
     },
 
     search(key: string, label: string, attrs: string | undefined) {
-        const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
+        // Allow dots, slashes, colons, etc. in src key. Stop at space or closing paren.
+        const srcMatch = (attrs || '').match(/src:([^\s)]+)/);
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
