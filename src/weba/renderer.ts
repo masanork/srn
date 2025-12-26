@@ -20,6 +20,13 @@ export const Renderers: Record<string, any> = {
             .replace(/'/g, '&#039;');
     },
 
+    formatHint(text: string): string {
+        const escaped = this.escapeHtml(text);
+        return escaped
+            .replace(/&lt;br\s*\/?&gt;/gi, '<br>')
+            .replace(/\r?\n/g, '<br>');
+    },
+
     getStyle(attrs: string | undefined): string {
         if (!attrs) return '';
         let style = '';
@@ -57,10 +64,10 @@ export const Renderers: Record<string, any> = {
 
         const val = valMatch ? valMatch[1] : '';
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.escapeHtml(hintMatch[1]).replace(/<br>/g, '<br>')}</div>` : '';
+        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
 
         return `
-        <div class="form-row vertical" style="${this.getStyle(attrs)}">
+        <div class="form-row" style="${this.getStyle(attrs)}">
             <label class="form-label">${this.escapeHtml(label)}</label>
             <input type="text" class="form-input" data-json-path="${key}" value="${this.escapeHtml(val)}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
             ${hint}
@@ -72,7 +79,7 @@ export const Renderers: Record<string, any> = {
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.escapeHtml(hintMatch[1]).replace(/<br>/g, '<br>')}</div>` : '';
+        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
 
         return `
         <div class="form-row">
@@ -95,7 +102,7 @@ export const Renderers: Record<string, any> = {
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.escapeHtml(hintMatch[1]).replace(/<br>/g, '<br>')}</div>` : '';
+        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
         return `
         <div class="form-row vertical" style="${this.getStyle(attrs)}">
             <label class="form-label">${this.escapeHtml(label)}</label>
@@ -135,7 +142,7 @@ export const Renderers: Record<string, any> = {
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.escapeHtml(hintMatch[1]).replace(/<br>/g, '<br>')}</div>` : '';
+        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
 
         let optionsHtml = '';
         const srcKey = srcMatch ? srcMatch[1] : '';

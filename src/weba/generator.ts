@@ -6,18 +6,19 @@ body { font-family: sans-serif; background: #eee; margin: 0; padding: 20px; }
 .page { margin: 0 auto; background: white; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20mm; max-width: 100%; box-sizing: border-box; }
 .form-row { display: flex; margin-bottom: 20px; align-items: center; }
 .form-row.vertical { display: block; }
-.form-label { display: block; font-weight: bold; margin-right: 15px; min-width: 140px; }
+.form-label { display: block; font-weight: bold; margin-right: 12px; min-width: 120px; }
 .form-row.vertical .form-label { margin-bottom: 8px; width: 100%; }
 .form-input { 
     flex: 1; 
     width: 100%; 
-    padding: 8px; 
+    padding: 6px; 
     border: 1px solid #ccc; 
     border-radius: 4px; 
     box-sizing: border-box; 
-    font-size: 16px; 
-    max-width: 800px;
+    font-size: 14px; 
+    max-width: 640px;
 }
+textarea.form-input { max-width: none; }
 .table-wrapper { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 20px; }
 .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
 .data-table th, .data-table td { border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 4px 8px; text-align: left; vertical-align: middle; }
@@ -49,6 +50,7 @@ button.primary:hover { background: #0056b3; }
 }
 .tab-btn:hover { background: #f9f9f9; }
 .tab-btn.active { color: #007bff; border-bottom: 2px solid #007bff; }
+.tabs-nav .primary { margin: 5px; padding: 8px 14px; font-size: 14px; display: inline-flex; align-items: center; }
 .tab-content { display: none; animation: fadeIn 0.3s; }
 .tab-content.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

@@ -223,7 +223,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         });
         // Add spacer and Save button
         navHtml += '<div style="flex:1"></div>';
-        navHtml += `<button class="tab-btn" style="color:#007bff; border:1px solid #007bff; border-radius:4px; margin:5px;" onclick="saveDocument()" data-i18n="save_btn">Save</button>`;
+        navHtml += `<button class="primary" onclick="saveDocument()" data-i18n="save_btn">Save</button>`;
         navHtml += '</div>';
         
         // Find position to insert Nav: After H1
