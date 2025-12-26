@@ -274,6 +274,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     if (currentTabId) appendHtml('</div>'); // Close last tab
 
     // Final Assembly: Inject Tab Nav if tabs exist
+    const toolbarHtml = `<div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
+            <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
+            <button class="primary" onclick="window.signAndDownload()" style="margin: 0; background-color: #2e7d32;" data-i18n="sign_btn">Sign & Save</button>
+            <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit HTML</button>
+        </div>`;
+
     if (tabs.length > 0) {
         let navHtml = '<div class="tabs-nav">';
         tabs.forEach((tab, idx) => {
@@ -285,21 +292,19 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center;">
             <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
             <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
+            <button class="primary" onclick="window.signAndDownload()" style="margin: 0; background-color: #2e7d32;" data-i18n="sign_btn">Sign & Save</button>
             <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
         </div>`;
         navHtml += '</div>';
 
         // Find position to insert Nav: After H1
-        // Simplified: Just prepend to mainContentHtml, but after H1 if exists.
-        // Actually, H1 is inside mainContentHtml.
-        // Let's use Regex to inject after H1, or top if no H1.
         if (mainContentHtml.includes('</h1>')) {
             html = mainContentHtml.replace('</h1>', '</h1>' + navHtml);
         } else {
             html = navHtml + mainContentHtml;
         }
     } else {
-        html = mainContentHtml;
+        html = mainContentHtml + toolbarHtml;
     }
 
     return { html, jsonStructure };

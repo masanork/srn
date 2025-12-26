@@ -16,6 +16,7 @@ export function initRuntime() {
 
     w.saveDraft = () => data.saveDraft();
     w.submitDocument = () => data.submitDocument();
+    w.signAndDownload = () => data.signAndDownload();
     w.clearData = () => data.clearData();
     w.removeTableRow = (btn: any) => ui.removeTableRow(btn);
     w.addTableRow = (btn: any, tableKey: string) => ui.addTableRow(btn, tableKey);
