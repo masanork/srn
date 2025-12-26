@@ -614,43 +614,45 @@ function generateHtml(markdown) {
 }
 
 // src/weba/browser_maker.ts
-var DEFAULT_MARKDOWN = `# 経費精算申請書
+var DEFAULT_MARKDOWN = `# 御見積書
 ---
 
-## 申請人情報
+## 顧客情報
 
-- [text:employee_id (size:S placeholder="例: 123456")] 社員番号
-- [text:dept (val="営業部" size:S)] 所属部署
-- [text:name (size:L placeholder="氏名を入力してください")] 氏名
-- [date:date] 申請日
-
----
-
-## 申請詳細
-
-- [radio:type] 経費種別
-  - [x] 交通費
-  - 会議費
-  - 消耗品費
-  - その他
-
-- [textarea:reason (placeholder="例: クライアント訪問のため")] 申請理由（詳細）
+- [text:client_name (placeholder="株式会社〇〇 御中" size:L)] 顧客名
+- [date:issue_date] 発行日
+- [text:project_name (placeholder="例: Webサイトリニューアル案件")] 件名
 
 ---
 
-## 経費明細 (動的テーブル)
+## 見積明細
 
 [dynamic-table:items]
-| 日付 | 内容 | 金額 | 支払先 | 備考 |
-|---|---|---|---|---|
-| [date:date] | [text:description] | [number:amount (align:R placeholder="0")] | [datalist:payee (src:vendors placeholder="例: ○○商事")] | [text:note] |
+| 品目 / 内容 | 単価 | 数量 | 金額 |
+|---|---|---|---|
+| [datalist:item (src:products placeholder="品目を選択または入力")] | [number:price (placeholder="0" align:R)] | [number:qty (placeholder="1" align:R)] | [calc:amount (formula="price * qty" align:R)] |
 
-[master:vendors]
-| ID | Vendor Name | 
+<div style="text-align: right; margin-top: 20px;">
+
+- [calc:subtotal (formula="SUM(amount)" align:R)] 小計
+- [calc:tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] 消費税 (10%)
+- [calc:total (formula="SUM(amount) + Math.floor(SUM(amount) * 0.1)" size:XL align:R bold)] 合計金額
+
+</div>
+
+---
+
+## 備考
+- [textarea:remarks (placeholder="有効期限: 発行より2週間")] 備考欄
+
+[master:products]
+| Item Name | Unit Price |
 |---|---|
-| 001 | 山田文具店 |
-| 002 | 鈴木交通 |
-| 003 | 田中商事 |
+| システム開発一式 (人月) | 800000 |
+| 初期導入費用 | 150000 |
+| サーバー構築費 | 120000 |
+| UI/UXデザイン費 | 300000 |
+| 月額保守サポート | 30000 |
 `;
 function updatePreview() {
   const editor = document.getElementById("editor");
