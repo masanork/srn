@@ -135,6 +135,46 @@ var Renderers = {
             ${hint}
         </div>`;
   },
+  renderInput(type, key, attrs, isTemplate = false) {
+    const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
+    const placeholder = placeholderMatch ? `placeholder="${this.escapeHtml(placeholderMatch[1])}"` : "";
+    const commonClass = isTemplate ? "form-input template-input" : "form-input";
+    const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+    if (type === "calc") {
+      const formulaMatch = (attrs || "").match(/formula="([^"]+)"/) || (attrs || "").match(/formula='([^']+)'/);
+      const formula = formulaMatch ? formulaMatch[1] : "";
+      return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+    }
+    if (type === "datalist") {
+      const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
+      const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
+      let optionsHtml = "";
+      const srcKey = srcMatch ? srcMatch[1] : "";
+      if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
+        const data = this._context.masterData[srcKey];
+        const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
+        data.forEach((row) => {
+          if (row.length > lIdx) {
+            optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || "")}"></option>`;
+          }
+        });
+      }
+      const listId = "list_" + key + "_" + Math.floor(Math.random() * 1e4);
+      return `<input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist>`;
+    }
+    if (type === "search") {
+      const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
+      const srcKey = srcMatch ? srcMatch[1] : "";
+      const searchClass = commonClass + " search-input";
+      return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
+                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                    </div>`;
+    }
+    if (type === "number") {
+      return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+    }
+    return `<input type="text" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+  },
   tableRow(cells, isTemplate = false) {
     const tds = cells.map((cell) => {
       const trimmed = cell.trim();
@@ -142,56 +182,8 @@ var Renderers = {
       if (match) {
         let [_, type, key, attrsParen, attrsColon] = match;
         const attrs = attrsParen || attrsColon;
-        const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
-        const placeholder = placeholderMatch ? `placeholder="${this.escapeHtml(placeholderMatch[1])}"` : "";
-        if (type === "calc") {
-          const formulaMatch = (attrs || "").match(/formula="([^"]+)"/) || (attrs || "").match(/formula='([^']+)'/);
-          const formula = formulaMatch ? formulaMatch[1] : "";
-          const commonClass = isTemplate ? "form-input template-input" : "form-input";
-          const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-          return `<td><input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-        }
-        if (type === "datalist") {
-          const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
-          const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
-          let optionsHtml = "";
-          const srcKey = srcMatch ? srcMatch[1] : "";
-          if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
-            const data = this._context.masterData[srcKey];
-            const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
-            data.forEach((row) => {
-              if (row.length > lIdx) {
-                optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || "")}"></option>`;
-              }
-            });
-          }
-          const listId = "list_" + key + "_" + Math.floor(Math.random() * 1e4);
-          const commonClass = isTemplate ? "form-input template-input" : "form-input";
-          const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-          return `<td><input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist></td>`;
-        }
-        if (type === "search") {
-          const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_]+)/);
-          const srcKey = srcMatch ? srcMatch[1] : "";
-          const commonClass = isTemplate ? "form-input template-input search-input" : "form-input search-input";
-          const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-          return `<td>
-                        <div style="position:relative;">
-                            <input type="text" class="${commonClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
-                            <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1001;"></div>
-                        </div>
-                    </td>`;
-        }
-        if (type === "number") {
-          const commonClass = isTemplate ? "form-input template-input" : "form-input";
-          const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
-          return `<td><input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-        }
-        if (isTemplate) {
-          return `<td><input type="text" class="form-input template-input" data-base-key="${key}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-        } else {
-          return `<td><input type="text" class="form-input" data-json-path="${key}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></td>`;
-        }
+        const inputHtml = this.renderInput(type || "text", key, attrs, isTemplate);
+        return `<td>${inputHtml}</td>`;
       } else {
         return `<td>${this.escapeHtml(trimmed)}</td>`;
       }
@@ -245,6 +237,14 @@ function parseMarkdown(text) {
   let mainContentHtml = "";
   const appendHtml = (str) => {
     mainContentHtml += str;
+  };
+  const processInlineTags = (text2) => {
+    return text2.replace(/\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*?)\))?\]/g, (match, type, key, attrs) => {
+      const label = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
+      const cleanLabel = label ? label[1] : key;
+      jsonStructure.fields.push({ key, label: cleanLabel, type: type || "text" });
+      return Renderers.renderInput(type || "text", key, attrs || "");
+    });
   };
   lines.forEach((line) => {
     const trimmed = line.trim();
@@ -375,13 +375,13 @@ function parseMarkdown(text) {
         appendHtml("</div></div>");
         currentRadioGroup = null;
       }
-      appendHtml(trimmed);
+      appendHtml(processInlineTags(trimmed));
     } else if (trimmed.length > 0) {
       if (currentRadioGroup) {
         appendHtml("</div></div>");
         currentRadioGroup = null;
       }
-      appendHtml(`<p>${Renderers.escapeHtml(trimmed)}</p>`);
+      appendHtml(`<p>${Renderers.escapeHtml(processInlineTags(trimmed))}</p>`);
     } else {
       if (currentRadioGroup) {
         appendHtml("</div></div>");
@@ -575,7 +575,6 @@ function runtime() {
     }
   }
   function recalculate() {
-    console.log("Recalculating...");
     document.querySelectorAll("[data-formula]").forEach((calcField) => {
       const formula = calcField.dataset.formula;
       if (!formula)
@@ -701,8 +700,10 @@ function runtime() {
   });
   w.saveDocument = saveDocument;
   w.recalculate = recalculate;
+  w.initSearch = initSearch;
   console.log("Web/A Runtime Initialized");
   function initSearch() {
+    console.log("Initializing Search...");
     const normalize = (s) => {
       if (!s)
         return "";
@@ -728,27 +729,64 @@ function runtime() {
         return 1;
       return 0;
     };
+    let suggestionsVisible = false;
+    let activeSearchInput = null;
+    let globalBox = null;
+    const getGlobalBox = () => {
+      if (!globalBox) {
+        globalBox = document.getElementById("web-a-search-suggestions");
+        if (!globalBox) {
+          globalBox = document.createElement("div");
+          globalBox.id = "web-a-search-suggestions";
+          globalBox.className = "search-suggestions";
+          Object.assign(globalBox.style, {
+            display: "none",
+            position: "absolute",
+            background: "white",
+            border: "1px solid #ccc",
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+            zIndex: "9999",
+            maxHeight: "200px",
+            overflowY: "auto",
+            borderRadius: "4px"
+          });
+          document.body.appendChild(globalBox);
+        }
+      }
+      return globalBox;
+    };
+    const hideSuggestions = () => {
+      const box = getGlobalBox();
+      if (box)
+        box.style.display = "none";
+      suggestionsVisible = false;
+      activeSearchInput = null;
+    };
     document.addEventListener("click", (e) => {
-      if (!e.target.closest(".autocomplete-container") && !e.target.closest("td")) {
-        document.querySelectorAll(".search-suggestions").forEach((el) => el.style.display = "none");
+      if (suggestionsVisible && !e.target.closest("#web-a-search-suggestions") && e.target !== activeSearchInput) {
+        hideSuggestions();
       }
     });
     document.body.addEventListener("input", (e) => {
       if (e.target.classList.contains("search-input")) {
+        console.log("Search: Input event detected on .search-input", e.target.value);
         const input = e.target;
-        const container = input.parentElement;
-        const suggestionsBox = container.querySelector(".search-suggestions");
+        activeSearchInput = input;
         const srcKey = input.dataset.masterSrc;
-        if (!srcKey || !suggestionsBox)
+        if (!srcKey) {
+          console.warn("Search: No src key found", { srcKey });
           return;
+        }
         const query = input.value;
         if (!query) {
-          suggestionsBox.style.display = "none";
+          hideSuggestions();
           return;
         }
         const master = w.generatedJsonStructure.masterData;
-        if (!master || !master[srcKey])
+        if (!master || !master[srcKey]) {
+          console.warn(`Search: masterData key '${srcKey}' not found.`);
           return;
+        }
         const data = master[srcKey];
         const hits = [];
         data.forEach((row) => {
@@ -760,27 +798,40 @@ function runtime() {
         });
         hits.sort((a, b) => b.score - a.score);
         const topHits = hits.slice(0, 10);
+        console.log(`Search: Query '${query}' matched ${hits.length} records. Showing top ${topHits.length}.`);
         if (topHits.length > 0) {
           let html = "";
           topHits.forEach((h) => {
-            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:6px; cursor:pointer; border-bottom:1px solid #eee;">${w.escapeHtml(h.val)}</div>`;
+            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
           });
-          suggestionsBox.innerHTML = html;
-          suggestionsBox.style.display = "block";
+          const box = getGlobalBox();
+          box.innerHTML = html;
+          const rect = input.getBoundingClientRect();
+          const scrollTop = window.scrollY || document.documentElement.scrollTop;
+          const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+          Object.assign(box.style, {
+            display: "block",
+            top: rect.bottom + scrollTop + "px",
+            left: rect.left + scrollLeft + "px",
+            width: rect.width + "px",
+            minWidth: "200px"
+          });
+          suggestionsVisible = true;
         } else {
-          suggestionsBox.style.display = "none";
+          hideSuggestions();
         }
       }
     });
     document.body.addEventListener("click", (e) => {
       if (e.target.classList.contains("suggestion-item")) {
         const item = e.target;
-        const box = item.closest(".search-suggestions");
-        const container = box.parentElement;
-        const input = container.querySelector("input");
-        input.value = item.dataset.val;
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        box.style.display = "none";
+        if (activeSearchInput) {
+          activeSearchInput.value = item.dataset.val;
+          activeSearchInput.dispatchEvent(new Event("input", { bubbles: true }));
+          hideSuggestions();
+        } else {
+          console.warn("Search: No active input found for selection");
+        }
       }
     });
   }
@@ -864,6 +915,8 @@ function aggregatorRuntime() {
     let loadedCount = 0;
     for (let i = 0;i < files.length; i++) {
       const file = files[i];
+      if (!file)
+        continue;
       if (file.name.endsWith(".html") || file.name.endsWith(".htm")) {
         const text = await file.text();
         const doc = new DOMParser().parseFromString(text, "text/html");
@@ -968,43 +1021,41 @@ function generateAggregatorHtml(markdown) {
 </html>`;
 }
 
-// src/weba/browser_maker.ts
-var DEFAULT_MARKDOWN = `# 請求書 (Sample Invoice)
+// src/weba/sample.ts
+var DEFAULT_MARKDOWN = `# Simple Search & Calc Test
 ---
 
-## 1. 宛先・基本情報
+## 1. Master Data Definition
+(This will be hidden in the UI but used for search)
 
-- [text:recipient_name (placeholder="株式会社〇〇 御中" size:L)] 請求先名
-- [text:invoice_no (placeholder="INV-2025-001")] 請求書番号
-- [date:issue_date] 発行日
+[master:products]
+| Item Name | Price |
+|---|---|
+| Apple | 100 |
+| Banana | 200 |
+| Cherry | 300 |
+| Durian | 5000 |
+| Elderberry | 400 |
 
 ---
 
-## 2. 明細 (Calculation Demo)
+## 2. Input Form
+
+We want to verify:
+1. Search suggestion works for "Product"
+2. Calculation works for "Total"
 
 [dynamic-table:items]
-| 品目・摘要 | 単価 (Unit Price) | 数量 (Qty) | 金額 (Amount) |
+| Product (Search) | Unit Price | Qty | Total |
 |---|---|---|---|
-| [text:item_desc (placeholder="品目名")] | [number:price (placeholder="0" align:R)] | [number:qty (placeholder="1" align:R)] | [calc:amount (formula="price * qty" align:R)] |
+| [search:item_name (src:products placeholder="Search fruit...")] | [number:price (placeholder="0")] | [number:qty (placeholder="1")] | [calc:amount (formula="price * qty")] |
 
-<div style="text-align: right; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">
-
-- [calc:subtotal (formula="SUM(amount)" align:R)] 小計 (Subtotal)
-- [calc:tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] 消費税 (10%)
-- [calc:total (formula="SUM(amount) + Math.floor(SUM(amount) * 0.1)" size:XL align:R bold)] ご請求金額 (Total)
-
+<div style="text-align: right; margin-top: 10px;">
+  <b>Grand Total:</b> [calc:grand_total (formula="SUM(amount)" size:L bold)]
 </div>
-
----
-
-## 3. 振込先情報 (Static Table)
-
-| 銀行名 | 支店名 | 口座番号 |
-|---|---|---|
-| [text:bank_name (val="サンプルの銀行")] | [text:branch (val="本店営業部")] | [text:acc_no (val="1234567")] |
-
-- [textarea:notes (placeholder="備考（支払期限など）" hint="振込手数料は貴社にてご負担願います。")] 備考
 `;
+
+// src/weba/browser_maker.ts
 function updatePreview() {
   console.log("Web/A Maker v2.3");
   const editor = document.getElementById("editor");
@@ -1012,9 +1063,9 @@ function updatePreview() {
   if (!editor || !preview)
     return;
   const { html, jsonStructure } = parseMarkdown(editor.value);
-  preview.innerHTML = html;
   window.generatedJsonStructure = jsonStructure;
-  if (!window.recalculate) {
+  preview.innerHTML = html;
+  if (!window.isRuntimeLoaded) {
     initRuntime();
     window.isRuntimeLoaded = true;
   }

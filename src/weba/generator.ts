@@ -170,7 +170,7 @@ function runtime() {
     }
 
     function recalculate() {
-        console.log("Recalculating...");
+        // console.log("Recalculating...");
         document.querySelectorAll('[data-formula]').forEach((calcField: any) => {
             const formula = calcField.dataset.formula;
             if (!formula) return;
@@ -306,16 +306,16 @@ function runtime() {
     // Expose explicitly for onclick handlers in HTML
     w.saveDocument = saveDocument;
     w.recalculate = recalculate; // For Maker preview to trigger initial calc
+    w.initSearch = initSearch; // For Maker preview to init search logic
 
     console.log("Web/A Runtime Initialized");
 
     function initSearch() {
+        console.log("Initializing Search...");
         const normalize = (s: string) => {
             if (!s) return '';
             let n = s.trim();
-            // Full-width to Half-width (alphanumeric)
             n = n.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-            // Space normalization
             n = n.replace(/\s+/g, ' ').toLowerCase();
             return n;
         };
@@ -323,7 +323,6 @@ function runtime() {
         const clean = (s: string) => {
             if (!s) return '';
             let n = normalize(s);
-            // Remove corporate prefixes/suffixes (partial list)
             n = n.replace(/(株式会社|有限会社|合同会社|一般社団法人|公益社団法人|npo法人|学校法人|社会福祉法人)/g, '');
             n = n.replace(/(\(株\)|\(有\)|\(同\))/g, '');
             return n.trim();
@@ -332,43 +331,84 @@ function runtime() {
         const getScore = (query: string, targetParsed: string, targetOriginal: string) => {
             const q = clean(query);
             const t = clean(targetParsed);
-            if (t.includes(q)) return 2; // Exact partial match after cleaning
-            if (normalize(targetOriginal).includes(normalize(query))) return 1; // Basic partial match
+            if (t.includes(q)) return 2;
+            if (normalize(targetOriginal).includes(normalize(query))) return 1;
             return 0;
+        };
+
+        let suggestionsVisible = false;
+        let activeSearchInput: HTMLInputElement | null = null;
+        let globalBox: HTMLElement | null = null;
+
+        const getGlobalBox = () => {
+            if (!globalBox) {
+                globalBox = document.getElementById('web-a-search-suggestions');
+                if (!globalBox) {
+                    globalBox = document.createElement('div');
+                    globalBox.id = 'web-a-search-suggestions';
+                    globalBox.className = 'search-suggestions';
+                    // Base styles for the global box
+                    Object.assign(globalBox.style, {
+                        display: 'none',
+                        position: 'absolute',
+                        background: 'white',
+                        border: '1px solid #ccc',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                        zIndex: '9999',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        borderRadius: '4px'
+                    });
+                    document.body.appendChild(globalBox);
+                }
+            }
+            return globalBox;
+        };
+
+        const hideSuggestions = () => {
+            const box = getGlobalBox();
+            if (box) box.style.display = 'none';
+            suggestionsVisible = false;
+            activeSearchInput = null;
         };
 
         // Close suggestions on click outside
         document.addEventListener('click', (e: any) => {
-            if (!e.target.closest('.autocomplete-container') && !e.target.closest('td')) {
-                document.querySelectorAll('.search-suggestions').forEach((el: any) => el.style.display = 'none');
+            if (suggestionsVisible && !e.target.closest('#web-a-search-suggestions') && e.target !== activeSearchInput) {
+                hideSuggestions();
             }
         });
 
         // Delegate input for search
         document.body.addEventListener('input', (e: any) => {
             if (e.target.classList.contains('search-input')) {
-                const input = e.target;
-                const container = input.parentElement;
-                const suggestionsBox = container.querySelector('.search-suggestions');
+                console.log("Search: Input event detected on .search-input", e.target.value);
+                const input = e.target as HTMLInputElement;
+                activeSearchInput = input;
+
                 const srcKey = input.dataset.masterSrc;
-                if (!srcKey || !suggestionsBox) return;
+                if (!srcKey) {
+                    console.warn("Search: No src key found", { srcKey });
+                    return;
+                }
 
                 const query = input.value;
                 if (!query) {
-                    suggestionsBox.style.display = 'none';
+                    hideSuggestions();
                     return;
                 }
 
                 // @ts-ignore
                 const master = w.generatedJsonStructure.masterData;
-                if (!master || !master[srcKey]) return;
+                if (!master || !master[srcKey]) {
+                    console.warn(`Search: masterData key '${srcKey}' not found.`);
+                    return;
+                }
 
                 const data = master[srcKey];
                 const hits: any[] = [];
 
                 data.forEach((row: string[]) => {
-                    // Assuming col 0 is value/label. Or if multiple cols, search all or specific?
-                    // Let's assume col 0 is the primary label/value
                     const val = row[0] || '';
                     const score = getScore(query, val, val);
                     if (score > 0) {
@@ -377,17 +417,34 @@ function runtime() {
                 });
 
                 hits.sort((a, b) => b.score - a.score);
-                const topHits = hits.slice(0, 10); // Match limit
+                const topHits = hits.slice(0, 10);
+                console.log(`Search: Query '${query}' matched ${hits.length} records. Showing top ${topHits.length}.`);
 
                 if (topHits.length > 0) {
                     let html = '';
                     topHits.forEach(h => {
-                        html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:6px; cursor:pointer; border-bottom:1px solid #eee;">${w.escapeHtml(h.val)}</div>`;
+                        html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(h.val)}</div>`;
                     });
-                    suggestionsBox.innerHTML = html;
-                    suggestionsBox.style.display = 'block';
+
+                    const box = getGlobalBox();
+                    box.innerHTML = html;
+
+                    // Positioning
+                    const rect = input.getBoundingClientRect();
+                    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                    const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+
+                    Object.assign(box.style, {
+                        display: 'block',
+                        top: (rect.bottom + scrollTop) + 'px',
+                        left: (rect.left + scrollLeft) + 'px',
+                        width: rect.width + 'px', // Match input width
+                        minWidth: '200px' // But at least 200px
+                    });
+
+                    suggestionsVisible = true;
                 } else {
-                    suggestionsBox.style.display = 'none';
+                    hideSuggestions();
                 }
             }
         });
@@ -396,13 +453,14 @@ function runtime() {
         document.body.addEventListener('click', (e: any) => {
             if (e.target.classList.contains('suggestion-item')) {
                 const item = e.target;
-                const box = item.closest('.search-suggestions');
-                const container = box.parentElement;
-                const input = container.querySelector('input');
-
-                input.value = item.dataset.val;
-                input.dispatchEvent(new Event('input', { bubbles: true })); // Trigger recalc
-                box.style.display = 'none';
+                // Use activeSearchInput captured from input event
+                if (activeSearchInput) {
+                    activeSearchInput.value = item.dataset.val;
+                    activeSearchInput.dispatchEvent(new Event('input', { bubbles: true })); // Trigger recalc & hide
+                    hideSuggestions();
+                } else {
+                    console.warn("Search: No active input found for selection");
+                }
             }
         });
     }
@@ -497,6 +555,7 @@ function aggregatorRuntime() {
         let loadedCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            if (!file) continue;
             if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
                 const text = await file.text();
                 const doc = new DOMParser().parseFromString(text, 'text/html');
