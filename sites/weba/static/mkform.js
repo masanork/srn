@@ -230,6 +230,8 @@ function parseMarkdown(text) {
   let inTable = false;
   let inMasterTable = false;
   let currentMasterKey = null;
+  jsonStructure.fields = [];
+  jsonStructure.tables = {};
   let tabs = [];
   let currentTabId = null;
   let mainContentHtml = "";
@@ -246,6 +248,7 @@ function parseMarkdown(text) {
     const dynTableMatch = trimmed.match(/^\[dynamic-table:([a-zA-Z0-9_]+)\]$/);
     if (dynTableMatch) {
       currentDynamicTableKey = dynTableMatch[1];
+      jsonStructure.tables[currentDynamicTableKey] = [];
       return;
     }
     if (trimmed.startsWith("|")) {
@@ -274,6 +277,17 @@ function parseMarkdown(text) {
           if (!hasInput) {
             appendHtml(`<tr>${cells.map((c) => `<th>${Renderers.escapeHtml(c)}</th>`).join("")}</tr>`);
           } else {
+            const tableKey = currentDynamicTableKey;
+            cells.forEach((cell) => {
+              const match = cell.trim().match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+              if (match) {
+                const [_, type, key, attrsParen, attrsColon] = match;
+                const attrs = attrsParen || attrsColon;
+                const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
+                const label = placeholderMatch ? placeholderMatch[1] : key;
+                jsonStructure.tables[tableKey].push({ key, label, type: type || "text" });
+              }
+            });
             appendHtml(Renderers.tableRow(cells, true));
           }
         } else {
@@ -333,6 +347,7 @@ function parseMarkdown(text) {
         const [_, type, key, attrs, label] = match;
         currentRadioGroup = null;
         const cleanLabel = (label || "").trim();
+        jsonStructure.fields.push({ key, label: cleanLabel, type });
         if (type === "radio") {
           currentRadioGroup = { key, label: cleanLabel, attrs };
           appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
@@ -718,6 +733,144 @@ function generateHtml(markdown) {
 </body>
 </html>`;
 }
+function aggregatorRuntime() {
+  const w = window;
+  const jsonStructure = w.generatedJsonStructure;
+  const fields = jsonStructure.fields || [];
+  let allData = [];
+  function renderTable() {
+    const container = document.getElementById("table-container");
+    if (!container)
+      return;
+    let html = '<table class="data-table"><thead><tr>';
+    html += "<th>Filename</th>";
+    fields.forEach((f) => html += `<th>${f.label}</th>`);
+    html += "</tr></thead><tbody>";
+    allData.forEach((row) => {
+      html += "<tr>";
+      html += `<td>${row.filename || "-"}</td>`;
+      const d = row.data || {};
+      fields.forEach((f) => {
+        let val = d[f.key];
+        if (typeof val === "object")
+          val = JSON.stringify(val);
+        html += `<td>${val || ""}</td>`;
+      });
+      html += "</tr>";
+    });
+    html += "</tbody></table>";
+    container.innerHTML = html;
+    const countEl = document.getElementById("count");
+    if (countEl)
+      countEl.textContent = allData.length + " files loaded";
+  }
+  async function handleFiles(files) {
+    let loadedCount = 0;
+    for (let i = 0;i < files.length; i++) {
+      const file = files[i];
+      if (file.name.endsWith(".html") || file.name.endsWith(".htm")) {
+        const text = await file.text();
+        const doc = new DOMParser().parseFromString(text, "text/html");
+        const script = doc.getElementById("json-ld");
+        if (script && script.textContent) {
+          try {
+            const json = JSON.parse(script.textContent);
+            allData.push({ filename: file.name, data: json });
+            loadedCount++;
+          } catch (e) {
+            console.error("Error parsing JSON from " + file.name, e);
+          }
+        }
+      } else if (file.name.endsWith(".json")) {
+        try {
+          const text = await file.text();
+          const json = JSON.parse(text);
+          if (Array.isArray(json) && json.length > 0 && (json[0].filename || json[0].data)) {
+            allData = allData.concat(json);
+            loadedCount += json.length;
+          } else if (typeof json === "object") {
+            allData.push({ filename: file.name, data: json });
+            loadedCount++;
+          }
+        } catch (e) {}
+      }
+    }
+    renderTable();
+    alert(`${loadedCount} files loaded/imported.`);
+  }
+  function setup() {
+    const input = document.getElementById("file-input");
+    input?.addEventListener("change", (e) => {
+      if (e.target.files)
+        handleFiles(e.target.files);
+    });
+    const dropZone = document.getElementById("drop-zone");
+    dropZone?.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.style.background = "#eef";
+    });
+    dropZone?.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dropZone.style.background = "";
+    });
+    dropZone?.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.style.background = "";
+      if (e.dataTransfer?.files)
+        handleFiles(e.dataTransfer.files);
+    });
+    document.getElementById("btn-download")?.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = (jsonStructure.name || "data") + "_aggregated.json";
+      a.click();
+    });
+  }
+  setup();
+}
+var AGGREGATOR_RUNTIME_SCRIPT = `(${aggregatorRuntime.toString()})();`;
+function generateAggregatorHtml(markdown) {
+  const { jsonStructure } = parseMarkdown(markdown);
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>${jsonStructure.name || "Web/A Aggregator"}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>\uD83D\uDCCA</text></svg>">
+    <style>
+        ${BASE_CSS}
+        #drop-zone { border: 2px dashed #ccc; padding: 40px; text-align: center; margin-bottom: 20px; border-radius: 8px; color: #666; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .stats { margin-left: auto; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="page" style="max-width: 1200px;">
+        <h1>${jsonStructure.name} - Aggregator</h1>
+        
+        <div id="drop-zone">
+            <p>Drop Web/A HTML files or JSON Archive here</p>
+            <p>or</p>
+            <input type="file" id="file-input" multiple webkitdirectory />
+        </div>
+
+        <div class="controls">
+            <button class="primary" id="btn-download">Download Aggregated JSON</button>
+            <div class="stats" id="count">0 files loaded</div>
+        </div>
+
+        <div id="table-container" class="table-wrapper">
+            <p style="padding: 20px; text-align: center; color: #999;">No data loaded</p>
+        </div>
+    </div>
+    <script>
+        window.generatedJsonStructure = ${JSON.stringify(jsonStructure)};
+        ${AGGREGATOR_RUNTIME_SCRIPT}
+    </script>
+</body>
+</html>`;
+}
 
 // src/weba/browser_maker.ts
 var DEFAULT_MARKDOWN = `# 請求書 (Sample Invoice)
@@ -785,8 +938,20 @@ function downloadWebA() {
   a.download = title + ".html";
   a.click();
 }
+function downloadAggregator() {
+  const editor = document.getElementById("editor");
+  const htmlContent = generateAggregatorHtml(editor.value);
+  const blob = new Blob([htmlContent], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const title = window.generatedJsonStructure && window.generatedJsonStructure.name || "web-a-aggregator";
+  a.download = title + "_aggregator.html";
+  a.click();
+}
 window.parseAndRender = updatePreview;
 window.downloadWebA = downloadWebA;
+window.downloadAggregator = downloadAggregator;
 window.addEventListener("DOMContentLoaded", () => {
   const editor = document.getElementById("editor");
   if (editor) {

@@ -42,10 +42,14 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     let inMasterTable = false;
     let currentMasterKey: string | null = null;
 
+    // Aggregator Schema
+    jsonStructure.fields = [];
+    jsonStructure.tables = {};
+
     // Tab Logic
     let tabs: { id: string, title: string }[] = [];
     let currentTabId: string | null = null;
-    let mainContentHtml = ''; 
+    let mainContentHtml = '';
 
     // Helper to append to the correct buffer
     const appendHtml = (str: string) => {
@@ -65,6 +69,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         const dynTableMatch = trimmed.match(/^\[dynamic-table:([a-zA-Z0-9_]+)\]$/);
         if (dynTableMatch) {
             currentDynamicTableKey = dynTableMatch[1];
+            jsonStructure.tables[currentDynamicTableKey] = [];
             return;
         }
 
@@ -100,6 +105,18 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     if (!hasInput) {
                         appendHtml(`<tr>${cells.map(c => `<th>${Renderers.escapeHtml(c)}</th>`).join('')}</tr>`);
                     } else {
+                        // Extract schema
+                        const tableKey = currentDynamicTableKey!;
+                        cells.forEach(cell => {
+                            const match = cell.trim().match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+                            if (match) {
+                                const [_, type, key, attrsParen, attrsColon] = match;
+                                const attrs = attrsParen || attrsColon;
+                                const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                                const label = placeholderMatch ? placeholderMatch[1] : key;
+                                jsonStructure.tables[tableKey].push({ key, label, type: type || 'text' });
+                            }
+                        });
                         // @ts-ignore
                         appendHtml(Renderers.tableRow(cells, true));
                     }
@@ -132,7 +149,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         if (headerMatch) {
             const level = headerMatch[1].length;
             const content = headerMatch[2];
-            
+
             if (level === 1) {
                 // H1 is Document Title
                 appendHtml(`<h1>${Renderers.escapeHtml(content)}</h1>`);
@@ -179,6 +196,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 currentRadioGroup = null;
                 const cleanLabel = (label || '').trim();
 
+                jsonStructure.fields.push({ key, label: cleanLabel, type });
+
                 if (type === 'radio') {
                     currentRadioGroup = { key, label: cleanLabel, attrs };
                     // @ts-ignore
@@ -193,7 +212,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
         else if (trimmed.startsWith('---')) {
             if (!currentTabId) { // Only render HR if not in tabs (tabs replace HR separation usually)
-                 appendHtml('<hr>');
+                appendHtml('<hr>');
             }
             currentRadioGroup = null;
         }
@@ -225,7 +244,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         navHtml += '<div style="flex:1"></div>';
         navHtml += `<button class="primary" onclick="saveDocument()" data-i18n="save_btn">Save</button>`;
         navHtml += '</div>';
-        
+
         // Find position to insert Nav: After H1
         // Simplified: Just prepend to mainContentHtml, but after H1 if exists.
         // Actually, H1 is inside mainContentHtml.
