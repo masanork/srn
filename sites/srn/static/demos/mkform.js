@@ -139,7 +139,7 @@ var Renderers = {
   tableRow(cells, isTemplate = false) {
     const tds = cells.map((cell) => {
       const trimmed = cell.trim();
-      const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\)|:([^\]]+))?\]$/);
+      const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
       if (match) {
         let [_, type, key, attrsParen, attrsColon] = match;
         const attrs = attrsParen || attrsColon;
@@ -280,7 +280,7 @@ function parseMarkdown(text) {
       if (inTable) {
         html += "</tbody></table></div>";
         if (currentDynamicTableKey) {
-          html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')">+ Add Row</button>`;
+          html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ Add Row</button>`;
           currentDynamicTableKey = null;
         }
         html += "</div>";
@@ -306,7 +306,7 @@ function parseMarkdown(text) {
         html += Renderers.radioOption(currentRadioGroup.key, label, label, checked);
       }
     } else if (trimmed.startsWith("- [")) {
-      const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\))?\]\s*(.*)$/);
+      const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
       if (match) {
         const [_, type, key, attrs, label] = match;
         currentRadioGroup = null;
@@ -323,6 +323,12 @@ function parseMarkdown(text) {
     } else if (trimmed.startsWith("---")) {
       html += "<hr>";
       currentRadioGroup = null;
+    } else if (trimmed.startsWith("<")) {
+      if (currentRadioGroup) {
+        html += "</div></div>";
+        currentRadioGroup = null;
+      }
+      html += trimmed;
     } else if (trimmed.length > 0) {
       if (currentRadioGroup) {
         html += "</div></div>";
@@ -382,212 +388,232 @@ button.primary:hover { background: #0056b3; }
     button { display: none !important; }
 }
 `;
-var RUNTIME_SCRIPT = `
-const FORM_ID = 'WebA_' + window.location.pathname;
-
-function updateJsonLd() {
-    const data = window.generatedJsonStructure || {};
-    
-    // 1. Static Inputs
-    document.querySelectorAll('[data-json-path]').forEach(input => {
-        const key = input.dataset.jsonPath;
-        if(key) {
-            data[key] = input.value;
-        }
+function runtime() {
+  const w = window;
+  const FORM_ID = "WebA_" + window.location.pathname;
+  function updateJsonLd() {
+    const data = w.generatedJsonStructure || {};
+    document.querySelectorAll("[data-json-path]").forEach((input) => {
+      const key = input.dataset.jsonPath;
+      if (key) {
+        data[key] = input.value;
+      }
     });
-
-    // 2. Radio Groups
-    document.querySelectorAll('[type="radio"]:checked').forEach(radio => {
-        data[radio.name] = radio.value;
+    document.querySelectorAll('[type="radio"]:checked').forEach((radio) => {
+      data[radio.name] = radio.value;
     });
-
-    // 3. Dynamic Tables
-    document.querySelectorAll('table.data-table.dynamic').forEach(table => {
-        const tableKey = table.dataset.tableKey;
-        if(tableKey) {
-            const rows = [];
-            table.querySelectorAll('tbody tr').forEach(tr => {
-                // Collect row data
-                const rowData = {};
-                let hasVal = false;
-                tr.querySelectorAll('[data-base-key]').forEach(input => {
-                    rowData[input.dataset.baseKey] = input.value;
-                    if(input.value) hasVal = true;
-                });
-                if(hasVal) rows.push(rowData);
-            });
-            data[tableKey] = rows;
-        }
+    document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
+      const tableKey = table.dataset.tableKey;
+      if (tableKey) {
+        const rows = [];
+        table.querySelectorAll("tbody tr").forEach((tr) => {
+          const rowData = {};
+          let hasVal = false;
+          tr.querySelectorAll("[data-base-key]").forEach((input) => {
+            rowData[input.dataset.baseKey] = input.value;
+            if (input.value)
+              hasVal = true;
+          });
+          if (hasVal)
+            rows.push(rowData);
+        });
+        data[tableKey] = rows;
+      }
     });
-
-    const scriptBlock = document.getElementById('json-ld');
-    if(scriptBlock) {
-        scriptBlock.textContent = JSON.stringify(data, null, 2);
+    const scriptBlock = document.getElementById("json-ld");
+    if (scriptBlock) {
+      scriptBlock.textContent = JSON.stringify(data, null, 2);
     }
-    const debugBlock = document.getElementById('json-debug');
-    if(debugBlock) {
-        debugBlock.textContent = JSON.stringify(data, null, 2);
+    const debugBlock = document.getElementById("json-debug");
+    if (debugBlock) {
+      debugBlock.textContent = JSON.stringify(data, null, 2);
     }
     return data;
-}
-
-function saveToLS() {
+  }
+  function saveToLS() {
     const data = updateJsonLd();
     localStorage.setItem(FORM_ID, JSON.stringify(data));
-}
-
-function restoreFromLS() {
+  }
+  function restoreFromLS() {
     const c = localStorage.getItem(FORM_ID);
-    if(!c) return;
+    if (!c)
+      return;
     try {
-        const d = JSON.parse(c);
-        // Static
-        document.querySelectorAll('[data-json-path]').forEach(input => {
-            const key = input.dataset.jsonPath;
-            if(d[key] !== undefined) input.value = d[key];
-        });
-        // Dynamic Tables
-        document.querySelectorAll('table.data-table.dynamic').forEach(table => {
-            const tableKey = table.dataset.tableKey;
-            const rowsData = d[tableKey];
-            if(Array.isArray(rowsData)) {
-                const tbody = table.querySelector('tbody');
-                // Remove existing except first template
-                const currentRows = tbody.querySelectorAll('.template-row');
-                for(let i=1; i<currentRows.length; i++) currentRows[i].remove();
-                
-                rowsData.forEach((rowData, idx) => {
-                    let row;
-                    if (idx === 0) {
-                        row = tbody.querySelector('.template-row');
-                    } else {
-                        // @ts-ignore
-                        row = tbody.querySelector('.template-row').cloneNode(true);
-                        tbody.appendChild(row);
-                    }
-                    if(row) {
-                        row.querySelectorAll('input, select').forEach((input: any) => {
-                             const k = input.dataset.baseKey;
-                             if(k && rowData[k] !== undefined) input.value = rowData[k];
-                        });
-                    }
-                });
-            }
-        });
-    } catch(e) { console.error(e); }
-}
-
-function recalculate() {
-    document.querySelectorAll('[data-formula]').forEach((calcField: any) => {
-        const formula = calcField.dataset.formula;
-        if (!formula) return;
-        const row = calcField.closest('tr');
-        const table = calcField.closest('table');
-        
-        const getValue = (varName) => {
-            if (row) {
-                const input = row.querySelector(\`[data-base-key="\${varName}"]\`);
-                // @ts-ignore
-                if (input && input.value !== '') return parseFloat(input.value);
-            }
-            const staticInput = document.querySelector(\`[data-json-path="\${varName}"]\`);
-            // @ts-ignore
-            if (staticInput && staticInput.value !== '') return parseFloat(staticInput.value);
-            return 0;
-        };
-
-        let evalStr = formula.replace(/SUM\\(([a-zA-Z0-9_]+)\\)/g, (_, key) => {
-            let sum = 0;
-            const scope = table || document;
-            scope.querySelectorAll(\`[data-base-key="\${key}"]\`).forEach((inp: any) => {
-                sum += parseFloat(inp.value) || 0;
-            });
-            return sum;
-        });
-
-        // Strict replacement for variables to avoid matching '100' as '0' if strict
-        // But here we just use regex match. 
-        // IMPORTANT: Sort variable names by length desc to avoid partial matches?
-        // Or simpler regex.
-        evalStr = evalStr.replace(/[a-zA-Z_][a-zA-Z0-9_]*/g, (match) => {
-             // Math functions
-             if(['Math','round','floor','ceil','abs','min','max'].includes(match)) return match;
-             return getValue(match);
-        });
-
-        try {
-            const result = new Function('return ' + evalStr)();
-            if (typeof result === 'number' && !isNaN(result)) {
-                calcField.value = Number.isInteger(result) ? result : result.toFixed(0); // Integer preferred
+      const d = JSON.parse(c);
+      document.querySelectorAll("[data-json-path]").forEach((input) => {
+        const key = input.dataset.jsonPath;
+        if (d[key] !== undefined)
+          input.value = d[key];
+      });
+      document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
+        const tableKey = table.dataset.tableKey;
+        const rowsData = d[tableKey];
+        if (Array.isArray(rowsData)) {
+          const tbody = table.querySelector("tbody");
+          if (!tbody)
+            return;
+          const currentRows = tbody.querySelectorAll(".template-row");
+          for (let i = 1;i < currentRows.length; i++)
+            currentRows[i].remove();
+          rowsData.forEach((rowData, idx) => {
+            let row;
+            if (idx === 0) {
+              row = tbody.querySelector(".template-row");
             } else {
-                calcField.value = '';
+              const tmpl = tbody.querySelector(".template-row");
+              if (tmpl) {
+                row = tmpl.cloneNode(true);
+                tbody.appendChild(row);
+              }
             }
-        } catch (e) {
-            console.error(e);
-            calcField.value = 'Err';
+            if (row) {
+              row.querySelectorAll("input, select").forEach((input) => {
+                const k = input.dataset.baseKey;
+                if (k && rowData[k] !== undefined)
+                  input.value = rowData[k];
+              });
+            }
+          });
         }
-    });
-}
-
-function saveDocument() {
-    updateJsonLd();
-    // Bake values into attributes
-    document.querySelectorAll('input, textarea, select').forEach((el: any) => {
-        if(el.type === 'checkbox' || el.type === 'radio') {
-            if(el.checked) el.setAttribute('checked', 'checked');
-            else el.removeAttribute('checked');
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  function recalculate() {
+    console.log("Recalculating...");
+    document.querySelectorAll("[data-formula]").forEach((calcField) => {
+      const formula = calcField.dataset.formula;
+      if (!formula)
+        return;
+      const row = calcField.closest("tr");
+      const table = calcField.closest("table");
+      const getValue = (varName) => {
+        if (row) {
+          const input = row.querySelector(`[data-base-key="${varName}"], [data-json-path="${varName}"]`);
+          if (input && input.value !== "")
+            return parseFloat(input.value);
+        }
+        const staticInput = document.querySelector(`[data-json-path="${varName}"]`);
+        if (staticInput && staticInput.value !== "")
+          return parseFloat(staticInput.value);
+        return 0;
+      };
+      let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_]+)\)/g, (_, key) => {
+        let sum = 0;
+        const scope = table || document;
+        scope.querySelectorAll(`[data-base-key="${key}"], [data-json-path="${key}"]`).forEach((inp) => {
+          const val = parseFloat(inp.value);
+          if (!isNaN(val))
+            sum += val;
+        });
+        return sum;
+      });
+      evalStr = evalStr.replace(/[a-zA-Z_][a-zA-Z0-9_]*/g, (match) => {
+        if (["Math", "round", "floor", "ceil", "abs", "min", "max"].includes(match))
+          return match;
+        return String(getValue(match));
+      });
+      try {
+        const result = new Function("return " + evalStr)();
+        if (typeof result === "number" && !isNaN(result)) {
+          calcField.value = Number.isInteger(result) ? result : result.toFixed(0);
         } else {
-            el.setAttribute('value', el.value);
-            if(el.tagName === 'TEXTAREA') el.textContent = el.value;
+          calcField.value = "";
         }
+      } catch (e) {
+        console.error("Calc Error:", e);
+        calcField.value = "Err";
+      }
     });
-    
-    // Remove buttons
-    document.querySelectorAll('button, .no-print').forEach(el => el.remove());
-    
-    // Disable inputs
-    document.querySelectorAll('input, textarea, select').forEach((el: any) => el.setAttribute('readonly', 'readonly'));
-
-    // Create blobs
+  }
+  function applyI18n() {
+    const RESOURCES = {
+      en: {
+        add_row: "+ Add Row",
+        save_btn: "Save"
+      },
+      ja: {
+        add_row: "+ 行を追加",
+        save_btn: "保存"
+      }
+    };
+    const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
+    const dict = RESOURCES[lang] || RESOURCES["en"];
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.dataset.i18n;
+      if (dict[key])
+        el.textContent = dict[key];
+    });
+  }
+  function saveDocument() {
+    updateJsonLd();
+    document.querySelectorAll("input, textarea, select").forEach((el) => {
+      if (el.type === "checkbox" || el.type === "radio") {
+        if (el.checked)
+          el.setAttribute("checked", "checked");
+        else
+          el.removeAttribute("checked");
+      } else {
+        el.setAttribute("value", el.value);
+        if (el.tagName === "TEXTAREA")
+          el.textContent = el.value;
+      }
+    });
+    document.querySelectorAll("button, .no-print").forEach((el) => el.remove());
+    document.querySelectorAll("input, textarea, select").forEach((el) => el.setAttribute("readonly", "readonly"));
     const htmlContent = document.documentElement.outerHTML;
-    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const blob = new Blob([htmlContent], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'form_filled.html';
+    const title = w.generatedJsonStructure && w.generatedJsonStructure.name || "web-a-form";
+    const now = new Date;
+    const dateStr = now.getFullYear() + ("0" + (now.getMonth() + 1)).slice(-2) + ("0" + now.getDate()).slice(-2) + "-" + ("0" + now.getHours()).slice(-2) + ("0" + now.getMinutes()).slice(-2);
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const filename = `${title}_${dateStr}_${randomId}.html`;
+    a.download = filename;
     a.click();
-    
-    // Reload to restore state? 
     setTimeout(() => location.reload(), 1000);
-}
-
-window.addTableRow = function(btn, tableKey) {
-    const table = document.getElementById('tbl_' + tableKey);
-    if (!table) return;
-    const tbody = table.querySelector('tbody');
-    // @ts-ignore
-    const templateRow = tbody.querySelector('.template-row');
-    if (!templateRow) return;
-    // @ts-ignore
+  }
+  w.addTableRow = function(btn, tableKey) {
+    const table = document.getElementById("tbl_" + tableKey);
+    if (!table)
+      return;
+    const tbody = table.querySelector("tbody");
+    if (!tbody)
+      return;
+    const templateRow = tbody.querySelector(".template-row");
+    if (!templateRow)
+      return;
     const newRow = templateRow.cloneNode(true);
-    // @ts-ignore
-    newRow.querySelectorAll('input').forEach(input => input.value = '');
-    // @ts-ignore
+    newRow.querySelectorAll("input").forEach((input) => input.value = "");
     tbody.appendChild(newRow);
-};
-
-let tm;
-document.addEventListener('input', () => { 
+  };
+  let tm;
+  document.addEventListener("input", () => {
     recalculate();
     updateJsonLd();
-    // @ts-ignore
-    clearTimeout(tm); tm = setTimeout(saveToLS, 1000); 
-});
-window.addEventListener('DOMContentLoaded', () => {
-    restoreFromLS();
-    recalculate();
-});
-`;
+    clearTimeout(tm);
+    tm = setTimeout(saveToLS, 1000);
+  });
+  w.saveDocument = saveDocument;
+  w.recalculate = recalculate;
+  console.log("Web/A Runtime Initialized");
+  restoreFromLS();
+  applyI18n();
+  recalculate();
+}
+var RUNTIME_SCRIPT = `(${runtime.toString()})();`;
+function initRuntime() {
+  if (typeof window === "undefined")
+    return;
+  if (window.recalculate) {
+    console.log("Runtime already loaded, skipping init");
+    return;
+  }
+  runtime();
+}
 function generateHtml(markdown) {
   const { html, jsonStructure } = parseMarkdown(markdown);
   return `<!DOCTYPE html>
@@ -595,12 +621,13 @@ function generateHtml(markdown) {
 <head>
     <meta charset="UTF-8">
     <title>${jsonStructure.name || "Web/A Form"}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>\uD83D\uDCC4</text></svg>">
     <style>${BASE_CSS}</style>
 </head>
 <body>
     <div class="page">
         ${html}
-        <button class="primary no-print" onclick="saveDocument()">Complete & Save (Bake)</button>
+        <button class="primary no-print" onclick="saveDocument()" data-i18n="save_btn">Save</button>
     </div>
     <script type="application/ld+json" id="json-ld">
         ${JSON.stringify(jsonStructure, null, 2)}
@@ -614,47 +641,44 @@ function generateHtml(markdown) {
 }
 
 // src/weba/browser_maker.ts
-var DEFAULT_MARKDOWN = `# 御見積書
+var DEFAULT_MARKDOWN = `# 請求書 (Sample Invoice)
 ---
 
-## 顧客情報
+## 1. 宛先・基本情報
 
-- [text:client_name (placeholder="株式会社〇〇 御中" size:L)] 顧客名
+- [text:recipient_name (placeholder="株式会社〇〇 御中" size:L)] 請求先名
+- [text:invoice_no (placeholder="INV-2025-001")] 請求書番号
 - [date:issue_date] 発行日
-- [text:project_name (placeholder="例: Webサイトリニューアル案件")] 件名
 
 ---
 
-## 見積明細
+## 2. 明細 (Calculation Demo)
 
 [dynamic-table:items]
-| 品目 / 内容 | 単価 | 数量 | 金額 |
+| 品目・摘要 | 単価 (Unit Price) | 数量 (Qty) | 金額 (Amount) |
 |---|---|---|---|
-| [datalist:item (src:products placeholder="品目を選択または入力")] | [number:price (placeholder="0" align:R)] | [number:qty (placeholder="1" align:R)] | [calc:amount (formula="price * qty" align:R)] |
+| [text:item_desc (placeholder="品目名")] | [number:price (placeholder="0" align:R)] | [number:qty (placeholder="1" align:R)] | [calc:amount (formula="price * qty" align:R)] |
 
-<div style="text-align: right; margin-top: 20px;">
+<div style="text-align: right; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">
 
-- [calc:subtotal (formula="SUM(amount)" align:R)] 小計
+- [calc:subtotal (formula="SUM(amount)" align:R)] 小計 (Subtotal)
 - [calc:tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] 消費税 (10%)
-- [calc:total (formula="SUM(amount) + Math.floor(SUM(amount) * 0.1)" size:XL align:R bold)] 合計金額
+- [calc:total (formula="SUM(amount) + Math.floor(SUM(amount) * 0.1)" size:XL align:R bold)] ご請求金額 (Total)
 
 </div>
 
 ---
 
-## 備考
-- [textarea:remarks (placeholder="有効期限: 発行より2週間")] 備考欄
+## 3. 振込先情報 (Static Table)
 
-[master:products]
-| Item Name | Unit Price |
-|---|---|
-| システム開発一式 (人月) | 800000 |
-| 初期導入費用 | 150000 |
-| サーバー構築費 | 120000 |
-| UI/UXデザイン費 | 300000 |
-| 月額保守サポート | 30000 |
+| 銀行名 | 支店名 | 口座番号 |
+|---|---|---|
+| [text:bank_name (val="サンプルの銀行")] | [text:branch (val="本店営業部")] | [text:acc_no (val="1234567")] |
+
+- [textarea:notes (placeholder="備考（支払期限など）" hint="振込手数料は貴社にてご負担願います。")] 備考
 `;
 function updatePreview() {
+  console.log("Web/A Maker v2.3");
   const editor = document.getElementById("editor");
   const preview = document.getElementById("preview");
   if (!editor || !preview)
@@ -662,10 +686,8 @@ function updatePreview() {
   const { html, jsonStructure } = parseMarkdown(editor.value);
   preview.innerHTML = html;
   window.generatedJsonStructure = jsonStructure;
-  if (!window.isRuntimeLoaded) {
-    const script = document.createElement("script");
-    script.textContent = RUNTIME_SCRIPT;
-    document.body.appendChild(script);
+  if (!window.recalculate) {
+    initRuntime();
     window.isRuntimeLoaded = true;
   }
   setTimeout(() => {
@@ -680,7 +702,8 @@ function downloadWebA() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "web-a-form.html";
+  const title = window.generatedJsonStructure && window.generatedJsonStructure.name || "web-a-form";
+  a.download = title + ".html";
   a.click();
 }
 window.parseAndRender = updatePreview;

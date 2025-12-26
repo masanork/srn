@@ -1,6 +1,6 @@
 
 import { parseMarkdown } from './parser';
-import { generateHtml, RUNTIME_SCRIPT } from './generator';
+import { generateHtml, initRuntime } from './generator';
 
 // Window global functions for HTML event handlers
 declare global {
@@ -14,48 +14,45 @@ declare global {
     }
 }
 
-const DEFAULT_MARKDOWN = `# 御見積書
+const DEFAULT_MARKDOWN = `# 請求書 (Sample Invoice)
 ---
 
-## 顧客情報
+## 1. 宛先・基本情報
 
-- [text:client_name (placeholder="株式会社〇〇 御中" size:L)] 顧客名
+- [text:recipient_name (placeholder="株式会社〇〇 御中" size:L)] 請求先名
+- [text:invoice_no (placeholder="INV-2025-001")] 請求書番号
 - [date:issue_date] 発行日
-- [text:project_name (placeholder="例: Webサイトリニューアル案件")] 件名
 
 ---
 
-## 見積明細
+## 2. 明細 (Calculation Demo)
 
 [dynamic-table:items]
-| 品目 / 内容 | 単価 | 数量 | 金額 |
+| 品目・摘要 | 単価 (Unit Price) | 数量 (Qty) | 金額 (Amount) |
 |---|---|---|---|
-| [datalist:item (src:products placeholder="品目を選択または入力")] | [number:price (placeholder="0" align:R)] | [number:qty (placeholder="1" align:R)] | [calc:amount (formula="price * qty" align:R)] |
+| [text:item_desc (placeholder="品目名")] | [number:price (placeholder="0" align:R)] | [number:qty (placeholder="1" align:R)] | [calc:amount (formula="price * qty" align:R)] |
 
-<div style="text-align: right; margin-top: 20px;">
+<div style="text-align: right; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">
 
-- [calc:subtotal (formula="SUM(amount)" align:R)] 小計
+- [calc:subtotal (formula="SUM(amount)" align:R)] 小計 (Subtotal)
 - [calc:tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] 消費税 (10%)
-- [calc:total (formula="SUM(amount) + Math.floor(SUM(amount) * 0.1)" size:XL align:R bold)] 合計金額
+- [calc:total (formula="SUM(amount) + Math.floor(SUM(amount) * 0.1)" size:XL align:R bold)] ご請求金額 (Total)
 
 </div>
 
 ---
 
-## 備考
-- [textarea:remarks (placeholder="有効期限: 発行より2週間")] 備考欄
+## 3. 振込先情報 (Static Table)
 
-[master:products]
-| Item Name | Unit Price |
-|---|---|
-| システム開発一式 (人月) | 800000 |
-| 初期導入費用 | 150000 |
-| サーバー構築費 | 120000 |
-| UI/UXデザイン費 | 300000 |
-| 月額保守サポート | 30000 |
+| 銀行名 | 支店名 | 口座番号 |
+|---|---|---|
+| [text:bank_name (val="サンプルの銀行")] | [text:branch (val="本店営業部")] | [text:acc_no (val="1234567")] |
+
+- [textarea:notes (placeholder="備考（支払期限など）" hint="振込手数料は貴社にてご負担願います。")] 備考
 `;
 
 function updatePreview() {
+    console.log("Web/A Maker v2.3");
     const editor = document.getElementById('editor') as HTMLTextAreaElement;
     const preview = document.getElementById('preview');
     if (!editor || !preview) return;
@@ -66,11 +63,9 @@ function updatePreview() {
     // @ts-ignore
     window.generatedJsonStructure = jsonStructure;
 
-    // Inject runtime behavior
-    if (!(window as any).isRuntimeLoaded) {
-        const script = document.createElement('script');
-        script.textContent = RUNTIME_SCRIPT;
-        document.body.appendChild(script);
+    // Initialize runtime behavior once without inline script injection
+    if (!(window as any).recalculate) {
+        initRuntime();
         (window as any).isRuntimeLoaded = true;
     }
 
@@ -88,7 +83,10 @@ function downloadWebA() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'web-a-form.html';
+    
+    // @ts-ignore
+    const title = (window.generatedJsonStructure && window.generatedJsonStructure.name) || 'web-a-form';
+    a.download = title + '.html';
     a.click();
 }
 
