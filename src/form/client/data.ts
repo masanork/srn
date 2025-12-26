@@ -134,7 +134,7 @@ export class DataManager {
     public clearData() {
         if (confirm('Clear all saved data? / 保存されたデータを削除しますか？')) {
             localStorage.removeItem(this.formId);
-            location.reload();
+            window.location.reload();
         }
     }
 
@@ -174,7 +174,7 @@ export class DataManager {
         a.click();
 
         if (isFinal) {
-            setTimeout(() => location.reload(), 1000);
+            setTimeout(() => window.location.reload(), 1000);
         }
     }
 
