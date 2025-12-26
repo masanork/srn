@@ -4,7 +4,7 @@ import opentype from 'opentype.js';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { loadConfig, getAbsolutePaths } from './config.ts';
+import { loadConfig, getAbsolutePaths } from '../core/config.ts';
 
 const config = await loadConfig();
 const { DATA_DIR, FONTS_DIR, DIST_DIR } = getAbsolutePaths(config);
