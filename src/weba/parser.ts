@@ -42,6 +42,16 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     let inMasterTable = false;
     let currentMasterKey: string | null = null;
 
+    // Tab Logic
+    let tabs: { id: string, title: string }[] = [];
+    let currentTabId: string | null = null;
+    let mainContentHtml = ''; 
+
+    // Helper to append to the correct buffer
+    const appendHtml = (str: string) => {
+        mainContentHtml += str;
+    };
+
     lines.forEach((line) => {
         const trimmed = line.trim();
 
@@ -64,13 +74,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 if (currentMasterKey) {
                     inMasterTable = true;
                 } else {
-                    html += `<div class="form-row vertical"><div class="table-wrapper">`;
+                    appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
                     if (currentDynamicTableKey) {
-                        html += `<table class="data-table dynamic" id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}">`;
+                        appendHtml(`<table class="data-table dynamic" id="tbl_${currentDynamicTableKey}" data-table-key="${currentDynamicTableKey}">`);
                     } else {
-                        html += `<table class="data-table">`;
+                        appendHtml(`<table class="data-table">`);
                     }
-                    html += `<tbody>`;
+                    appendHtml(`<tbody>`);
                     inTable = true;
                 }
             }
@@ -88,14 +98,14 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 if (currentDynamicTableKey) {
                     const hasInput = cells.some(c => c.includes('['));
                     if (!hasInput) {
-                        html += `<tr>${cells.map(c => `<th>${Renderers.escapeHtml(c)}</th>`).join('')}</tr>`;
+                        appendHtml(`<tr>${cells.map(c => `<th>${Renderers.escapeHtml(c)}</th>`).join('')}</tr>`);
                     } else {
                         // @ts-ignore
-                        html += Renderers.tableRow(cells, true);
+                        appendHtml(Renderers.tableRow(cells, true));
                     }
                 } else {
                     // @ts-ignore
-                    html += Renderers.tableRow(cells);
+                    appendHtml(Renderers.tableRow(cells));
                 }
             }
             return;
@@ -107,12 +117,12 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             }
 
             if (inTable) {
-                html += '</tbody></table></div>';
+                appendHtml('</tbody></table></div>');
                 if (currentDynamicTableKey) {
-                    html += `<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ Add Row</button>`;
+                    appendHtml(`<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ 行を追加</button>`);
                     currentDynamicTableKey = null;
                 }
-                html += '</div>';
+                appendHtml('</div>');
                 inTable = false;
             }
         }
@@ -122,11 +132,32 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         if (headerMatch) {
             const level = headerMatch[1].length;
             const content = headerMatch[2];
-            html += `<h${level}>${Renderers.escapeHtml(content)}</h${level}>`;
-            if (level === 1) jsonStructure.name = content;
+            
+            if (level === 1) {
+                // H1 is Document Title
+                appendHtml(`<h1>${Renderers.escapeHtml(content)}</h1>`);
+                jsonStructure.name = content;
+            } else if (level === 2) {
+                // H2 is Tab
+                if (currentTabId) {
+                    appendHtml('</div>'); // Close previous tab
+                }
+                const tabId = 'tab-' + (tabs.length + 1);
+                tabs.push({ id: tabId, title: content });
+                currentTabId = tabId;
+                // Start new tab div, hidden by default (class logic handles active)
+                // data-tab-title for Print CSS
+                const activeClass = tabs.length === 1 ? ' active' : '';
+                appendHtml(`<div id="${tabId}" class="tab-content${activeClass}" data-tab-title="${Renderers.escapeHtml(content)}">`);
+                // Note: We do NOT render H2 inside the tab content as a heading, 
+                // the tab button acts as the heading.
+            } else {
+                // H3-H6
+                appendHtml(`<h${level}>${Renderers.escapeHtml(content)}</h${level}>`);
+            }
             currentRadioGroup = null;
         }
-        // 2. Radio Options (Indented) - Check BEFORE generic input syntax to avoid false positives
+        // 2. Radio Options (Indented)
         else if ((line.startsWith('  - ') || line.startsWith('\t- '))) {
             if (currentRadioGroup) {
                 let label = trimmed.replace(/^-\s*/, '');
@@ -136,7 +167,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     label = label.substring(4);
                 }
                 // @ts-ignore
-                html += Renderers.radioOption(currentRadioGroup.key, label, label, checked);
+                appendHtml(Renderers.radioOption(currentRadioGroup.key, label, label, checked));
             }
         }
         // 3. Syntax: - [type:key (attrs)] Label
@@ -151,34 +182,62 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 if (type === 'radio') {
                     currentRadioGroup = { key, label: cleanLabel, attrs };
                     // @ts-ignore
-                    html += Renderers.radioStart(key, cleanLabel, attrs);
+                    appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
                 } else if (Renderers[type]) {
                     // @ts-ignore
-                    html += Renderers[type](key, cleanLabel, attrs);
+                    appendHtml(Renderers[type](key, cleanLabel, attrs));
                 } else {
-                    html += `<p style="color:red">Unknown type: ${type}</p>`;
+                    appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
                 }
             }
         }
         else if (trimmed.startsWith('---')) {
-            html += '<hr>';
+            if (!currentTabId) { // Only render HR if not in tabs (tabs replace HR separation usually)
+                 appendHtml('<hr>');
+            }
             currentRadioGroup = null;
         }
         // HTML Passthrough for layout
         else if (trimmed.startsWith('<')) {
-            if (currentRadioGroup) { html += '</div></div>'; currentRadioGroup = null; }
-            html += trimmed;
+            if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
+            appendHtml(trimmed);
         }
         else if (trimmed.length > 0) {
-            if (currentRadioGroup) { html += '</div></div>'; currentRadioGroup = null; }
-            html += `<p>${Renderers.escapeHtml(trimmed)}</p>`;
+            if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
+            appendHtml(`<p>${Renderers.escapeHtml(trimmed)}</p>`);
         } else {
-            if (currentRadioGroup) { html += '</div></div>'; currentRadioGroup = null; }
+            if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
         }
     });
 
-    if (inTable) html += '</tbody></table></div></div>';
-    if (currentRadioGroup) html += '</div></div>';
+    if (inTable) appendHtml('</tbody></table></div></div>');
+    if (currentRadioGroup) appendHtml('</div></div>');
+    if (currentTabId) appendHtml('</div>'); // Close last tab
+
+    // Final Assembly: Inject Tab Nav if tabs exist
+    if (tabs.length > 0) {
+        let navHtml = '<div class="tabs-nav no-print">';
+        tabs.forEach((tab, idx) => {
+            const activeClass = idx === 0 ? ' active' : '';
+            navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
+        });
+        // Add spacer and Save button
+        navHtml += '<div style="flex:1"></div>';
+        navHtml += `<button class="tab-btn" style="color:#007bff; border:1px solid #007bff; border-radius:4px; margin:5px;" onclick="saveDocument()" data-i18n="save_btn">Save</button>`;
+        navHtml += '</div>';
+        
+        // Find position to insert Nav: After H1
+        // Simplified: Just prepend to mainContentHtml, but after H1 if exists.
+        // Actually, H1 is inside mainContentHtml.
+        // Let's use Regex to inject after H1, or top if no H1.
+        if (mainContentHtml.includes('</h1>')) {
+            html = mainContentHtml.replace('</h1>', '</h1>' + navHtml);
+        } else {
+            html = navHtml + mainContentHtml;
+        }
+    } else {
+        html = mainContentHtml;
+    }
 
     return { html, jsonStructure };
 }

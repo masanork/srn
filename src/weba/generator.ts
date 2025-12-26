@@ -32,11 +32,37 @@ button.primary { background: #007bff; color: white; border: none; padding: 12px 
 button.primary:hover { background: #0056b3; }
 .add-row-btn { background: #eee; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
 .add-row-btn:hover { background: #ddd; }
+
+/* Tab Styles */
+.tabs-nav { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; overflow-x: auto; }
+.tab-btn { 
+    padding: 10px 20px; 
+    cursor: pointer; 
+    border: none; 
+    background: none; 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #666; 
+    border-bottom: 2px solid transparent; 
+    margin-bottom: -2px; 
+    white-space: nowrap;
+}
+.tab-btn:hover { background: #f9f9f9; }
+.tab-btn.active { color: #007bff; border-bottom: 2px solid #007bff; }
+.tab-content { display: none; animation: fadeIn 0.3s; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 @media print {
     body { background: white; padding: 0; }
     .page { box-shadow: none; padding: 0mm; width: 100%; }
     .no-print { display: none !important; }
     button { display: none !important; }
+    
+    /* Print: Linearize Tabs */
+    .tabs-nav { display: none; }
+    .tab-content { display: block !important; border-bottom: 1px solid #ccc; padding-bottom: 20px; margin-bottom: 20px; }
+    .tab-content::before { content: attr(data-tab-title); display: block; font-size: 18px; font-weight: bold; margin-bottom: 10px; border-left: 5px solid #333; padding-left: 10px; }
 }
 `;
 
@@ -257,6 +283,15 @@ function runtime() {
         const newRow = templateRow.cloneNode(true) as HTMLElement;
         newRow.querySelectorAll('input').forEach(input => input.value = '');
         tbody.appendChild(newRow);
+    };
+
+    w.switchTab = function (btn: any, tabId: string) {
+        document.querySelectorAll('.tab-btn').forEach((b: any) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach((c: any) => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        const content = document.getElementById(tabId);
+        if (content) content.classList.add('active');
     };
 
     let tm: any;
