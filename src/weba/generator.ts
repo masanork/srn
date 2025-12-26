@@ -267,6 +267,28 @@ function runtime() {
                 calcField.value = 'Err';
             }
         });
+        runAutoCopy();
+    }
+
+    function runAutoCopy() {
+        document.querySelectorAll('[data-copy-from]').forEach((dest: any) => {
+            // Only copy if destination hasn't been manually edited (dirty)
+            if (!dest.dataset.dirty) {
+                const srcKey = dest.dataset.copyFrom;
+                if (srcKey) {
+                    // Find source (scoped to row if destination is in row)
+                    const row = dest.closest('tr');
+                    const scope = row || document;
+                    const src = scope.querySelector(`[data-base-key="${srcKey}"], [data-json-path="${srcKey}"]`) as HTMLInputElement;
+
+                    if (src && src.value !== dest.value) {
+                        dest.value = src.value;
+                        // Trigger input to propagate
+                        dest.dispatchEvent(new Event('input'));
+                    }
+                }
+            }
+        });
     }
 
     function applyI18n() {
@@ -389,6 +411,17 @@ function runtime() {
         const rmBtn = newRow.querySelector('.remove-row-btn') as HTMLElement;
         if (rmBtn) rmBtn.style.visibility = 'visible';
 
+        // Initialize Auto-Copy
+        newRow.querySelectorAll('[data-copy-from]').forEach((target: any) => {
+            const srcKey = target.dataset.copyFrom;
+            if (srcKey) {
+                const src = newRow.querySelector(`[data-base-key="${srcKey}"]`) as HTMLInputElement;
+                if (src && src.value) {
+                    target.value = src.value;
+                }
+            }
+        });
+
         tbody.appendChild(newRow);
     };
 
@@ -403,6 +436,28 @@ function runtime() {
 
     let tm: any;
     document.addEventListener('input', (e) => {
+        const input = e.target as HTMLInputElement;
+        if (e.isTrusted) {
+            input.dataset.dirty = 'true';
+        }
+
+        // Auto-Copy Logic
+        const key = input.dataset.baseKey || input.dataset.jsonPath;
+        if (key) {
+            const row = input.closest('tr');
+            const scope = row || document;
+            scope.querySelectorAll(`[data-copy-from="${key}"]`).forEach((dest: any) => {
+                // Only copy if destination hasn't been manually edited (dirty)
+                if (!dest.dataset.dirty) {
+                    if (dest.value !== input.value) {
+                        dest.value = input.value;
+                        // Trigger input on destination to propagate further (chains) and recalc
+                        dest.dispatchEvent(new Event('input'));
+                    }
+                }
+            });
+        }
+
         recalculate();
         updateJsonLd();
         clearTimeout(tm); tm = setTimeout(saveToLS, 1000);
@@ -741,6 +796,7 @@ function runtime() {
     applyI18n();
     initSearch();
     recalculate();
+    // Trigger initial copy for static fields if needed, but important for dynamic rows added later
 }
 
 export const RUNTIME_SCRIPT = `(${runtime.toString()})();`;
