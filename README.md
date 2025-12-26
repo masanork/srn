@@ -86,7 +86,10 @@ Use the specialized syntax to embed specific glyphs by ID without worrying about
 
 ```text
 srn/
-├── src/                # Shared Engine logic (TypeScript)
+├── src/
+│   ├── core/           # Shared Infrastructure (VC, Fonts, Utils, Config)
+│   ├── ssg/            # Static Site Generator Engine (Layouts, Build scripts)
+│   └── form/           # Web/A Form Engine (Parser, Renderer, Runtime)
 ├── shared/             # Shared Assets (Master fonts, schemas, base CSS)
 ├── sites/              # Tenant Directories
 │   └── [site-name]/
