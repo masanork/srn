@@ -31,6 +31,7 @@ import { blogLayout } from './layouts/blog.ts';
 import type { BlogItem, BlogData } from './layouts/blog.ts';
 import { webaLayout } from './layouts/weba.ts';
 import type { WebAData } from './layouts/weba.ts';
+import { formLayout, formReportLayout } from './layouts/form.ts';
 import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
 import type { HybridKeys } from '../core/vc.ts';
 
@@ -831,6 +832,24 @@ body {
                 safeFontFamilies,
                 vc
             );
+        } else if (data.layout === 'form') {
+            finalHtml = formLayout(
+                data as any,
+                content,
+                fontCss,
+                safeFontFamilies
+            );
+
+            // Generate Report Page as well
+            const reportHtml = formReportLayout(
+                data as any,
+                content,
+                fontCss,
+                safeFontFamilies
+            );
+            const reportPath = path.join(DIST_DIR, file.replace('.md', '.report.html'));
+            await fs.writeFile(reportPath, reportHtml);
+            console.log(`  Generated Report: ${reportPath}`);
         } else {
             // Default to article
             finalHtml = articleLayout(
@@ -852,6 +871,8 @@ body {
 
     // Bundle Client Scripts
     console.log("Bundling client scripts...");
+    
+    // 1. Verify App Bundle
     const clientEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
     if (await fs.pathExists(clientEntry)) {
         const result = await Bun.build({
@@ -868,9 +889,26 @@ body {
             }
             console.log("  Bundled verify-app.ts -> assets/verify-bundle.js");
         } else {
-            console.error("  Bundle failed:", result.logs);
+            console.error("  Bundle failed (Verify App):", result.logs);
         }
     }
+
+    // 2. Form Client Bundle
+    const formClientEntry = path.join(process.cwd(), 'src/form/client/index.ts');
+    if (await fs.pathExists(formClientEntry)) {
+        const result = await Bun.build({
+            entrypoints: [formClientEntry],
+            outdir: path.join(DIST_DIR, 'assets'),
+            naming: "form-bundle.[ext]", // direct naming
+            minify: true,
+        });
+        if (result.success) {
+             console.log("  Bundled form/client -> assets/form-bundle.js");
+        } else {
+             console.error("  Bundle failed (Form Client):", result.logs);
+        }
+    }
+
 
     // Generate Sitemaps
     console.log("Generating sitemaps...");
@@ -911,9 +949,13 @@ ${sitemapItems.join('')}
     const distHtmls = await glob('**/*.html', { cwd: DIST_DIR });
     const validPaths = new Set<string>();
 
-    files.forEach(f => {
-        validPaths.add(f.replace(/\.md$/, '.html'));
+    allPages.forEach(p => {
+        validPaths.add(p.path);
+        if (p.layout === 'form') {
+             validPaths.add(p.path.replace(/\.html$/, '.report.html'));
+        }
     });
+
     if (!hasIndexMd && files.includes('srn.md')) {
         validPaths.add('index.html');
     }
