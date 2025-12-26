@@ -139,7 +139,7 @@ var Renderers = {
   tableRow(cells, isTemplate = false) {
     const tds = cells.map((cell) => {
       const trimmed = cell.trim();
-      const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\)|:([^\]]+))?\]$/);
+      const match = trimmed.match(/^\[(?:([a-z]+):)?([a-zA-Z0-9_]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
       if (match) {
         let [_, type, key, attrsParen, attrsColon] = match;
         const attrs = attrsParen || attrsColon;
@@ -306,7 +306,7 @@ function parseMarkdown(text) {
         html += Renderers.radioOption(currentRadioGroup.key, label, label, checked);
       }
     } else if (trimmed.startsWith("- [")) {
-      const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\))?\]\s*(.*)$/);
+      const match = trimmed.match(/^-\s*\[([a-z]+):([a-zA-Z0-9_]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
       if (match) {
         const [_, type, key, attrs, label] = match;
         currentRadioGroup = null;
@@ -388,212 +388,197 @@ button.primary:hover { background: #0056b3; }
     button { display: none !important; }
 }
 `;
-var RUNTIME_SCRIPT = `
-const FORM_ID = 'WebA_' + window.location.pathname;
-
-function updateJsonLd() {
-    const data = window.generatedJsonStructure || {};
-    
-    // 1. Static Inputs
-    document.querySelectorAll('[data-json-path]').forEach(input => {
-        const key = input.dataset.jsonPath;
-        if(key) {
-            data[key] = input.value;
-        }
+function runtime() {
+  const w = window;
+  const FORM_ID = "WebA_" + window.location.pathname;
+  function updateJsonLd() {
+    const data = w.generatedJsonStructure || {};
+    document.querySelectorAll("[data-json-path]").forEach((input) => {
+      const key = input.dataset.jsonPath;
+      if (key) {
+        data[key] = input.value;
+      }
     });
-
-    // 2. Radio Groups
-    document.querySelectorAll('[type="radio"]:checked').forEach(radio => {
-        data[radio.name] = radio.value;
+    document.querySelectorAll('[type="radio"]:checked').forEach((radio) => {
+      data[radio.name] = radio.value;
     });
-
-    // 3. Dynamic Tables
-    document.querySelectorAll('table.data-table.dynamic').forEach(table => {
-        const tableKey = table.dataset.tableKey;
-        if(tableKey) {
-            const rows = [];
-            table.querySelectorAll('tbody tr').forEach(tr => {
-                // Collect row data
-                const rowData = {};
-                let hasVal = false;
-                tr.querySelectorAll('[data-base-key]').forEach(input => {
-                    rowData[input.dataset.baseKey] = input.value;
-                    if(input.value) hasVal = true;
-                });
-                if(hasVal) rows.push(rowData);
-            });
-            data[tableKey] = rows;
-        }
+    document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
+      const tableKey = table.dataset.tableKey;
+      if (tableKey) {
+        const rows = [];
+        table.querySelectorAll("tbody tr").forEach((tr) => {
+          const rowData = {};
+          let hasVal = false;
+          tr.querySelectorAll("[data-base-key]").forEach((input) => {
+            rowData[input.dataset.baseKey] = input.value;
+            if (input.value)
+              hasVal = true;
+          });
+          if (hasVal)
+            rows.push(rowData);
+        });
+        data[tableKey] = rows;
+      }
     });
-
-    const scriptBlock = document.getElementById('json-ld');
-    if(scriptBlock) {
-        scriptBlock.textContent = JSON.stringify(data, null, 2);
+    const scriptBlock = document.getElementById("json-ld");
+    if (scriptBlock) {
+      scriptBlock.textContent = JSON.stringify(data, null, 2);
     }
-    const debugBlock = document.getElementById('json-debug');
-    if(debugBlock) {
-        debugBlock.textContent = JSON.stringify(data, null, 2);
+    const debugBlock = document.getElementById("json-debug");
+    if (debugBlock) {
+      debugBlock.textContent = JSON.stringify(data, null, 2);
     }
     return data;
-}
-
-function saveToLS() {
+  }
+  function saveToLS() {
     const data = updateJsonLd();
     localStorage.setItem(FORM_ID, JSON.stringify(data));
-}
-
-function restoreFromLS() {
+  }
+  function restoreFromLS() {
     const c = localStorage.getItem(FORM_ID);
-    if(!c) return;
+    if (!c)
+      return;
     try {
-        const d = JSON.parse(c);
-        // Static
-        document.querySelectorAll('[data-json-path]').forEach(input => {
-            const key = input.dataset.jsonPath;
-            if(d[key] !== undefined) input.value = d[key];
-        });
-        // Dynamic Tables
-        document.querySelectorAll('table.data-table.dynamic').forEach(table => {
-            const tableKey = table.dataset.tableKey;
-            const rowsData = d[tableKey];
-            if(Array.isArray(rowsData)) {
-                const tbody = table.querySelector('tbody');
-                // Remove existing except first template
-                const currentRows = tbody.querySelectorAll('.template-row');
-                for(let i=1; i<currentRows.length; i++) currentRows[i].remove();
-                
-                rowsData.forEach((rowData, idx) => {
-                    let row;
-                    if (idx === 0) {
-                        row = tbody.querySelector('.template-row');
-                    } else {
-                        // @ts-ignore
-                        row = tbody.querySelector('.template-row').cloneNode(true);
-                        tbody.appendChild(row);
-                    }
-                    if(row) {
-                        row.querySelectorAll('input, select').forEach((input) => {
-                             const k = input.dataset.baseKey;
-                             if(k && rowData[k] !== undefined) input.value = rowData[k];
-                        });
-                    }
-                });
-            }
-        });
-    } catch(e) { console.error(e); }
-}
-
-function recalculate() {
-    document.querySelectorAll('[data-formula]').forEach((calcField) => {
-        const formula = calcField.dataset.formula;
-        if (!formula) return;
-        const row = calcField.closest('tr');
-        const table = calcField.closest('table');
-        
-        const getValue = (varName) => {
-            if (row) {
-                const input = row.querySelector(\`[data-base-key="\${varName}"]\`);
-                // @ts-ignore
-                if (input && input.value !== '') return parseFloat(input.value);
-            }
-            const staticInput = document.querySelector(\`[data-json-path="\${varName}"]\`);
-            // @ts-ignore
-            if (staticInput && staticInput.value !== '') return parseFloat(staticInput.value);
-            return 0;
-        };
-
-        let evalStr = formula.replace(/SUM\\(([a-zA-Z0-9_]+)\\)/g, (_, key) => {
-            let sum = 0;
-            const scope = table || document;
-            scope.querySelectorAll(\`[data-base-key="\${key}"]\`).forEach((inp) => {
-                sum += parseFloat(inp.value) || 0;
-            });
-            return sum;
-        });
-
-        // Strict replacement for variables to avoid matching '100' as '0' if strict
-        // But here we just use regex match. 
-        // IMPORTANT: Sort variable names by length desc to avoid partial matches?
-        // Or simpler regex.
-        evalStr = evalStr.replace(/[a-zA-Z_][a-zA-Z0-9_]*/g, (match) => {
-             // Math functions
-             if(['Math','round','floor','ceil','abs','min','max'].includes(match)) return match;
-             return getValue(match);
-        });
-
-        try {
-            const result = new Function('return ' + evalStr)();
-            if (typeof result === 'number' && !isNaN(result)) {
-                calcField.value = Number.isInteger(result) ? result : result.toFixed(0); // Integer preferred
+      const d = JSON.parse(c);
+      document.querySelectorAll("[data-json-path]").forEach((input) => {
+        const key = input.dataset.jsonPath;
+        if (d[key] !== undefined)
+          input.value = d[key];
+      });
+      document.querySelectorAll("table.data-table.dynamic").forEach((table) => {
+        const tableKey = table.dataset.tableKey;
+        const rowsData = d[tableKey];
+        if (Array.isArray(rowsData)) {
+          const tbody = table.querySelector("tbody");
+          if (!tbody)
+            return;
+          const currentRows = tbody.querySelectorAll(".template-row");
+          for (let i = 1;i < currentRows.length; i++)
+            currentRows[i].remove();
+          rowsData.forEach((rowData, idx) => {
+            let row;
+            if (idx === 0) {
+              row = tbody.querySelector(".template-row");
             } else {
-                calcField.value = '';
+              const tmpl = tbody.querySelector(".template-row");
+              if (tmpl) {
+                row = tmpl.cloneNode(true);
+                tbody.appendChild(row);
+              }
             }
-        } catch (e) {
-            console.error(e);
-            calcField.value = 'Err';
+            if (row) {
+              row.querySelectorAll("input, select").forEach((input) => {
+                const k = input.dataset.baseKey;
+                if (k && rowData[k] !== undefined)
+                  input.value = rowData[k];
+              });
+            }
+          });
         }
-    });
-}
-
-function saveDocument() {
-    updateJsonLd();
-    // Bake values into attributes
-    document.querySelectorAll('input, textarea, select').forEach((el) => {
-        if(el.type === 'checkbox' || el.type === 'radio') {
-            if(el.checked) el.setAttribute('checked', 'checked');
-            else el.removeAttribute('checked');
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  function recalculate() {
+    document.querySelectorAll("[data-formula]").forEach((calcField) => {
+      const formula = calcField.dataset.formula;
+      if (!formula)
+        return;
+      const row = calcField.closest("tr");
+      const table = calcField.closest("table");
+      const getValue = (varName) => {
+        if (row) {
+          const input = row.querySelector(`[data-base-key="${varName}"]`);
+          if (input && input.value !== "")
+            return parseFloat(input.value);
+        }
+        const staticInput = document.querySelector(`[data-json-path="${varName}"]`);
+        if (staticInput && staticInput.value !== "")
+          return parseFloat(staticInput.value);
+        return 0;
+      };
+      let evalStr = formula.replace(/SUM\(([a-zA-Z0-9_]+)\)/g, (_, key) => {
+        let sum = 0;
+        const scope = table || document;
+        scope.querySelectorAll(`[data-base-key="${key}"]`).forEach((inp) => {
+          sum += parseFloat(inp.value) || 0;
+        });
+        return sum;
+      });
+      evalStr = evalStr.replace(/[a-zA-Z_][a-zA-Z0-9_]*/g, (match) => {
+        if (["Math", "round", "floor", "ceil", "abs", "min", "max"].includes(match))
+          return match;
+        return String(getValue(match));
+      });
+      try {
+        const result = new Function("return " + evalStr)();
+        if (typeof result === "number" && !isNaN(result)) {
+          calcField.value = Number.isInteger(result) ? result : result.toFixed(0);
         } else {
-            el.setAttribute('value', el.value);
-            if(el.tagName === 'TEXTAREA') el.textContent = el.value;
+          calcField.value = "";
         }
+      } catch (e) {
+        console.error(e);
+        calcField.value = "Err";
+      }
     });
-    
-    // Remove buttons
-    document.querySelectorAll('button, .no-print').forEach(el => el.remove());
-    
-    // Disable inputs
-    document.querySelectorAll('input, textarea, select').forEach((el) => el.setAttribute('readonly', 'readonly'));
-
-    // Create blobs
+  }
+  function saveDocument() {
+    updateJsonLd();
+    document.querySelectorAll("input, textarea, select").forEach((el) => {
+      if (el.type === "checkbox" || el.type === "radio") {
+        if (el.checked)
+          el.setAttribute("checked", "checked");
+        else
+          el.removeAttribute("checked");
+      } else {
+        el.setAttribute("value", el.value);
+        if (el.tagName === "TEXTAREA")
+          el.textContent = el.value;
+      }
+    });
+    document.querySelectorAll("button, .no-print").forEach((el) => el.remove());
+    document.querySelectorAll("input, textarea, select").forEach((el) => el.setAttribute("readonly", "readonly"));
     const htmlContent = document.documentElement.outerHTML;
-    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const blob = new Blob([htmlContent], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'form_filled.html';
+    a.download = "form_filled.html";
     a.click();
-    
-    // Reload to restore state? 
     setTimeout(() => location.reload(), 1000);
-}
-
-window.addTableRow = function(btn, tableKey) {
-    const table = document.getElementById('tbl_' + tableKey);
-    if (!table) return;
-    const tbody = table.querySelector('tbody');
-    // @ts-ignore
-    const templateRow = tbody.querySelector('.template-row');
-    if (!templateRow) return;
-    // @ts-ignore
+  }
+  w.addTableRow = function(btn, tableKey) {
+    const table = document.getElementById("tbl_" + tableKey);
+    if (!table)
+      return;
+    const tbody = table.querySelector("tbody");
+    if (!tbody)
+      return;
+    const templateRow = tbody.querySelector(".template-row");
+    if (!templateRow)
+      return;
     const newRow = templateRow.cloneNode(true);
-    // @ts-ignore
-    newRow.querySelectorAll('input').forEach(input => input.value = '');
-    // @ts-ignore
+    newRow.querySelectorAll("input").forEach((input) => input.value = "");
     tbody.appendChild(newRow);
-};
-
-let tm;
-document.addEventListener('input', () => { 
+  };
+  let tm;
+  document.addEventListener("input", () => {
     recalculate();
     updateJsonLd();
-    // @ts-ignore
-    clearTimeout(tm); tm = setTimeout(saveToLS, 1000); 
-});
-window.addEventListener('DOMContentLoaded', () => {
-    restoreFromLS();
-    recalculate();
-});
-`;
+    clearTimeout(tm);
+    tm = setTimeout(saveToLS, 1000);
+  });
+  w.saveDocument = saveDocument;
+  w.recalculate = recalculate;
+  restoreFromLS();
+  recalculate();
+}
+var RUNTIME_SCRIPT = `(${runtime.toString()})();`;
+function initRuntime() {
+  runtime();
+}
 function generateHtml(markdown) {
   const { html, jsonStructure } = parseMarkdown(markdown);
   return `<!DOCTYPE html>
@@ -661,6 +646,7 @@ var DEFAULT_MARKDOWN = `# 御見積書
 | 月額保守サポート | 30000 |
 `;
 function updatePreview() {
+  console.log("Web/A Maker v2.3");
   const editor = document.getElementById("editor");
   const preview = document.getElementById("preview");
   if (!editor || !preview)
@@ -669,9 +655,7 @@ function updatePreview() {
   preview.innerHTML = html;
   window.generatedJsonStructure = jsonStructure;
   if (!window.isRuntimeLoaded) {
-    const script = document.createElement("script");
-    script.textContent = RUNTIME_SCRIPT;
-    document.body.appendChild(script);
+    initRuntime();
     window.isRuntimeLoaded = true;
   }
   setTimeout(() => {
