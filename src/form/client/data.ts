@@ -68,10 +68,19 @@ export class DataManager {
         // Try to get template ID from document or use URL
         const templateId = window.location.href.split('#')[0];
 
+        // Ensure key is ready (triggers Passkey registration if needed)
+        if (!globalSigner.getPublicKey()) {
+            const success = await globalSigner.register();
+            if (!success) {
+                alert("Key registration failed.");
+                return;
+            }
+        }
+
         const payload = {
             "@context": ["https://www.w3.org/2018/credentials/v1"],
             "type": ["VerifiableCredential", "WebAFormResponse"],
-            "issuer": `did:key:z${globalSigner.getPublicKey()}`,
+            "issuer": globalSigner.getIssuerDid(),
             "issuanceDate": new Date().toISOString(),
             "credentialSubject": {
                 "id": `urn:uuid:${crypto.randomUUID()}`,
