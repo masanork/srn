@@ -173,6 +173,12 @@ var Renderers = {
     if (type === "number") {
       return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
     }
+    if (type === "date") {
+      return `<input type="date" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+    }
+    if (type === "checkbox") {
+      return `<input type="checkbox" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+    }
     return `<input type="text" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
   },
   tableRow(cells, isTemplate = false) {
@@ -282,7 +288,7 @@ function parseMarkdown(text) {
         if (currentDynamicTableKey) {
           const hasInput = cells.some((c) => c.includes("["));
           if (!hasInput) {
-            appendHtml(`<tr>${cells.map((c) => `<th>${Renderers.escapeHtml(c)}</th>`).join("")}<th style="width:30px;"></th></tr>`);
+            appendHtml(`<tr>${cells.map((c) => `<th>${Renderers.escapeHtml(c)}</th>`).join("")}<th class="row-action-cell"></th></tr>`);
           } else {
             const tableKey = currentDynamicTableKey;
             cells.forEach((cell) => {
@@ -296,7 +302,7 @@ function parseMarkdown(text) {
               }
             });
             let trHtml = Renderers.tableRow(cells, true);
-            trHtml = trHtml.replace("</tr>", '<td><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" style="padding:2px 6px; color:red;" tabindex="-1">×</button></td></tr>');
+            trHtml = trHtml.replace("</tr>", '<td class="row-action-cell"><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" tabindex="-1">×</button></td></tr>');
             appendHtml(trHtml);
           }
         } else if (inMasterTable) {
@@ -417,7 +423,11 @@ function parseMarkdown(text) {
       navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
     });
     navHtml += '<div style="flex:1"></div>';
-    navHtml += `<button class="primary" onclick="saveDocument()" data-i18n="save_btn">Save</button>`;
+    navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center;">
+            <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
+            <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
+            <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
+        </div>`;
     navHtml += "</div>";
     if (mainContentHtml.includes("</h1>")) {
       html = mainContentHtml.replace("</h1>", "</h1>" + navHtml);
@@ -485,10 +495,33 @@ button.primary:hover { background: #0056b3; }
 .tab-content.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+/* Row Action (Delete) Button Styles */
+.row-action-cell { 
+    border: none !important; 
+    background: transparent !important; 
+    width: 30px; 
+    text-align: center; 
+    padding: 0 !important; 
+    vertical-align: middle;
+}
+.remove-row-btn { 
+    background: transparent; 
+    border: none; 
+    font-size: 20px; 
+    color: #ccc; 
+    cursor: pointer; 
+    opacity: 0.2; 
+    transition: opacity 0.2s, color 0.2s; 
+    padding: 0 5px; 
+    line-height: 1;
+}
+.data-table tr:hover .remove-row-btn { opacity: 1; }
+.remove-row-btn:hover { color: #d9534f; }
+
 @media print {
     body { background: white; padding: 0; }
     .page { box-shadow: none; padding: 0mm; width: 100%; }
-    .no-print { display: none !important; }
+    .no-print, .row-action-cell { display: none !important; }
     button { display: none !important; }
     
     /* Print: Linearize Tabs */
@@ -519,9 +552,15 @@ function runtime() {
           const rowData = {};
           let hasVal = false;
           tr.querySelectorAll("[data-base-key]").forEach((input) => {
-            rowData[input.dataset.baseKey] = input.value;
-            if (input.value)
-              hasVal = true;
+            if (input.type === "checkbox") {
+              rowData[input.dataset.baseKey] = input.checked;
+              if (input.checked)
+                hasVal = true;
+            } else {
+              rowData[input.dataset.baseKey] = input.value;
+              if (input.value)
+                hasVal = true;
+            }
           });
           if (hasVal)
             rows.push(rowData);
@@ -578,8 +617,12 @@ function runtime() {
             if (row) {
               row.querySelectorAll("input, select").forEach((input) => {
                 const k = input.dataset.baseKey;
-                if (k && rowData[k] !== undefined)
-                  input.value = rowData[k];
+                if (k && rowData[k] !== undefined) {
+                  if (input.type === "checkbox")
+                    input.checked = !!rowData[k];
+                  else
+                    input.value = rowData[k];
+                }
               });
             }
           });
@@ -676,6 +719,8 @@ function runtime() {
   function bakeValues() {
     updateJsonLd();
     document.querySelectorAll("input, textarea, select").forEach((el) => {
+      if (el.closest(".template-row"))
+        return;
       if (el.type === "checkbox" || el.type === "radio") {
         if (el.checked)
           el.setAttribute("checked", "checked");
@@ -711,8 +756,6 @@ function runtime() {
   };
   w.submitDocument = function() {
     bakeValues();
-    document.querySelectorAll("button, .add-row-btn, .no-print").forEach((el) => el.remove());
-    document.querySelectorAll("input, textarea, select").forEach((el) => el.setAttribute("readonly", "readonly"));
     document.querySelectorAll(".search-suggestions").forEach((el) => el.remove());
     downloadHtml("submit", true);
   };
@@ -725,7 +768,12 @@ function runtime() {
   w.removeTableRow = function(btn) {
     const tr = btn.closest("tr");
     if (tr.classList.contains("template-row")) {
-      tr.querySelectorAll("input").forEach((inp) => inp.value = "");
+      tr.querySelectorAll("input").forEach((inp) => {
+        if (inp.type === "checkbox")
+          inp.checked = false;
+        else
+          inp.value = "";
+      });
     } else {
       tr.remove();
       recalculate();
@@ -745,7 +793,11 @@ function runtime() {
     const newRow = templateRow.cloneNode(true);
     newRow.classList.remove("template-row");
     newRow.querySelectorAll("input").forEach((input) => {
-      input.value = input.getAttribute("value") || "";
+      if (input.type === "checkbox") {
+        input.checked = input.hasAttribute("checked");
+      } else {
+        input.value = input.getAttribute("value") || "";
+      }
     });
     const rmBtn = newRow.querySelector(".remove-row-btn");
     if (rmBtn)
@@ -1035,10 +1087,10 @@ function generateHtml(markdown) {
 <body>
     <div class="page">
         ${html}
-        <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px;">
-            <button class="primary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Draft</button>
-            <button class="primary" onclick="window.submitDocument()" style="background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
-            <button onclick="window.clearData()" style="margin-left:auto; background-color: #999;" data-i18n="clear_btn">Clear</button>
+        <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; align-items: center; justify-content: center;">
+            <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
+            <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
+            <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
         </div>
     </div>
     <script type="application/ld+json" id="json-ld">
