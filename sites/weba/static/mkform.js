@@ -187,7 +187,13 @@ var Renderers = {
     if (type === "checkbox") {
       return `<input type="checkbox" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
     }
-    return `<input type="text" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+    let suggestAttr = "";
+    let suggestClass = "";
+    if ((attrs || "").includes("suggest:column")) {
+      suggestClass = " search-input";
+      suggestAttr = ' data-suggest-source="column"';
+    }
+    return `<input type="text" class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}>`;
   },
   tableRow(cells, isTemplate = false) {
     const tds = cells.map((cell) => {
@@ -917,7 +923,8 @@ function runtime() {
         const input = e.target;
         activeSearchInput = input;
         const srcKey = input.dataset.masterSrc;
-        if (!srcKey)
+        const suggestSource = input.dataset.suggestSource;
+        if (!srcKey && !suggestSource)
           return;
         const labelIdx = toIndex(input.dataset.masterLabelIndex);
         const valueIdx = toIndex(input.dataset.masterValueIndex);
@@ -926,28 +933,45 @@ function runtime() {
           hideSuggestions();
           return;
         }
-        console.log(`Search: Input '${query}', srcKey: '${srcKey}'`);
-        const master = w.generatedJsonStructure.masterData;
-        if (!master || !master[srcKey]) {
-          console.warn(`Search: masterData key '${srcKey}' not found. Available:`, Object.keys(master || {}));
-          return;
-        }
-        const allRows = master[srcKey];
         const hits = [];
         const normQuery = normalize(query);
-        allRows.forEach((row, idx) => {
-          if (idx === 0)
-            return;
-          const match = row.some((col) => {
-            return normalize(col || "").includes(normQuery);
-          });
-          if (match) {
-            const labelVal = labelIdx >= 0 ? row[labelIdx] || "" : "";
-            const valueVal = valueIdx >= 0 ? row[valueIdx] || "" : "";
-            const val = valueIdx >= 0 ? valueVal : labelIdx >= 0 ? labelVal : row[1] || row[0] || "";
-            hits.push({ val, row, label: labelVal, score: 10, idx });
+        if (suggestSource === "column") {
+          const baseKey = input.dataset.baseKey;
+          const table = input.closest("table");
+          if (table && baseKey) {
+            const seen = new Set;
+            table.querySelectorAll(`[data-base-key="${baseKey}"]`).forEach((inp) => {
+              const v = inp.value;
+              if (v && normalize(v).includes(normQuery)) {
+                if (!seen.has(v)) {
+                  seen.add(v);
+                  hits.push({ val: v, row: [v], label: v, score: 10 });
+                }
+              }
+            });
           }
-        });
+        } else if (srcKey) {
+          console.log(`Search: Input '${query}', srcKey: '${srcKey}'`);
+          const master = w.generatedJsonStructure.masterData;
+          if (!master || !master[srcKey]) {
+            console.warn(`Search: masterData key '${srcKey}' not found. Available:`, Object.keys(master || {}));
+            return;
+          }
+          const allRows = master[srcKey];
+          allRows.forEach((row, idx) => {
+            if (idx === 0)
+              return;
+            const match = row.some((col) => {
+              return normalize(col || "").includes(normQuery);
+            });
+            if (match) {
+              const labelVal = labelIdx >= 0 ? row[labelIdx] || "" : "";
+              const valueVal = valueIdx >= 0 ? row[valueIdx] || "" : "";
+              const val = valueIdx >= 0 ? valueVal : labelIdx >= 0 ? labelVal : row[1] || row[0] || "";
+              hits.push({ val, row, label: labelVal, score: 10, idx });
+            }
+          });
+        }
         console.log(`Search: Found ${hits.length} matches for '${query}' (norm: '${normQuery}') in '${srcKey}'`);
         hits.sort((a, b) => b.score - a.score);
         const topHits = hits.slice(0, 10);
