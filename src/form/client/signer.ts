@@ -1,4 +1,4 @@
-import { ed25519 } from '@noble/curves/ed25519';
+import { ed25519 } from '@noble/curves/ed25519.js';
 // @ts-ignore
 import canonicalize from 'canonicalize';
 import { decode } from 'cbor-x';
