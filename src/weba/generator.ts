@@ -318,6 +318,18 @@ function runtime() {
         }
     };
 
+    w.removeTableRow = function (btn: any) {
+        const tr = btn.closest('tr');
+        if (tr.classList.contains('template-row')) {
+            // Cannot delete template row, just clear inputs
+            tr.querySelectorAll('input').forEach((inp: HTMLInputElement) => inp.value = '');
+        } else {
+            tr.remove();
+            recalculate();
+            updateJsonLd();
+        }
+    };
+
     w.addTableRow = function (btn: any, tableKey: string) {
         const table = document.getElementById('tbl_' + tableKey);
         if (!table) return;
@@ -331,6 +343,10 @@ function runtime() {
         newRow.querySelectorAll('input').forEach(input => {
             input.value = input.getAttribute('value') || '';
         });
+        // Unhide delete button for non-template rows
+        const rmBtn = newRow.querySelector('.remove-row-btn') as HTMLElement;
+        if (rmBtn) rmBtn.style.visibility = 'visible';
+
         tbody.appendChild(newRow);
     };
 

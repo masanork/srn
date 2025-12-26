@@ -282,7 +282,7 @@ function parseMarkdown(text) {
         if (currentDynamicTableKey) {
           const hasInput = cells.some((c) => c.includes("["));
           if (!hasInput) {
-            appendHtml(`<tr>${cells.map((c) => `<th>${Renderers.escapeHtml(c)}</th>`).join("")}</tr>`);
+            appendHtml(`<tr>${cells.map((c) => `<th>${Renderers.escapeHtml(c)}</th>`).join("")}<th style="width:30px;"></th></tr>`);
           } else {
             const tableKey = currentDynamicTableKey;
             cells.forEach((cell) => {
@@ -295,7 +295,9 @@ function parseMarkdown(text) {
                 jsonStructure.tables[tableKey].push({ key, label, type: type || "text" });
               }
             });
-            appendHtml(Renderers.tableRow(cells, true));
+            let trHtml = Renderers.tableRow(cells, true);
+            trHtml = trHtml.replace("</tr>", '<td><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" style="padding:2px 6px; color:red;" tabindex="-1">×</button></td></tr>');
+            appendHtml(trHtml);
           }
         } else if (inMasterTable) {
           appendHtml(Renderers.tableRow(cells));
@@ -720,6 +722,16 @@ function runtime() {
       location.reload();
     }
   };
+  w.removeTableRow = function(btn) {
+    const tr = btn.closest("tr");
+    if (tr.classList.contains("template-row")) {
+      tr.querySelectorAll("input").forEach((inp) => inp.value = "");
+    } else {
+      tr.remove();
+      recalculate();
+      updateJsonLd();
+    }
+  };
   w.addTableRow = function(btn, tableKey) {
     const table = document.getElementById("tbl_" + tableKey);
     if (!table)
@@ -735,6 +747,9 @@ function runtime() {
     newRow.querySelectorAll("input").forEach((input) => {
       input.value = input.getAttribute("value") || "";
     });
+    const rmBtn = newRow.querySelector(".remove-row-btn");
+    if (rmBtn)
+      rmBtn.style.visibility = "visible";
     tbody.appendChild(newRow);
   };
   w.switchTab = function(btn, tabId) {

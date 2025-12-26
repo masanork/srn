@@ -120,7 +120,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 if (currentDynamicTableKey) {
                     const hasInput = cells.some(c => c.includes('['));
                     if (!hasInput) {
-                        appendHtml(`<tr>${cells.map(c => `<th>${Renderers.escapeHtml(c)}</th>`).join('')}</tr>`);
+                        appendHtml(`<tr>${cells.map(c => `<th>${Renderers.escapeHtml(c)}</th>`).join('')}<th style="width:30px;"></th></tr>`);
                     } else {
                         // Extract schema
                         const tableKey = currentDynamicTableKey!;
@@ -135,7 +135,10 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                             }
                         });
                         // @ts-ignore
-                        appendHtml(Renderers.tableRow(cells, true));
+                        let trHtml = Renderers.tableRow(cells, true);
+                        // Inject Delete Button cell for dynamic rows
+                        trHtml = trHtml.replace('</tr>', '<td><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" style="padding:2px 6px; color:red;" tabindex="-1">×</button></td></tr>');
+                        appendHtml(trHtml);
                     }
                 } else if (inMasterTable) {
                     // Check if header row (heuristic: usually first row, but here we can check if it looks like a header or data)
