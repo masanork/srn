@@ -116,18 +116,22 @@ var Renderers = {
   },
   search: function(key, label, attrs) {
     const srcMatch = (attrs || "").match(/src:([^\s)]+)/);
+    const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
+    const valueIndexMatch = (attrs || "").match(/value:(\d+)/);
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const srcKey = srcMatch ? srcMatch[1] : "";
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
     const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : "";
+    const labelIndexAttr = labelIndexMatch ? ` data-master-label-index="${labelIndexMatch[1]}"` : "";
+    const valueIndexAttr = valueIndexMatch ? ` data-master-value-index="${valueIndexMatch[1]}"` : "";
     return `
         <div class="form-row autocomplete-container" style="position:relative; z-index:100;">
             <label class="form-label">${this.escapeHtml(label)}</label>
             <div style="flex:1; position:relative;">
                 <input type="text" class="form-input search-input" autocomplete="off" 
                     data-json-path="${key}" 
-                    data-master-src="${srcKey}"
+                    data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr}
                     placeholder="${this.escapeHtml(placeholder)}" 
                     style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
                 <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:0 0 4px 4px; z-index:1001;"></div>
@@ -164,10 +168,14 @@ var Renderers = {
     }
     if (type === "search") {
       const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
+      const labelIndexMatch = (attrs || "").match(/label:(\d+)/);
+      const valueIndexMatch = (attrs || "").match(/value:(\d+)/);
       const srcKey = srcMatch ? srcMatch[1] : "";
+      const labelIndexAttr = labelIndexMatch ? ` data-master-label-index="${labelIndexMatch[1]}"` : "";
+      const valueIndexAttr = valueIndexMatch ? ` data-master-value-index="${valueIndexMatch[1]}"` : "";
       const searchClass = commonClass + " search-input";
       return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
-                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
                     </div>`;
     }
     if (type === "number") {
