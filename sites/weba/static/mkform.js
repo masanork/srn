@@ -147,7 +147,7 @@ var Renderers = {
     if (type === "calc") {
       const formulaMatch = (attrs || "").match(/formula="([^"]+)"/) || (attrs || "").match(/formula='([^']+)'/);
       const formula = formulaMatch ? formulaMatch[1] : "";
-      return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+      return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; text-align:right; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
     }
     if (type === "datalist") {
       const srcMatch = (attrs || "").match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
@@ -174,12 +174,22 @@ var Renderers = {
       const labelIndexAttr = labelIndexMatch ? ` data-master-label-index="${labelIndexMatch[1]}"` : "";
       const valueIndexAttr = valueIndexMatch ? ` data-master-value-index="${valueIndexMatch[1]}"` : "";
       const searchClass = commonClass + " search-input";
+      let suggestAttr2 = "";
+      if ((attrs || "").includes("suggest:column")) {
+        suggestAttr2 = ' data-suggest-source="column"';
+      }
+      const copyMatch2 = (attrs || "").match(/copy:([^\s)]+)/);
+      const copyAttr2 = copyMatch2 ? ` data-copy-from="${copyMatch2[1]}"` : "";
+      const bgStyle2 = copyMatch2 ? "background-color: #ffffea;" : "";
       return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
-                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${bgStyle2} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr2}${copyAttr2}>
                     </div>`;
     }
     if (type === "number") {
-      return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+      const copyMatch2 = (attrs || "").match(/copy:([^\s)]+)/);
+      const copyAttr2 = copyMatch2 ? ` data-copy-from="${copyMatch2[1]}"` : "";
+      const bgStyle2 = copyMatch2 ? "background-color: #ffffea;" : "";
+      return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="text-align:right; ${bgStyle2} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${copyAttr2}>`;
     }
     if (type === "date") {
       return `<input type="date" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
@@ -193,7 +203,10 @@ var Renderers = {
       suggestClass = " search-input";
       suggestAttr = ' data-suggest-source="column"';
     }
-    return `<input type="text" class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}>`;
+    const copyMatch = (attrs || "").match(/copy:([^\s)]+)/);
+    const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : "";
+    const bgStyle = copyMatch ? "background-color: #ffffea;" : "";
+    return `<input type="text" class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>`;
   },
   tableRow(cells, isTemplate = false) {
     const tds = cells.map((cell) => {
@@ -709,6 +722,23 @@ function runtime() {
         calcField.value = "Err";
       }
     });
+    runAutoCopy();
+  }
+  function runAutoCopy() {
+    document.querySelectorAll("[data-copy-from]").forEach((dest) => {
+      if (!dest.dataset.dirty) {
+        const srcKey = dest.dataset.copyFrom;
+        if (srcKey) {
+          const row = dest.closest("tr");
+          const scope = row || document;
+          const src = scope.querySelector(`[data-base-key="${srcKey}"], [data-json-path="${srcKey}"]`);
+          if (src && src.value !== dest.value) {
+            dest.value = src.value;
+            dest.dispatchEvent(new Event("input"));
+          }
+        }
+      }
+    });
   }
   function applyI18n() {
     const RESOURCES = {
@@ -819,6 +849,15 @@ function runtime() {
     const rmBtn = newRow.querySelector(".remove-row-btn");
     if (rmBtn)
       rmBtn.style.visibility = "visible";
+    newRow.querySelectorAll("[data-copy-from]").forEach((target) => {
+      const srcKey = target.dataset.copyFrom;
+      if (srcKey) {
+        const src = newRow.querySelector(`[data-base-key="${srcKey}"]`);
+        if (src && src.value) {
+          target.value = src.value;
+        }
+      }
+    });
     tbody.appendChild(newRow);
   };
   w.switchTab = function(btn, tabId) {
@@ -831,6 +870,23 @@ function runtime() {
   };
   let tm;
   document.addEventListener("input", (e) => {
+    const input = e.target;
+    if (e.isTrusted) {
+      input.dataset.dirty = "true";
+    }
+    const key = input.dataset.baseKey || input.dataset.jsonPath;
+    if (key) {
+      const row = input.closest("tr");
+      const scope = row || document;
+      scope.querySelectorAll(`[data-copy-from="${key}"]`).forEach((dest) => {
+        if (!dest.dataset.dirty) {
+          if (dest.value !== input.value) {
+            dest.value = input.value;
+            dest.dispatchEvent(new Event("input"));
+          }
+        }
+      });
+    }
     recalculate();
     updateJsonLd();
     clearTimeout(tm);

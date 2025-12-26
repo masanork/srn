@@ -173,7 +173,7 @@ export const Renderers: Record<string, any> = {
         if (type === 'calc') {
             const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
             const formula = formulaMatch ? formulaMatch[1] : '';
-            return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+            return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; text-align:right; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
         }
 
         if (type === 'datalist') {
@@ -204,13 +204,24 @@ export const Renderers: Record<string, any> = {
             const searchClass = commonClass + ' search-input';
 
             // Note: search-suggestions are now global, no need for inner div
+            let suggestAttr = '';
+            if ((attrs || '').includes('suggest:column')) {
+                suggestAttr = ' data-suggest-source="column"';
+            }
+            const copyMatch = (attrs || '').match(/copy:([^\s)]+)/);
+            const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : '';
+            const bgStyle = copyMatch ? 'background-color: #ffffea;' : '';
+
             return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
-                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>
                     </div>`;
         }
 
         if (type === 'number') {
-            return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+            const copyMatch = (attrs || '').match(/copy:([^\s)]+)/);
+            const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : '';
+            const bgStyle = copyMatch ? 'background-color: #ffffea;' : '';
+            return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="text-align:right; ${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${copyAttr}>`;
         }
 
         if (type === 'date') {
@@ -228,7 +239,11 @@ export const Renderers: Record<string, any> = {
             suggestClass = ' search-input';
             suggestAttr = ' data-suggest-source="column"';
         }
-        return `<input type="text" class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}>`;
+        const copyMatch = (attrs || '').match(/copy:([^\s)]+)/);
+        const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : '';
+        const bgStyle = copyMatch ? 'background-color: #ffffea;' : '';
+
+        return `<input type="text" class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>`;
     },
 
     tableRow(cells: string[], isTemplate = false) {
