@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web/A Form Maker (Refactored)</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .pane-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #editor {
+            flex: 1;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #preview-container {
+            flex: 1;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .preview-content {
+            margin: 0 auto;
+            max-width: 100%;
+            padding: 0 20px;
+        }
+
+        /* Common Web/A Styles (duplicated from generator for better preview fidelity) */
+        .form-row {
+            display: flex;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .form-row.vertical {
+            display: block;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-right: 15px;
+            min-width: 140px;
+        }
+
+        .form-row.vertical .form-label {
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .form-input {
+            flex: 1;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            max-width: 800px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+        }
+
+        .data-table th,
+        .data-table td {
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 4px 8px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table th:last-child,
+        .data-table td:last-child {
+            border-right: none;
+        }
+
+        .data-table th {
+            background: #f5f7fa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        .form-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        button.primary {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.primary:hover {
+            background: #0056b3;
+        }
+
+        .syntax-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            background: #eef;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="pane" style="border-right: 1px solid #ddd;">
+        <div class="pane-header">
+            <span>Markdown Definition</span>
+            <button class="primary" onclick="downloadWebA()">Download Web/A Form</button>
+        </div>
+        <textarea id="editor" spellcheck="false" oninput="parseAndRender()"></textarea>
+        <div class="syntax-help">
+            <strong>Syntax Guide:</strong><br>
+            <code># Title</code> : Document Title<br>
+            <code>- [type:key] Label</code> : Input Field (text, number, date, textarea)<br>
+            <code>- [radio:key] Label</code> : Radio Group<br>
+            <code>[calc:key (formula="...")]</code> : Calculation
+        </div>
+    </div>
+    <div class="pane">
+        <div class="pane-header">Preview</div>
+        <div id="preview-container">
+            <div id="preview" class="preview-content"></div>
+        </div>
+    </div>
+    <script src="./mkform.js"></script>
+</body>
+
+</html>
