@@ -120,7 +120,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 if (currentDynamicTableKey) {
                     const hasInput = cells.some(c => c.includes('['));
                     if (!hasInput) {
-                        appendHtml(`<tr>${cells.map(c => `<th>${Renderers.escapeHtml(c)}</th>`).join('')}<th style="width:30px;"></th></tr>`);
+                        appendHtml(`<tr>${cells.map(c => `<th>${Renderers.escapeHtml(c)}</th>`).join('')}<th class="row-action-cell"></th></tr>`);
                     } else {
                         // Extract schema
                         const tableKey = currentDynamicTableKey!;
@@ -137,7 +137,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                         // @ts-ignore
                         let trHtml = Renderers.tableRow(cells, true);
                         // Inject Delete Button cell for dynamic rows
-                        trHtml = trHtml.replace('</tr>', '<td><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" style="padding:2px 6px; color:red;" tabindex="-1">×</button></td></tr>');
+                        trHtml = trHtml.replace('</tr>', '<td class="row-action-cell"><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" tabindex="-1">×</button></td></tr>');
                         appendHtml(trHtml);
                     }
                 } else if (inMasterTable) {
@@ -285,7 +285,11 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         });
         // Add spacer and Save button
         navHtml += '<div style="flex:1"></div>';
-        navHtml += `<button class="primary" onclick="saveDocument()" data-i18n="save_btn">Save</button>`;
+        navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center;">
+            <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
+            <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
+            <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
+        </div>`;
         navHtml += '</div>';
 
         // Find position to insert Nav: After H1

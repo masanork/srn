@@ -55,10 +55,33 @@ button.primary:hover { background: #0056b3; }
 .tab-content.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+/* Row Action (Delete) Button Styles */
+.row-action-cell { 
+    border: none !important; 
+    background: transparent !important; 
+    width: 30px; 
+    text-align: center; 
+    padding: 0 !important; 
+    vertical-align: middle;
+}
+.remove-row-btn { 
+    background: transparent; 
+    border: none; 
+    font-size: 20px; 
+    color: #ccc; 
+    cursor: pointer; 
+    opacity: 0.2; 
+    transition: opacity 0.2s, color 0.2s; 
+    padding: 0 5px; 
+    line-height: 1;
+}
+.data-table tr:hover .remove-row-btn { opacity: 1; }
+.remove-row-btn:hover { color: #d9534f; }
+
 @media print {
     body { background: white; padding: 0; }
     .page { box-shadow: none; padding: 0mm; width: 100%; }
-    .no-print { display: none !important; }
+    .no-print, .row-action-cell { display: none !important; }
     button { display: none !important; }
     
     /* Print: Linearize Tabs */
@@ -100,8 +123,13 @@ function runtime() {
                     const rowData: any = {};
                     let hasVal = false;
                     tr.querySelectorAll('[data-base-key]').forEach((input: any) => {
-                        rowData[input.dataset.baseKey] = input.value;
-                        if (input.value) hasVal = true;
+                        if (input.type === 'checkbox') {
+                            rowData[input.dataset.baseKey] = input.checked;
+                            if (input.checked) hasVal = true;
+                        } else {
+                            rowData[input.dataset.baseKey] = input.value;
+                            if (input.value) hasVal = true;
+                        }
                     });
                     if (hasVal) rows.push(rowData);
                 });
@@ -160,7 +188,10 @@ function runtime() {
                         if (row) {
                             row.querySelectorAll('input, select').forEach((input: any) => {
                                 const k = input.dataset.baseKey;
-                                if (k && rowData[k] !== undefined) input.value = rowData[k];
+                                if (k && rowData[k] !== undefined) {
+                                    if (input.type === 'checkbox') input.checked = !!rowData[k];
+                                    else input.value = rowData[k];
+                                }
                             });
                         }
                     });
@@ -262,6 +293,7 @@ function runtime() {
     function bakeValues() {
         updateJsonLd();
         document.querySelectorAll('input, textarea, select').forEach((el: any) => {
+            if (el.closest('.template-row')) return; // Skip template row
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (el.checked) el.setAttribute('checked', 'checked');
                 else el.removeAttribute('checked');
@@ -305,9 +337,8 @@ function runtime() {
 
     w.submitDocument = function () {
         bakeValues();
-        document.querySelectorAll('button, .add-row-btn, .no-print').forEach(el => el.remove());
-        document.querySelectorAll('input, textarea, select').forEach((el: any) => el.setAttribute('readonly', 'readonly'));
         document.querySelectorAll('.search-suggestions').forEach(el => el.remove()); // Clean up UI artifacts
+        // Do not remove buttons or set readonly to allow further editing/printing
         downloadHtml('submit', true);
     };
 
@@ -322,7 +353,11 @@ function runtime() {
         const tr = btn.closest('tr');
         if (tr.classList.contains('template-row')) {
             // Cannot delete template row, just clear inputs
-            tr.querySelectorAll('input').forEach((inp: HTMLInputElement) => inp.value = '');
+            // Cannot delete template row, just clear inputs
+            tr.querySelectorAll('input').forEach((inp: HTMLInputElement) => {
+                if (inp.type === 'checkbox') inp.checked = false;
+                else inp.value = '';
+            });
         } else {
             tr.remove();
             recalculate();
@@ -341,7 +376,11 @@ function runtime() {
         newRow.classList.remove('template-row');
         // Reset inputs to default value (from attribute) or empty
         newRow.querySelectorAll('input').forEach(input => {
-            input.value = input.getAttribute('value') || '';
+            if (input.type === 'checkbox') {
+                input.checked = input.hasAttribute('checked');
+            } else {
+                input.value = input.getAttribute('value') || '';
+            }
         });
         // Unhide delete button for non-template rows
         const rmBtn = newRow.querySelector('.remove-row-btn') as HTMLElement;
@@ -704,10 +743,10 @@ export function generateHtml(markdown: string): string {
 <body>
     <div class="page">
         ${html}
-        <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px;">
-            <button class="primary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Draft</button>
-            <button class="primary" onclick="window.submitDocument()" style="background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
-            <button onclick="window.clearData()" style="margin-left:auto; background-color: #999;" data-i18n="clear_btn">Clear</button>
+        <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; align-items: center; justify-content: center;">
+            <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
+            <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
+            <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
         </div>
     </div>
     <script type="application/ld+json" id="json-ld">
