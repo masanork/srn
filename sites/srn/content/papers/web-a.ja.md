@@ -74,9 +74,7 @@ Web/A は、すべての Web コンテンツを置き換えるものではない
 
 ### 4.3. 拡張ユースケース：Web/A Form（入力と記録の統合）
 Web/A は「読むため」の文書だけでなく、「入力するため」のアプリケーションとしても機能する。これが **Web/A Form** である。
-- **自己完結型アプリケーション**: HTML 内に入力フォーム、計算ロジック、バリデーション機能（JavaScript）を内包し、サーバーレスで動作する「マイクロアプリケーション」として振る舞う。
-- **State Freeze（状態の凍結）**: ユーザーが入力を完了し「保存」を行うと、現在の入力値と計算結果を HTML 属性および JSON-LD として「焼成（Bake）」し、JavaScript を除去（または無効化）した**静的なスナップショット**として再出力する。
-- **インフラレスなワークフロー**: サーバーを介さず、HTML ファイルをメールやチャットで回覧するだけで「配布→入力→保存→提出」のワークフローが完結する。これにより、「Excel 方眼紙」のような柔軟な運用と、Web 標準のデータ可搬性を両立する。
+後述する「3層トラスト・アーキテクチャ」により、発行者が提供する「正しい設問とロジック（Layer 1）」に対し、利用者が「署名付きの回答（Layer 2）」を付加することで、双方の真正性が担保された一連の文書レコードが完成する。
 
 ---
 
@@ -100,59 +98,71 @@ PDF/A-1a/1b のように、用途に応じた厳格さのレベルを定義す�
 
 ## 6. 技術構築モデル
 
-### 6.1. 多層保守モデル (Multi-Layer Maintenance)
-ブラウザの進化による閲覧不能（XSLT問題の再来）を防ぐため、文書内に二つのレイヤーを定義する：
-1.  **署名済みコンテンツ・レイヤー（ペイロード）**: 発行者によって暗号的に署名された、変更不可の「事実」としてのレイヤー。
-2.  **ポータブル・プレゼンテーション・レイヤー（ラッパー）**: 将来のブラウザでレンダリングするための CSS やフォント。
-    *   **進化的・分散的な保守**: 長期保存の過程において、将来のブラウザへの適合やセキュリティ強化のために、ラッパー層の更新が必要となる。Web/A では発行者が消滅した将来も見越し、コンテンツの配布者（公文書館、ライブラリ、あるいは個人の所有者）など**「誰もがラッパー層を安全に最新化できる」**仕組みを提唱する。文書メタデータには「最新の推奨ビューアー」を配布する非局所的な URI（IPFS 等の分散ネットワークや標準団体、レジストリ等）を埋め込むことを推奨し、これに基づいて署名済みの最新ビューアーを取得・適用することで、原本（ペイロード）の署名を壊すことなく、常に最新の閲覧体験を維持可能にする。
+### 6.1. 3層トラスト・アーキテクチャ (The 3-Layer Trust Architecture)
+静的なアーカイブ文書とインタラクティブなフォームを統一的に扱うため、Web/A は階層化された **3層トラスト・アーキテクチャ** を定義する。これにより、「発行者の意図」と「利用者の回答」を暗号学的に分離しつつ、プレゼンテーション層でシームレスに統合することを可能にする。
+
+1.  **Layer 1: 発行者署名コア (Issuer-Signed Core / The "Law")**
+    *   **内容**: 文書の基本構造、セマンティック・データ（JSON-LD）、および静的なテキストや設問。フォームにおいては「テンプレート」に相当する。
+    *   **署名者**: **発行者 (Issuer)**。
+    *   **信頼**: 公権力や組織によって確立された、不変の「真実」または「設問」を表す。
+    *   **成果物**: コアとなる HTML/JSON-LD を対象とした VC または埋め込み署名。
+
+2.  **Layer 2: 利用者署名コンテキスト (User-Signed Context / The "Fact")**
+    *   **内容**: Layer 1 に対する利用者の入力、回答、または同意。閲覧専用文書の場合は空であるか、受領確認メタデータ等が含まれる。
+    *   **署名者**: **利用者 (User/Subject)**。Passkey やローカル鍵を使用。
+    *   **信頼**: 利用者による特定の具体化や合意を表す。Layer 1 のハッシュ（Digest）を含めることで、「どの設問に対する回答か」を暗号学的に紐付ける。
+    *   **成果物**: Layer 1 をラップまたは参照する VP (Verifiable Presentation) または VC。
+
+3.  **Layer 3: ポータブル・プレゼンテーション (Portable Presentation / The "View")**
+    *   **内容**: Layer 1 と 2 を統合して可視化するために必要な CSS、フォント、および最小限のレンダリング・ロジック（JavaScript）。
+    *   **役割**: **進化的保守 (Evolutionary Adaptation)**。署名されたデータ層とは異なり、このレイヤーは原本の改ざんを伴わずに将来のデバイス環境に合わせて更新（長期検証 LTV）が可能である。
 
 ### 6.2. 人間と機械の同一性 (Human-Machine Parity : HMP) 
 生成ツール（Sorane等）は、JSON-LD と HTML が乖離しないことを保証する責任を持つ：
 - **静的同期**: HTML は JSON-LD と同じデータソースから同時に生成（ベイク）される。
 - **生成ツール宣言**: C2PA マニフェストを埋め込み、「このツールが同一性を持って生成した」ことを署名付きで記録する。
 
-### 6.3. Web/A の文書構造解説
-Web/A の堅牢性は、プレゼンテーション・レイヤー（Wrapper）と署名済みデータレイヤー（Payload）の明確な分離と、それらの間の厳格な同一性（HMP）によって担保される。
+### 6.3. Web/A の文書構造と信頼の連鎖
+Web/A の堅牢性は、これら三つのレイヤーの厳格な分離と紐付けによって担保される。
 
 <div align="center">
-<svg width="600" height="380" viewBox="0 0 600 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
-  <rect width="600" height="380" fill="#F8FAFC"/>
-  <rect x="40" y="30" width="520" height="320" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+<svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+  <rect width="600" height="460" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
   <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
 
-  <!-- Viewer Layer -->
-  <rect x="60" y="70" width="480" height="60" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
-  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Presentation レイヤー (Wrapper)</text>
-  <text x="75" y="115" font-family="system-ui" font-size="11" fill="#64748B">CSS・フォント等（進化的保守：将来のブラウザ対応のため更新可）</text>
+  <!-- Layer 3: Presentation -->
+  <rect x="60" y="70" width="480" height="50" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Layer 3: Portable Presentation (View)</text>
+  <text x="75" y="110" font-family="system-ui" font-size="10" fill="#64748B">CSS・フォント等（将来のブラウザ対応のため更新可能）</text>
 
-  <!-- Payload Layer -->
-  <rect x="60" y="150" width="480" height="180" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
-  <text x="75" y="175" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">署名済みペイロード (Immutable Payload)</text>
+  <!-- Layer 2: User Signed -->
+  <rect x="60" y="130" width="480" height="80" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="155" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: User-Signed Context (利用者による事実の入力)</text>
+  <text x="75" y="175" font-family="system-ui" font-size="11" fill="#065F46">利用者の回答・同意データ</text>
+  <text x="75" y="190" font-family="system-ui" font-size="11" fill="#065F46">Passkey 等による利用者署名 (VP)</text>
+  <!-- Link to Layer 1 -->
+  <path d="M300 210V220" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <rect x="80" y="190" width="200" height="80" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="90" y="210" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">人間可読レイヤー (HTML)</text>
-  <text x="90" y="230" font-family="system-ui" font-size="11" fill="#64748B">セマンティックHTML</text>
-  <text x="90" y="245" font-family="system-ui" font-size="11" fill="#64748B">アクセシビリティ担保</text>
+  <!-- Layer 1: Issuer Signed -->
+  <rect x="60" y="220" width="480" height="150" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="245" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: Issuer-Signed Core (発行者による原本・テンプレート)</text>
 
-  <rect x="320" y="190" width="200" height="80" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="330" y="210" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">機械可読レイヤー (JSON-LD)</text>
-  <text x="330" y="230" font-family="system-ui" font-size="11" fill="#64748B">構造化データ / 属性定義</text>
-  <text x="330" y="245" font-family="system-ui" font-size="11" fill="#64748B">VC / C2PA 署名マニフェスト</text>
+  <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">人間可読レイヤー</text>
+  <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / セマンティック構造</text>
 
-  <!-- HMP Connection -->
-  <path d="M280 230H320" stroke="#6366F1" stroke-width="2" stroke-dasharray="2 2"/>
-  <text x="300" y="285" font-family="system-ui" font-size="11" font-weight="700" fill="#6366F1" text-anchor="middle">HMP (人間・機械の一貫性)</text>
+  <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">機械可読レイヤー</text>
+  <text x="330" y="300" font-family="system-ui" font-size="11" fill="#64748B">JSON-LD / ロジック</text>
 
-  <!-- Hybrid Signature -->
-  <rect x="80" y="295" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
-  <text x="300" y="312" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">ハイブリッド署名: Ed25519 + ML-DSA-44（耐量子暗号）</text>
+  <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + ML-DSA-44 (耐量子)</text>
 </svg>
 </div>
 
 #### 6.3.1. セマンティック・マッピング（検証可能性の向上）
-第三者による監査やスクリプトでの突合を容易にするため、表示レイヤーの HTML 要素に対し、JSON-LD のプロパティとの対応を示す属性（例：`data-weba-field`）を付与することを推奨する。
-- **例**: `<span data-weba-field="author.name">楠 正憲</span>`
-これにより、署名されたペイロード内で「どの表示項目が、どの機械可読データに基づいているか」を透明化し、視覚的な偽装を防止する。
+第三者による監査やスクリプトでの突合を容易にするため、表示レイヤーの HTML 要素に対し、JSON-LD のプロパティとの対応を示す属性（例：`data-weba-field`）を付与することを推奨する。これにより、署名されたペイロード内で「どの表示項目が、どの機械可読データに基づいているか」を透明化し、視覚的な偽装を防止する。
 
 ---
 
