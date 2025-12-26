@@ -135,34 +135,26 @@ export const Renderers: Record<string, any> = {
         </div>`;
     },
 
-    datalist(key: string, label: string, attrs: string | undefined) {
+    search(key: string, label: string, attrs: string | undefined) {
         const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
-        const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
+        const srcKey = srcMatch ? srcMatch[1] : '';
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
         const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
 
-        let optionsHtml = '';
-        const srcKey = srcMatch ? srcMatch[1] : '';
-        if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
-            const data = this._context.masterData[srcKey];
-            const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
-
-            data.forEach((row: string[]) => {
-                if (row.length > lIdx) {
-                    optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || '')}"></option>`;
-                }
-            });
-        }
-
-        const listId = 'list_' + key + '_' + Math.floor(Math.random() * 10000);
-
         return `
-        <div class="form-row">
+        <div class="form-row autocomplete-container" style="position:relative; z-index:100;">
             <label class="form-label">${this.escapeHtml(label)}</label>
-            <input type="text" list="${listId}" class="form-input" data-json-path="${key}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist>
+            <div style="flex:1; position:relative;">
+                <input type="text" class="form-input search-input" autocomplete="off" 
+                    data-json-path="${key}" 
+                    data-master-src="${srcKey}"
+                    placeholder="${this.escapeHtml(placeholder)}" 
+                    style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:0 0 4px 4px; z-index:1001;"></div>
+            </div>
             ${hint}
         </div>`;
     },
@@ -205,6 +197,21 @@ export const Renderers: Record<string, any> = {
                     const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
                     const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
                     return `<td><input type="text" list="${listId}" class="${commonClass}" ${dataAttr} ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}><datalist id="${listId}">${optionsHtml}</datalist></td>`;
+                }
+
+                if (type === 'search') {
+                    const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_]+)/);
+                    const srcKey = srcMatch ? srcMatch[1] : '';
+                    const commonClass = isTemplate ? 'form-input template-input search-input' : 'form-input search-input';
+                    const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
+                    // Table search needs special handling for positioning if absolute, but simpler to use simple input then attach JS
+                    // For now, simplify structure for table
+                    return `<td>
+                        <div style="position:relative;">
+                            <input type="text" class="${commonClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}" ${placeholder} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                            <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1001;"></div>
+                        </div>
+                    </td>`;
                 }
 
                 if (type === 'number') {

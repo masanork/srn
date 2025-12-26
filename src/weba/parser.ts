@@ -45,6 +45,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     // Aggregator Schema
     jsonStructure.fields = [];
     jsonStructure.tables = {};
+    jsonStructure.masterData = masterData;
 
     // Tab Logic
     let tabs: { id: string, title: string }[] = [];
