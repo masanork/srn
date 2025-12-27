@@ -11,8 +11,34 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
     const { html, jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
 
+    const layer1Ref =
+        (data.l2_layer1_ref as string | undefined) ||
+        ((vc as any)?.credentialSubject?.contentDigest
+            ? `sha256:${(vc as any).credentialSubject.contentDigest}`
+            : '');
+    const hasL2Config = Boolean(
+        data.l2_encrypt &&
+        data.l2_recipient_kid &&
+        data.l2_recipient_x25519 &&
+        layer1Ref,
+    );
+    const l2Config = hasL2Config
+        ? {
+              enabled: true,
+              recipient_kid: data.l2_recipient_kid,
+              recipient_x25519: data.l2_recipient_x25519,
+              layer1_ref: layer1Ref,
+              weba_version: data.l2_weba_version || '0.1',
+              default_enabled: data.l2_encrypt_default ?? true,
+              user_kid: data.l2_user_kid || 'user#sig-1',
+          }
+        : null;
+
     // Embed structure for client-side logic
     const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
+    const l2ConfigScript = l2Config
+        ? `<script id="weba-l2-config" type="application/json">${JSON.stringify(l2Config)}</script>`
+        : '';
 
     const verificationDetails = vc ? `
         <details style="margin-top: 0.5rem;">
@@ -27,9 +53,22 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
         </details>
     ` : '';
 
+    const l2Toggle = l2Config
+        ? `
+            <div class="no-print weba-l2-toggle" style="margin-top: 1.5rem; padding: 0.75rem 1rem; border: 1px dashed #cbd5f5; border-radius: 8px; background: #f8fafc; font-size: 0.85rem;">
+                <label style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="checkbox" id="weba-l2-encrypt" ${l2Config.default_enabled ? 'checked' : ''}>
+                    <span>Encrypt L2 (任意暗号化)</span>
+                </label>
+                <div style="color: #64748b; margin-top: 0.4rem;">Encrypted answers can only be opened by the recipient key.</div>
+            </div>
+        `
+        : '';
+
     const content = `
         <div class="weba-form-container">
             ${html}
+            ${l2Toggle}
 
             <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
                 <div style="display: flex; flex-direction: column; gap: 0.2rem;">
@@ -47,6 +86,7 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
             </footer>
         </div>
         ${structureScript}
+        ${l2ConfigScript}
         <script src="./assets/form-bundle.js"></script>
     `;
 

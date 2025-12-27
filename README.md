@@ -101,5 +101,37 @@ srn/
     └── [site-name]/    # Each site gets its own clean directory
 ```
 
+## 🔐 Web/A Layer2 Crypto PoC
+
+Minimal HPKE-like hybrid KEM + AEAD envelope demo lives in:
+- `src/weba_l2crypto.ts`
+- `src/cli.ts`
+- `tests/test_roundtrip.ts`
+
+### Quickstart
+```bash
+bun src/cli.ts generate-keys --out keys/
+bun src/cli.ts sign-and-encrypt --layer1-ref sha256:deadbeef --recipient issuer#kem-2025 --keys keys/issuer.json --in layer2.json --out envelope.json
+bun src/cli.ts decrypt-and-verify --keys keys/issuer.json --in envelope.json
+bun test tests/test_roundtrip.ts
+```
+
+### Test vectors
+- Canonical JSON vector: input `{ "b": 1, "a": [true, {"z": 0, "y": "hi"}] }` -> output `{\"a\":[true,{\"y\":\"hi\",\"z\":0}],\"b\":1}`.
+- Ed25519 reference vector (RFC 8032, empty message):
+  - seed: `9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60`
+  - public: `d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a`
+  - sig: `e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b`
+
+### Threat model notes
+- AEAD binds `layer1_ref`, `recipient`, and `weba_version` via AAD; tampering breaks decryption.
+- The PoC stores private keys on disk and omits key rotation and access controls.
+- PQC (ML-KEM-768) is optional and uses `@noble/post-quantum` for encapsulation; if absent, only X25519 is used.
+- Signature is an Ed25519 stand-in for WebAuthn; replace with passkey signatures and COSE/CBOR formats.
+
+### TODOs
+- Replace Ed25519 placeholders with WebAuthn/COSE/CBOR signature flow.
+- Integrate a full hybrid HPKE implementation with standardized suite IDs.
+- Add key rotation, recipient key registry, and audit logging.
 ## ⚖️ License
 MIT License. Content and fonts used in demos are subject to their respective licenses.

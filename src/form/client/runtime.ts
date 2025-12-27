@@ -3,6 +3,7 @@ import { Calculator } from './calculator';
 import { DataManager } from './data';
 import { UIManager } from './ui';
 import { SearchEngine } from './search'; // Ensure Search is available if needed, though index.ts instantiates it
+import { loadL2Config } from './l2crypto';
 
 export function initRuntime() {
     console.log("Web/A Runtime Booting...");
@@ -13,6 +14,20 @@ export function initRuntime() {
 
     // Bind Globals for HTML onclick handlers
     const w = window as any;
+
+    const structureScript = document.getElementById('weba-structure');
+    if (structureScript?.textContent) {
+        try {
+            w.generatedJsonStructure = JSON.parse(structureScript.textContent);
+        } catch (e) {
+            console.warn('Failed to parse weba structure JSON', e);
+        }
+    }
+
+    const l2Config = loadL2Config();
+    if (l2Config) {
+        w.webaL2Config = l2Config;
+    }
 
     w.saveDraft = () => data.saveDraft();
     w.submitDocument = () => data.submitDocument();

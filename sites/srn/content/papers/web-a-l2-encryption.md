@@ -15,6 +15,14 @@ This paper defines the **Layer 2 Encryption** layer for Web/A documents. While L
 - **Integrity-Linked**: Ensure the ciphertext is cryptographically bound to the specific version of the Layer 1 Template (preventing "cut-and-paste" attacks where answers are moved to a different form).
 - **Future-Proofing**: Provide a hybrid path for Post-Quantum Cryptography (PQC) while maintaining compatibility with current high-performance ECC.
 
+## 2.5. Integration with Web/A Form (Opt-in)
+Layer 2 Encryption is optional for Web/A Form. When enabled, the form emits a **Layer2Encrypted** envelope instead of plaintext L2. When disabled, the form behaves exactly as today.
+
+Operational assumptions:
+- The issuer distributes the form together with a recipient encryption public key (X25519, optional ML-KEM-768).
+- The form UI exposes a clear “Encrypt L2” toggle and explains who can decrypt.
+- The encrypted envelope binds to the form’s `layer1_ref` via AAD so answers cannot be transplanted to a different template.
+
 ## 3. Cryptographic Construction
 
 ### 3.1. HPKE-like Hybrid Encryption
