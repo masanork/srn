@@ -1,6 +1,7 @@
 
 import { globalSigner } from './signer';
 import { buildLayer2Envelope, type L2Config, type Layer2Encrypted } from './l2crypto';
+import { downloadHtml } from './download';
 
 export class DataManager {
     private formId: string;
@@ -228,91 +229,14 @@ export class DataManager {
         options?: { embeddedVc?: any; l2Envelope?: Layer2Encrypted; stripPlaintext?: boolean },
     ) {
         const w = window as any;
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(document.documentElement.outerHTML, 'text/html');
-
-        if (options?.stripPlaintext) {
-            doc.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
-                if (input.type === 'checkbox' || input.type === 'radio') {
-                    input.checked = false;
-                    input.removeAttribute('checked');
-                } else {
-                    input.value = '';
-                    input.removeAttribute('value');
-                }
-            });
-            doc.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((area) => {
-                area.value = '';
-                area.textContent = '';
-            });
-            doc.querySelectorAll<HTMLSelectElement>('select').forEach((select) => {
-                select.selectedIndex = -1;
-                select.querySelectorAll('option').forEach((opt) => opt.removeAttribute('selected'));
-            });
-            doc.getElementById('json-ld')?.remove();
-            doc.getElementById('data-layer')?.remove();
-            const debug = doc.getElementById('json-debug');
-            if (debug) debug.textContent = '';
-        }
-
-        if (options?.embeddedVc) {
-            const vcJson = JSON.stringify(options.embeddedVc, null, 2);
-            const vcScript = doc.createElement('script');
-            vcScript.type = 'application/ld+json';
-            vcScript.id = 'weba-user-vc';
-            vcScript.textContent = vcJson;
-            doc.body.appendChild(vcScript);
-
-            const vcViewer = doc.createElement('div');
-            vcViewer.className = 'weba-user-verification no-print';
-            vcViewer.style.cssText =
-                'margin-top:2rem;padding:1rem;border:1px solid #10b981;border-radius:8px;background:#f0fdf4;font-size:0.85rem;';
-            vcViewer.innerHTML = `
-                <details>
-                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #047857; font-weight: 600;">
-                        <span>✓</span> 利用者による署名の証明
-                    </summary>
-                    <div style="padding: 1rem 0;">
-                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
-                    </div>
-                </details>
-            `;
-            const pre = vcViewer.querySelector('pre');
-            if (pre) pre.textContent = vcJson;
-            doc.body.appendChild(vcViewer);
-        }
-
-        if (options?.l2Envelope) {
-            const envScript = doc.createElement('script');
-            envScript.id = 'weba-l2-envelope';
-            envScript.type = 'application/json';
-            envScript.textContent = JSON.stringify(options.l2Envelope, null, 2);
-            doc.body.appendChild(envScript);
-        }
-
-        const htmlContent = doc.documentElement.outerHTML;
-
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-
         const title = (w.generatedJsonStructure && w.generatedJsonStructure.name) || 'web-a-form';
-        const now = new Date();
-        const dateStr = now.getFullYear() +
-            ('0' + (now.getMonth() + 1)).slice(-2) +
-            ('0' + now.getDate()).slice(-2) + '-' +
-            ('0' + now.getHours()).slice(-2) +
-            ('0' + now.getMinutes()).slice(-2);
-        const randomId = Math.random().toString(36).substring(2, 8);
-        const filename = `${title}_${dateStr}_${filenameSuffix}_${randomId}.html`;
-
-        a.download = filename;
-        a.click();
-
-        if (isFinal) {
-            setTimeout(() => window.location.reload(), 1000);
-        }
+        downloadHtml({
+            documentHtml: document.documentElement.outerHTML,
+            title,
+            filenameSuffix,
+            isFinal,
+            options,
+        });
     }
 
     public saveDraft() {

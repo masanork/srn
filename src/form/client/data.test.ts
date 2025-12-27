@@ -14,6 +14,7 @@ const document = window.document;
 (global as any).Event = window.Event;
 (global as any).Blob = window.Blob;
 (global as any).URL = window.URL;
+(global as any).DOMParser = window.DOMParser;
 
 // Mock localStorage
 const localStorageMock = (() => {

@@ -1,4 +1,12 @@
-import { buildRowFromPlain, extractJsonLdFromHtml, extractL2EnvelopeFromHtml, flattenForCsv } from "./aggregator_browser";
+import { describe, expect, test, beforeEach } from "bun:test";
+import { Window } from "happy-dom";
+import {
+  buildRowFromPlain,
+  extractJsonLdFromHtml,
+  extractL2EnvelopeFromHtml,
+  flattenForCsv,
+  initAggregatorBrowser,
+} from "./aggregator_browser";
 
 describe("aggregator browser helpers", () => {
   test("extracts JSON-LD from data-layer", () => {
@@ -45,5 +53,47 @@ describe("aggregator browser helpers", () => {
     expect(built.row._filename).toBe("file.html");
     expect(built.row._json).toBe(JSON.stringify({ a: 1 }));
     expect(built.row._l2_sig).toBe(JSON.stringify({ alg: "Ed25519" }));
+  });
+});
+
+describe("aggregator browser UI", () => {
+  let window: Window;
+  let document: Document;
+
+  beforeEach(() => {
+    window = new Window({ url: "http://localhost:3000/agg" });
+    document = window.document;
+    (globalThis as any).window = window;
+    (globalThis as any).document = document;
+    (globalThis as any).HTMLElement = window.HTMLElement;
+    (globalThis as any).HTMLInputElement = window.HTMLInputElement;
+    (globalThis as any).HTMLButtonElement = window.HTMLButtonElement;
+    (globalThis as any).Event = window.Event;
+    (globalThis as any).DOMParser = window.DOMParser;
+  });
+
+  test("renders UI with empty key status", () => {
+    document.body.innerHTML = `<div id="aggregator-root"></div>`;
+    initAggregatorBrowser();
+
+    const status = document.querySelector("#weba-agg-key-status") as HTMLElement;
+    const fileInput = document.querySelector("#weba-agg-files") as HTMLInputElement;
+    expect(status.textContent).toBe("Not loaded");
+    expect(fileInput).toBeTruthy();
+  });
+
+  test("renders UI with embedded key status", () => {
+    document.body.innerHTML = `
+      <div id="aggregator-root"></div>
+      <script id="weba-l2-keys" type="application/json">${JSON.stringify({
+        recipient_kid: "issuer#kem-2025",
+        recipient_x25519_private: "abc",
+      })}</script>
+    `;
+    initAggregatorBrowser();
+
+    const status = document.querySelector("#weba-agg-key-status") as HTMLElement;
+    expect(status.textContent).toBe("Loaded (issuer#kem-2025)");
+    expect(status.classList.contains("ready")).toBe(true);
   });
 });
