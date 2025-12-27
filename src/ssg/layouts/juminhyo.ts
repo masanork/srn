@@ -191,7 +191,7 @@ export function juminhyoLayout(
         </div>
         <style>
             /* Juminhyo Specific Styles (Kept inline for simplicity in this technote) */
-            .juminhyo-container { max-width: 1200px; margin: 0 auto; padding: 20px; background: #f0f0f0; }
+            .juminhyo-container { max-width: 1400px; margin: 0 auto; padding: 20px; background: #f0f0f0; }
             .jumin-sheet { background: white; padding: 40px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: inherit; position: relative; overflow: hidden; }
             .jumin-table { width: 100%; border-collapse: collapse; border: 2px solid black; table-layout: fixed; }
             .cell { border: 1px solid black; padding: 2px; font-size: 12px; overflow: hidden; }
@@ -201,7 +201,7 @@ export function juminhyoLayout(
             .label-text { display: flex; align-items: center; justify-content: center; height: 100%; }
             .label-main { font-size: 10px; line-height: 1.2; word-break: keep-all; line-break: strict; }
             .value-cell { padding-left: 5px; }
-            .title-cell { font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; }
+            .title-cell { font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; white-space: nowrap; }
             .issuer-title { white-space: nowrap; font-size: 0.9rem; }
             .seal-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
             .footer-section { margin-top: 2rem; display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; }

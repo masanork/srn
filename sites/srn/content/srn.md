@@ -1,14 +1,12 @@
 ---
 title: "Sorane (空音): Typography-First SSG"
 layout: width
-font: 
-  - hero:ReggaeOne-Regular.ttf
 ---
 
 
 
 <div class="hero-section">
-    <div class="logo-area font-hero">空音</div>
+    <div class="logo-area">空音</div>
     <p class="lead">SORANE (空音): The Reference Implementation for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>
 </div>
 
@@ -29,7 +27,7 @@ font:
         font-size: 7rem;
         margin-bottom: 0.5rem;
         color: var(--accent-color);
-        letter-spacing: -0.05em;
+        letter-spacing: -0.02em;
         font-weight: 800;
         line-height: 1;
     }
