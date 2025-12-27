@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Passkey Binding JSON Generator</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            color: #cbd5f5;
+            line-height: 1.6;
+        }
+        .card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+        }
+        label {
+            display: block;
+            margin-top: 1.25rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        input {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 1rem;
+        }
+        button {
+            margin-top: 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.6rem;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .status {
+            margin-top: 1rem;
+            color: #93c5fd;
+            font-size: 0.95rem;
+        }
+        pre {
+            margin-top: 1.5rem;
+            background: #020617;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            overflow: auto;
+            max-height: 360px;
+            font-size: 0.85rem;
+        }
+        .note {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .inline {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .inline button {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>Passkey Binding JSON Generator</h1>
+        <p>
+            Generate a draft binding JSON after registering a Passkey in your browser.
+            WebAuthn works only on HTTPS or localhost.
+        </p>
+
+        <div class="card">
+            <label for="rp-id">RP ID</label>
+            <input id="rp-id" type="text" placeholder="example.com">
+
+            <label for="rp-name">RP Name</label>
+            <input id="rp-name" type="text" value="Sorane">
+
+            <label for="user-name">User Name</label>
+            <input id="user-name" type="text" placeholder="user@example.com">
+
+            <label for="user-display">User Display Name</label>
+            <input id="user-display" type="text" placeholder="Taro Yamada">
+
+            <div class="inline">
+                <button id="generate-btn">Create Passkey</button>
+                <button id="download-btn" disabled>Download JSON</button>
+            </div>
+            <div class="status" id="status">Ready</div>
+            <pre id="output"></pre>
+            <div class="note" id="note"></div>
+        </div>
+    </div>
+
+    <script>
+        const rpIdInput = document.getElementById('rp-id');
+        const rpNameInput = document.getElementById('rp-name');
+        const userNameInput = document.getElementById('user-name');
+        const userDisplayInput = document.getElementById('user-display');
+        const generateBtn = document.getElementById('generate-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const statusEl = document.getElementById('status');
+        const outputEl = document.getElementById('output');
+        const noteEl = document.getElementById('note');
+
+        rpIdInput.value = location.hostname || "localhost";
+        let latestJson = null;
+
+        const base64UrlEncode = (buffer) => {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (const b of bytes) binary += String.fromCharCode(b);
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        };
+
+        const randomBytes = (length) => {
+            const bytes = new Uint8Array(length);
+            crypto.getRandomValues(bytes);
+            return bytes;
+        };
+
+        const buildOptions = (userIdBytes) => ({
+            publicKey: {
+                rp: {
+                    id: rpIdInput.value.trim(),
+                    name: rpNameInput.value.trim() || "Sorane"
+                },
+                user: {
+                    id: userIdBytes,
+                    name: userNameInput.value.trim() || "user",
+                    displayName: userDisplayInput.value.trim() || "user"
+                },
+                challenge: randomBytes(32),
+                pubKeyCredParams: [
+                    { type: "public-key", alg: -7 }
+                ],
+                authenticatorSelection: {
+                    residentKey: "preferred",
+                    userVerification: "required"
+                },
+                attestation: "none",
+                timeout: 60000
+            }
+        });
+
+        const toJson = (credential, publicKeyBuffer) => ({
+            schema: "passkey-binding-v0",
+            createdAt: new Date().toISOString(),
+            rpId: rpIdInput.value.trim(),
+            credentialId: base64UrlEncode(credential.rawId),
+            publicKey: {
+                format: "cose",
+                value: base64UrlEncode(publicKeyBuffer)
+            },
+            client: {
+                origin: location.origin,
+                userAgent: navigator.userAgent
+            }
+        });
+
+        const setStatus = (message, note) => {
+            statusEl.textContent = message;
+            if (note) noteEl.textContent = note;
+        };
+
+        generateBtn.addEventListener('click', async () => {
+            outputEl.textContent = '';
+            noteEl.textContent = '';
+            downloadBtn.disabled = true;
+            latestJson = null;
+
+            if (!window.PublicKeyCredential) {
+                setStatus('WebAuthn is not supported in this browser.', 'Use a modern browser with WebAuthn support.');
+                return;
+            }
+
+            const rpId = rpIdInput.value.trim();
+            if (!rpId) {
+                setStatus('RP ID is required.');
+                return;
+            }
+
+            const userId = randomBytes(16);
+            const options = buildOptions(userId);
+
+            try {
+                setStatus('Creating Passkey... Please confirm on your device.');
+                const credential = await navigator.credentials.create(options);
+                if (!credential) {
+                    setStatus('Passkey creation was cancelled.');
+                    return;
+                }
+
+                const response = credential.response;
+                if (!response.getPublicKey) {
+                    setStatus('This browser does not expose getPublicKey().');
+                    noteEl.textContent = 'Use a Chromium-based browser or extract the COSE key from attestationObject on the server side.';
+                    return;
+                }
+
+                const publicKeyBuffer = response.getPublicKey();
+                const json = toJson(credential, publicKeyBuffer);
+                latestJson = json;
+                outputEl.textContent = JSON.stringify(json, null, 2);
+                downloadBtn.disabled = false;
+                setStatus('Passkey JSON generated.');
+            } catch (err) {
+                console.error(err);
+                setStatus(`Error: ${err.message}`);
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!latestJson) return;
+            const blob = new Blob([JSON.stringify(latestJson, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'passkey-binding.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
