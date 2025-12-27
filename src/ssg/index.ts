@@ -111,18 +111,62 @@ async function collectMetadata(files: string[], contentDir: string) {
     const items = [];
     for (const file of files) {
         const source = await fs.readFile(path.join(contentDir, file), 'utf-8');
-        const { data } = matter(source);
+        const { data, content } = matter(source);
 
         if (data.status === 'draft') continue;
 
+        const html = await marked.parse(content);
+        const { excerptHtml, excerptText } = buildExcerpt(html);
+
         items.push({
             title: String(data.title || file),
+            description: data.description ? String(data.description) : '',
+            author: data.author ? String(data.author) : '',
             date: data.date ? String(data.date) : '',
             path: file.replace('.md', '.html'),
-            layout: String(data.layout || 'article')
+            layout: String(data.layout || 'article'),
+            isSystem: Boolean(data.isSystem),
+            excerptHtml,
+            excerptText
         });
     }
     return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+}
+
+function buildExcerpt(html: string) {
+    const firstParagraph = html.match(/<p>([\s\S]*?)<\/p>/i);
+    if (firstParagraph) {
+        const paragraphHtml = firstParagraph[1].trim();
+        return {
+            excerptHtml: `<p>${paragraphHtml}</p>`,
+            excerptText: stripTags(paragraphHtml).trim()
+        };
+    }
+
+    const text = stripTags(html).replace(/\s+/g, ' ').trim();
+    if (!text) {
+        return { excerptHtml: '', excerptText: '' };
+    }
+
+    const snippet = text.slice(0, 200);
+    const suffix = text.length > 200 ? '…' : '';
+    return {
+        excerptHtml: `<p>${escapeHtml(snippet)}${suffix}</p>`,
+        excerptText: `${snippet}${suffix}`
+    };
+}
+
+function stripTags(value: string) {
+    return value.replace(/<[^>]+>/g, ' ');
+}
+
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 async function isUpToDate(src: string, relPath: string, distDir: string, layout: string) {

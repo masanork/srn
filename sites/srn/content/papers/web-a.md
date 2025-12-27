@@ -167,7 +167,7 @@ The robustness of Web/A lies in the strict separation and binding between these 
 
   <!-- Semantic Mapping -->
   <path d="M280 290H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
-  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">Micro-Mapping</text>
+  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">Mapping</text>
 
   <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
   <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Machine Readable</text>
