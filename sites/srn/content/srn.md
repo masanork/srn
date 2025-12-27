@@ -94,13 +94,10 @@ font:
     /* Nav Cards */
     .nav-links {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1.5rem;
-        justify-items: start;
     }
     .nav-item {
-        width: 100%;
-        max-width: 400px;
         display: grid;
         grid-template-columns: 56px 1fr;
         grid-row-gap: 0.25rem;
@@ -111,6 +108,7 @@ font:
         border: 1px solid var(--border-color);
         box-shadow: var(--panel-shadow);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
     }
     .nav-item:hover {
         transform: translateY(-4px);
