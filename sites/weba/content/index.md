@@ -62,6 +62,12 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
     <a href="./prompt.html">プロンプト集を見る →</a>
   </div>
 
+  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+    <h3>💼 Web/A Folio</h3>
+    <p>データと知能を分離する。個人の履歴と鍵を束ねる「デジタル・ポートフォリオ」構想。</p>
+    <a href="./folio.html">構想を読む →</a>
+  </div>
+
 </div>
 
 ---

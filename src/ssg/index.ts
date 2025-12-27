@@ -47,7 +47,14 @@ async function build() {
         const filePath = path.join(CONTENT_DIR, file);
         const source = await fs.readFile(filePath, 'utf-8');
         const { data, content } = matter(source);
-        
+
+        // Check for draft status
+        if (data.status === 'draft') {
+            console.log(`Skipping draft: ${file}`);
+            continue;
+        }
+
+
         // Incremental check
         if (!isClean && await isUpToDate(filePath, file, DIST_DIR, data.layout)) continue;
 
@@ -69,7 +76,7 @@ async function build() {
         await fs.ensureDir(path.dirname(outPath));
         await fs.writeFile(outPath, finalHtml);
         if (vc) await fs.writeJson(outPath.replace('.html', '.vc.json'), vc, { spaces: 2 });
-        
+
         // SRN.md fallback to index.html
         if (file === 'srn.md' && !files.includes('index.md')) {
             await fs.writeFile(path.join(DIST_DIR, 'index.html'), finalHtml);
@@ -105,6 +112,9 @@ async function collectMetadata(files: string[], contentDir: string) {
     for (const file of files) {
         const source = await fs.readFile(path.join(contentDir, file), 'utf-8');
         const { data } = matter(source);
+
+        if (data.status === 'draft') continue;
+
         items.push({
             title: String(data.title || file),
             date: data.date ? String(data.date) : '',
@@ -126,7 +136,7 @@ async function isUpToDate(src: string, relPath: string, distDir: string, layout:
 async function bundleClientScripts(distDir: string) {
     const assetsDir = path.join(distDir, 'assets');
     await fs.ensureDir(assetsDir);
-    
+
     // Verify App
     const verifyEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
     if (await fs.pathExists(verifyEntry)) {
