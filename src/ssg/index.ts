@@ -63,7 +63,7 @@ async function build() {
 
         // Process Fonts
         const { fontCss, safeFontFamilies } = await fontProcessor.processPageFonts(
-            htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId
+            htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages
         );
 
         // Render via Layout Manager
