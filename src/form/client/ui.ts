@@ -15,15 +15,15 @@ export class UIManager {
         const RESOURCES: any = {
             "en": {
                 "add_row": "+ Add Row",
-                "work_save_btn": "Save HTML",
+                "work_save_btn": "Save Progress",
                 "clear_btn": "Clear Data",
-                "sign_btn": "Submit (VC)",
+                "sign_btn": "Submit",
             },
             "ja": {
                 "add_row": "+ 行を追加",
-                "work_save_btn": "HTML保存",
+                "work_save_btn": "作業内容を保存",
                 "clear_btn": "クリア",
-                "sign_btn": "提出版を保存 (VC)",
+                "sign_btn": "提出版を保存",
             }
         };
         const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';

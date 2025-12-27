@@ -1,993 +1,156 @@
+
 import fs from 'fs-extra';
 import path from 'path';
 import matter from 'gray-matter';
 import { marked } from 'marked';
 import { glob } from 'glob';
 
-import * as cheerio from 'cheerio';
-import crypto from 'node:crypto';
-import { subsetFont, bufferToDataUrl, getGlyphAsSvg } from '../core/font.ts';
-import { findGlyphInDb } from '../core/db.ts';
-import { loadConfig, getAbsolutePaths } from '../core/config.ts';
-import { toWareki, toLegalFormat } from '../core/utils.ts';
+import { loadConfig, getAbsolutePaths } from '../core/config.js';
+import { FontProcessor } from './FontProcessor.js';
+import { IdentityManager } from './IdentityManager.js';
+import { LayoutManager } from './LayoutManager.js';
 
-// Render HTML using Layout System
-let finalHtml = '';
-import { articleLayout } from './layouts/article.ts';
-import type { ArticleData } from './layouts/article.ts';
-import { variantsLayout } from './layouts/variants.ts';
-import type { VariantsData } from './layouts/variants.ts';
-import { officialLayout } from './layouts/official.ts';
-import type { OfficialData } from './layouts/official.ts';
-import { gridLayout } from './layouts/grid.ts';
-import type { GridData } from './layouts/grid.ts';
-import { searchLayout } from './layouts/search.ts';
-import type { SearchData } from './layouts/search.ts';
-import { juminhyoLayout } from './layouts/juminhyo.ts';
-import type { JuminhyoData, JuminhyoItem } from './layouts/juminhyo.ts';
-import { verifierLayout } from './layouts/verifier.ts';
-import type { VerifierData } from './layouts/verifier.ts';
-import { blogLayout } from './layouts/blog.ts';
-import type { BlogItem, BlogData } from './layouts/blog.ts';
-import { formLayout, formReportLayout } from './layouts/form.ts';
-import { createHybridVC, createCoseVC, createSdCoseVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
-import type { HybridKeys } from '../core/vc.ts';
-
-// Configuration
-const config = await loadConfig();
-const { SITE_DIR, DIST_DIR, CONTENT_DIR, FONTS_DIR, DATA_DIR, SCHEMAS_DIR } = getAbsolutePaths(config);
-
-const SITE_DOMAIN = process.env.SITE_DOMAIN || config.identity.domain;
-const SITE_PATH = process.env.SITE_PATH || config.identity.path;
-const SITE_DID = `did:web:${SITE_DOMAIN}${SITE_PATH.replace(/\//g, ':')}`;
+// Layouts
+import { articleLayout } from './layouts/article.js';
+import { verifierLayout } from './layouts/verifier.js';
+import { blogLayout } from './layouts/blog.js';
+import { formLayout, formReportLayout } from './layouts/form.js';
+import { juminhyoLayout } from './layouts/juminhyo.js';
 
 async function build() {
+    const configOverridePath = process.argv.indexOf('--site-config') !== -1 ? process.argv[process.argv.indexOf('--site-config') + 1] : undefined;
+    const config = await loadConfig(configOverridePath);
+    const { SITE_DIR, DIST_DIR, CONTENT_DIR, DATA_DIR, SCHEMAS_DIR } = getAbsolutePaths(config);
     const isClean = process.argv.includes('--clean');
-    console.log(`Starting build... (Clean: ${isClean})`);
 
-    // Clean dist only if requested
-    if (isClean) {
-        await fs.emptyDir(DIST_DIR);
-    }
-
-    // Always ensure dist exists
+    if (isClean) await fs.emptyDir(DIST_DIR);
     await fs.ensureDir(DIST_DIR);
     await fs.ensureDir(DATA_DIR);
 
-    // 0. Copy style.css (Order: static/style.css -> style.css -> shared/style.css)
-    const stylePaths = [
-        path.join(SITE_DIR, 'static', 'style.css'),
-        path.join(SITE_DIR, 'style.css'),
-        path.resolve(process.cwd(), 'shared', 'style.css')
-    ];
+    // Initialize Managers
+    const idManager = new IdentityManager(config.identity.domain, config.identity.path, DATA_DIR, DIST_DIR);
+    await idManager.init();
 
-    for (const p of stylePaths) {
-        if (await fs.pathExists(p)) {
-            await fs.copy(p, path.join(DIST_DIR, 'style.css'));
-            console.log(`  Using stylesheet: ${p}`);
-            break;
-        }
-    }
+    const fontProcessor = new FontProcessor(config, process.cwd());
+    await fontProcessor.init();
 
-    // 0.1 Copy other static assets from site's static directory
-    const STATIC_DIR = path.join(SITE_DIR, 'static');
-    if (await fs.pathExists(STATIC_DIR)) {
-        await fs.copy(STATIC_DIR, DIST_DIR, {
-            overwrite: true,
-            filter: (src) => !src.endsWith('style.css') // Already handled specifically or just copy all
-        });
-        console.log("  Copied site-specific static assets.");
-    }
+    const layoutManager = new LayoutManager();
 
-    // --- Key Management & History ---
-    console.log("Initializing Key Management...");
+    // Copy Assets
+    await copyStaticAssets(SITE_DIR, DIST_DIR, SCHEMAS_DIR);
 
-    // 1. Primary Identity Handling
-    const delegateKeyPath = path.join(DATA_DIR, 'delegate-key.json');
-    const rootKeyPath = path.join(DATA_DIR, 'root-key.json');
-
-    let currentKeys: HybridKeys;
-    let delegateCertificate: any = null;
-    let rootKeys: HybridKeys | null = null;
-
-    if (await fs.pathExists(delegateKeyPath)) {
-        const delegateData = await fs.readJson(delegateKeyPath);
-        currentKeys = delegateData.buildKeys;
-        delegateCertificate = delegateData.delegateCertificate;
-        console.log("  Using Authorized Delegate Build Keys.");
-
-        // Root public key from delegate certificate for DID Doc
-        // (In real scenario we'd load this from a stable root-identity.json)
-    } else if (await fs.pathExists(rootKeyPath)) {
-        rootKeys = await fs.readJson(rootKeyPath);
-        currentKeys = generateHybridKeys(); // Still use ephemeral for the build
-        console.log("  Loaded Root Key. Generated Ephemeral Build Key.");
-    } else {
-        rootKeys = generateHybridKeys();
-        currentKeys = generateHybridKeys();
-        await fs.writeJson(rootKeyPath, rootKeys, { spaces: 2 });
-        console.log("  Generated NEW Root Key and Ephemeral Build Key.");
-    }
-
-    if (!rootKeys && await fs.pathExists(rootKeyPath)) {
-        rootKeys = await fs.readJson(rootKeyPath);
-    }
-
-    // 2. Load History
-    const historyPath = path.join(DATA_DIR, 'key-history.json');
-    let keyHistory: Array<{ timestamp: string; buildId: string; revoked?: boolean; ed25519Params: string; pqcParams: string }> = [];
-
-    if (await fs.pathExists(historyPath)) {
-        try {
-            keyHistory = await fs.readJson(historyPath);
-        } catch (e) {
-            console.warn("Failed to read existing key history, starting fresh.");
-        }
-    }
-
-    // 3. Mark Build
-    const buildId = `build-${Date.now()}`;
-    const newEntry = {
-        timestamp: new Date().toISOString(),
-        buildId: buildId,
-        revoked: false,
-        ed25519Params: `did:key:z${currentKeys.ed25519.publicKey}`,
-        pqcParams: `did:key:zPQC${currentKeys.pqc.publicKey}`
-    };
-    keyHistory.push(newEntry);
-
-    // Persist history
-    await fs.writeJson(historyPath, keyHistory, { spaces: 2 });
-    await fs.writeJson(path.join(DIST_DIR, 'key-history.json'), keyHistory, { spaces: 2 });
-
-    // Copy delegate certificate to dist if it exists
-    if (delegateCertificate) {
-        await fs.writeJson(path.join(DIST_DIR, 'delegate-certificate.json'), delegateCertificate, { spaces: 2 });
-    }
-
-    // 4. Generate DID Document (did:web standard)
-    console.log(`Generating DID Document for ${SITE_DID}...`);
-    const didDoc = {
-        "@context": [
-            "https://www.w3.org/ns/did/v1",
-            "https://w3id.org/security/suites/jws-2020/v1"
-        ],
-        "id": SITE_DID,
-        "verificationMethod": [
-            {
-                "id": `${SITE_DID}#root-ed25519`,
-                "type": "Ed25519VerificationKey2020",
-                "controller": SITE_DID,
-                "publicKeyHex": rootKeys ? rootKeys.ed25519.publicKey : (delegateCertificate ? delegateCertificate.issuer.split(':').pop() : '') // Simplified root extraction
-            },
-            {
-                "id": `${SITE_DID}#${buildId}-ed25519`,
-                "type": "Ed25519VerificationKey2020",
-                "controller": SITE_DID,
-                "publicKeyHex": currentKeys.ed25519.publicKey
-            },
-            {
-                "id": `${SITE_DID}#${buildId}-pqc`,
-                "type": "DataIntegrityProof",
-                "controller": SITE_DID,
-                "publicKeyHex": currentKeys.pqc.publicKey
-            }
-        ],
-        "assertionMethod": [
-            `${SITE_DID}#root-ed25519`,
-            `${SITE_DID}#${buildId}-ed25519`,
-            `${SITE_DID}#${buildId}-pqc`
-        ]
-    };
-
-    await fs.ensureDir(path.join(DIST_DIR, '.well-known'));
-    await fs.writeJson(path.join(DIST_DIR, '.well-known', 'did.json'), didDoc, { spaces: 2 });
-    await fs.writeJson(path.join(DIST_DIR, 'did.json'), didDoc, { spaces: 2 });
-
-    // 5. Generate Status List VC (Signed by Root Key)
-    // Filter revoked build IDs
-    const revokedBuildIds = keyHistory.filter(k => k.revoked).map(k => k.buildId);
-    const statusListUrl = `https://${SITE_DOMAIN}${SITE_PATH}/status-list.json`;
-
-    try {
-        if (rootKeys) {
-            const statusListVc = await createStatusListVC(revokedBuildIds, rootKeys, statusListUrl, SITE_DID);
-            await fs.writeJson(path.join(DIST_DIR, 'status-list.json'), statusListVc, { spaces: 2 });
-            console.log("  Generated Status List VC (Signed by Root Key).");
-        } else {
-            console.warn("  Skipping Status List VC (No Root Key available locally).");
-        }
-    } catch (err) {
-        console.error("Failed to generate status list:", err);
-    }
-
-    console.log(`  Key history updated. Current PQC Key: ...${currentKeys.pqc.publicKey.slice(-8)}`);
-
-    // 6. Copy schemas to dist
-    const schemaDistDir = path.join(DIST_DIR, 'schemas');
-    if (await fs.pathExists(SCHEMAS_DIR)) {
-        await fs.ensureDir(schemaDistDir);
-        await fs.copy(SCHEMAS_DIR, schemaDistDir);
-        console.log("  Copied schemas to dist.");
-    }
-    // --------------------------------
-
-    // --------------------------------
-    // Setup Markdown Renderer
-    // Find all markdown files
-    // Configure marked once
-    marked.use({
-        renderer: {
-            // @ts-ignore
-            code({ text, lang }) {
-                if (lang === 'mermaid') {
-                    return `<div class="mermaid">${text}</div>`;
-                }
-                const langClass = lang ? `class="language-${lang}"` : '';
-                return `<pre><code ${langClass}>${text}</code></pre>\n`;
-            }
-        }
-    });
-
-    // Find all markdown files
+    // Process Content
     const files = await glob('**/*.md', { cwd: CONTENT_DIR });
-    const hasIndexMd = files.includes('index.md');
-
-    // Pass 1: Collect metadata of all pages for CMS/Blog features
-    const allPages: BlogItem[] = [];
-
-    for (const file of files) {
-        const filePath = path.join(CONTENT_DIR, file);
-        const source = await fs.readFile(filePath, 'utf-8');
-        const { data } = matter(source);
-        const stats = await fs.stat(filePath);
-        const autoDate = stats.mtime.toISOString().split('T')[0] || '';
-
-        allPages.push({
-            title: String(data.title || file),
-            description: String(data.description || ''),
-            date: data.date ? String(data.date) : autoDate,
-            author: String(data.author || ''),
-            path: file.replace('.md', '.html'),
-            layout: String(data.layout || 'article'),
-            isSystem: data.isSystem === true
-        });
-    }
-    // Sort by date (desc)
-    allPages.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+    const allPages = await collectMetadata(files, CONTENT_DIR);
 
     for (const file of files) {
         const filePath = path.join(CONTENT_DIR, file);
         const source = await fs.readFile(filePath, 'utf-8');
         const { data, content } = matter(source);
-        const stats = await fs.stat(filePath);
-        if (!data.date) {
-            data.date = stats.mtime.toISOString().split('T')[0];
-        }
-
-        // Multiple output paths support (e.g. srn.md -> index.html if no index.md)
-        const targetFiles = [file.replace('.md', '.html')];
-        if (!hasIndexMd && file === 'srn.md') {
-            targetFiles.push('index.html');
-        }
-
-        // Incremental check: if not clean build, check if all targets are up to date
-        // Note: Dynamic pages like 'blog' or 'grid' should always be rebuilt 
-        // because they depend on other pages' metadata.
-        if (!isClean && data.layout !== 'blog' && data.layout !== 'grid' && data.layout !== 'search') {
-            let allUpToDate = true;
-            const srcStat = await fs.stat(filePath);
-            for (const tFile of targetFiles) {
-                const tPath = path.join(DIST_DIR, tFile);
-                if (!await fs.pathExists(tPath)) {
-                    allUpToDate = false;
-                    break;
-                }
-                const dstStat = await fs.stat(tPath);
-                if (srcStat.mtime > dstStat.mtime) {
-                    allUpToDate = false;
-                    break;
-                }
-            }
-            if (allUpToDate) continue;
-        }
+        
+        // Incremental check
+        if (!isClean && await isUpToDate(filePath, file, DIST_DIR, data.layout)) continue;
 
         console.log(`Processing: ${file}`);
-
-        // Convert to HTML
-        let htmlContent = await marked.parse(content);
-
-        // Extract text for subsetting
-        const $ = cheerio.load(htmlContent);
-        const bodyText = $.text().replace(/\s+/g, '');
-
-        // Extract text from Frontmatter data to ensure all characters are subsetted
-        const extractTextFromData = (obj: any): string => {
-            let text = '';
-            if (typeof obj === 'string') {
-                text += obj;
-            } else if (Array.isArray(obj)) {
-                obj.forEach(item => text += extractTextFromData(item));
-            } else if (typeof obj === 'object' && obj !== null) {
-                Object.values(obj).forEach(val => text += extractTextFromData(val));
-            }
-            return text;
-        };
-        const dataText = extractTextFromData(data);
-
-        let fullText = (data.title || '') + bodyText + dataText;
-
-        // Common UI strings used across layouts
-        const commonStrings = "Read More → ログイン 検索 設定 Home Back Next";
-        fullText += commonStrings;
-
-        // CMS Improvement: If layout is blog, include metadata from all pages in subsetting
-        if (data.layout === 'blog') {
-            // Include all titles, descriptions, and authors from the metadata list
-            const cmsText = allPages.map(p => p.title + p.description + p.author).join('');
-            fullText += cmsText;
-        }
-
-        let fontCss = '';
-
-        // Helper to resolve font styles (including aliases)
-        const resolveStyleFiles = (styleName: string, seen = new Set<string>()): string[] => {
-            if (seen.has(styleName)) return [];
-            seen.add(styleName);
-            const entry = config.fontStyles[styleName];
-            if (!entry) return [];
-            if (Array.isArray(entry)) return entry;
-            return resolveStyleFiles(entry, seen);
-        };
-
-        // Parse font configurations
-        let fontConfigs: string[] = [];
-        if (data.font) {
-            const rawConfigs = Array.isArray(data.font) ? data.font : [data.font];
-            fontConfigs = [];
-            let hasDefault = false;
-
-            for (const cfg of rawConfigs) {
-                let matchedStyle = '';
-                let matchedFiles: string[] = [];
-
-                // Check for direct style match or style: expansion
-                for (const sName of Object.keys(config.fontStyles)) {
-                    if (cfg === sName) {
-                        matchedStyle = sName;
-                        matchedFiles = resolveStyleFiles(sName);
-                        break;
-                    } else if (cfg.startsWith(`${sName}:`)) {
-                        const extra = cfg.slice(sName.length + 1);
-                        matchedStyle = sName;
-                        matchedFiles = [...resolveStyleFiles(sName), ...extra.split(',').map((s: string) => s.trim())];
-                        break;
-                    }
-                }
-
-                if (matchedStyle) {
-                    const fileList = matchedFiles.join(',');
-                    fontConfigs.push(`${matchedStyle}:${fileList}`);
-                    if (!hasDefault) {
-                        fontConfigs.push(`default:${fileList}`);
-                        hasDefault = true;
-                    }
-                } else {
-                    fontConfigs.push(cfg);
-                    if (cfg === 'default' || cfg.startsWith('default:')) hasDefault = true;
-                }
-            }
-
-            // If no default style is specified, add the global default
-            if (!hasDefault) {
-                const defFiles = resolveStyleFiles('default');
-                const fallback = defFiles.length > 0 ? defFiles : ['NotoSansJP-VariableFont_wght.ttf'];
-                fontConfigs.push(`default:${fallback.join(',')}`);
-            }
-        } else {
-            // Global default font
-            const defFiles = resolveStyleFiles('default');
-            const fallback = defFiles.length > 0 ? defFiles : ['NotoSansJP-VariableFont_wght.ttf'];
-            fontConfigs.push(`default:${fallback.join(',')}`);
-        }
-
-        const styleMap: Record<string, string[]> = {};
-        const uniqueFontsToSubset = new Set<string>();
-        const ivsSupportCountByFamily = new Map<string, number>();
-
-        const getBaseName = (fname: string) => 'Srn-' + path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
-
-        for (const config of fontConfigs) {
-            let styleName = 'default';
-            let fileListStr = config;
-
-            if (config.includes(':')) {
-                const parts = config.split(':');
-                styleName = (parts[0] || '').trim();
-                fileListStr = parts.slice(1).join(':').trim(); // Join back in case filename has :, though unlikely
-            }
-
-            const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
-
-            if (!styleMap[styleName]) {
-                styleMap[styleName] = [];
-            }
-
-            for (const file of files) {
-                uniqueFontsToSubset.add(file);
-                // Use a generated family name based on filename to uniquely identify it
-                styleMap[styleName]?.push(getBaseName(file));
-            }
-        }
-
-        // Subset unique fonts
-        for (const fontName of uniqueFontsToSubset) {
-            const fontPath = path.join(FONTS_DIR, fontName);
-
-            if (await fs.pathExists(fontPath)) {
-                const fontFamilyName = getBaseName(fontName);
-                try {
-                    console.log(`  Subsetting font: ${fontName}`);
-                    const { rawSfnt: initialSfnt, ivsRecordsCount } = await subsetFont(fontPath, fullText);
-
-                    // --- C2PA-style Provenance Injection ---
-                    const assetHash = crypto.createHash('sha256').update(initialSfnt).digest('hex');
-                    const provenanceClaim = {
-                        type: "FontProvenance",
-                        name: fontName,
-                        hash: assetHash,
-                        buildId: buildId,
-                        timestamp: new Date().toISOString()
-                    };
-                    const provenanceVc = await createCoseVC(provenanceClaim, currentKeys, SITE_DID, buildId);
-
-                    // Final subsetting with injected SRNC (Sorane Claim) table
-                    const { buffer, mimeType } = await subsetFont(fontPath, fullText, {
-                        'SRNC': provenanceVc.cbor
-                    });
-
-                    const format = 'woff2';
-                    const dataUrl = bufferToDataUrl(buffer, mimeType);
-
-                    fontCss += `
-<style>
-@font-face {
-  font-family: '${fontFamilyName}';
-  src: url('${dataUrl}') format('${format}');
-  font-display: swap;
-}
-</style>
-                    `;
-                    ivsSupportCountByFamily.set(fontFamilyName, ivsRecordsCount);
-                } catch (err) {
-                    console.error(`  Error subsetting font ${fontName}: ${err}`);
-                    console.error(err);
-                    ivsSupportCountByFamily.set(fontFamilyName, 0);
-                }
-            } else {
-                console.warn(`  Font not found: ${fontName}`);
-                const fontFamilyName = getBaseName(fontName);
-                ivsSupportCountByFamily.set(fontFamilyName, 0);
-            }
-        }
-
-        const anyIvsSupport = Array.from(ivsSupportCountByFamily.values()).some(count => count > 0);
-        if (anyIvsSupport) {
-            const reorderStackForIvs = (stack: string[]) => {
-                return stack
-                    .map((name, index) => ({
-                        name,
-                        index,
-                        score: ivsSupportCountByFamily.get(name) ?? 0
-                    }))
-                    .sort((a, b) => {
-                        if (a.score !== b.score) return b.score - a.score;
-                        return a.index - b.index;
-                    })
-                    .map(entry => entry.name);
-            };
-
-            for (const [styleName, stack] of Object.entries(styleMap)) {
-                styleMap[styleName] = reorderStackForIvs(stack);
-            }
-        }
-
-
-        // Default fallbacks
-        const defaultStack = styleMap['default'] || [];
-        const safeDefaultStack = defaultStack.map(f => `'${f}'`);
-
-        // Generate utility classes for non-default styles
-        let utilityCss = '<style>\n';
-        for (const [styleName, stack] of Object.entries(styleMap)) {
-            if (styleName === 'default') continue;
-            const quotedStack = stack.map(f => `'${f}'`);
-            const stackStr = [...quotedStack, ...safeDefaultStack, 'serif'].join(', ');
-            utilityCss += `.font-${styleName} { font-family: ${stackStr} !important; }\n`;
-        }
-        utilityCss += '</style>';
-        fontCss += utilityCss;
-
-        const safeFontFamilies = [...defaultStack, 'serif'];
-
-        // Generate valid CSS font stack: quote non-generic families
-        const fontFamilyCss = safeFontFamilies.map(f => {
-            if (['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'].includes(f)) return f;
-            return `'${f}'`;
-        }).join(', ');
-
-        // Global styles (only font-family injection needed now)
-        const globalStyle = `
-<style>
-body {
-  font-family: ${fontFamilyCss};
-  font-weight: 450; /* Slightly heavier for better legibility on high-res screens */
-  font-variation-settings: 'wght' 450;
-}
-</style>
-        `;
-        fontCss += globalStyle;
-
-        // Process Inline Glyph Tags
-        const glyphPattern = /\[([a-zA-Z0-9_.:-]+)\]/g;
-        const matches = [...htmlContent.matchAll(glyphPattern)];
-
-        if (matches.length > 0) {
-            const replacers = await Promise.all(matches.map(async m => {
-                const rawContent = m[1] || '';
-                const parts = rawContent.split(':');
-
-                let fontRef = '';
-                let glyphId = '';
-
-                // Analyze parts
-                if (parts.length === 1) {
-                    // [glyphId]
-                    glyphId = parts[0]!;
-                } else if (parts.length === 2) {
-                    // [fontOrStyle:glyphId]
-                    fontRef = parts[0]!;
-                    glyphId = parts[1]!;
-                } else if (parts.length >= 3) {
-                    // [prefix:fontOrStyle:glyphId] e.g. [font:ipamjm.ttf:MJ005232]
-                    // We ignore the first part (prefix)
-                    fontRef = parts[1]!;
-                    glyphId = parts[2]!;
-                }
-
-                // --- MJ Code Resolution Removed as per user request ---
-                // if (glyphId && glyphId.startsWith('MJ')) { ... }
-                // ----------------------------------------------------
-
-                let fontFile = '';
-
-                if (fontRef) {
-                    // Explicit font/style specified
-                    fontFile = fontRef;
-
-                    // Check if it matches a defined style alias
-                    for (const cfg of fontConfigs) {
-                        let sName = 'default';
-                        let fFiles = cfg;
-                        if (cfg.includes(':')) {
-                            const pts = cfg.split(':');
-                            sName = pts[0]!.trim();
-                            fFiles = pts.slice(1).join(':').trim();
-                        }
-                        if (sName === fontRef) {
-                            // @ts-ignore
-                            fontFile = fFiles.split(',')[0].trim();
-                            break;
-                        }
-                    }
-                } else {
-                    // Auto lookup from DB
-                    const location = findGlyphInDb(glyphId);
-                    if (location) {
-                        fontFile = location.filename || '';
-                        console.log(`  Resolved ${glyphId} -> ${fontFile}`);
-                    } else {
-                        if (glyphId && glyphId.match(/^(MJ|GJ|uni)/)) {
-                            console.warn(`  Glyph not found in DB: ${glyphId}`);
-                        }
-                        return { original: m[0], replacement: m[0] };
-                    }
-                }
-
-                if (!fontFile || !glyphId) return { original: m[0], replacement: m[0] };
-
-                let fontPath = path.join(FONTS_DIR, fontFile);
-                if (!await fs.pathExists(fontPath)) {
-                    if (await fs.pathExists(fontPath + '.ttf')) fontPath += '.ttf';
-                    else if (await fs.pathExists(fontPath + '.otf')) fontPath += '.otf';
-                }
-
-                try {
-                    const svg = await getGlyphAsSvg(fontPath, glyphId);
-                    return { original: m[0], replacement: svg };
-                } catch (e) {
-                    console.error(`  Failed to generate SVG for ${glyphId} in ${fontFile}:`, e);
-                    return { original: m[0], replacement: m[0] };
-                }
-            }));
-
-            let newHtml = htmlContent;
-            for (const { original, replacement } of replacers) {
-                newHtml = newHtml.split(original).join(replacement);
-            }
-            htmlContent = newHtml;
-        }
-
-        // Render HTML using Layout System
-        let finalHtml = '';
-        if (data.layout === 'variants') {
-            finalHtml = variantsLayout(
-                data as VariantsData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies
-            );
-        } else if (data.layout === 'official') {
-            // Generate VC for official documents
-            console.log("  Generating PQC Hybrid VC...");
-            const plainText = cheerio.load(htmlContent).text();
-
-            const vcPayload = {
-                id: `urn:uuid:${crypto.randomUUID()}`,
-                credentialSubject: {
-                    id: `https://${SITE_DOMAIN}${SITE_PATH}/notices/${file.replace('.md', '')}`,
-                    name: data.title,
-                    recipient: data.recipient,
-                    "srn:buildId": buildId, // Embed Build ID for Revocation Check
-                    contentDigest: Buffer.from(new TextEncoder().encode(plainText)).toString('hex')
-                }
-            };
-
-            // Use the single-source-of-truth keys for this build session
-            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
-
-            // Save VC sidecar
-            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
-            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-            console.log(`  Generated VC: ${vcOutPath}`);
-
-            finalHtml = officialLayout(
-                data as OfficialData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies,
-                vc
-            );
-        } else if (data.layout === 'grid') {
-            finalHtml = gridLayout(
-                data as GridData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies
-            );
-        } else if (data.layout === 'search') {
-            finalHtml = searchLayout(
-                data as SearchData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies
-            );
-        } else if (data.layout === 'verifier') {
-            finalHtml = verifierLayout(
-                data as VerifierData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies
-            );
-        } else if (data.layout === 'juminhyo') {
-            // Normalization Layer: Map Japanese aliases to English internal keys
-            const normalizePerson = (p: any): JuminhyoItem => {
-                return {
-                    name: p.氏名 || p.name,
-                    kana: p.カナ || p.フリガナ || p.kana,
-                    dob: p.生年月日 || p.dob,
-                    gender: p.性別 || p.gender,
-                    relationship: p.続柄 || p.relationship,
-                    becameResident: p.住民となった日 || p.becameResident,
-                    becameResidentReason: p.住民となった事由 || p.becameResidentReason,
-                    addressDate: p.住所を定めた日 || p.addressDate,
-                    notificationDate: p.届出日 || p.notificationDate,
-                    prevAddress: p.前住所 || p.prevAddress,
-                    domiciles: p.本籍 || p.domiciles,
-                    myNumber: p.個人番号 || p.マイナンバー || p.myNumber,
-                    residentCode: p.住民票コード || p.residentCode,
-                    maidenName: p.旧氏 || p.maidenName,
-                    maidenKana: p.旧氏カナ || p.maidenKana,
-                    remarks: p.備考 || p.remarks
-                };
-            };
-
-            const normalizedItems = (data.世帯員 || data.項目 || data.items || []).map(normalizePerson);
-
-            // Machine-Readable Data (for VC/JSON-LD) stays in standard/ISO formats
-            const vcPayload = {
-                id: `urn:uuid:${crypto.randomUUID()}`,
-                type: ["VerifiableCredential", "ResidentRecord"],
-                credentialSchema: {
-                    id: `https://${SITE_DOMAIN}${SITE_PATH}/schemas/juminhyo-v1.schema.json`,
-                    type: "JsonSchema"
-                },
-                credentialSubject: {
-                    id: `https://${SITE_DOMAIN}${SITE_PATH}/certificates/${file.replace('.md', '')}`,
-                    type: "ResidentRecord",
-                    name: data.証明書名称 || data.certificateTitle || "住民票",
-                    householder: data.世帯主氏名 || data.householder,
-                    address: data.世帯住所 || data.address,
-                    "srn:buildId": buildId,
-                    member: normalizedItems.map((item: JuminhyoItem) => ({
-                        name: item.name,
-                        kana: item.kana,
-                        birthDate: item.dob,
-                        gender: item.gender,
-                        relationship: item.relationship,
-                        becameResidentDate: item.becameResident,
-                        becameResidentReason: item.becameResidentReason,
-                        addressSetDate: item.addressDate,
-                        notificationDate: item.notificationDate,
-                        maidenName: item.maidenName,
-                        maidenKana: item.maidenKana,
-                        residentCode: item.residentCode,
-                        individualNumber: item.myNumber,
-                        prevAddress: item.prevAddress,
-                        domiciles: item.domiciles,
-                        remarks: item.remarks
-                    }))
-                }
-            };
-
-            // Presentation Data (for HTML) is transformed to Legal/Human formats
-            const presentationData = {
-                ...data,
-                certificateTitle: toLegalFormat(data.証明書名称 || data.certificateTitle || "住民票"),
-                address: toLegalFormat(data.世帯住所 || data.address),
-                householder: toLegalFormat(data.世帯主氏名 || data.householder),
-                issueDate: toLegalFormat(data.交付年月日 || data.issueDate),
-                items: normalizedItems.map((item: JuminhyoItem) => ({
-                    ...item,
-                    name: toLegalFormat(item.name),
-                    dob: toLegalFormat(item.dob),
-                    becameResident: toLegalFormat(item.becameResident),
-                    addressDate: toLegalFormat(item.addressDate),
-                    notificationDate: toLegalFormat(item.notificationDate),
-                    myNumber: toLegalFormat(item.myNumber),
-                    residentCode: toLegalFormat(item.residentCode)
-                })),
-                issuer: {
-                    title: toLegalFormat(data.発行者役職 || data.issuer?.title),
-                    name: toLegalFormat(data.発行者氏名 || data.issuer?.name)
-                }
-            };
-
-            // Generate VC for Juminhyo
-            console.log("  Generating Juminhyo Hybrid VC...");
-
-            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
-            const binaryVc = await createCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
-            const sdVc = await createSdCoseVC(vcPayload, currentKeys, SITE_DID, buildId);
-
-            // Save VC sidecars
-            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
-            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-
-            const binVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.cbor'));
-            await fs.writeFile(binVcOutPath, binaryVc.cbor);
-
-            const sdVcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.sd.cwt'));
-            await fs.writeFile(sdVcOutPath, sdVc.cbor);
-
-            const disclosuresOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.disclosures.json'));
-            await fs.writeJson(disclosuresOutPath, sdVc.disclosures, { spaces: 2 });
-
-            console.log(`  Generated Juminhyo VCs: ${vcOutPath}, ${binVcOutPath}, ${sdVcOutPath}`);
-
-            finalHtml = juminhyoLayout(
-                presentationData as JuminhyoData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies,
-                vc,
-                binaryVc.base64url,
-                sdVc.disclosures
-            );
-        } else if (data.layout === 'blog') {
-            finalHtml = blogLayout(
-                data as BlogData,
-                allPages,
-                fontCss,
-                safeFontFamilies,
-                htmlContent
-            );
-        } else if (data.layout === 'form') {
-            // Generate VC for Form Template
-            console.log("  Generating Form Template VC...");
-            const formVcPayload = {
-                id: `urn:uuid:${crypto.randomUUID()}`,
-                type: ["VerifiableCredential", "WebAFormTemplate"],
-                credentialSubject: {
-                    id: `https://${SITE_DOMAIN}${SITE_PATH}/${file.replace('.md', '')}`,
-                    type: "WebAFormTemplate",
-                    name: data.title,
-                    description: data.description,
-                    "srn:buildId": buildId,
-                    contentDigest: crypto.createHash('sha256').update(content).digest('hex')
-                }
-            };
-            const vc = await createHybridVC(formVcPayload, currentKeys, SITE_DID, buildId);
-            
-            // Save VC sidecar
-            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
-            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-
-            finalHtml = formLayout(
-                data as any,
-                content,
-                fontCss,
-                safeFontFamilies,
-                vc
-            );
-
-            // Generate Report Page as well
-            const reportHtml = formReportLayout(
-                data as any,
-                content,
-                fontCss,
-                safeFontFamilies
-            );
-            const reportPath = path.join(DIST_DIR, file.replace('.md', '.report.html'));
-            await fs.writeFile(reportPath, reportHtml);
-            console.log(`  Generated Report: ${reportPath}`);
-        } else {
-            // Default to article (Standard Web/A)
-            console.log("  Generating Web/A Provenance VC...");
-            const plainText = cheerio.load(htmlContent).text();
-
-            const vcPayload = {
-                id: `urn:uuid:${crypto.randomUUID()}`,
-                type: ["VerifiableCredential", "WebADocument"],
-                credentialSubject: {
-                    id: `https://${SITE_DOMAIN}${SITE_PATH}/${file.replace('.md', '')}`,
-                    type: "WebADocument",
-                    name: data.title,
-                    author: data.author,
-                    date: data.date,
-                    "srn:buildId": buildId,
-                    contentDigest: crypto.createHash('sha256').update(plainText.trim()).digest('hex')
-                }
-            };
-
-            const vc = await createHybridVC(vcPayload, currentKeys, SITE_DID, buildId);
-            
-            const vcOutPath = path.join(DIST_DIR, file.replace('.md', '.vc.json'));
-            await fs.writeJson(vcOutPath, vc, { spaces: 2 });
-
-            finalHtml = articleLayout(
-                data as ArticleData,
-                htmlContent,
-                fontCss,
-                safeFontFamilies,
-                vc
-            );
-        }
-
-        for (const tFile of targetFiles) {
-            const outPath = path.join(DIST_DIR, tFile);
-            await fs.ensureDir(path.dirname(outPath));
-            await fs.writeFile(outPath, finalHtml);
-            console.log(`  Generated: ${outPath} (${(finalHtml.length / 1024).toFixed(2)} KB)`);
-        }
-    }
-
-
-    // Bundle Client Scripts
-    console.log("Bundling client scripts...");
-    
-    // 1. Verify App Bundle
-    const clientEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
-    if (await fs.pathExists(clientEntry)) {
-        const result = await Bun.build({
-            entrypoints: [clientEntry],
-            outdir: path.join(DIST_DIR, 'assets'),
-            naming: "[name]-bundle.[ext]",
-            minify: true,
+        const htmlContent = await marked.parse(content);
+
+        // Process Fonts
+        const { fontCss, safeFontFamilies } = await fontProcessor.processPageFonts(
+            htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId
+        );
+
+        // Render via Layout Manager
+        const { html: finalHtml, vc } = await layoutManager.render({
+            data, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir: DIST_DIR, relPath: file
         });
-        if (result.success) {
-            const generated = path.join(DIST_DIR, 'assets', 'verify-app-bundle.js');
-            const target = path.join(DIST_DIR, 'assets', 'verify-bundle.js');
-            if (await fs.pathExists(generated)) {
-                await fs.move(generated, target, { overwrite: true });
-            }
-            console.log("  Bundled verify-app.ts -> assets/verify-bundle.js");
-        } else {
-            console.error("  Bundle failed (Verify App):", result.logs);
+
+        // Write Outputs
+        const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
+        await fs.ensureDir(path.dirname(outPath));
+        await fs.writeFile(outPath, finalHtml);
+        if (vc) await fs.writeJson(outPath.replace('.html', '.vc.json'), vc, { spaces: 2 });
+        
+        // SRN.md fallback to index.html
+        if (file === 'srn.md' && !files.includes('index.md')) {
+            await fs.writeFile(path.join(DIST_DIR, 'index.html'), finalHtml);
         }
     }
 
-    // 2. Form Client Bundle
-    const formClientEntry = path.join(process.cwd(), 'src/form/client/index.ts');
-    if (await fs.pathExists(formClientEntry)) {
-        const result = await Bun.build({
-            entrypoints: [formClientEntry],
-            outdir: path.join(DIST_DIR, 'assets'),
-            naming: "form-bundle.[ext]", // direct naming
-            minify: true,
-        });
-        if (result.success) {
-             console.log("  Bundled form/client -> assets/form-bundle.js");
-        } else {
-             console.error("  Bundle failed (Form Client):", result.logs);
-        }
-    }
-
-
-    // Generate Sitemaps
-    console.log("Generating sitemaps...");
-    const baseUrl = `https://${SITE_DOMAIN}${SITE_PATH}`;
-    const sitemapFiles = [...files.map(f => f.replace('.md', '.html'))];
-    if (!hasIndexMd && files.includes('srn.md')) {
-        sitemapFiles.push('index.html');
-    }
-
-    const sitemapItems = sitemapFiles.map(file => {
-        const url = `${baseUrl}/${file}`;
-        return `
-    <url>
-        <loc>${url}</loc>
-        <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    </url>`;
-    });
-
-    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemapItems.join('')}
-</urlset>`;
-
-    await fs.writeFile(path.join(DIST_DIR, 'sitemap.xml'), sitemapXml);
-
-    // Generate llms.txt (AI Friendly Sitemap)
-    const llmsPages = [...files.map(f => ({ title: path.basename(f, '.md'), url: `/${f.replace('.md', '.html')}` }))];
-    if (!hasIndexMd && files.includes('srn.md')) {
-        llmsPages.push({ title: 'Home', url: '/index.html' });
-    }
-    const llmsTxt = llmsPages.map(p => `- [${p.title}](${p.url})`).join('\n');
-
-    await fs.writeFile(path.join(DIST_DIR, 'llms.txt'), llmsTxt);
-    console.log(`Generated sitemap.xml and llms.txt`);
-
-    // Prune stale HTML files
-    console.log("Pruning stale files...");
-    const distHtmls = await glob('**/*.html', { cwd: DIST_DIR });
-    const validPaths = new Set<string>();
-
-    allPages.forEach(p => {
-        validPaths.add(p.path);
-        if (p.layout === 'form') {
-             validPaths.add(p.path.replace(/\.html$/, '.report.html'));
-        }
-    });
-
-    if (!hasIndexMd && files.includes('srn.md')) {
-        validPaths.add('index.html');
-    }
-
-    const staticHtmls = await glob('**/*.html', { cwd: STATIC_DIR });
-    staticHtmls.forEach(f => validPaths.add(f));
-
-    for (const file of distHtmls) {
-        if (!validPaths.has(file)) {
-            await fs.remove(path.join(DIST_DIR, file));
-            console.log(`  Removed stale file: ${file}`);
-        }
-    }
-
+    await bundleClientScripts(DIST_DIR);
+    await generateSitemaps(allPages, config, DIST_DIR, files.includes('srn.md') && !files.includes('index.md'));
     console.log('Build complete.');
 }
 
-build().catch(err => {
-    console.error(err);
-    process.exit(1);
-});
+// --- Helpers ---
+
+async function copyStaticAssets(siteDir: string, distDir: string, schemasDir: string) {
+    const sharedStyle = path.resolve(process.cwd(), 'shared', 'style.css');
+    const siteStyle = path.join(siteDir, 'static', 'style.css');
+    const styleTarget = path.join(distDir, 'style.css');
+
+    if (await fs.pathExists(siteStyle)) await fs.copy(siteStyle, styleTarget);
+    else if (await fs.pathExists(sharedStyle)) await fs.copy(sharedStyle, styleTarget);
+
+    const staticDir = path.join(siteDir, 'static');
+    if (await fs.pathExists(staticDir)) {
+        await fs.copy(staticDir, distDir, { overwrite: true, filter: (src) => !src.endsWith('style.css') });
+    }
+    if (await fs.pathExists(schemasDir)) {
+        await fs.copy(schemasDir, path.join(distDir, 'schemas'));
+    }
+}
+
+async function collectMetadata(files: string[], contentDir: string) {
+    const items = [];
+    for (const file of files) {
+        const source = await fs.readFile(path.join(contentDir, file), 'utf-8');
+        const { data } = matter(source);
+        items.push({
+            title: String(data.title || file),
+            date: data.date ? String(data.date) : '',
+            path: file.replace('.md', '.html'),
+            layout: String(data.layout || 'article')
+        });
+    }
+    return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+}
+
+async function isUpToDate(src: string, relPath: string, distDir: string, layout: string) {
+    if (['blog', 'grid', 'search', 'form'].includes(layout)) return false;
+    const target = path.join(distDir, relPath.replace('.md', '.html'));
+    if (!await fs.pathExists(target)) return false;
+    const [s, t] = await Promise.all([fs.stat(src), fs.stat(target)]);
+    return s.mtime <= t.mtime;
+}
+
+async function bundleClientScripts(distDir: string) {
+    const assetsDir = path.join(distDir, 'assets');
+    await fs.ensureDir(assetsDir);
+    
+    // Verify App
+    const verifyEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
+    if (await fs.pathExists(verifyEntry)) {
+        await Bun.build({ entrypoints: [verifyEntry], outdir: assetsDir, naming: "verify-bundle.js", minify: true });
+    }
+
+    // Form Client
+    const formEntry = path.join(process.cwd(), 'src/form/client/index.ts');
+    if (await fs.pathExists(formEntry)) {
+        await Bun.build({ entrypoints: [formEntry], outdir: assetsDir, naming: "form-bundle.js", minify: true });
+    }
+}
+
+async function generateSitemaps(pages: any[], config: any, distDir: string, hasFallbackIndex: boolean) {
+    const baseUrl = `https://${config.identity.domain}${config.identity.path}`;
+    const urls = pages.map(p => `${baseUrl}/${p.path}`);
+    if (hasFallbackIndex) urls.push(`${baseUrl}/index.html`);
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        ${urls.map(u => `<url><loc>${u}</loc></url>`).join('')}</urlset>`;
+    await fs.writeFile(path.join(distDir, 'sitemap.xml'), xml);
+}
+
+export { build };
+if (import.meta.main) {
+    build().catch(err => { console.error(err); process.exit(1); });
+}

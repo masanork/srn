@@ -198,11 +198,27 @@ export class DataManager {
         let htmlContent = document.documentElement.outerHTML;
 
         if (embeddedVc) {
-            const vcScript = `\n<script type="application/ld+json" id="weba-user-vc">\n${JSON.stringify(embeddedVc, null, 2)}\n</script>\n`;
+            const vcJson = JSON.stringify(embeddedVc, null, 2);
+            const vcScript = `\n<script type="application/ld+json" id="weba-user-vc">\n${vcJson}\n</script>\n`;
+            
+            // Add viewer UI for the user VC
+            const vcViewer = `
+                <div class="weba-user-verification no-print" style="margin-top: 2rem; padding: 1rem; border: 1px solid #10b981; border-radius: 8px; background: #f0fdf4; font-size: 0.85rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #047857; font-weight: 600;">
+                            <span>✓</span> 利用者による署名の証明
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${vcJson}</pre>
+                        </div>
+                    </details>
+                </div>
+            `;
+
             if (htmlContent.includes('</body>')) {
-                htmlContent = htmlContent.replace('</body>', vcScript + '</body>');
+                htmlContent = htmlContent.replace('</body>', vcScript + vcViewer + '</body>');
             } else {
-                htmlContent += vcScript;
+                htmlContent += vcScript + vcViewer;
             }
         }
 

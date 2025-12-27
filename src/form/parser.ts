@@ -125,11 +125,18 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                         // Extract schema
                         const tableKey = currentDynamicTableKey!;
                         cells.forEach(cell => {
-                            const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+                            const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
                             if (match) {
-                                const [_, type, key, attrsParen, attrsColon] = match;
-                                const attrs = attrsParen || attrsColon;
-                                const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
+                                let [_, type, keyPart, attrsParen, attrsColon] = match;
+                                // Handle cases where keyPart contains attributes like "idx autonum"
+                                let key = keyPart.trim();
+                                let extraAttrs = attrsParen || attrsColon || '';
+                                if (key.includes(' ')) {
+                                    const parts = key.split(/\s+/);
+                                    key = parts[0]!;
+                                    extraAttrs = parts.slice(1).join(' ') + ' ' + extraAttrs;
+                                }
+                                const placeholderMatch = extraAttrs.match(/placeholder="([^"]+)"/) || extraAttrs.match(/placeholder='([^']+)'/);
                                 const label = placeholderMatch ? placeholderMatch[1] : key;
                                 jsonStructure.tables[tableKey].push({ key, label, type: type || 'text' });
                             }
@@ -282,10 +289,10 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
     // Final Assembly: Inject Tab Nav if tabs exist
     const toolbarButtons = `
-            <button class="secondary" onclick="window.clearData()" style="color: #666; border-color: transparent;" data-i18n="clear_btn">Clear</button>
             <div style="flex:1"></div>
-            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save HTML</button>
-            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Sign & Save</button>
+            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
     `;
 
     const toolbarHtml = `<div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
