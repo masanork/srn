@@ -80,6 +80,7 @@ export function juminhyoLayout(
     sdDisclosures?: string[]
 ) {
     const subject = prepareSubject(data);
+    const lang = (data.lang || 'ja').toString();
     
     // --- SD-CWT Disclosure Logic (Simplified for refactoring) ---
     let disclosures: any = null;
@@ -116,7 +117,8 @@ export function juminhyoLayout(
     const instanceVerificationDetails = instanceVc ? `
         <details style="margin-top: 0.5rem;">
             <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
-                <span>✓</span> 発行元による真正性の証明
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
                 <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Document Signed</span>
             </summary>
             <div style="padding: 1rem 0;">
@@ -128,7 +130,8 @@ export function juminhyoLayout(
     const templateVerificationDetails = templateVc ? `
         <details style="margin-top: 0.5rem;">
             <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
-                <span>✓</span> テンプレートの真正性の証明
+                <span>✓</span>
+                <span data-i18n-ja="テンプレートの真正性の証明" data-i18n-en="Template Authenticity Proof">テンプレートの真正性の証明</span>
                 <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
             </summary>
             <div style="padding: 1rem 0;">
@@ -175,7 +178,8 @@ export function juminhyoLayout(
                 <div style="display: flex; flex-direction: column; gap: 0.2rem;">
                     <details>
                         <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
-                            <span style="color: #3b82f6;">ℹ️</span> 記載内容（データ）の確認
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記載内容（データ）の確認" data-i18n-en="Review Machine-Readable Data">記載内容（データ）の確認</span>
                         </summary>
                         <div style="padding: 1rem 0;">
                             <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${JSON.stringify(subject, null, 2)}</pre>
@@ -217,5 +221,5 @@ export function juminhyoLayout(
         </style>
     `;
 
-    return baseLayout({ title: data.title, content: fullContent, fontCss, fontFamilies, jsonLd: jsonLdPayload });
+    return baseLayout({ title: data.title, content: fullContent, fontCss, fontFamilies, jsonLd: jsonLdPayload, lang: lang });
 }

@@ -9,6 +9,7 @@ export interface FormData {
 
 export function formLayout(data: FormData, rawMarkdown: string, fontCss: string, fontFamilies: string[], vc?: object) {
     const { html, jsonStructure } = parseMarkdown(rawMarkdown);
+    const lang = (data.lang || 'ja').toString();
 
     // Embed structure for client-side logic
     const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
@@ -16,7 +17,8 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
     const verificationDetails = vc ? `
         <details style="margin-top: 0.5rem;">
             <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
-                <span>✓</span> 発行元による真正性の証明
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
                 <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
             </summary>
             <div style="padding: 1rem 0;">
@@ -33,7 +35,8 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
                 <div style="display: flex; flex-direction: column; gap: 0.2rem;">
                     <details>
                         <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
-                            <span style="color: #3b82f6;">ℹ️</span> 記入内容（データ）の確認
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記入内容（データ）の確認" data-i18n-en="Review Form Data">記入内容（データ）の確認</span>
                         </summary>
                         <div style="padding: 1rem 0;">
                             <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
@@ -51,12 +54,14 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
         title: data.title,
         content: content,
         fontCss,
-        fontFamilies
+        fontFamilies,
+        lang: lang
     });
 }
 
 export function formReportLayout(data: FormData, rawMarkdown: string, fontCss: string, fontFamilies: string[]) {
     const { jsonStructure } = parseMarkdown(rawMarkdown);
+    const lang = (data.lang || 'ja').toString();
 
     // Embed structure for client-side logic
     const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
@@ -84,6 +89,7 @@ export function formReportLayout(data: FormData, rawMarkdown: string, fontCss: s
         title: `${data.title} (Report)`,
         content: content,
         fontCss,
-        fontFamilies
+        fontFamilies,
+        lang: lang
     });
 }
