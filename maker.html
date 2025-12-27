@@ -163,6 +163,27 @@
             padding: 10px;
             border-radius: 4px;
         }
+
+        .preview-modes {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .preview-btn {
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .preview-btn.active {
+            background: #111827;
+            color: #fff;
+            border-color: #111827;
+        }
     </style>
 </head>
 
@@ -186,7 +207,15 @@
         </div>
     </div>
     <div class="pane">
-        <div class="pane-header" data-i18n="preview">Preview</div>
+        <div class="pane-header">
+            <span data-i18n="preview">Preview</span>
+            <div class="preview-modes">
+                <button class="preview-btn active" data-preview="form" onclick="setPreviewMode('form')"
+                    data-i18n="btn_preview_form">Form</button>
+                <button class="preview-btn" data-preview="aggregator" onclick="setPreviewMode('aggregator')"
+                    data-i18n="btn_preview_agg">Aggregator</button>
+            </div>
+        </div>
         <div id="preview-container">
             <div id="preview" class="preview-content"></div>
         </div>
