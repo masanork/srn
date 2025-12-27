@@ -101,3 +101,115 @@ For both signing and AAD preparation, Web/A uses a simplified **Canonical JSON**
 - Use `@noble/curves/ed25519` and `x25519` for elliptic curve operations.
 - Use `node:crypto` for `hkdf`, `randomBytes`, and `createCipheriv` (AES-GCM).
 - Implementation should be minimal and self-contained to allow easy porting to browser environments.
+
+## 6. Usage (Web/A Form Integration)
+
+### 6.1. Enable Encryption in Frontmatter
+Add the following fields to a Web/A Form Markdown file to enable L2 encryption. This will inject the recipient key and show a toggle in the form UI.
+
+```yaml
+---
+layout: form
+l2_encrypt: true
+l2_recipient_kid: "issuer#kem-2025"
+l2_recipient_x25519: "<base64url>"
+# l2_layer1_ref: "sha256:..."  # Optional. If omitted, it derives from the template VC digest.
+l2_encrypt_default: true       # Optional. Default toggle state.
+l2_user_kid: "user#sig-1"       # Optional. User signature key id.
+l2_keywrap:                    # Optional. Enables passkey unlock for recipient.
+  alg: "WebAuthn-PRF-AESGCM-v1"
+  kid: "issuer#passkey-1"
+  credential_id: "base64url(...)"
+  prf_salt: "base64url(...)"
+  wrapped_key: "base64url(...)"
+  aad: "base64url(layer1_ref)"
+---
+```
+
+### 6.2. User Flow
+1. Issuer distributes the form with recipient public keys embedded.
+2. User fills the form as usual.
+3. User toggles “Encrypt L2” on (default can be pre-set).
+4. Submission produces a Layer2Encrypted envelope instead of plaintext L2.
+
+### 6.3. Output Artifacts
+When encryption is enabled:
+- The encrypted envelope is stored in `<script id="weba-l2-envelope" type="application/json">`.
+- Plaintext JSON-LD is removed from the output HTML.
+- The envelope is bound to `layer1_ref` via AAD (tampering breaks decryption).
+
+## 7. Browser-Only Decryption with Passkey (Concept)
+Web/A’s file-first model favors a **browser-only decryption flow** that works without external tooling. The intended UX is “one passkey action to open”.
+
+### 7.1. Key Wrap Concept
+To enable browser-only decryption, the recipient’s **CEK (content-encryption key)** is wrapped with a Passkey-protected key and embedded alongside the envelope:
+
+- The form carries a **Key Wrap Package** (KWP) that can be unlocked via WebAuthn.
+- The KWP contains an encrypted CEK and the metadata required to unlock it.
+- The recipient authenticates via Passkey → browser unwraps CEK → decrypts L2 envelope.
+
+This preserves the file-first property: a single HTML file still carries all data needed, yet only the intended recipient can decrypt.
+
+### 7.2. Proposed Data Blocks
+```json
+// Embedded in HTML (example IDs)
+{
+  "weba-l2-envelope": { /* Layer2Encrypted */ },
+  "weba-l2-keywrap": {
+    "alg": "WebAuthn-PRF-AESGCM-v1",
+    "kid": "issuer#passkey-1",
+    "wrapped_key": "base64url(...)",
+    "credential_id": "base64url(...)",
+    "prf_salt": "base64url(...)",
+    "aad": "base64url(layer1_ref)"
+  }
+}
+```
+
+### 7.3. Unlock Flow (Recipient)
+1. Recipient opens the HTML file in a browser.
+2. Click **Unlock (Passkey)**.
+3. WebAuthn `get()` is invoked for the configured credential ID.
+4. The browser derives/unwraps CEK and decrypts the L2 envelope.
+5. Decrypted payload is rendered in a read-only view (no plaintext stored unless explicitly exported).
+
+### 7.4. Notes
+- This section defines the **conceptual flow**; exact KWP format is a spec extension.
+- The goal is **single action unlock** without external tools.
+- If KWP is absent, offline decryption via CLI remains the fallback.
+
+### 7.5. Key Wrap Mechanics (Proposed)
+The Key Wrap Package (KWP) wraps the **recipient X25519 private key** so it can only be unlocked with the recipient’s Passkey. The CEK is still derived at decryption time from the envelope and the unwrapped private key.
+
+**Inputs**:
+- `recipient_x25519_sk`: recipient private key (32 bytes).
+- `credential_id`: passkey identifier for the recipient.
+- `prf_salt`: per-form salt for PRF key derivation.
+- `aad`: optional context binding (e.g., `layer1_ref`).
+
+**Derivation (sketch)**:
+1. Call WebAuthn `get()` with **PRF extension** and `prf_salt`.
+2. Obtain `prf_output` from `getClientExtensionResults().prf.results.first`.
+3. Derive wrap key/iv via HKDF-SHA256:
+   - `wrap_key = HKDF(prf_output, info="weba-l2/kw", 32)`
+   - `wrap_iv  = HKDF(prf_output, info="weba-l2/kw-iv", 12)`
+4. Encrypt `recipient_x25519_sk` with AES-256-GCM using `wrap_key`, `wrap_iv`, and `aad`.
+5. Store the ciphertext as `wrapped_key` in the KWP.
+
+**Unwrap**:
+1. Re-run WebAuthn `get()` with the same PRF salt.
+2. Re-derive `wrap_key`/`wrap_iv`.
+3. Decrypt `wrapped_key` to recover `recipient_x25519_sk`.
+
+This preserves “single action unlock” while keeping all materials inside the HTML file. If PRF is unavailable, fallback to CLI decryption.
+
+### 7.6. Browser UI/UX (Proposed)
+**Unlock panel** (visible when `weba-l2-envelope` is present):
+- Button: “Unlock (Passkey)”
+- Status line: “Waiting for passkey…” / “Unlocked”
+- Optional: “Export decrypted JSON” (explicit user action)
+
+**Behavior**:
+- Until unlock, no plaintext L2 data is displayed or stored.
+- After unlock, render a read-only view of `layer2_plain`.
+- Optionally allow exporting the decrypted payload as JSON/CSV.

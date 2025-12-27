@@ -4,6 +4,8 @@ import { DataManager } from './data';
 import { UIManager } from './ui';
 import { SearchEngine } from './search'; // Ensure Search is available if needed, though index.ts instantiates it
 import { loadL2Config } from './l2crypto';
+import { initL2Viewer } from './l2viewer';
+import { initKeywrapTool } from './keywrap_tool';
 
 export function initRuntime() {
     console.log("Web/A Runtime Booting...");
@@ -54,6 +56,8 @@ export function initRuntime() {
     ui.applyI18n();
     ui.initTables();
     calc.recalculate(); // This also runs runAutoCopy
+    initL2Viewer();
+    initKeywrapTool();
 
     // Global Input Listener
     let tm: any;
