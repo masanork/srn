@@ -1,5 +1,5 @@
-import { baseLayout } from './base.ts';
-import { parseMarkdown } from '../../form/parser.ts';
+import { baseLayout } from './base.js';
+import { parseMarkdown } from '../../form/parser.js';
 
 export interface FormData {
     title: string;
@@ -13,35 +13,38 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
     // Embed structure for client-side logic
     const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
 
-    const verificationFooter = vc ? `
-        <footer class="doc-verification no-print" style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #666;">
-            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                <div style="background: #e6f7e6; color: #2e7d32; padding: 0.4rem 1rem; border-radius: 20px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
-                    <span>✓</span> Template Signed
-                </div>
-                <div>
-                    <span style="font-size: 0.8rem;">Layer 1: Issuer Context (Immutable)</span>
-                </div>
+    const verificationDetails = vc ? `
+        <details style="margin-top: 0.5rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span> 発行元による真正性の証明
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${JSON.stringify(vc, null, 2)}</pre>
             </div>
-            
-            <details style="background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
-                <summary style="padding: 0.8rem 1rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="opacity: 0.6;">▶</span> View Template VC (JSON-LD)
-                </summary>
-                <div style="padding: 0 1rem 1rem 1rem;">
-                    <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${JSON.stringify(vc, null, 2)}</pre>
-                </div>
-            </details>
-        </footer>
+        </details>
     ` : '';
 
     const content = `
         <div class="weba-form-container">
             ${html}
-            ${verificationFooter}
+
+            <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                            <span style="color: #3b82f6;">ℹ️</span> 記入内容（データ）の確認
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                        </div>
+                    </details>
+                    ${verificationDetails}
+                </div>
+            </footer>
         </div>
         ${structureScript}
-        <script src="/assets/form-bundle.js"></script>
+        <script src="./assets/form-bundle.js"></script>
     `;
 
     return baseLayout({
@@ -64,7 +67,7 @@ export function formReportLayout(data: FormData, rawMarkdown: string, fontCss: s
             <div id="aggregator-root">Loading...</div>
         </div>
         ${structureScript}
-        <script src="/assets/form-bundle.js"></script>
+        <script src="./assets/form-bundle.js"></script>
         <script>
             // Initialize Aggregator
             document.addEventListener('DOMContentLoaded', () => {

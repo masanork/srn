@@ -232,9 +232,9 @@ export const Renderers: Record<string, any> = {
             return `<input type="checkbox" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
         }
 
-        if (type === 'autonum') {
+        if (type === 'autonum' || (attrs || '').includes('autonum')) {
             const classList = commonClass + ' auto-num';
-            return `<input type="number" readonly class="${classList}" ${dataAttr} style="background:transparent; border:none; text-align:center; width:100%; font-weight:bold; cursor:default; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+            return `<input type="number" readonly class="${classList}" ${dataAttr} data-autonum="true" style="background:transparent; border:none; text-align:center; width:100%; font-weight:bold; cursor:default; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
         }
 
         // Default text
@@ -254,12 +254,20 @@ export const Renderers: Record<string, any> = {
     tableRow(cells: string[], isTemplate = false) {
         const tds = cells.map(cell => {
             const trimmed = cell.trim();
-            const match = trimmed.match(/^\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+            const match = trimmed.match(/^\[(?:([a-z]+):)?([^\]:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
 
             if (match) {
-                let [_, type, key, attrsParen, attrsColon] = match;
-                const attrs = attrsParen || attrsColon;
-                const inputHtml = this.renderInput(type || 'text', key, attrs, isTemplate);
+                let [_, type, keyPart, attrsParen, attrsColon] = match;
+                let key = keyPart.trim();
+                let extraAttrs = attrsParen || attrsColon || '';
+                
+                if (key.includes(' ')) {
+                    const parts = key.split(/\s+/);
+                    key = parts[0]!;
+                    extraAttrs = parts.slice(1).join(' ') + ' ' + extraAttrs;
+                }
+
+                const inputHtml = this.renderInput(type || 'text', key, extraAttrs, isTemplate);
                 return `<td>${inputHtml}</td>`;
             } else {
                 return `<td>${this.escapeHtml(trimmed)}</td>`;

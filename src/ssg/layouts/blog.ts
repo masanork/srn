@@ -15,10 +15,12 @@ export interface BlogData {
     description?: string;
 }
 
-export function blogLayout(data: BlogData, items: BlogItem[], fontCss: string, fontFamilies: string[], htmlContent: string) {
-    // Filter out index and system pages, showing only user articles/official docs
-    const articles = items.filter(item =>
-        item.layout === 'article' || item.layout === 'official'
+export function blogLayout(data: BlogData, allPages: BlogItem[], fontCss: string, fontFamilies: string[], htmlContent: string) {
+    // Filter out index and system pages, showing only user articles
+    const articles = allPages.filter(item => 
+        item.layout === 'article' && 
+        !item.isSystem && 
+        item.path !== 'index.html'
     );
 
     const articleCards = articles.map(item => `

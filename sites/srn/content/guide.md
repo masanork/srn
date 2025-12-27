@@ -29,7 +29,7 @@ srn/
 │   └── data/         # System data (Keys, DB) - *Do not commit keys!*
 ├── dist/srn/         # Generated Output (Git-ignored)
 ├── src/              # Build Scripts (TypeScript)
-│   ├── layouts/      # HTML Templates (article, weba, official, etc.)
+│   ├── layouts/      # HTML Templates (article, form, etc.)
 │   ├── bin/          # CLI Tools (weba-verify.ts)
 │   ├── vc.ts         # Cryptography & VC Logic
 │   ├── verify-core.ts # Shared Verification Logic
@@ -129,22 +129,6 @@ layout: form
 * **Signed Template**: The form structure itself is signed by the issuer (Layer 1).
 * **User Signature**: Users can sign their input using Passkeys (WebAuthn) and download a Verifiable Credential (Layer 2).
 * **Form Maker**: Use the [Web/A Form Maker](./maker.html) to visually design forms and generate Markdown.
-
-### 4. Verified Documents (Official VC)
-
-To certify a document as a traditional VC sidecar, use the `official` layout.
-
-```markdown
----
-title: "Official Notice"
-layout: official  <-- Triggers signing process
-recipient: "Public"
----
-This content will be signed by the Root Key.
-```
-
-* **Result**: A `.vc.json` file is generated alongside the HTML.
-* **Verification**: Users can verify this JSON in the [Verify Console](./verify.html).
 
 ### 3. Font System (Typography)
 

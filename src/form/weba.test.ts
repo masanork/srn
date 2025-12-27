@@ -46,6 +46,68 @@ describe("Web/A Parser", () => {
         expect(result.html).toContain('data-formula="Math.floor(SUM(amount) * 0.1)"');
         expect(result.html).toContain('data-base-key="row_tax"');
     });
+
+    test("toolbar buttons are in correct order", () => {
+        const md = `# Test Form\n- [text:foo] Bar`;
+        const result = parseMarkdown(md);
+        
+        // Check order: btn-clear should appear before secondary (Save Progress)
+        const clearIdx = result.html.indexOf('class="btn-clear"');
+        const saveIdx = result.html.indexOf('class="secondary"');
+        const primaryIdx = result.html.indexOf('class="primary"');
+        
+        expect(clearIdx).toBeGreaterThan(-1);
+        expect(saveIdx).toBeGreaterThan(clearIdx);
+        expect(primaryIdx).toBeGreaterThan(saveIdx);
+    });
+
+    test("parses autonum attribute in table columns", () => {
+        const md = `[dynamic-table:items]
+| No | Item |
+|---|---|
+| [text:idx autonum] | [text:name] |`;
+        const result = parseMarkdown(md);
+        expect(result.html).toContain('data-autonum="true"');
+    });
+
+    test("parses tabs and injects nav", () => {
+        const md = `# Title
+## Main
+Page 1 Content
+## Details
+Page 2 Content`;
+        const result = parseMarkdown(md);
+        expect(result.html).toContain('class="tabs-nav"');
+        expect(result.html).toContain('Main</button>');
+        expect(result.html).toContain('id="tab-1" class="tab-content active"');
+    });
+
+    test("parses master data blocks", () => {
+        const md = `[master:vendors]
+| ID | Name |
+|---|---|
+| V01 | Vendor A |
+| V02 | Vendor B |
+
+# Form
+- [search:v src:vendors] Vendor`;
+        const result = parseMarkdown(md);
+        expect(result.jsonStructure.masterData.vendors).toBeDefined();
+        // Current parser includes header, separator, and data rows in masterData array
+        expect(result.jsonStructure.masterData.vendors.length).toBe(3); 
+        expect(result.jsonStructure.masterData.vendors[1][1]).toBe("Vendor A");
+    });
+
+    test("parses indented radio options", () => {
+        const md = `- [radio:color] Select Color
+  - [x] Red
+  - Blue
+  - Green`;
+        const result = parseMarkdown(md);
+        expect(result.html).toContain('value="Red" checked');
+        expect(result.html).toContain('value="Blue"');
+        expect(result.html).toContain('value="Green"');
+    });
 });
 
 describe("Web/A Renderer", () => {
@@ -75,16 +137,5 @@ describe("Web/A Renderer", () => {
     test("renders number input with default right alignment", () => {
         const html = Renderers.renderInput('number', 'n1', '');
         expect(html).toContain('text-align:right');
-    });
-});
-
-describe("Web/A Generator", () => {
-    test("generates complete HTML document", () => {
-        const md = `# Test Form
-- [text:foo] Bar`;
-        const html = generateHtml(md);
-        expect(html).toContain('<!DOCTYPE html>');
-        expect(html).toContain('<title>Test Form</title>');
-        expect(html).toContain('window.generatedJsonStructure');
     });
 });

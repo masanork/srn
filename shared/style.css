@@ -43,6 +43,11 @@ body {
     letter-spacing: 0.01em;
 }
 
+/* Widen layout for Web/A Forms */
+body:has(.weba-form-container) {
+    max-width: 95%;
+}
+
 main {
     background: var(--card-bg);
     padding: 3rem;
@@ -50,6 +55,11 @@ main {
     box-shadow: var(--premium-shadow);
     border: 1px solid var(--border-color);
     transition: transform 0.2s ease;
+}
+
+/* Reduce padding for forms to save space */
+main:has(.weba-form-container) {
+    padding: 2rem;
 }
 
 h1,
@@ -134,8 +144,9 @@ pre code {
     background: var(--card-bg);
 }
 
-table {
-    width: 100%;
+.table-wrapper table {
+    width: auto;
+    min-width: 100%;
     border-collapse: collapse;
     border-spacing: 0;
     margin-bottom: 0;
@@ -144,7 +155,7 @@ table {
 
 th,
 td {
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
@@ -163,6 +174,32 @@ th {
 tr:last-child td {
     border-bottom: none;
 }
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    min-width: 80px;
+}
+
+/* Table specific input tweaks */
+td .form-input {
+    padding: 0.5rem;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 4px;
+    min-width: 100px;
+}
+td input[type="number"].form-input { min-width: 80px; }
+td input[type="date"].form-input { min-width: 140px; }
+td input[type="checkbox"].form-input { min-width: auto; width: auto; }
+
 
 .mermaid {
     margin: 2rem 0;
@@ -303,38 +340,56 @@ td .form-input:focus {
 }
 
 /* Buttons (Toolbar) */
-button.primary, button.tab-btn {
+button.primary, button.secondary, button.btn-clear, button.tab-btn {
     appearance: none;
-    background-color: var(--bg-color);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
     font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
 }
 
+/* 提出版を保存 (Submit) */
 button.primary {
-    background-color: var(--primary-color);
+    background-color: #10b981;
     color: white;
-    border-color: var(--primary-color);
+    border-color: #10b981;
 }
 button.primary:hover {
-    background-color: var(--primary-hover);
+    background-color: #059669;
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
+/* 作業内容を保存 (Save Progress) */
 button.secondary {
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
+    background-color: #0070f3;
+    color: white;
+    border-color: #0070f3;
 }
 button.secondary:hover {
-    background-color: var(--bg-color);
-    border-color: var(--text-muted);
+    background-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* クリア (Clear) - 落ち着いた灰色、ホバーで赤 */
+button.btn-clear {
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+}
+button.btn-clear:hover {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #e11d48;
+    transform: translateY(-1px);
 }
 
 /* Tabs */

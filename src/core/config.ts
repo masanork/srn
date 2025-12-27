@@ -20,13 +20,13 @@ export interface SrnConfig {
 
 const DEFAULT_CONFIG_FILE = path.resolve(process.cwd(), 'srn.config.default.yaml');
 
-export async function loadConfig(): Promise<SrnConfig> {
+export async function loadConfig(explicitConfigPath?: string): Promise<SrnConfig> {
     // 1. Determine Profile
     const profileArgIndex = process.argv.indexOf('--site');
     const profileName = profileArgIndex !== -1 ? process.argv[profileArgIndex + 1] : null;
 
-    let configPath = path.resolve(process.cwd(), 'srn.config.yaml');
-    if (profileName) {
+    let configPath = explicitConfigPath || path.resolve(process.cwd(), 'srn.config.yaml');
+    if (!explicitConfigPath && profileName) {
         configPath = path.resolve(process.cwd(), 'sites', profileName, 'config.yaml');
     }
 
