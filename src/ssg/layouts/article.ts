@@ -11,6 +11,7 @@ export interface ArticleData {
 
 export function articleLayout(data: ArticleData, bodyContent: string, fontCss: string, fontFamilies: string[], vc?: any) {
     const siteDid = vc?.issuer || "did:web:masanork.github.io:srn";
+    const lang = (data.lang || 'ja').toString();
 
     // Construct schema.org JSON-LD
     const schema = {
@@ -56,7 +57,8 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
         <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
             <details>
                 <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
-                    <span>✓</span> 発行元による真正性の証明
+                    <span>✓</span>
+                    <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
                 </summary>
                 <div style="padding: 1rem 0;">
                     <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${JSON.stringify(vc, null, 2)}</pre>
@@ -88,6 +90,7 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
         content: fullContent,
         fontCss,
         fontFamilies,
-        jsonLd: schema
+        jsonLd: schema,
+        lang: lang
     });
 }

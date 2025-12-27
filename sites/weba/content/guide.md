@@ -67,3 +67,38 @@ bun build src/form/browser_maker.ts --outfile sites/weba/static/mkform.js
 # 基本的な使い方
 bun src/form/cli.ts input.md > output.html
 ```
+
+## 4. Excel 帳票からの変換ワークフロー
+
+Excel からの機械的な完全変換は難しいため、**MarkItDown + LLM** を前提とした半自動ワークフローを標準手順とします。
+この手順を文書化しておくことで、品質と再現性を確保します。
+
+### 4.1 基本フロー
+
+1. **Excel を Markdown に変換**
+   - Microsoft `markitdown` 等を使って Excel を Markdown 化します。
+   - 例: `markitdown input.xlsx > input.md`
+2. **Markdown の整形**
+   - 余計な空行、注釈、重複ヘッダーを整理。
+   - 罫線・結合セルが崩れていないかを確認。
+3. **LLM に Web/A 構文へ変換させる**
+   - `sites/weba/content/prompt.md` または `sites/weba/content/papers/web-a-form.ja.md` の変換プロンプトを利用。
+4. **CLI で HTML を生成**
+   - `bun src/form/cli.ts converted.md > output.html`
+5. **QA（人手確認）**
+   - 画面レイアウト、計算式、入力バリデーション、テーブルの行追加、JSON-LD の整合性を確認。
+
+### 4.2 成果物の保存ルール
+
+- `input.xlsx`（原本）
+- `input.md`（MarkItDown 出力）
+- `converted.md`（LLM 変換結果）
+- `output.html`（Web/A Form）
+- 変換に使ったプロンプト（テキストとして保存）
+
+### 4.3 変換チェックリスト（最小）
+
+- **見た目**: 罫線・ラベル・注記が崩れていないか
+- **ロジック**: SUM 等の式が正しいか
+- **データ構造**: JSON-LD のキーと値が期待どおりか
+- **入力制約**: 必須/任意、型、選択肢が妥当か

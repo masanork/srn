@@ -53,6 +53,17 @@ export function baseLayout(props: BaseLayoutProps): string {
     <main>
         ${content}
     </main>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase();
+            const isJa = lang.startsWith('ja');
+            document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                const ja = el.getAttribute('data-i18n-ja') || '';
+                const en = el.getAttribute('data-i18n-en') || ja;
+                el.textContent = isJa ? ja : en;
+            });
+        })();
+    </script>
 </body>
 </html>`;
 }
