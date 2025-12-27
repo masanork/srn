@@ -1153,7 +1153,24 @@ function generateHtml(markdown) {
 }
 function generateAggregatorHtml(markdown) {
   const { jsonStructure } = parseMarkdown(markdown);
-  return `<!DOCTYPE html><html><head><title>Aggregator</title></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+  return `<!DOCTYPE html><html><head><title>Aggregator</title><style>
+    body{font-family:sans-serif;max-width:1100px;margin:0 auto;padding:2rem;}
+    h1{margin-bottom:1.5rem;}
+    .agg-panel{border:1px solid #ddd;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem;background:#fafafa;}
+    .agg-row{display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap;}
+    .agg-label{min-width:140px;font-weight:600;}
+    .agg-btn{padding:0.6rem 1rem;border-radius:6px;border:1px solid #ccc;background:#111;color:#fff;cursor:pointer;}
+    .agg-btn.secondary{background:#fff;color:#333;}
+    .agg-btn:disabled{opacity:0.6;cursor:not-allowed;}
+    .agg-status{font-size:0.9rem;color:#555;}
+    .agg-chip{padding:0.25rem 0.6rem;border-radius:999px;background:#eee;font-size:0.85rem;}
+    .agg-chip.ready{background:#d1fae5;color:#065f46;}
+    .agg-output{overflow:auto;border:1px solid #eee;border-radius:8px;}
+    .agg-table{border-collapse:collapse;width:100%;font-size:0.9rem;}
+    .agg-table th,.agg-table td{border:1px solid #eee;padding:0.5rem;vertical-align:top;text-align:left;}
+    .agg-table th{background:#f3f4f6;position:sticky;top:0;}
+    .agg-empty{padding:1rem;color:#666;}
+    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
 
 // src/form/sample.ts
