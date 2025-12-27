@@ -33,9 +33,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
         }
 
-        #editor {
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .editor-area {
             flex: 1;
             font-family: "JetBrains Mono", "Menlo", "Monaco", "Courier New", monospace;
             padding: 16px;
@@ -167,6 +175,28 @@
             border-radius: 6px;
         }
 
+        .editor-tabs {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .editor-btn {
+            background: #fff;
+            border: 1px solid #cbd5f5;
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .editor-btn.active {
+            background: #111827;
+            color: #fff;
+            border-color: #111827;
+        }
+
         .preview-modes {
             display: inline-flex;
             gap: 6px;
@@ -194,14 +224,19 @@
 <body>
     <div class="pane" style="border-right: 1px solid #ddd;">
         <div class="pane-header">
-            <span data-i18n="md_def">Markdown Definition</span>
-            <div>
-                <button class="primary" onclick="downloadAggregator()" style="background: #28a745; margin-right: 10px;"
-                    data-i18n="btn_aggregator">Download Web/A Aggregator</button>
-                <button class="primary" onclick="downloadWebA()" data-i18n="btn_form">Download Web/A Form</button>
+            <div class="header-left">
+                <span data-i18n="md_def">Markdown Definition</span>
+                <div class="editor-tabs">
+                    <button class="editor-btn active" data-editor="form" onclick="setEditorMode('form')"
+                        data-i18n="btn_editor_form">Form</button>
+                    <button class="editor-btn" data-editor="aggregator" onclick="setEditorMode('aggregator')"
+                        data-i18n="btn_editor_agg">Aggregator</button>
+                </div>
             </div>
+            <button class="primary" onclick="downloadCurrent()" data-i18n="btn_download">Download</button>
         </div>
-        <textarea id="editor" spellcheck="false" oninput="parseAndRender()"></textarea>
+        <textarea id="editor-form" class="editor-area" spellcheck="false" oninput="parseAndRender()"></textarea>
+        <textarea id="editor-aggregator" class="editor-area" spellcheck="false" oninput="parseAndRender()" style="display:none;"></textarea>
         <div class="syntax-help">
             <strong>Syntax Guide:</strong><br>
             <code># Title</code> : Document Title<br>
