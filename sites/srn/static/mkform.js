@@ -1213,6 +1213,23 @@ var DEFAULT_MARKDOWN_EN = `# IT Services Estimate (Sample)
 | Security Review | day | 200000 | Threat model & hardening |
 | Observability Stack | day | 140000 | Metrics/logs/traces |
 | App Modernization | day | 220000 | Containerization |
+
+---
+
+## 5. Aggregator Preview (Sample)
+
+> This section is intended for the Aggregator preview. The normal form ignores it.
+
+<div data-preview-only="aggregator" style="display:grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr));">
+  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
+    <b>Total Requests</b><br>
+    <span style="font-size:24px;">42</span>
+  </div>
+  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
+    <b>Avg. Deal Size</b><br>
+    <span style="font-size:24px;">¥1,240,000</span>
+  </div>
+</div>
 `;
 var DEFAULT_MARKDOWN_JA = `# IT見積書（サンプル）
 ---
@@ -1270,9 +1287,32 @@ var DEFAULT_MARKDOWN_JA = `# IT見積書（サンプル）
 | セキュリティレビュー | 人日 | 200000 | 脅威分析含む |
 | 監視設計 | 人日 | 140000 | メトリクス/ログ |
 | アプリ刷新支援 | 人日 | 220000 | コンテナ化 |
+
+---
+
+## 5. 集計プレビュー（サンプル）
+
+> このセクションは集計プレビュー用の表示例です。
+
+<div data-preview-only="aggregator" style="display:grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr));">
+  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
+    <b>受付件数</b><br>
+    <span style="font-size:24px;">42</span>
+  </div>
+  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
+    <b>平均受注額</b><br>
+    <span style="font-size:24px;">¥1,240,000</span>
+  </div>
+</div>
 `;
 
 // src/form/browser_maker.ts
+function stripAggregatorOnly(html) {
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = html;
+  wrapper.querySelectorAll('[data-preview-only="aggregator"]').forEach((el) => el.remove());
+  return wrapper.innerHTML;
+}
 function updatePreview() {
   console.log("Web/A Maker v3.0");
   const editor = document.getElementById("editor");
@@ -1290,7 +1330,7 @@ function updatePreview() {
       frame.srcdoc = aggHtml;
     return;
   }
-  preview.innerHTML = html;
+  preview.innerHTML = stripAggregatorOnly(html);
   if (!window.isRuntimeLoaded) {
     initRuntime();
     window.isRuntimeLoaded = true;
