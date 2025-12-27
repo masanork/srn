@@ -124,14 +124,22 @@ pre code {
     padding: 0;
 }
 
-table {
+.table-wrapper {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin-bottom: 2rem;
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
-    overflow: hidden;
+    background: var(--card-bg);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin-bottom: 0;
+    border: none;
 }
 
 th,
@@ -139,6 +147,7 @@ td {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
 
 th {
@@ -148,6 +157,7 @@ th {
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
 }
 
 tr:last-child td {
