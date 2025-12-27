@@ -28,6 +28,11 @@ beforeEach(() => {
 });
 
 describe("Web/A L2 keywrap tool", () => {
+  let consoleErrorMock: ReturnType<typeof mock>;
+  beforeEach(() => {
+    consoleErrorMock = mock(() => {});
+    console.error = consoleErrorMock;
+  });
   test("generates salt and builds keywrap JSON", async () => {
     document.body.innerHTML = `
       <div id="weba-l2-keywrap-tool">
@@ -89,5 +94,6 @@ describe("Web/A L2 keywrap tool", () => {
 
     const status = document.getElementById("kwp-status") as HTMLElement;
     expect(status.textContent).toBe("Key wrap failed.");
+    expect(consoleErrorMock).toHaveBeenCalled();
   });
 });

@@ -138,6 +138,33 @@ When encryption is enabled:
 - Plaintext JSON-LD is removed from the output HTML.
 - The envelope is bound to `layer1_ref` via AAD (tampering breaks decryption).
 
+### 6.4. Aggregation Output (CSV + Optional JSON)
+For aggregation pipelines, L2 plaintext can be emitted to CSV using flattened keys. Arrays are indexed with `[]` and objects use dot notation.
+
+Examples:
+- `org.name`
+- `items[0].amount`
+
+If raw JSON is needed, aggregation can include a `_json` column via `--include-json` to preserve the original structure.
+This makes it possible to reconstruct nested data or run custom post-processing later.
+
+**Flattening rules**:
+- Objects are flattened with `.` (dot) separators.
+- Arrays are flattened with `[index]` suffixes.
+- `null` / `undefined` are exported as empty or null values depending on CSV handling.
+
+**Example**:
+```json
+{
+  "org": { "name": "ACME" },
+  "items": [{ "amount": 1200 }, { "amount": 900 }]
+}
+```
+becomes:
+- `org.name` = `ACME`
+- `items[0].amount` = `1200`
+- `items[1].amount` = `900`
+
 ## 7. Browser-Only Decryption with Passkey (Concept)
 Web/A’s file-first model favors a **browser-only decryption flow** that works without external tooling. The intended UX is “one passkey action to open”.
 
