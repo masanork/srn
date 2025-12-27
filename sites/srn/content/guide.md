@@ -22,18 +22,20 @@ The two core pillars:
 
 ```text
 srn/
-├── sites/srn/        # Source Content (Site specific)
-│   ├── content/      # Markdown files (*.md)
+├── shared/           # Shared assets (fonts, schemas, base CSS)
 │   ├── fonts/        # Raw font files (*.ttf, *.otf)
+│   └── schemas/      # JSON schemas
+├── sites/srn/        # Source content (site specific)
+│   ├── content/      # Markdown files (*.md)
 │   ├── static/       # Static assets (images, css)
-│   └── data/         # System data (Keys, DB) - *Do not commit keys!*
-├── dist/srn/         # Generated Output (Git-ignored)
-├── src/              # Build Scripts (TypeScript)
-│   ├── layouts/      # HTML Templates (article, form, etc.)
-│   ├── bin/          # CLI Tools (weba-verify.ts)
-│   ├── vc.ts         # Cryptography & VC Logic
-│   ├── verify-core.ts # Shared Verification Logic
-│   └── index.ts      # Main Build Pipeline
+│   └── data/         # System data (keys, DB) - *Do not commit keys!*
+├── dist/srn/         # Generated output (git-ignored)
+├── src/              # Build scripts (TypeScript)
+│   ├── core/         # Crypto, VC, shared utils
+│   ├── ssg/          # Build pipeline, layouts, identity manager
+│   ├── form/         # Web/A Form runtime
+│   ├── tools/        # Local utilities
+│   └── bin/          # CLI entrypoints
 └── mjq/              # Submodule: Glyph Database (SQLite)
 ```
 
@@ -73,21 +75,21 @@ bun run build -- --clean
 
 ### Local Development
 
-To preview the site (and generate local font catalog):
+To preview the site locally:
 
 ```bash
-# Generate Glyph Catalog (site/fonts/catalog.html)
-bun run catalog
+# Build SRN site
+bun run build:srn
 
 # Serve dist directory
-bun x http-server dist
+bun x http-server dist/srn
 ```
 
 ## Key Features & How-to
 
 ### 1. Writing Content
 
-Create Markdown files in `site/content/`.
+Create Markdown files in `sites/srn/content/`.
 
 ```markdown
 ---
@@ -100,7 +102,7 @@ Content goes here.
 
 ### 2. Web/A Documents (Archive-Quality Web)
 
-All documents generated with `layout: article` are automatically signed as Web/A archives.
+Use `layout: weba` for archival-grade Web/A documents. Standard `layout: article` pages are also signed as Web/A documents by default.
 
 ```markdown
 ---
@@ -130,7 +132,7 @@ layout: form
 * **User Signature**: Users can sign their input using Passkeys (WebAuthn) and download a Verifiable Credential (Layer 2).
 * **Form Maker**: Use the [Web/A Form Maker](./maker.html) to visually design forms and generate Markdown.
 
-### 3. Font System (Typography)
+### 4. Font System (Typography)
 
 SRN allows precise control over font stacking and glyph substitution.
 
@@ -161,14 +163,14 @@ bun run mcp
 
 ### 6. Trust Management (Advanced)
 
-* **Root Key**: Generated automatically on first build in `site/data/root-key.json`. Back up this file to maintain issuer identity!
+* **Root Key**: Generated automatically on first build in `sites/srn/data/root-key.json`. Back up this file to maintain issuer identity!
 * **Revocation**: Status lists are generated in `dist/status-list.json`.
 
 ## Troubleshooting
 
-* **Missing Glyphs**: Run `bun run catalog` to see available glyphs.
+* **Missing Glyphs**: Run `bun run db:build` to refresh the glyph database, then rebuild the site.
 * **Build Errors**: Ensure `bun run db:build` was successful.
-* **Signature Invalid**: If `site/data/root-key.json` was deleted, all previous signatures become invalid (Trust on First Use reset).
+* **Signature Invalid**: If `sites/srn/data/root-key.json` was deleted, all previous signatures become invalid (Trust on First Use reset).
 
 ---
 *Built with [Bun](https://bun.sh) and [OpenType.js](https://opentype.js.org).*

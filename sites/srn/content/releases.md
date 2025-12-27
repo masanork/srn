@@ -4,6 +4,23 @@ layout: article
 description: "Release history and major updates for the Sorane project."
 ---
 
+## v1.7.0 - Juminhyo Layout & Form Tooling
+
+**Date:** 2026-01-04
+
+Incremental improvements to resident record layouts, local form tooling, and documentation.
+
+* **Juminhyo VC & Layout**:
+  * **Template/Instance Split**: Added dedicated template and instance VCs with content digests.
+  * **JSON-LD Binding**: Added explicit `data-weba-field` bindings for structured extraction.
+  * **Layout Polish**: Restored watermark/header notice and refined seal/cert text placement.
+* **Form Tooling**:
+  * **Local Aggregation Report**: Added in-browser aggregation UI with scatter plot support.
+  * **Headless Wallet CLI**: Prototype tool to extract JSON-LD and auto-fill Web/A forms.
+* **Site & Docs**:
+  * **Footer i18n**: Footer labels now follow browser language (JA/EN).
+  * **New Papers**: Added English Web/A Form discussion paper and PassKey national ID signing memo (JA).
+
 ## v1.6.0 - Web/A Form & Core Refactoring
 
 **Date:** 2025-12-27
@@ -44,8 +61,6 @@ Introduction of a new archival web document format and major enhancements to lon
   * **New Discussion Papers**: Published comprehensive papers on *Web/A*, *Hybrid Signatures*, and *PassKey Delegation*.
   * **English Localization**: Updated the Developer Guide and core site metadata to English for global accessibility.
   * **Project Cleanup**: Migrated architectural docs to the publishing pipeline and removed the legacy `docs/` directory.
-
-## v1.4.0 - Multi-Tenant Architecture & Build Optimization
 
 ## v1.4.0 - Multi-Tenant Architecture & Build Optimization
 
