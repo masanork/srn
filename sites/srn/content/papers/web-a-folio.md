@@ -84,17 +84,17 @@ However, this does not prevent third parties from providing Folio hosting servic
 
 However, since the Folio gathers information that can be called a person's entire life history, data concentration in a specific company should be avoided. An ecosystem where users can freely choose and change where to place their Folio (local or which cloud) is essential.
 
-## 7. Establishing Identity: PassKey × National ID (JPKI)
+## 7. Establishing Identity: PassKey × National ID Signatures
 
 In a general web environment, **PassKey (WebAuthn)** is the de facto standard for secure hardware-level key management. However, a PassKey alone cannot prove "whose key it is" to a third party.
-Therefore, Web/A Folio adopts the following model combining Japan's Public Personal Identification Service (JPKI).
+Many countries issue **national ID cards or eID schemes with qualified signing certificates**, so Web/A Folio adopts a model that binds a PassKey to a government-backed signing credential.
 
 1.  **PassKey Generation**: Generate a PassKey pair on the user's device (smartphone or PC).
-2.  **Identity Binding**: Sign the public key of the generated PassKey using the My Number Card (Digital Certificate for Signature).
-3.  **Ownership VC**: Create a self-signed Verifiable Credential (VC) stating "This PassKey public key is managed by me, the holder of the My Number Card," and store it in the Folio.
+2.  **Identity Binding**: Sign the public key of the generated PassKey using the national ID signing certificate (for example, a digital signature certificate on a national ID card).
+3.  **Ownership VC**: Create a self-signed Verifiable Credential (VC) stating "This PassKey public key is managed by me, the holder of the national ID credential," and store it in the Folio.
 4.  **Presentation**: When submitting a form, include this VC as a Verifiable Presentation (VP), sign it with the PassKey, and send it.
 
-This allows daily operations to be completed with just biometric authentication (Touch ID/Face ID) while indirectly proving identity equivalent to the My Number Card through the signature chain.
+This allows daily operations to be completed with just biometric authentication (Touch ID/Face ID) while indirectly proving identity equivalent to the national ID through the signature chain.
 
 ## 8. Why Not "Wallet"?
 

@@ -2,7 +2,6 @@
 title: "PQC Verification Console"
 layout: verifier
 description: "Verify the authenticity of generic Sorane documents using Hybrid Post-Quantum Signatures (Ed25519 + ML-DSA-44)."
-font: ipamjm.ttf
 ---
 
 This tool runs purely in your browser. No data is uploaded to any server.
