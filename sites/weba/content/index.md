@@ -68,6 +68,12 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
     <a href="./folio.html">構想を読む →</a>
   </div>
 
+  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+    <h3>🔌 Agent Integration</h3>
+    <p>Claude Desktop や Cursor から Web/A Folio を操作するための MCP 設定ガイド。</p>
+    <a href="./guide/mcp-setup.html">設定方法を見る →</a>
+  </div>
+
 </div>
 
 ---

@@ -3,7 +3,6 @@ title: "Web/A Folio: データと知能の分離"
 layout: article
 description: "個人のデータ、履歴、鍵を束ねる「デジタル・ポートフォリオ」の構想。"
 date: 2025-12-27
-status: draft
 author: "Sorane Project"
 ---
 
