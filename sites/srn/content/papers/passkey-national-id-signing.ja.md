@@ -44,7 +44,33 @@ PassKey公開鍵そのものだけでなく、以下を束ねて署名する。
 - 発行時刻 (createdAt)
 - 依拠先 (rpId)
 
-### 4.2 カノニカル化
+### 4.2 署名対象JSONのスキーマ (Draft v0)
+
+ブラウザでPassKeyを取得し、CLIでmyna署名できる最小構成を定義する。
+
+```json
+{
+  "schema": "passkey-binding-v0",
+  "createdAt": "2026-01-04T12:34:56Z",
+  "rpId": "example.com",
+  "credentialId": "BASE64URL",
+  "publicKey": {
+    "format": "cose",
+    "value": "BASE64URL"
+  },
+  "client": {
+    "origin": "https://example.com",
+    "userAgent": "UA String"
+  }
+}
+```
+
+補足:
+- `publicKey.format` は `cose` を基本とし、必要に応じて `jwk` を許容する。
+- `credentialId` と `publicKey.value` は **Base64URL** 表記。
+- `client` は監査・再現性のための付帯情報。署名対象から外す場合は別ファイル化でも可。
+
+### 4.3 カノニカル化
 
 - 署名対象は **安定したJSON文字列**に変換してからハッシュ化する。
 - 例: JCS (JSON Canonicalization Scheme) を採用。
