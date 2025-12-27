@@ -191,21 +191,40 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
         let rawConfigs = data.font ? (Array.isArray(data.font) ? data.font : [data.font]) : [];
         let fontConfigs: string[] = [];
         let hasDefault = false;
+        let defaultFromFont: string | null = null;
 
-        for (const cfg of rawConfigs) {
+        for (const cfgRaw of rawConfigs) {
+            const cfg = String(cfgRaw).trim();
+            if (!cfg) continue;
+
+            let matched = false;
             for (const sName of Object.keys(config.fontStyles)) {
                 if (cfg === sName || cfg.startsWith(`${sName}:`)) {
                     const extra = cfg.startsWith(`${sName}:`) ? cfg.slice(sName.length + 1).split(',').map((s: string) => s.trim()) : [];
                     const files = [...resolveStyleFiles(sName), ...extra].join(',');
                     fontConfigs.push(`${sName}:${files}`);
+                    if (!defaultFromFont && sName !== 'default') defaultFromFont = sName;
                     if (sName === 'default') hasDefault = true;
+                    matched = true;
                     break;
                 }
             }
+
+            if (!matched) {
+                // Treat raw file lists as a default override for this page.
+                fontConfigs.push(`default:${cfg}`);
+                hasDefault = true;
+            }
         }
+
         if (!hasDefault) {
-            const def = resolveStyleFiles('default');
-            fontConfigs.push(`default:${def.length > 0 ? def.join(',') : 'NotoSansJP-VariableFont_wght.ttf'}`);
+            if (defaultFromFont) {
+                const def = resolveStyleFiles(defaultFromFont);
+                fontConfigs.unshift(`default:${def.length > 0 ? def.join(',') : 'NotoSansJP-VariableFont_wght.ttf'}`);
+            } else {
+                const def = resolveStyleFiles('default');
+                fontConfigs.push(`default:${def.length > 0 ? def.join(',') : 'NotoSansJP-VariableFont_wght.ttf'}`);
+            }
         }
         return fontConfigs;
     }

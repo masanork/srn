@@ -56,7 +56,15 @@ export class LayoutManager {
                 break;
 
             case 'juminhyo':
-                finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies);
+                vc = await idManager.signDocument({
+                    type: ["VerifiableCredential", "JuminhyoTemplate"],
+                    credentialSubject: {
+                        id: `${idManager.siteDid}/${relPath.replace('.md', '')}`,
+                        name: data.title,
+                        contentDigest: crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex')
+                    }
+                });
+                finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, vc);
                 break;
 
             default:
