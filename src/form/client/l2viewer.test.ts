@@ -52,9 +52,12 @@ beforeEach(() => {
 });
 
 describe("Web/A L2 viewer", () => {
+  let consoleErrorMock: ReturnType<typeof mock>;
   beforeEach(() => {
     document.body.innerHTML = "";
     shouldFailUnlock = false;
+    consoleErrorMock = mock(() => {});
+    console.error = consoleErrorMock;
   });
 
   test("renders unlock panel and decrypts on click", async () => {
@@ -165,5 +168,6 @@ describe("Web/A L2 viewer", () => {
     expect(status.textContent).toBe("Unlock failed.");
     expect(button.disabled).toBe(false);
     shouldFailUnlock = false;
+    expect(consoleErrorMock).toHaveBeenCalled();
   });
 });
