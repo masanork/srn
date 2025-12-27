@@ -45,6 +45,12 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+    <h3>🏥 Demo: 医療費集計</h3>
+    <p>医療費控除の明細書をイメージした、計算式と動的テーブルを含む実用的なフォーム例です。</p>
+    <a href="./iryouhi.html">デモを開く →</a>
+  </div>
+
+  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>👩‍💻 Developer Guide</h3>
     <p>アーキテクチャ詳細、CLIツールの使い方、ソースコードの構成など、開発者向けの情報です。</p>
     <a href="./guide.html">ガイドを読む →</a>
