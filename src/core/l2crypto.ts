@@ -58,6 +58,32 @@ export function canonicalJson(obj: any): string {
   return result;
 }
 
+export type PqcKemProvider = {
+  kemId: string;
+  encapsulate: (recipientPublicKey: Uint8Array) => {
+    sharedSecret: Uint8Array;
+    encapsulation: Uint8Array;
+  };
+  decapsulate: (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => Uint8Array;
+};
+
+export type PqcEncryptOptions = {
+  kem: PqcKemProvider;
+  recipientPublicKey: Uint8Array;
+};
+
+export type PqcDecryptOptions = {
+  kem: PqcKemProvider;
+  recipientPrivateKey: Uint8Array;
+};
+
+function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a, 0);
+  out.set(b, a.length);
+  return out;
+}
+
 /**
  * Generate a recipient keypair for encryption (X25519).
  */
@@ -115,7 +141,8 @@ export async function encryptLayer2(
   payload: Layer2Payload,
   recipientPublicKey: Uint8Array,
   layer1Ref: string,
-  recipientKid: string
+  recipientKid: string,
+  options?: { pqc?: PqcEncryptOptions }
 ): Promise<Layer2Encrypted> {
   const webaVersion = "0.1";
   const createdAt = new Date().toISOString();
@@ -135,8 +162,16 @@ export async function encryptLayer2(
   const ephemeralPub = x25519.getPublicKey(ephemeralPriv);
   const ss1 = x25519.getSharedSecret(ephemeralPriv, recipientPublicKey);
 
-  // IKM (Input Key Material)
-  const ikm = ss1; // PQC (ss2) would be appended here if used
+  let ikm = ss1;
+  let pqcEncapsulation: Uint8Array | undefined;
+  let kemId = "X25519";
+  if (options?.pqc) {
+    const pqc = options.pqc;
+    const kemResult = pqc.kem.encapsulate(pqc.recipientPublicKey);
+    pqcEncapsulation = kemResult.encapsulation;
+    ikm = concatBytes(ss1, kemResult.sharedSecret);
+    kemId = `X25519+${pqc.kem.kemId}`;
+  }
 
   // 3. KDF: HKDF-SHA256
   // Use aadBytes as salt to bind the key to the context
@@ -157,13 +192,14 @@ export async function encryptLayer2(
     layer2: {
       enc: "HPKE-v1",
       suite: {
-        kem: "X25519",
+        kem: kemId,
         kdf: "HKDF-SHA256",
         aead: "AES-256-GCM",
       },
       recipient: recipientKid,
       encapsulated: {
         classical: toBase64Url(ephemeralPub),
+        ...(pqcEncapsulation ? { pqc: toBase64Url(pqcEncapsulation) } : {}),
       },
       ciphertext: toBase64Url(Buffer.concat([ciphertext, authTag])),
       aad: toBase64Url(aadBytes),
@@ -180,7 +216,8 @@ export async function encryptLayer2(
  */
 export async function decryptLayer2(
   envelope: Layer2Encrypted,
-  recipientPrivateKey: Uint8Array
+  recipientPrivateKey: Uint8Array,
+  options?: { pqc?: PqcDecryptOptions }
 ): Promise<Layer2Payload> {
   if (envelope.layer2.suite.aead !== "AES-256-GCM") {
     throw new Error("Unsupported AEAD");
@@ -197,7 +234,16 @@ export async function decryptLayer2(
   // 1. KEM: X25519
   const ephemeralPub = fromBase64Url(envelope.layer2.encapsulated.classical);
   const ss1 = x25519.getSharedSecret(recipientPrivateKey, ephemeralPub);
-  const ikm = ss1;
+  let ikm = ss1;
+  if (envelope.layer2.encapsulated.pqc) {
+    const pqc = options?.pqc;
+    if (!pqc) {
+      throw new Error("Missing PQC KEM for envelope");
+    }
+    const pqcEnc = fromBase64Url(envelope.layer2.encapsulated.pqc);
+    const ss2 = pqc.kem.decapsulate(pqc.recipientPrivateKey, pqcEnc);
+    ikm = concatBytes(ss1, ss2);
+  }
 
   // 2. KDF: HKDF-SHA256
   const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);

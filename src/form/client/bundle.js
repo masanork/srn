@@ -4793,6 +4793,16 @@ function buildAad(layer1Ref, recipientKid, webaVersion) {
   };
   return new TextEncoder().encode(canonicalJson(aadObj));
 }
+function concatBytes2(a, b) {
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a, 0);
+  out.set(b, a.length);
+  return out;
+}
+function getPqcProvider() {
+  const w = globalThis;
+  return w.webaPqcKem || null;
+}
 async function aesGcmEncrypt(plaintext, keyBytes, iv, aad) {
   const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt"]);
   const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: aad }, key, plaintext);
@@ -4835,7 +4845,21 @@ async function buildLayer2Envelope(params) {
   const ephSk = randomBytes2(32);
   const ephPk = x25519.getPublicKey(ephSk);
   const ss1 = x25519.getSharedSecret(ephSk, recipientPub);
-  const prk = hkdf(sha256, ss1, aadBytes, undefined, 32);
+  let ikm = ss1;
+  let pqcEncapsulation;
+  let kemId = "X25519";
+  if (params.config.recipient_pqc) {
+    const provider = params.pqcProvider ?? getPqcProvider();
+    if (!provider) {
+      throw new Error("PQC requested but no provider is available");
+    }
+    const pqcPub = b64urlDecode(params.config.recipient_pqc);
+    const kemResult = provider.encapsulate(pqcPub);
+    pqcEncapsulation = kemResult.encapsulation;
+    ikm = concatBytes2(ss1, kemResult.sharedSecret);
+    kemId = `X25519+${provider.kemId}`;
+  }
+  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
   const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
   const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
   const ciphertext = await aesGcmEncrypt(payloadBytes, key, iv, aadBytes);
@@ -4845,13 +4869,14 @@ async function buildLayer2Envelope(params) {
     layer2: {
       enc: "HPKE-v1",
       suite: {
-        kem: "X25519",
+        kem: kemId,
         kdf: "HKDF-SHA256",
         aead: "AES-256-GCM"
       },
       recipient: recipientKid,
       encapsulated: {
-        classical: b64urlEncode(ephPk)
+        classical: b64urlEncode(ephPk),
+        ...pqcEncapsulation ? { pqc: b64urlEncode(pqcEncapsulation) } : {}
       },
       ciphertext: b64urlEncode(ciphertext),
       aad: b64urlEncode(aadBytes)
@@ -4872,7 +4897,7 @@ function loadL2Config() {
     return null;
   }
 }
-async function decryptLayer2Envelope(envelope, recipientSk) {
+async function decryptLayer2Envelope(envelope, recipientSk, options) {
   const aadBytes = b64urlDecode(envelope.layer2.aad);
   const aadObj = {
     layer1_ref: envelope.layer1_ref,
@@ -4885,7 +4910,18 @@ async function decryptLayer2Envelope(envelope, recipientSk) {
   }
   const ephPub = b64urlDecode(envelope.layer2.encapsulated.classical);
   const ss1 = x25519.getSharedSecret(recipientSk, ephPub);
-  const prk = hkdf(sha256, ss1, aadBytes, undefined, 32);
+  let ikm = ss1;
+  if (envelope.layer2.encapsulated.pqc) {
+    const provider = options?.pqcProvider ?? getPqcProvider();
+    const pqcSk = options?.pqcRecipientSk;
+    if (!provider || !pqcSk) {
+      throw new Error("Missing PQC KEM for envelope");
+    }
+    const pqcEnc = b64urlDecode(envelope.layer2.encapsulated.pqc);
+    const ss2 = provider.decapsulate(pqcSk, pqcEnc);
+    ikm = concatBytes2(ss1, ss2);
+  }
+  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
   const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
   const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
   const ct = b64urlDecode(envelope.layer2.ciphertext);
@@ -5653,7 +5689,11 @@ async function extractPlainFromHtml(html, l2Keys) {
       throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
     }
     const recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
-    const payload = await decryptLayer2Envelope(l2Envelope, recipientSk);
+    const pqc = l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === "ML-KEM-768" ? {
+      pqcProvider: globalThis.webaPqcKem ?? null,
+      pqcRecipientSk: b64urlDecode(l2Keys.recipient_pqc_private)
+    } : undefined;
+    const payload = await decryptLayer2Envelope(l2Envelope, recipientSk, pqc);
     return {
       plain: payload.layer2_plain ?? payload,
       sig: payload.layer2_sig,

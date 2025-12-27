@@ -113,6 +113,7 @@ layout: form
 l2_encrypt: true
 l2_recipient_kid: "issuer#kem-2025"
 l2_recipient_x25519: "<base64url>"
+# l2_recipient_pqc: "<base64url>" # Optional. ML-KEM-768 公開鍵（ハイブリッド用）
 # l2_layer1_ref: "sha256:..."  # Optional. 未指定ならテンプレートのVCダイジェストから算出
 l2_encrypt_default: true       # Optional. トグルの初期状態
 l2_user_kid: "user#sig-1"       # Optional. ユーザー署名鍵ID
@@ -175,6 +176,16 @@ Aggregator HTML に鍵ファイルを埋め込みます:
 ```
 
 これは **Aggregator Escrow** モードに相当します。テンポラリー鍵を集計ツールに仕込み、複数オペレーターが安全に復号・集計できるようにします。
+
+### 6.6. PQC 有効化（ハイブリッド）
+PQC は **明示的に有効化した場合のみ** 利用します。`l2_recipient_pqc` に ML-KEM-768 公開鍵を設定すると **X25519 + ML-KEM-768** になります。未設定なら古典暗号のみです。
+
+**CLI 例**:
+- PQC 鍵を含めて生成: `bun src/bin/weba-l2-crypto.ts gen-keys --pqc`
+- 生成される JSON に `pqc_kem`, `pqc_publicKey`, `pqc_privateKey` が入ります。
+
+**ブラウザ側**:
+PQC 復号には ML-KEM-768 のプロバイダを用意し、`webaPqcKem` に登録します。
 
 ## 7. ブラウザのみでの復号（Passkey 概念）
 Web/A は「単一 HTML で完結する」ことを重視するため、**ブラウザだけで復号できる UI** を想定します。

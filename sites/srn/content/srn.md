@@ -22,7 +22,7 @@ font:
     /* Hero Section Enhancements */
     .hero-section {
         text-align: center;
-        margin-bottom: 5rem;
+        margin-bottom: 8rem;
         padding-top: 4rem;
     }
     .logo-area {

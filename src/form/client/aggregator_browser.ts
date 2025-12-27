@@ -3,6 +3,8 @@ import { b64urlDecode, decryptLayer2Envelope, type Layer2Encrypted } from "./l2c
 type L2KeyFile = {
   recipient_kid?: string;
   recipient_x25519_private: string;
+  recipient_pqc_private?: string;
+  recipient_pqc_kem?: string;
 };
 
 type ExtractedPlain = {
@@ -159,7 +161,14 @@ async function extractPlainFromHtml(html: string, l2Keys?: L2KeyFile | null): Pr
       throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
     }
     const recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
-    const payload = await decryptLayer2Envelope(l2Envelope, recipientSk);
+    const pqc =
+      l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === "ML-KEM-768"
+        ? {
+            pqcProvider: (globalThis as any).webaPqcKem ?? null,
+            pqcRecipientSk: b64urlDecode(l2Keys.recipient_pqc_private),
+          }
+        : undefined;
+    const payload = await decryptLayer2Envelope(l2Envelope, recipientSk, pqc);
     return {
       plain: (payload as any).layer2_plain ?? payload,
       sig: (payload as any).layer2_sig,

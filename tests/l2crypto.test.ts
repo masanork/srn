@@ -9,6 +9,7 @@ import {
   verifyLayer2Signature,
   Layer2Payload,
 } from "../src/core/l2crypto.ts";
+import { createMlKem768Provider, generateMlKem768KeyPair } from "../src/core/pqc";
 
 describe("Web/A Layer 2 Crypto", () => {
   test("Canonical JSON should be deterministic", () => {
@@ -95,5 +96,30 @@ describe("Web/A Layer 2 Crypto", () => {
     envelope.layer2.ciphertext = ct.toString("base64url");
 
     await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow();
+  });
+
+  test("Hybrid PQC hook encrypts and decrypts when provided", async () => {
+    const recipient = generateRecipientKeyPair();
+    const user = generateUserKeyPair();
+    const plain = { hello: "pqc" };
+    const sig = await signLayer2(plain, user.privateKey, "user#1");
+    const payload = { layer2_plain: plain, layer2_sig: sig };
+
+    const pqcProvider = createMlKem768Provider();
+    const pqcKeys = generateMlKem768KeyPair();
+
+    const envelope = await encryptLayer2(payload, recipient.publicKey, "ref1", "issuer#1", {
+      pqc: { kem: pqcProvider, recipientPublicKey: pqcKeys.publicKey },
+    });
+
+    expect(envelope.layer2.encapsulated.pqc).toBeTruthy();
+    expect(envelope.layer2.suite.kem).toBe("X25519+ML-KEM-768");
+
+    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow("Missing PQC KEM for envelope");
+
+    const decrypted = await decryptLayer2(envelope, recipient.privateKey, {
+      pqc: { kem: pqcProvider, recipientPrivateKey: pqcKeys.privateKey },
+    });
+    expect(decrypted.layer2_plain).toEqual(plain);
   });
 });

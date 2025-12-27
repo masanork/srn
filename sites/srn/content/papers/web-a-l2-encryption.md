@@ -113,6 +113,7 @@ layout: form
 l2_encrypt: true
 l2_recipient_kid: "issuer#kem-2025"
 l2_recipient_x25519: "<base64url>"
+# l2_recipient_pqc: "<base64url>" # Optional. ML-KEM-768 public key for hybrid mode.
 # l2_layer1_ref: "sha256:..."  # Optional. If omitted, it derives from the template VC digest.
 l2_encrypt_default: true       # Optional. Default toggle state.
 l2_user_kid: "user#sig-1"       # Optional. User signature key id.
@@ -176,6 +177,16 @@ Embed the key file in the aggregator HTML:
 ```
 
 Operationally, this aligns with the **Aggregator Escrow** mode: the organization pre-installs temporary keys in the aggregator so multiple operators can decrypt and export CSV safely.
+
+### 6.6. PQC Enablement (Hybrid)
+PQC is **opt-in**. If `l2_recipient_pqc` is provided (ML-KEM-768 public key), encryption switches to **X25519 + ML-KEM-768**. Without it, the system remains classical-only.
+
+**CLI example**:
+- Generate keys with PQC: `bun src/bin/weba-l2-crypto.ts gen-keys --pqc`
+- The recipient key JSON will include `pqc_kem`, `pqc_publicKey`, `pqc_privateKey` fields.
+
+**Browser note**:
+To decrypt PQC envelopes in-browser (viewer or aggregator), install a PQC provider (ML-KEM-768) and expose it as `webaPqcKem`.
 
 ## 7. Browser-Only Decryption with Passkey (Concept)
 Web/A’s file-first model favors a **browser-only decryption flow** that works without external tooling. The intended UX is “one passkey action to open”.
