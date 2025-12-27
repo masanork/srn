@@ -8,8 +8,10 @@ declare global {
         parseAndRender: () => void;
         downloadWebA: () => void;
         downloadAggregator: () => void;
+        setPreviewMode: (mode: 'form' | 'aggregator') => void;
         generatedJsonStructure: any;
         isRuntimeLoaded: boolean;
+        previewMode?: 'form' | 'aggregator';
         recalculate: (() => void) | undefined;
         initSearch: (() => void) | undefined;
         addTableRow: ((btn: HTMLButtonElement, tableKey: string) => void) | undefined;
@@ -28,6 +30,15 @@ function updatePreview() {
 
     // @ts-ignore
     window.generatedJsonStructure = jsonStructure; // Update window.generatedJsonStructure
+
+    const mode = (window as any).previewMode || 'form';
+    if (mode === 'aggregator') {
+        const aggHtml = generateAggregatorHtml(editor.value);
+        preview.innerHTML = `<iframe id="preview-frame" style="width:100%; height:100%; border:0;"></iframe>`;
+        const frame = document.getElementById('preview-frame') as HTMLIFrameElement | null;
+        if (frame) frame.srcdoc = aggHtml;
+        return;
+    }
 
     preview.innerHTML = html;
 
@@ -80,6 +91,13 @@ function downloadAggregator() {
 window.parseAndRender = updatePreview;
 window.downloadWebA = downloadWebA;
 window.downloadAggregator = downloadAggregator;
+window.setPreviewMode = (mode: 'form' | 'aggregator') => {
+    (window as any).previewMode = mode;
+    document.querySelectorAll<HTMLButtonElement>('.preview-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.preview === mode);
+    });
+    updatePreview();
+};
 
 function applyI18n() {
     const RESOURCES: any = {
@@ -87,13 +105,17 @@ function applyI18n() {
             "md_def": "Markdown Definition",
             "btn_aggregator": "Download Web/A Aggregator",
             "btn_form": "Download Web/A Form",
-            "preview": "Preview"
+            "preview": "Preview",
+            "btn_preview_form": "Form",
+            "btn_preview_agg": "Aggregator"
         },
         "ja": {
             "md_def": "定義 (Markdown)",
             "btn_aggregator": "集計ツール",
             "btn_form": "入力画面",
-            "preview": "プレビュー"
+            "preview": "プレビュー",
+            "btn_preview_form": "入力画面",
+            "btn_preview_agg": "集計プレビュー"
         }
     };
     const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';
