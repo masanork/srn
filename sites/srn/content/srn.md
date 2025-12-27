@@ -14,53 +14,53 @@ font:
 </div>
 
 <div class="dashboard-grid">
-    <div class="panel">
-        <div class="panel-header">CORE PHILOSOPHY</div>
-        <div class="panel-body">
-            <ul class="spec-list">
-                <li><strong>Zero Layout Shift (CLS 0)</strong><span>Subsetting fonts per page ensures content renders immediately with correct glyphs. No FOUT/FOIT.</span></li>
-                <li><strong>Zero Request Overhead</strong><span>Fonts are embedded as Base64 Data URIs. No external font requests. Offline ready.</span></li>
-                <li><strong>AI-First Workflows</strong><span>Documents are structured for agents to read, fill, and summarize end-to-end.</span></li>
-                <li><strong>Future-Proof Auth</strong><span>Built-in Post-Quantum Cryptography (ML-DSA-44) support for document signing.</span></li>
-            </ul>
-        </div>
-    </div>
-    
-    <div class="panel">
-        <div class="panel-header">DISCUSSION PAPERS</div>
-        <div class="panel-body nav-links">
-            <a href="./papers/web-a.html" class="nav-item">
-                <span class="icon">📄</span><span class="label">Web/A: Archival Web</span><span class="desc">A portable, machine-readable alternative to PDF/A and XML.</span>
-            </a>
-            <a href="./papers/web-a-form.html" class="nav-item">
-                <span class="icon">🧾</span><span class="label">Web/A Form</span><span class="desc">File-first forms for low-frequency workflows.</span>
-            </a>
-            <a href="./papers/web-a-folio.html" class="nav-item">
-                <span class="icon">💼</span><span class="label">Web/A Folio</span><span class="desc">Concept: The Personal Data Container.</span>
-            </a>
-            <a href="./papers/web-a-l2-encryption.html" class="nav-item">
-                <span class="icon">🔐</span><span class="label">Web/A L2 Encryption</span><span class="desc">Confidential, recipient-only submission envelopes.</span>
-            </a>
-        </div>
-    </div>
+<div class="panel">
+<div class="panel-header">CORE PHILOSOPHY</div>
+<div class="panel-body">
+<ul class="spec-list">
+<li><strong>Zero Layout Shift (CLS 0)</strong><span>Subsetting fonts per page ensures content renders immediately with correct glyphs. No FOUT/FOIT.</span></li>
+<li><strong>Zero Request Overhead</strong><span>Fonts are embedded as Base64 Data URIs. No external font requests. Offline ready.</span></li>
+<li><strong>AI-First Workflows</strong><span>Documents are structured for agents to read, fill, and summarize end-to-end.</span></li>
+<li><strong>Future-Proof Auth</strong><span>Built-in Post-Quantum Cryptography (ML-DSA-44) support for document signing.</span></li>
+</ul>
+</div>
+</div>
 
-    <div class="panel">
-        <div class="panel-header">MODULES & NAVIGATION</div>
-        <div class="panel-body nav-links">
-            <a href="./maker.html" class="nav-item primary">
-                <span class="icon">📝</span><span class="label">Web/A Form Maker</span><span class="desc">Create verifiable forms visually. (Beta)</span>
-            </a>
-            <a href="./guide.html" class="nav-item">
-                <span class="icon">📖</span><span class="label">Developer Guide</span><span class="desc">System architecture & Usage manual.</span>
-            </a>
-            <a href="./releases.html" class="nav-item">
-                <span class="icon">🔖</span><span class="label">Release History</span><span class="desc">Changelog & versions.</span>
-            </a>
-            <a href="https://github.com/masanork/srn" class="nav-item">
-                <span class="icon">🐙</span><span class="label">Source Code</span><span class="desc">Sorane engine on GitHub.</span>
-            </a>
-        </div>
-    </div>
+<div class="panel">
+<div class="panel-header">DISCUSSION PAPERS</div>
+<div class="panel-body nav-links">
+<a href="./papers/web-a.html" class="nav-item">
+<span class="icon">📄</span><span class="label">Web/A: Archival Web</span><span class="desc">A portable, machine-readable alternative to PDF/A and XML.</span>
+</a>
+<a href="./papers/web-a-form.html" class="nav-item">
+<span class="icon">🧾</span><span class="label">Web/A Form</span><span class="desc">File-first forms for low-frequency workflows.</span>
+</a>
+<a href="./papers/web-a-folio.html" class="nav-item">
+<span class="icon">💼</span><span class="label">Web/A Folio</span><span class="desc">Concept: The Personal Data Container.</span>
+</a>
+<a href="./papers/web-a-l2-encryption.html" class="nav-item">
+<span class="icon">🔐</span><span class="label">Web/A L2 Encryption</span><span class="desc">Confidential, recipient-only submission envelopes.</span>
+</a>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-header">MODULES & NAVIGATION</div>
+<div class="panel-body nav-links">
+<a href="./maker.html" class="nav-item primary">
+<span class="icon">📝</span><span class="label">Web/A Form Maker</span><span class="desc">Create verifiable forms visually. (Beta)</span>
+</a>
+<a href="./guide.html" class="nav-item">
+<span class="icon">📖</span><span class="label">Developer Guide</span><span class="desc">System architecture & Usage manual.</span>
+</a>
+<a href="./releases.html" class="nav-item">
+<span class="icon">🔖</span><span class="label">Release History</span><span class="desc">Changelog & versions.</span>
+</a>
+<a href="https://github.com/masanork/srn" class="nav-item">
+<span class="icon">🐙</span><span class="label">Source Code</span><span class="desc">Sorane engine on GitHub.</span>
+</a>
+</div>
+</div>
 </div>
 <div class="footer-status">
     Runtime: Bun v1.x | Engine: opentype.js | Database: SQLite (WAL)
