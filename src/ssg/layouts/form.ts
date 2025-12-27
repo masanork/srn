@@ -13,17 +13,26 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
     // Embed structure for client-side logic
     const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
 
-    const vcString = vc ? JSON.stringify(vc, null, 2) : '';
-    const vcDataUri = vc ? `data:application/json;charset=utf-8,${encodeURIComponent(vcString)}` : '#';
-
     const verificationFooter = vc ? `
-            <footer class="doc-verification no-print" style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="background: #e6f7e6; color: #2e7d32; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem;">✓ PQC Signed</span>
-                    <span style="font-size: 0.8rem; color: #666;">Form Template Integrity Verified</span>
-                    <a href="${vcDataUri}" download="form-template.vc.json" style="font-size: 0.8rem; margin-left: auto;">Download VC</a>
+        <footer class="doc-verification no-print" style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #666;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <div style="background: #e6f7e6; color: #2e7d32; padding: 0.4rem 1rem; border-radius: 20px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>✓</span> Template Signed
                 </div>
-            </footer>
+                <div>
+                    <span style="font-size: 0.8rem;">Layer 1: Issuer Context (Immutable)</span>
+                </div>
+            </div>
+            
+            <details style="background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
+                <summary style="padding: 0.8rem 1rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="opacity: 0.6;">▶</span> View Template VC (JSON-LD)
+                </summary>
+                <div style="padding: 0 1rem 1rem 1rem;">
+                    <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${JSON.stringify(vc, null, 2)}</pre>
+                </div>
+            </details>
+        </footer>
     ` : '';
 
     const content = `
