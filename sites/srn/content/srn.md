@@ -1,13 +1,15 @@
 ---
 title: "Sorane (空音): Typography-First SSG"
 layout: width
-font: Serif
+font: 
+  - Serif
+  - logo:NotoSerifJP-VariableFont_wght.ttf
 ---
 
 
 
 <div class="hero-section">
-    <div class="logo-area">空音</div>
+    <div class="logo-area font-logo">空音</div>
     <p class="lead">SORANE (空音): The Reference Implementation for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>
 </div>
 
@@ -25,7 +27,6 @@ font: Serif
         padding-top: 4rem;
     }
     .logo-area {
-        font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
         font-size: 7rem;
         margin-bottom: 0.5rem;
         color: var(--accent-color);

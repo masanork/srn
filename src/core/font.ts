@@ -396,11 +396,17 @@ function injectNativeCmap(subsetBuffer: ArrayBuffer, unicodeMap: { code: number,
 export async function subsetFont(
     fontPath: string,
     text: string,
-    extraTables?: Record<string, Uint8Array>
+    extraTables?: Record<string, Uint8Array>,
+    weight?: number // Added weight parameter
 ): Promise<{ buffer: Buffer, rawSfnt: Uint8Array, mimeType: string, ivsRecordsCount: number }> {
     const fontBuffer = await fs.readFile(fontPath);
     const arrayBuffer = fontBuffer.buffer.slice(fontBuffer.byteOffset, fontBuffer.byteOffset + fontBuffer.byteLength);
-    const font = opentype.parse(arrayBuffer);
+    let font = opentype.parse(arrayBuffer);
+
+    // Apply variation if weight is specified and font is variable
+    if (weight !== undefined && font.tables.fvar) {
+        font = font.getVariation({ wght: weight });
+    }
 
     let ivsMap: IVSMap | null = null;
     try {

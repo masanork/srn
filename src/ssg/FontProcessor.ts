@@ -1,4 +1,3 @@
-
 import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
@@ -33,7 +32,6 @@ export class FontProcessor {
         buildId: string
     ): Promise<{ fontCss: string, safeFontFamilies: string[] }> {
         
-        // Skip for tests or form layout if needed (logic can be handled by caller or here)
         if (process.env.NODE_ENV === 'test' || data.layout === 'form') {
             return {
                 fontCss: `
@@ -41,7 +39,7 @@ export class FontProcessor {
 body {
   font-family: system-ui, -apple-system, sans-serif;
 }
-</style>`,
+</style>`, 
                 safeFontFamilies: ['sans-serif']
             };
         }
@@ -51,7 +49,7 @@ body {
         
         let fontCss = '';
         const styleMap: Record<string, string[]> = {};
-        const uniqueFontsToSubset = new Set<string>();
+        const fontRequestMap = new Map<string, Set<number | undefined>>();
         const ivsSupportCountByFamily = new Map<string, number>();
 
         const getBaseName = (fname: string) => 'Srn-' + path.basename(fname, path.extname(fname)).replace(/[^a-zA-Z0-9]/g, '');
@@ -66,56 +64,61 @@ body {
             }
             const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
             if (!styleMap[styleName]) styleMap[styleName] = [];
+            
+            const targetWeight = styleName === 'logo' ? 900 : undefined;
+
             for (const file of files) {
-                uniqueFontsToSubset.add(file);
-                styleMap[styleName]?.push(getBaseName(file));
+                const familyName = getBaseName(file) + (targetWeight ? `W${targetWeight}` : '');
+                styleMap[styleName]?.push(familyName);
+                
+                if (!fontRequestMap.has(file)) fontRequestMap.set(file, new Set());
+                fontRequestMap.get(file)?.add(targetWeight);
             }
         }
 
-        // Subset unique fonts with caching
-        for (const fontName of uniqueFontsToSubset) {
-            const fontPath = path.join(this.fontsDir, fontName);
-            if (!await fs.pathExists(fontPath)) continue;
+        for (const [fontName, weights] of fontRequestMap.entries()) {
+            for (const targetWeight of weights) {
+                const fontPath = path.join(this.fontsDir, fontName);
+                if (!await fs.pathExists(fontPath)) continue;
 
-            const fontFamilyName = getBaseName(fontName);
-            const cacheKey = this.getHash([fontPath, fullText, buildId]); // BuildId included for provenance
-            const cachePath = path.join(this.cacheDir, `${cacheKey}.woff2`);
-            const cssCachePath = path.join(this.cacheDir, `${cacheKey}.css`);
+                const fontFamilyName = getBaseName(fontName) + (targetWeight ? `W${targetWeight}` : '');
+                const cacheKey = this.getHash([fontPath, fullText, buildId, targetWeight?.toString() || 'default']); 
+                const cachePath = path.join(this.cacheDir, `${cacheKey}.woff2`);
+                const cssCachePath = path.join(this.cacheDir, `${cacheKey}.css`);
 
-            let dataUrl: string;
-            let ivsRecordsCount: number;
+                let dataUrl: string;
+                let ivsRecordsCount: number;
 
-            if (await fs.pathExists(cachePath) && await fs.pathExists(cssCachePath)) {
-                // Cache Hit
-                const buffer = await fs.readFile(cachePath);
-                dataUrl = bufferToDataUrl(buffer, 'font/woff2');
-                ivsRecordsCount = parseInt(await fs.readFile(cssCachePath, 'utf-8'));
-            } else {
-                // Cache Miss - Generate
-                console.log(`  Subsetting font: ${fontName} (Cache Miss)`);
-                const { rawSfnt: initialSfnt, ivsRecordsCount: ivsCount } = await subsetFont(fontPath, fullText);
-                ivsRecordsCount = ivsCount;
+                if (await fs.pathExists(cachePath) && await fs.pathExists(cssCachePath)) {
+                    const buffer = await fs.readFile(cachePath);
+                    dataUrl = bufferToDataUrl(buffer, 'font/woff2');
+                    ivsRecordsCount = parseInt(await fs.readFile(cssCachePath, 'utf-8'));
+                } else {
+                    console.log(`  Subsetting font: ${fontName} ${targetWeight ? `(Weight: ${targetWeight})` : ''} (Cache Miss)`);
+                    const { rawSfnt: initialSfnt, ivsRecordsCount: ivsCount } = await subsetFont(fontPath, fullText, undefined, targetWeight);
+                    ivsRecordsCount = ivsCount;
 
-                const assetHash = crypto.createHash('sha256').update(initialSfnt).digest('hex');
-                const provenanceClaim = {
-                    type: "FontProvenance",
-                    name: fontName,
-                    hash: assetHash,
-                    buildId: buildId,
-                    timestamp: new Date().toISOString()
-                };
-                const provenanceVc = await createCoseVC(provenanceClaim, currentKeys, siteDid, buildId);
+                    const assetHash = crypto.createHash('sha256').update(initialSfnt).digest('hex');
+                    const provenanceClaim = {
+                        type: "FontProvenance",
+                        name: fontName,
+                        weight: targetWeight,
+                        hash: assetHash,
+                        buildId: buildId,
+                        timestamp: new Date().toISOString()
+                    };
+                    const provenanceVc = await createCoseVC(provenanceClaim, currentKeys, siteDid, buildId);
 
-                const { buffer } = await subsetFont(fontPath, fullText, {
-                    'SRNC': provenanceVc.cbor
-                });
+                    const { buffer } = await subsetFont(fontPath, fullText, {
+                        'SRNC': provenanceVc.cbor
+                    }, targetWeight);
 
-                await fs.writeFile(cachePath, buffer);
-                await fs.writeFile(cssCachePath, ivsRecordsCount.toString());
-                dataUrl = bufferToDataUrl(buffer, 'font/woff2');
-            }
+                    await fs.writeFile(cachePath, buffer);
+                    await fs.writeFile(cssCachePath, ivsRecordsCount.toString());
+                    dataUrl = bufferToDataUrl(buffer, 'font/woff2');
+                }
 
-            fontCss += `
+                fontCss += `
 <style>
 @font-face {
   font-family: '${fontFamilyName}';
@@ -124,10 +127,10 @@ body {
 }
 </style>
 `;
-            ivsSupportCountByFamily.set(fontFamilyName, ivsRecordsCount);
+                ivsSupportCountByFamily.set(fontFamilyName, ivsRecordsCount);
+            }
         }
 
-        // IVS Reordering & Utility Classes
         const anyIvsSupport = Array.from(ivsSupportCountByFamily.values()).some(count => count > 0);
         if (anyIvsSupport) {
             const reorderStackForIvs = (stack: string[]) => {
@@ -144,7 +147,8 @@ body {
         const defaultStack = styleMap['default'] || [];
         const safeDefaultStack = defaultStack.map(f => `'${f}'`);
 
-        let utilityCss = `<style>\n`;
+        let utilityCss = `<style>
+`;
         for (const [styleName, stack] of Object.entries(styleMap)) {
             if (styleName === 'default') continue;
             const quotedStack = stack.map(f => `'${f}'`);
@@ -173,7 +177,6 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
             if (typeof obj === 'object' && obj !== null) return Object.values(obj).map(textFromObj).join('');
             return '';
         };
-        // Simplified text extraction (caller should provide cleaned HTML or we use regex)
         const bodyText = html.replace(/<[^>]*>/g, '').replace(/\s+/g, '');
         return (data.title || '') + bodyText + textFromObj(data) + "Read More → ログイン 検索 設定 Home Back Next";
     }
@@ -211,7 +214,6 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
             }
 
             if (!matched) {
-                // Treat raw file lists as a default override for this page.
                 fontConfigs.push(`default:${cfg}`);
                 hasDefault = true;
             }
