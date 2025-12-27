@@ -1,5 +1,6 @@
 
 import { WebAParser } from './core/parser.js';
+import { FolioServer } from './server.js';
 import fs from 'fs/promises';
 
 async function main() {
@@ -33,10 +34,15 @@ async function main() {
         const filled = WebAParser.fill(content, data);
         console.log(filled);
 
+    } else if (command === 'serve') {
+        const server = new FolioServer();
+        await server.run();
+
     } else {
         console.log("Folio CLI (Prototype)");
         console.log("Usage: folio parse <file.md>");
         console.log("       folio fill <file.md> --data <data.json>");
+        console.log("       folio serve (MCP Server Mode)");
     }
 }
 

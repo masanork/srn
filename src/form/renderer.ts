@@ -45,11 +45,11 @@ export const Renderers: Record<string, any> = {
         const lenMatch = attrs.match(/(?:len|max):(\d+)/);
         if (lenMatch) extra += ` maxlength="${lenMatch[1]}"`;
 
-        const valMatch = attrs.match(/val="([^"]+)"/);
+        const valMatch = attrs.match(/(?:val|value)="([^"]+)"/);
         if (valMatch) {
             extra += ` value="${this.escapeHtml(valMatch[1])}"`;
         } else {
-            const valMatchSimple = attrs.match(/val=([^\s\)]+)/);
+            const valMatchSimple = attrs.match(/(?:val|value)=([^\s\)]+)/);
             if (valMatchSimple) extra += ` value="${this.escapeHtml(valMatchSimple[1])}"`;
         }
         return extra;
@@ -58,7 +58,7 @@ export const Renderers: Record<string, any> = {
     // --- Component Renderers ---
 
     'text': function (key: string, label: string, attrs: string | undefined) {
-        const valMatch = (attrs || '').match(/val="([^"]+)"/) || (attrs || '').match(/val='([^']+)'/) || (attrs || '').match(/val=([^ ]+)/);
+        const valMatch = (attrs || '').match(/(?:val|value)="([^"]+)"/) || (attrs || '').match(/(?:val|value)='([^']+)'/) || (attrs || '').match(/(?:val|value)=([^ ]+)/);
         const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
@@ -103,10 +103,13 @@ export const Renderers: Record<string, any> = {
 
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
         const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
+        const valMatch = (attrs || '').match(/(?:val|value)="([^"]+)"/) || (attrs || '').match(/(?:val|value)='([^']+)'/) || (attrs || '').match(/(?:val|value)=([^ ]+)/);
+        const val = valMatch ? valMatch[1] : '';
+
         return `
         <div class="form-row vertical" style="${this.getStyle(attrs)}">
             <label class="form-label">${this.escapeHtml(label)}</label>
-            <textarea class="form-input" rows="5" data-json-path="${key}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}></textarea>
+            <textarea class="form-input" rows="5" data-json-path="${key}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>${this.escapeHtml(val)}</textarea>
             ${hint}
         </div>`;
     },
@@ -183,7 +186,7 @@ export const Renderers: Record<string, any> = {
             const srcKey = srcMatch ? srcMatch[1] : '';
             if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
                 const data = this._context.masterData[srcKey];
-                const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1]) - 1 : 1;
+                const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1] || '1') - 1 : 1;
                 data.forEach((row: string[]) => {
                     if (row.length > lIdx) {
                         optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || '')}"></option>`;
@@ -258,9 +261,9 @@ export const Renderers: Record<string, any> = {
 
             if (match) {
                 let [_, type, keyPart, attrsParen, attrsColon] = match;
-                let key = keyPart.trim();
+                let key = (keyPart || '').trim();
                 let extraAttrs = attrsParen || attrsColon || '';
-                
+
                 if (key.includes(' ')) {
                     const parts = key.split(/\s+/);
                     key = parts[0]!;
