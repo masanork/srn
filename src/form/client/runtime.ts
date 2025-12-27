@@ -6,6 +6,7 @@ import { SearchEngine } from './search'; // Ensure Search is available if needed
 import { loadL2Config } from './l2crypto';
 import { initL2Viewer } from './l2viewer';
 import { initKeywrapTool } from './keywrap_tool';
+import { initAggregatorBrowser } from './aggregator_browser';
 
 export function initRuntime() {
     console.log("Web/A Runtime Booting...");
@@ -58,6 +59,7 @@ export function initRuntime() {
     calc.recalculate(); // This also runs runAutoCopy
     initL2Viewer();
     initKeywrapTool();
+    initAggregatorBrowser();
 
     // Global Input Listener
     let tm: any;

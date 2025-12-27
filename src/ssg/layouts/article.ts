@@ -91,6 +91,7 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
         fontCss,
         fontFamilies,
         jsonLd: schema,
-        lang: lang
+        lang: lang,
+        className: `layout-${data.layout || 'article'}`
     });
 }

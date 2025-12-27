@@ -5,10 +5,11 @@ export interface BaseLayoutProps {
     fontFamilies: string[]; // For Mermaid config
     jsonLd?: object;
     lang?: string;
+    className?: string;
 }
 
 export function baseLayout(props: BaseLayoutProps): string {
-    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja' } = props;
+    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja', className = '' } = props;
 
     // JSON-LD script block
     const jsonLdScript = jsonLd
@@ -49,7 +50,8 @@ export function baseLayout(props: BaseLayoutProps): string {
         });
     </script>
 </head>
-<body>
+</head>
+<body class="${className}">
     <main>
         ${content}
     </main>
