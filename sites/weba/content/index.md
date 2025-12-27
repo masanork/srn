@@ -39,6 +39,12 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+    <h3>🔐 L2 Encryption Paper</h3>
+    <p>Web/A Layer 2 Encryption の設計と、ブラウザでの復号体験を含む実装方針を解説します。</p>
+    <a href="https://masanork.github.io/srn/papers/web-a-l2-encryption.ja.html">詳細を見る →</a>
+  </div>
+
+  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🛠️ Web/A Maker</h3>
     <p>ブラウザ上で Markdown を記述し、リアルタイムにフォームをプレビュー・生成できるツールです。</p>
     <a href="./maker.html">Maker を起動 →</a>
