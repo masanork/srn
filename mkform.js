@@ -447,11 +447,14 @@ function parseMarkdown(text) {
     appendHtml("</div></div>");
   if (currentTabId)
     appendHtml("</div>");
-  const toolbarHtml = `<div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
-            <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
-            <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
-            <button class="primary" onclick="window.signAndDownload()" style="margin: 0; background-color: #2e7d32;" data-i18n="sign_btn">Sign & Save</button>
-            <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit HTML</button>
+  const toolbarButtons = `
+            <button class="secondary" onclick="window.clearData()" style="color: #666; border-color: transparent;" data-i18n="clear_btn">Clear</button>
+            <div style="flex:1"></div>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save HTML</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Sign & Save</button>
+    `;
+  const toolbarHtml = `<div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            ${toolbarButtons}
         </div>`;
   if (tabs.length > 0) {
     let navHtml = '<div class="tabs-nav">';
@@ -459,12 +462,8 @@ function parseMarkdown(text) {
       const activeClass = idx === 0 ? " active" : "";
       navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
     });
-    navHtml += '<div style="flex:1"></div>';
-    navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center;">
-            <button class="primary" onclick="window.clearData()" style="margin: 0; background-color: #999;" data-i18n="clear_btn">Clear</button>
-            <button class="primary" onclick="window.saveDraft()" style="margin: 0;" data-i18n="work_save_btn">Save Draft</button>
-            <button class="primary" onclick="window.signAndDownload()" style="margin: 0; background-color: #2e7d32;" data-i18n="sign_btn">Sign & Save</button>
-            <button class="primary" onclick="window.submitDocument()" style="margin: 0; background-color: #d9534f;" data-i18n="submit_btn">Submit</button>
+    navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1;">
+            ${toolbarButtons}
         </div>`;
     navHtml += "</div>";
     if (mainContentHtml.includes("</h1>")) {
