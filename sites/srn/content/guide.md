@@ -100,20 +100,37 @@ Content goes here.
 
 ### 2. Web/A Documents (Archive-Quality Web)
 
-For long-term preservation and archive compatibility, use the `weba` layout.
+All documents generated with `layout: article` are automatically signed as Web/A archives.
 
 ```markdown
 ---
 title: "Whitepaper"
-layout: weba
+layout: article
 author: "Author Name"
 ---
 ```
 * **Architecture**: Implements **HMP (Human-Machine Parity)**. Signs a JSON-LD payload that is cryptographically bound to the HTML content view.
-* **Verification**: Optimized for both browser-side and machine-side (AI) verification.
-* **AI Generation**: To generate Web/A compliant HTML using LLMs, refer to the [Web/A Prompting Guide](./weba-prompt.html).
+* **Verification**: Includes a "Web/A Signed" badge with download link for the credential.
 
-### 3. Verified Documents (Official VC)
+### 3. Web/A Forms (Interactive Documents)
+
+To create a verifiable interactive form, use `layout: form`.
+
+```markdown
+---
+title: "Application Form"
+layout: form
+---
+- [text:name (placeholder="Your Name")] Name
+- [number:age] Age
+```
+
+* **Interactive**: Generates a functional HTML form with calculation logic.
+* **Signed Template**: The form structure itself is signed by the issuer (Layer 1).
+* **User Signature**: Users can sign their input using Passkeys (WebAuthn) and download a Verifiable Credential (Layer 2).
+* **Form Maker**: Use the [Web/A Form Maker](./maker.html) to visually design forms and generate Markdown.
+
+### 4. Verified Documents (Official VC)
 
 To certify a document as a traditional VC sidecar, use the `official` layout.
 
