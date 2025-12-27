@@ -200,12 +200,22 @@ This preserves the file-first property: a single HTML file still carries all dat
 4. The browser derives/unwraps CEK and decrypts the L2 envelope.
 5. Decrypted payload is rendered in a read-only view (no plaintext stored unless explicitly exported).
 
-### 7.4. Notes
+### 7.4. Organization Mode (Aggregator Escrow)
+For organizational workflows, a **temporary recipient key** may be generated per form and **pre-installed in the aggregator** for batch decryption. This provides a practical fallback when relying solely on an individual’s Passkey is operationally risky.
+
+- The form is encrypted to the temporary recipient public key.
+- The aggregator stores the corresponding private key and can decrypt in bulk.
+- This is an **opt-in escrow** model; it trades stronger individual-only access for operational continuity.
+- Key rotation is straightforward: issue new temp keys per campaign or per form.
+
+This mode can coexist with Passkey unlock (Key Wrap); issuers choose one or both based on risk tolerance.
+
+### 7.5. Notes
 - This section defines the **conceptual flow**; exact KWP format is a spec extension.
 - The goal is **single action unlock** without external tools.
 - If KWP is absent, offline decryption via CLI remains the fallback.
 
-### 7.5. Key Wrap Mechanics (Proposed)
+### 7.6. Key Wrap Mechanics (Proposed)
 The Key Wrap Package (KWP) wraps the **recipient X25519 private key** so it can only be unlocked with the recipient’s Passkey. The CEK is still derived at decryption time from the envelope and the unwrapped private key.
 
 **Inputs**:
@@ -230,7 +240,7 @@ The Key Wrap Package (KWP) wraps the **recipient X25519 private key** so it can 
 
 This preserves “single action unlock” while keeping all materials inside the HTML file. If PRF is unavailable, fallback to CLI decryption.
 
-### 7.6. Browser UI/UX (Proposed)
+### 7.7. Browser UI/UX (Proposed)
 **Unlock panel** (visible when `weba-l2-envelope` is present):
 - Button: “Unlock (Passkey)”
 - Status line: “Waiting for passkey…” / “Unlocked”
