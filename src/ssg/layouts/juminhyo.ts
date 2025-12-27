@@ -74,19 +74,19 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
             <div class="jumin-sheet">
                 <table class="jumin-table">
                     <tbody>
-                        ${tableHeaderRows(data.certificateTitle, subject.address, subject.householder)}
+                        ${tableHeaderRows(subject.name, subject.address, subject.householder)}
                         ${itemsHtml}
                     </tbody>
                 </table>
-                <div class="footer-section">
-                    <div class="cert-text">
+                <div class="footer-section" style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div class="cert-text" style="font-size: 1.1rem; line-height: 1.8;">
                         この写しは、世帯全員の住民票の原本と相違ない ことを証明する。
-                        <div class="issue-date-line">${normalizeText(data.issueDate)}</div>
+                        <div class="issue-date-line" style="margin-top: 1rem;">${normalizeText(subject.issueDate)}</div>
                     </div>
-                    <div class="issuer-line">
-                        <div class="issuer-name-block">
-                            ${normalizeText(data.issuer?.title)}（職務代理者）<br>
-                            ${normalizeText(data.issuer?.name)}
+                    <div class="issuer-line" style="display: flex; align-items: center; gap: 2rem;">
+                        <div class="issuer-name-block" style="text-align: right; font-size: 1.1rem; font-weight: bold;">
+                            ${normalizeText(subject.issuer?.title)}（職務代理者）<br>
+                            ${normalizeText(subject.issuer?.name)}
                         </div>
                         <div class="seal-area">
                             <span class="official-seal">住民票<br>認証印</span>
@@ -94,7 +94,9 @@ export function juminhyoLayout(data: JuminhyoData, _bodyContent: string, fontCss
                     </div>
                 </div>
             </div>
-            <div class="jumin-mobile-view">${mobileItemsHtml}</div>
+            <div class="jumin-mobile-view" style="margin-top: 2rem;">
+                ${mobileItemsHtml}
+            </div>
         </div>
         <style>
             /* Juminhyo Specific Styles (Kept inline for simplicity in this technote) */

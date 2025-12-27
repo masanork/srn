@@ -56,7 +56,7 @@ export class LayoutManager {
                 break;
 
             case 'juminhyo':
-                finalHtml = juminhyoLayout(data, '', fontCss, safeFontFamilies);
+                finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies);
                 break;
 
             default:
