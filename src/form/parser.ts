@@ -1,19 +1,42 @@
 
 import { Renderers } from './renderer';
+import yaml from 'js-yaml';
 
 export function parseMarkdown(text: string): { html: string, jsonStructure: any } {
     const lines = text.split('\n');
 
     let html = '';
     let jsonStructure: any = { "@context": "https://schema.org", "@type": "CreativeWork" };
+    const aggSpecs: any[] = [];
+
+    const parseAggSpec = (raw: string): any | null => {
+        const trimmed = raw.trim();
+        if (!trimmed) return null;
+        try {
+            return JSON.parse(trimmed);
+        } catch { }
+        try {
+            return yaml.load(trimmed);
+        } catch { }
+        return null;
+    };
 
     // Phase 0: Pre-scan for Master Data
     const masterData: Record<string, string[][]> = {};
     let scanInMaster = false;
     let scanMasterKey: string = '';
+    let scanInAggSpec = false;
 
     lines.forEach(line => {
         const t = line.trim();
+        if (t === '```agg') {
+            scanInAggSpec = true;
+            return;
+        }
+        if (scanInAggSpec) {
+            if (t === '```') scanInAggSpec = false;
+            return;
+        }
         const masterMatch = t.match(/^\[master:([^\]]+)\]$/);
         if (masterMatch) {
             scanMasterKey = masterMatch[1] || '';
@@ -51,6 +74,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     let tabs: { id: string, title: string }[] = [];
     let currentTabId: string | null = null;
     let mainContentHtml = '';
+    let inAggBlock = false;
+    let aggLines: string[] = [];
 
     // Helper to append to the correct buffer
     const appendHtml = (str: string) => {
@@ -71,6 +96,23 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
     lines.forEach((line) => {
         const trimmed = line.trim();
+
+        if (trimmed === '```agg') {
+            inAggBlock = true;
+            aggLines = [];
+            return;
+        }
+        if (inAggBlock) {
+            if (trimmed === '```') {
+                inAggBlock = false;
+                const parsed = parseAggSpec(aggLines.join('\n'));
+                if (parsed) aggSpecs.push(parsed);
+                aggLines = [];
+            } else {
+                aggLines.push(line);
+            }
+            return;
+        }
 
         // 0a. Master Table Marker (Allow unicode keys)
         const masterMatch = trimmed.match(/^\[master:([^\]]+)\]$/);
@@ -319,6 +361,12 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
     } else {
         html = mainContentHtml + toolbarHtml;
+    }
+
+    if (aggSpecs.length === 1) {
+        jsonStructure.aggSpec = aggSpecs[0];
+    } else if (aggSpecs.length > 1) {
+        jsonStructure.aggSpec = aggSpecs;
     }
 
     return { html, jsonStructure };
