@@ -8,7 +8,7 @@ import { articleLayout } from './layouts/article.js';
 import { blogLayout } from './layouts/blog.js';
 import { formLayout, formReportLayout } from './layouts/form.js';
 import { verifierLayout } from './layouts/verifier.js';
-import { juminhyoLayout } from './layouts/juminhyo.js';
+import { buildJuminhyoJsonLd, juminhyoLayout } from './layouts/juminhyo.js';
 import type { IdentityManager } from './IdentityManager.ts';
 
 export interface LayoutContext {
@@ -56,15 +56,45 @@ export class LayoutManager {
                 break;
 
             case 'juminhyo':
-                vc = await idManager.signDocument({
-                    type: ["VerifiableCredential", "JuminhyoTemplate"],
-                    credentialSubject: {
-                        id: `${idManager.siteDid}/${relPath.replace('.md', '')}`,
-                        name: data.title,
-                        contentDigest: crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex')
-                    }
-                });
-                finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, vc);
+                {
+                    const jsonLd = buildJuminhyoJsonLd(data);
+                    const draftHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd);
+                    const htmlDigest = crypto.createHash('sha256').update(draftHtml).digest('hex');
+                    const jsonLdDigest = crypto.createHash('sha256').update(JSON.stringify(jsonLd)).digest('hex');
+                    const contentDigest = crypto.createHash('sha256')
+                        .update(JSON.stringify({ html: htmlDigest, jsonLd: jsonLdDigest }))
+                        .digest('hex');
+
+                    const templatePayload = {
+                        layout: 'juminhyo',
+                        schema: 'juminhyo-v1',
+                        version: 1
+                    };
+                    const templateDigest = crypto.createHash('sha256').update(JSON.stringify(templatePayload)).digest('hex');
+
+                    const templateVc = await idManager.signDocument({
+                        type: ["VerifiableCredential", "JuminhyoTemplate"],
+                        credentialSubject: {
+                            id: `${idManager.siteDid}/templates/juminhyo`,
+                            name: "Juminhyo Template",
+                            templateDigest
+                        }
+                    });
+
+                    const instanceVc = await idManager.signDocument({
+                        type: ["VerifiableCredential", "JuminhyoInstance"],
+                        credentialSubject: {
+                            id: `${idManager.siteDid}/${relPath.replace('.md', '')}`,
+                            name: data.title,
+                            htmlDigest,
+                            jsonLdDigest,
+                            contentDigest
+                        }
+                    });
+
+                    vc = instanceVc;
+                    finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, templateVc, instanceVc);
+                }
                 break;
 
             default:

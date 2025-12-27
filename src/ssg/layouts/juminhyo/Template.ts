@@ -88,13 +88,13 @@ export function renderPersonRows(item: any, index: number, startRow: number) {
 export function tableHeaderRows(certificateTitle: string, address: string, householder: string) {
     return `
         <tr style="height: ${rowHeights[0]}px;">
-            <td class="cell no-border" colspan="16"></td>
-            <td class="cell title-cell no-border" colspan="7" rowspan="2"${fieldAttr('credentialSubject.name')}>${normalizeText(certificateTitle)}</td>
-            <td class="cell no-border" colspan="17"></td>
+            <td class="cell no-border" colspan="14"></td>
+            <td class="cell title-cell no-border" colspan="12" rowspan="2"${fieldAttr('credentialSubject.name')}>${normalizeText(certificateTitle)}</td>
+            <td class="cell no-border" colspan="14"></td>
         </tr>
         <tr style="height: ${rowHeights[1]}px;">
-            <td class="cell no-border" colspan="16"></td>
-            <td class="cell no-border" colspan="17"></td>
+            <td class="cell no-border" colspan="14"></td>
+            <td class="cell no-border" colspan="14"></td>
         </tr>
         <tr style="height: ${rowHeights[2]}px;">
             <td class="cell label-cell" colspan="6">${labelHtml('住所')}</td>
