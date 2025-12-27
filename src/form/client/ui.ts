@@ -44,7 +44,11 @@ export class UIManager {
     }
 
     private renumberRows(tbody: HTMLElement) {
-        const rows = tbody.querySelectorAll('tr');
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+            // Exclude header rows (which usually contain th, or no td)
+            return row.querySelectorAll('td').length > 0;
+        });
+
         rows.forEach((row, index) => {
             const num = index + 1;
             row.querySelectorAll('.auto-num').forEach((input: any) => {
