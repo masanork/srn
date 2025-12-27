@@ -1,10 +1,19 @@
-import { b64urlDecode, decryptLayer2Envelope, type Layer2Encrypted } from "./l2crypto";
+import {
+  b64urlDecode,
+  decryptLayer2Envelope,
+  deriveOrgX25519KeyPair,
+  type Layer2Encrypted,
+  type OrgKeyPolicy,
+} from "./l2crypto";
 
 type L2KeyFile = {
   recipient_kid?: string;
-  recipient_x25519_private: string;
+  recipient_x25519_private?: string;
   recipient_pqc_private?: string;
   recipient_pqc_kem?: string;
+  org_root_key?: string;
+  org_campaign_id?: string;
+  org_key_policy?: OrgKeyPolicy;
 };
 
 type ExtractedPlain = {
@@ -88,7 +97,7 @@ function parseKeyJson(raw: string): L2KeyFile | null {
   if (!raw.trim()) return null;
   try {
     const parsed = JSON.parse(raw) as L2KeyFile;
-    if (!parsed.recipient_x25519_private) return null;
+    if (!parsed.recipient_x25519_private && !parsed.org_root_key) return null;
     return parsed;
   } catch {
     return null;
@@ -160,7 +169,24 @@ async function extractPlainFromHtml(html: string, l2Keys?: L2KeyFile | null): Pr
     if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
       throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
     }
-    const recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+    let recipientSk: Uint8Array | null = null;
+    if (l2Keys.org_root_key) {
+      const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
+      if (!campaignId) {
+        throw new Error("org_campaign_id is required for org_root_key");
+      }
+      const derived = deriveOrgX25519KeyPair({
+        orgRootKey: b64urlDecode(l2Keys.org_root_key),
+        campaignId,
+        layer1Ref: l2Envelope.layer1_ref,
+        keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy,
+      });
+      recipientSk = derived.privateKey;
+    } else if (l2Keys.recipient_x25519_private) {
+      recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+    } else {
+      throw new Error("No recipient key provided");
+    }
     const pqc =
       l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === "ML-KEM-768"
         ? {

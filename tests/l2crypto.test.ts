@@ -3,6 +3,8 @@ import {
   canonicalJson,
   generateRecipientKeyPair,
   generateUserKeyPair,
+  deriveOrgX25519KeyPair,
+  deriveOrgRootKey,
   signLayer2,
   encryptLayer2,
   decryptLayer2,
@@ -17,6 +19,44 @@ describe("Web/A Layer 2 Crypto", () => {
     const obj2 = { a: 1, c: { d: 4, e: 5 }, b: 2 };
     expect(canonicalJson(obj1)).toBe(canonicalJson(obj2));
     expect(canonicalJson(obj1)).toBe('{"a":1,"b":2,"c":{"d":4,"e":5}}');
+  });
+
+  test("Derived org keys are deterministic with policy", () => {
+    const root = new Uint8Array(32).fill(1);
+    const a = deriveOrgX25519KeyPair({
+      orgRootKey: root,
+      campaignId: "campaign-1",
+      layer1Ref: "sha256:aaa",
+      keyPolicy: "campaign+layer1",
+    });
+    const b = deriveOrgX25519KeyPair({
+      orgRootKey: root,
+      campaignId: "campaign-1",
+      layer1Ref: "sha256:bbb",
+      keyPolicy: "campaign+layer1",
+    });
+    expect(Buffer.from(a.publicKey).equals(Buffer.from(b.publicKey))).toBe(false);
+
+    const c = deriveOrgX25519KeyPair({
+      orgRootKey: root,
+      campaignId: "campaign-1",
+      keyPolicy: "campaign",
+    });
+    const d = deriveOrgX25519KeyPair({
+      orgRootKey: root,
+      campaignId: "campaign-1",
+      keyPolicy: "campaign",
+    });
+    expect(Buffer.from(c.publicKey).equals(Buffer.from(d.publicKey))).toBe(true);
+  });
+
+  test("Org root key is deterministic per org", () => {
+    const instance = new Uint8Array(32).fill(2);
+    const a = deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-1" });
+    const b = deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-1" });
+    const c = deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-2" });
+    expect(Buffer.from(a).equals(Buffer.from(b))).toBe(true);
+    expect(Buffer.from(a).equals(Buffer.from(c))).toBe(false);
   });
 
   test("Roundtrip encryption and signature", async () => {

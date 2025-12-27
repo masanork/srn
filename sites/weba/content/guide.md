@@ -79,6 +79,8 @@ l2_encrypt: true
 l2_recipient_kid: "issuer#kem-2025"
 l2_recipient_x25519: "<base64url>"
 # l2_recipient_pqc: "<base64url>" # Optional. ML-KEM-768 公開鍵（ハイブリッド用）
+# l2_campaign_id: "campaign-2025"
+# l2_key_policy: "campaign+layer1" # Optional. campaign | campaign+layer1
 # l2_layer1_ref: "sha256:..."
 l2_encrypt_default: true
 l2_user_kid: "user#sig-1"
@@ -86,6 +88,22 @@ l2_user_kid: "user#sig-1"
 ```
 
 PQC を使う場合は `l2_recipient_pqc` を指定します。未指定の場合は X25519 のみです。
+組織ルート鍵から派生する場合は `l2_campaign_id` と `l2_key_policy` を設定し、受領者公開鍵は CLI で導出します。
+
+### 3.5.1 SRN インスタンス鍵との関係
+
+組織ルート鍵は SRN インスタンス鍵から決定的に導出できます。
+
+```
+org_root_key = HKDF(srn_instance_key, info = "weba-l2/org-root" || org_id)
+```
+
+CLI 例:
+
+```bash
+bun src/bin/weba-l2-crypto.ts gen-instance-key --out ./keys/srn-instance.json
+bun src/bin/weba-l2-crypto.ts derive-org-root --instance-key ./keys/srn-instance.json --org-id org-1 --out ./keys/org-root.json
+```
 
 ## 3.6 ブラウザでの PQC 復号
 
