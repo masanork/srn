@@ -116,7 +116,7 @@ async function collectMetadata(files: string[], contentDir: string) {
 }
 
 async function isUpToDate(src: string, relPath: string, distDir: string, layout: string) {
-    if (['blog', 'grid', 'search', 'form'].includes(layout)) return false;
+    if (['blog', 'grid', 'search', 'form', 'juminhyo', 'verifier'].includes(layout)) return false;
     const target = path.join(distDir, relPath.replace('.md', '.html'));
     if (!await fs.pathExists(target)) return false;
     const [s, t] = await Promise.all([fs.stat(src), fs.stat(target)]);
