@@ -441,8 +441,14 @@ function parseMarkdown(text) {
       }
     }
   });
-  if (inTable)
-    appendHtml("</tbody></table></div></div>");
+  if (inTable) {
+    appendHtml("</tbody></table></div>");
+    if (currentDynamicTableKey) {
+      appendHtml(`<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ 行を追加</button>`);
+      currentDynamicTableKey = null;
+    }
+    appendHtml("</div>");
+  }
   if (currentRadioGroup)
     appendHtml("</div></div>");
   if (currentTabId)
