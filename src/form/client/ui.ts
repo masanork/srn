@@ -15,15 +15,13 @@ export class UIManager {
         const RESOURCES: any = {
             "en": {
                 "add_row": "+ Add Row",
-                "work_save_btn": "Save Draft",
-                "submit_btn": "Submit HTML",
+                "work_save_btn": "Save HTML",
                 "clear_btn": "Clear Data",
                 "sign_btn": "Sign & Save (VC)",
             },
             "ja": {
                 "add_row": "+ 行を追加",
-                "work_save_btn": "一時保存",
-                "submit_btn": "提出用HTML",
+                "work_save_btn": "HTML保存",
                 "clear_btn": "クリア",
                 "sign_btn": "署名して保存 (VC)",
             }
