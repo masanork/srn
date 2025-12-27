@@ -92,13 +92,7 @@ export class DataManager {
 
         try {
             const signedVc = await globalSigner.sign(payload);
-            
-            const blob = new Blob([JSON.stringify(signedVc, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${formName}_signed.vc.json`;
-            a.click();
+            this.downloadHtml('submitted', true, signedVc);
         } catch (e) {
             console.error(e);
             alert("Signing failed. Please ensure you are in a secure context (HTTPS/localhost).");
@@ -199,9 +193,19 @@ export class DataManager {
         });
     }
 
-    public downloadHtml(filenameSuffix: string, isFinal: boolean) {
+    public downloadHtml(filenameSuffix: string, isFinal: boolean, embeddedVc?: any) {
         const w = window as any;
-        const htmlContent = document.documentElement.outerHTML;
+        let htmlContent = document.documentElement.outerHTML;
+
+        if (embeddedVc) {
+            const vcScript = `\n<script type="application/ld+json" id="weba-user-vc">\n${JSON.stringify(embeddedVc, null, 2)}\n</script>\n`;
+            if (htmlContent.includes('</body>')) {
+                htmlContent = htmlContent.replace('</body>', vcScript + '</body>');
+            } else {
+                htmlContent += vcScript;
+            }
+        }
+
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

@@ -17,13 +17,13 @@ export class UIManager {
                 "add_row": "+ Add Row",
                 "work_save_btn": "Save HTML",
                 "clear_btn": "Clear Data",
-                "sign_btn": "Sign & Save (VC)",
+                "sign_btn": "Submit (VC)",
             },
             "ja": {
                 "add_row": "+ 行を追加",
                 "work_save_btn": "HTML保存",
                 "clear_btn": "クリア",
-                "sign_btn": "署名して保存 (VC)",
+                "sign_btn": "提出版を保存 (VC)",
             }
         };
         const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';
