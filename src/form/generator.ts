@@ -35,6 +35,7 @@ export function generateHtml(markdown: string): string {
  */
 export function generateAggregatorHtml(markdown: string): string {
     const { jsonStructure } = parseMarkdown(markdown);
+    const aggSpec = jsonStructure.aggSpec ? JSON.stringify(jsonStructure.aggSpec) : '';
     return `<!DOCTYPE html><html><head><title>Aggregator</title><style>
     body{font-family:sans-serif;max-width:1100px;margin:0 auto;padding:2rem;}
     h1{margin-bottom:1.5rem;}
@@ -53,5 +54,13 @@ export function generateAggregatorHtml(markdown: string): string {
     .agg-table th,.agg-table td{border:1px solid #eee;padding:0.5rem;vertical-align:top;text-align:left;}
     .agg-table th{background:#f3f4f6;position:sticky;top:0;}
     .agg-empty{padding:1rem;color:#666;}
-    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    .agg-dashboard{margin-bottom:1.5rem;}
+    .agg-dashboard-title{font-size:1rem;font-weight:600;margin:1rem 0 0.75rem;}
+    .agg-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-bottom:1rem;}
+    .agg-card{border:1px solid #eee;border-radius:10px;padding:0.75rem;background:#fff;}
+    .agg-card-label{font-size:0.8rem;color:#666;margin-bottom:0.25rem;}
+    .agg-card-value{font-size:1.25rem;font-weight:700;}
+    .agg-dashboard-table{margin-bottom:1rem;}
+    .agg-table-title{font-weight:600;margin-bottom:0.35rem;}
+    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }

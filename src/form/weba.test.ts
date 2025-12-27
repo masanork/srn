@@ -82,6 +82,26 @@ Page 2 Content`;
         expect(result.html).toContain('id="tab-1" class="tab-content active"');
     });
 
+    test("extracts agg spec block and skips rendering", () => {
+        const md = [
+            "# Title",
+            "```agg",
+            "version: 0.1",
+            "dashboard:",
+            "  title: Test",
+            "  cards:",
+            "    - id: total",
+            "      label: Total",
+            "      op: count",
+            "```",
+            "Hello",
+        ].join("\n");
+        const result = parseMarkdown(md);
+        expect(result.jsonStructure.aggSpec).toBeTruthy();
+        expect(result.jsonStructure.aggSpec.dashboard.title).toBe("Test");
+        expect(result.html).not.toContain("```agg");
+    });
+
     test("parses master data blocks", () => {
         const md = `[master:vendors]
 | ID | Name |

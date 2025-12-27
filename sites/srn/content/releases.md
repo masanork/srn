@@ -4,9 +4,28 @@ layout: article
 description: "Release history and major updates for the Sorane project."
 ---
 
+## v1.8.0 - Web/A L2 Encryption & Maker Enhancements
+
+**Date:** 2025-12-28
+
+Major updates including the new Layer 2 Encryption specification, enhancements to the Form Maker, and visual refinements.
+
+* **Web/A L2 Encryption**:
+  * **New Specification**: Published [Web/A L2 Encryption](./papers/web-a-l2-encryption.html) discussion paper.
+  * **Implementation**: Added support for confidental, recipient-only submission envelopes using PQC-ready hybrid encryption.
+  * **Tooling**: Added `emit-frontmatter` command and CSV export utilities for encrypted datasets.
+* **Web/A Form Maker**:
+  * **Aggregator View**: Added preview mode for "Aggregator" dashboard visualization.
+  * **Dual Mode Editor**: Enhanced editor with toggleable preview/edit modes.
+  * **CSV Export**: Implemented CSV flattening and download for form responses.
+* **Design & Core**:
+  * **Top Page**: Refined dashboard layout and typography. Added "AI-First Workflows" to Core Philosophy.
+  * **Blog**: Fixed font subsetting for blog list views (titles/excerpts).
+  * **Search**: Improved suggestion UI.
+
 ## v1.7.0 - Juminhyo Layout & Form Tooling
 
-**Date:** 2026-01-04
+**Date:** 2025-12-27
 
 Incremental improvements to resident record layouts, local form tooling, and documentation.
 
