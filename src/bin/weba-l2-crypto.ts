@@ -158,6 +158,41 @@ program
   });
 
 program
+  .command("emit-frontmatter")
+  .description("Emit frontmatter snippet for L2 encryption using derived org keys")
+  .requiredOption("--org-root <file>", "Org root key JSON")
+  .requiredOption("--campaign-id <id>", "Campaign identifier")
+  .option("--layer1-ref <ref>", "Layer1 ref (required for campaign+layer1)")
+  .option("--policy <policy>", "campaign | campaign+layer1", "campaign+layer1")
+  .option("--recipient-kid <kid>", "Recipient key id")
+  .action(async (options) => {
+    const root = JSON.parse(await fs.readFile(options.orgRoot, "utf-8"));
+    if (!root.org_root_key) {
+      throw new Error("org_root_key is missing in org root file");
+    }
+    const policy = options.policy === "campaign" ? "campaign" : "campaign+layer1";
+    const derived = deriveOrgX25519KeyPair({
+      orgRootKey: fromBase64Url(root.org_root_key),
+      campaignId: options.campaignId,
+      layer1Ref: options.layer1Ref,
+      keyPolicy: policy,
+    });
+    const recipientKid = options.recipientKid || `org#${options.campaignId}`;
+    const snippet = [
+      "---",
+      "layout: form",
+      "l2_encrypt: true",
+      `l2_recipient_kid: "${recipientKid}"`,
+      `l2_recipient_x25519: "${toBase64Url(derived.publicKey)}"`,
+      `l2_campaign_id: "${options.campaignId}"`,
+      `l2_key_policy: "${derived.keyPolicy}"`,
+      options.layer1Ref ? `l2_layer1_ref: "${options.layer1Ref}"` : "# l2_layer1_ref: \"sha256:...\"",
+      "---",
+    ].join("\n");
+    console.log(snippet);
+  });
+
+program
   .command("sign-and-encrypt")
   .description("Sign and encrypt Layer 2 data")
   .requiredOption("--layer1-ref <ref>", "Layer 1 reference (e.g. hash)")

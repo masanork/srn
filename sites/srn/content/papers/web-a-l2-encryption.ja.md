@@ -177,6 +177,23 @@ Aggregator HTML に鍵ファイルを埋め込みます:
 
 これは **Aggregator Escrow** モードに相当します。テンポラリー鍵を集計ツールに仕込み、複数オペレーターが安全に復号・集計できるようにします。
 
+#### 6.5.2 Aggregator 鍵ファイル（JSON）
+集計ツールは鍵 JSON を受け取れます。推奨フィールド:
+
+```json
+{
+  "recipient_kid": "issuer#kem-2025",
+  "recipient_x25519_private": "base64url(...)",
+  "recipient_pqc_kem": "ML-KEM-768",
+  "recipient_pqc_private": "base64url(...)",
+  "org_root_key": "base64url(...)",
+  "org_campaign_id": "campaign-1",
+  "org_key_policy": "campaign+layer1"
+}
+```
+
+`recipient_x25519_private` か `org_root_key` のどちらかを指定します。`org_root_key` を使う場合は、集計側で秘密鍵を決定的に導出するため、運用者が鍵を選ぶ必要がありません。
+
 #### 6.5.1 ルート鍵派生（事故防止）
 「鍵ズレ事故」を防ぐために、発行者は **組織ルート鍵** から **キャンペーンID** で受領者鍵を派生させる方式を採用できます（必要なら `layer1_ref` にもバインド）。
 
