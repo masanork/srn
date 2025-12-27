@@ -82,17 +82,17 @@ Web/A Folio の参照実装は、ユーザーのローカル環境で動作す�
 
 ただし、Folio には個人の全生活史とも言える情報が集まるため、データが特定の一社に一極集中することは避けるべきである。ユーザーが自身の Folio をどこに置くか（ローカルか、どのクラウドか）を自由に選択・変更できるエコシステムが不可欠である。
 
-## 本人性の確立: PassKey × マイナンバーカード
+## 本人性の確立: PassKey × National ID 署名
 
 汎用的なWeb環境で、ハードウェアレベルの安全な鍵管理を行う手段は **PassKey (WebAuthn)** が事実上の標準である。しかし、PassKey 単体では「それが誰の鍵か」を第三者に証明することはできない。
-そこで Web/A Folio では、日本の公的個人認証サービス（JPKI）を組み合わせた以下のモデルを採用する。
+世界各国には、電子署名機能を備えた national ID / eID の仕組みがあるため、Web/A Folio では **国家が担保する署名資格** と PassKey を組み合わせるモデルを採用する。
 
 1.  **PassKey生成**: ユーザーのデバイス（スマホやPC）で PassKey ペアを生成する。
-2.  **Identity Binding**: マイナンバーカード（署名用電子証明書）を用いて、生成した PassKey の公開鍵に署名を行う。
-3.  **Ownership VC**: 「このPassKey公開鍵は、マイナンバーカード保有者である私が管理している」という自己署名 Verifiable Credential (VC) を作成し、Folio に格納する。
+2.  **Identity Binding**: national ID の署名用電子証明書（例: national ID カードの署名用証明書）を用いて、生成した PassKey の公開鍵に署名を行う。
+3.  **Ownership VC**: 「このPassKey公開鍵は、national ID を保有する私が管理している」という自己署名 Verifiable Credential (VC) を作成し、Folio に格納する。
 4.  **Presentation**: フォーム提出時などは、この VC を Verifiable Presentation (VP) として内包し、PassKey で署名して送信する。
 
-これにより、日常的な操作は生体認証（Touch ID/Face ID）だけで完結しつつ、その署名はマイナンバーカードと同等の本人性を間接的に証明することが可能となる。
+これにより、日常的な操作は生体認証（Touch ID/Face ID）だけで完結しつつ、その署名は national ID と同等の本人性を間接的に証明することが可能となる。
 
 ## なぜ "Wallet" ではないのか
 
