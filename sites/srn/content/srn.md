@@ -1,6 +1,7 @@
 ---
 title: "Sorane (空音): Typography-First SSG"
 layout: width
+font: Serif
 ---
 
 
