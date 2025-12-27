@@ -220,10 +220,10 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
         if (!hasDefault) {
             if (defaultFromFont) {
                 const def = resolveStyleFiles(defaultFromFont);
-                fontConfigs.unshift(`default:${def.length > 0 ? def.join(',') : 'NotoSansJP-VariableFont_wght.ttf'}`);
+                fontConfigs.unshift(`default:${def.length > 0 ? def.join(',') : 'NotoSerifJP-VariableFont_wght.ttf'}`);
             } else {
                 const def = resolveStyleFiles('default');
-                fontConfigs.push(`default:${def.length > 0 ? def.join(',') : 'NotoSansJP-VariableFont_wght.ttf'}`);
+                fontConfigs.push(`default:${def.length > 0 ? def.join(',') : 'NotoSerifJP-VariableFont_wght.ttf'}`);
             }
         }
         return fontConfigs;
