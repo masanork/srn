@@ -29,6 +29,7 @@ export class Signer {
     }
 
     private loadKey() {
+        if (typeof localStorage === 'undefined') return;
         const pkId = localStorage.getItem('weba_passkey_id');
         const pkPub = localStorage.getItem('weba_passkey_pub');
 
@@ -50,9 +51,11 @@ export class Signer {
     }
 
     public resetKey() {
-        localStorage.removeItem('weba_passkey_id');
-        localStorage.removeItem('weba_passkey_pub');
-        localStorage.removeItem('weba_private_key');
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('weba_passkey_id');
+            localStorage.removeItem('weba_passkey_pub');
+            localStorage.removeItem('weba_private_key');
+        }
         this.credentialId = null;
         this.publicKey = null;
         this.edPrivateKey = null;
@@ -93,8 +96,10 @@ export class Signer {
             this.publicKeyType = 'p256';
             this.usePasskey = true;
 
-            localStorage.setItem('weba_passkey_id', this.credentialId!);
-            localStorage.setItem('weba_passkey_pub', bytesToHex(this.publicKey));
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('weba_passkey_id', this.credentialId!);
+                localStorage.setItem('weba_passkey_pub', bytesToHex(this.publicKey));
+            }
 
             console.log("Passkey Registered:", this.credentialId);
             return true;
@@ -111,7 +116,9 @@ export class Signer {
         this.publicKey = ed25519.getPublicKey(this.edPrivateKey);
         this.publicKeyType = 'ed25519';
         this.usePasskey = false;
-        localStorage.setItem('weba_private_key', bytesToHex(this.edPrivateKey));
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('weba_private_key', bytesToHex(this.edPrivateKey));
+        }
     }
 
     public getIssuerDid(): string {
