@@ -5299,6 +5299,22 @@ function concatBytes2(a, b) {
   out.set(b, a.length);
   return out;
 }
+function deriveOrgX25519KeyPair(params) {
+  const policy = params.keyPolicy ?? "campaign+layer1";
+  if (policy === "campaign+layer1" && !params.layer1Ref) {
+    throw new Error("layer1_ref is required for campaign+layer1 policy");
+  }
+  const context = canonicalJson({
+    domain: "weba-l2/org-x25519",
+    campaign_id: params.campaignId,
+    key_policy: policy,
+    layer1_ref: policy === "campaign+layer1" ? params.layer1Ref : undefined
+  });
+  const info = new TextEncoder().encode(context);
+  const seed = hkdf(sha256, params.orgRootKey, undefined, info, 32);
+  const publicKey = x25519.getPublicKey(seed);
+  return { publicKey, privateKey: seed, keyPolicy: policy };
+}
 function getPqcProvider() {
   const w = globalThis;
   return w.webaPqcKem || null;
@@ -5383,7 +5399,9 @@ async function buildLayer2Envelope(params) {
     },
     meta: {
       created_at: new Date().toISOString(),
-      nonce: b64urlEncode(randomBytes2(16))
+      nonce: b64urlEncode(randomBytes2(16)),
+      ...params.config.campaign_id ? { campaign_id: params.config.campaign_id } : {},
+      ...params.config.key_policy ? { key_policy: params.config.key_policy } : {}
     }
   };
 }
@@ -6122,7 +6140,7 @@ function parseKeyJson(raw) {
     return null;
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed.recipient_x25519_private)
+    if (!parsed.recipient_x25519_private && !parsed.org_root_key)
       return null;
     return parsed;
   } catch {
@@ -6188,7 +6206,24 @@ async function extractPlainFromHtml(html, l2Keys) {
     if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
       throw new Error(\`recipient_kid mismatch (\${l2Envelope.layer2.recipient})\`);
     }
-    const recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+    let recipientSk = null;
+    if (l2Keys.org_root_key) {
+      const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
+      if (!campaignId) {
+        throw new Error("org_campaign_id is required for org_root_key");
+      }
+      const derived = deriveOrgX25519KeyPair({
+        orgRootKey: b64urlDecode(l2Keys.org_root_key),
+        campaignId,
+        layer1Ref: l2Envelope.layer1_ref,
+        keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy
+      });
+      recipientSk = derived.privateKey;
+    } else if (l2Keys.recipient_x25519_private) {
+      recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+    } else {
+      throw new Error("No recipient key provided");
+    }
     const pqc = l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === "ML-KEM-768" ? {
       pqcProvider: globalThis.webaPqcKem ?? null,
       pqcRecipientSk: b64urlDecode(l2Keys.recipient_pqc_private)
@@ -6850,6 +6885,13 @@ var DEFAULT_MARKDOWN_JA = `# IT見積書（サンプル）
 `;
 
 // src/form/browser_maker.ts
+function getEditor(mode) {
+  return document.getElementById(mode === "form" ? "editor-form" : "editor-aggregator");
+}
+function getMarkdown(mode) {
+  const editor = getEditor(mode);
+  return editor ? editor.value : "";
+}
 function stripAggregatorOnly(html) {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = html;
@@ -6858,15 +6900,15 @@ function stripAggregatorOnly(html) {
 }
 function updatePreview() {
   console.log("Web/A Maker v3.0");
-  const editor = document.getElementById("editor");
   const preview = document.getElementById("preview");
-  if (!editor || !preview)
+  if (!preview)
     return;
-  const { html, jsonStructure } = parseMarkdown(editor.value);
-  window.generatedJsonStructure = jsonStructure;
   const mode = window.previewMode || "form";
+  const markdown = getMarkdown(mode);
+  const { html, jsonStructure } = parseMarkdown(markdown);
+  window.generatedJsonStructure = jsonStructure;
   if (mode === "aggregator") {
-    const aggHtml = generateAggregatorHtml(editor.value);
+    const aggHtml = generateAggregatorHtml(markdown);
     preview.innerHTML = `<iframe id="preview-frame" style="width:100%; height:100%; border:0;"></iframe>`;
     const frame = document.getElementById("preview-frame");
     if (frame)
@@ -6886,55 +6928,61 @@ function updatePreview() {
     }
   }, 50);
 }
-function downloadWebA() {
-  const editor = document.getElementById("editor");
-  const htmlContent = generateHtml(editor.value);
+function downloadCurrent() {
+  const mode = window.previewMode || "form";
+  const markdown = getMarkdown(mode);
+  const htmlContent = mode === "aggregator" ? generateAggregatorHtml(markdown) : generateHtml(markdown);
   const blob = new Blob([htmlContent], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   const title = window.generatedJsonStructure && window.generatedJsonStructure.name || "web-a-form";
-  a.download = title + ".html";
-  a.click();
-}
-function downloadAggregator() {
-  const editor = document.getElementById("editor");
-  const htmlContent = generateAggregatorHtml(editor.value);
-  const blob = new Blob([htmlContent], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  const title = window.generatedJsonStructure && window.generatedJsonStructure.name || "web-a-aggregator";
-  a.download = title + "_aggregator.html";
+  a.download = mode === "aggregator" ? `${title}_aggregator.html` : `${title}.html`;
   a.click();
 }
 window.parseAndRender = updatePreview;
-window.downloadWebA = downloadWebA;
-window.downloadAggregator = downloadAggregator;
+window.downloadCurrent = downloadCurrent;
 window.setPreviewMode = (mode) => {
   window.previewMode = mode;
   document.querySelectorAll(".preview-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.preview === mode);
   });
+  if (window.editorMode !== mode) {
+    window.setEditorMode(mode);
+  }
   updatePreview();
+};
+window.setEditorMode = (mode) => {
+  window.editorMode = mode;
+  document.querySelectorAll(".editor-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.editor === mode);
+  });
+  const formEditor = getEditor("form");
+  const aggEditor = getEditor("aggregator");
+  if (formEditor)
+    formEditor.style.display = mode === "form" ? "block" : "none";
+  if (aggEditor)
+    aggEditor.style.display = mode === "aggregator" ? "block" : "none";
 };
 function applyI18n() {
   const RESOURCES = {
     en: {
       md_def: "Markdown Definition",
-      btn_aggregator: "Download Web/A Aggregator",
-      btn_form: "Download Web/A Form",
+      btn_download: "Download",
       preview: "Preview",
       btn_preview_form: "Form",
-      btn_preview_agg: "Aggregator"
+      btn_preview_agg: "Aggregator",
+      btn_editor_form: "Form",
+      btn_editor_agg: "Aggregator"
     },
     ja: {
       md_def: "定義 (Markdown)",
-      btn_aggregator: "集計ツール",
-      btn_form: "入力画面",
+      btn_download: "ダウンロード",
       preview: "プレビュー",
       btn_preview_form: "入力画面",
-      btn_preview_agg: "集計プレビュー"
+      btn_preview_agg: "集計プレビュー",
+      btn_editor_form: "入力画面",
+      btn_editor_agg: "集計定義"
     }
   };
   const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
@@ -6947,17 +6995,24 @@ function applyI18n() {
 }
 window.addEventListener("DOMContentLoaded", () => {
   applyI18n();
-  const editor = document.getElementById("editor");
-  if (editor) {
-    const navLang = navigator.language || "en";
-    const lang = navLang.startsWith("ja") ? "ja" : "en";
-    console.log(`Language detection: navigator.language='${navLang}' -> using '${lang}' sample.`);
-    const currentVal = editor.value.trim();
-    const isDefaultEn = currentVal === DEFAULT_MARKDOWN_EN.trim();
-    const isDefaultJa = currentVal === DEFAULT_MARKDOWN_JA.trim();
-    if (!currentVal || lang === "ja" && isDefaultEn || lang === "en" && isDefaultJa) {
-      editor.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
-    }
-    updatePreview();
+  const editorForm = getEditor("form");
+  const editorAgg = getEditor("aggregator");
+  if (!editorForm || !editorAgg)
+    return;
+  const navLang = navigator.language || "en";
+  const lang = navLang.startsWith("ja") ? "ja" : "en";
+  console.log(`Language detection: navigator.language='${navLang}' -> using '${lang}' sample.`);
+  const formVal = editorForm.value.trim();
+  const aggVal = editorAgg.value.trim();
+  const isDefaultEn = formVal === DEFAULT_MARKDOWN_EN.trim();
+  const isDefaultJa = formVal === DEFAULT_MARKDOWN_JA.trim();
+  if (!formVal || lang === "ja" && isDefaultEn || lang === "en" && isDefaultJa) {
+    editorForm.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
   }
+  if (!aggVal || aggVal === DEFAULT_MARKDOWN_EN.trim() || aggVal === DEFAULT_MARKDOWN_JA.trim()) {
+    editorAgg.value = editorForm.value;
+  }
+  window.setEditorMode("form");
+  window.setPreviewMode("form");
+  updatePreview();
 });
