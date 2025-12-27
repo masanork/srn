@@ -24,14 +24,15 @@ export class FontProcessor {
     }
 
     async processPageFonts(
-        htmlContent: string, 
-        data: any, 
-        config: SrnConfig, 
-        currentKeys: HybridKeys, 
-        siteDid: string, 
-        buildId: string
+        htmlContent: string,
+        data: any,
+        config: SrnConfig,
+        currentKeys: HybridKeys,
+        siteDid: string,
+        buildId: string,
+        allPages: any[] = []
     ): Promise<{ fontCss: string, safeFontFamilies: string[] }> {
-        
+
         if (process.env.NODE_ENV === 'test' || data.layout === 'form') {
             return {
                 fontCss: `
@@ -39,14 +40,14 @@ export class FontProcessor {
 body {
   font-family: system-ui, -apple-system, sans-serif;
 }
-</style>`, 
+</style>`,
                 safeFontFamilies: ['sans-serif']
             };
         }
 
-        const fullText = this.extractAllText(htmlContent, data);
+        const fullText = this.extractAllText(htmlContent, data, allPages);
         const fontConfigs = this.resolveFontConfigs(data, config);
-        
+
         let fontCss = '';
         const styleMap: Record<string, string[]> = {};
         const fontRequestMap = new Map<string, Set<number | undefined>>();
@@ -64,13 +65,13 @@ body {
             }
             const files = fileListStr.split(',').map(s => s.trim()).filter(s => s);
             if (!styleMap[styleName]) styleMap[styleName] = [];
-            
+
             const targetWeight = styleName === 'logo' ? 900 : undefined;
 
             for (const file of files) {
                 const familyName = getBaseName(file) + (targetWeight ? `W${targetWeight}` : '');
                 styleMap[styleName]?.push(familyName);
-                
+
                 if (!fontRequestMap.has(file)) fontRequestMap.set(file, new Set());
                 fontRequestMap.get(file)?.add(targetWeight);
             }
@@ -82,7 +83,7 @@ body {
                 if (!await fs.pathExists(fontPath)) continue;
 
                 const fontFamilyName = getBaseName(fontName) + (targetWeight ? `W${targetWeight}` : '');
-                const cacheKey = this.getHash([fontPath, fullText, buildId, targetWeight?.toString() || 'default']); 
+                const cacheKey = this.getHash([fontPath, fullText, buildId, targetWeight?.toString() || 'default']);
                 const cachePath = path.join(this.cacheDir, `${cacheKey}.woff2`);
                 const cssCachePath = path.join(this.cacheDir, `${cacheKey}.css`);
 
@@ -157,7 +158,7 @@ body {
 `;
         }
         utilityCss += '</style>';
-        
+
         const safeFontFamilies = [...defaultStack, 'serif'];
         const fontFamilyCss = safeFontFamilies.map(f => ['serif', 'sans-serif', 'monospace'].includes(f) ? f : `'${f}'`).join(', ');
 
@@ -170,7 +171,7 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
         return { fontCss, safeFontFamilies };
     }
 
-    private extractAllText(html: string, data: any): string {
+    private extractAllText(html: string, data: any, allPages: any[] = []): string {
         const textFromObj = (obj: any): string => {
             if (typeof obj === 'string') return obj;
             if (Array.isArray(obj)) return obj.map(textFromObj).join('');
@@ -178,7 +179,19 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
             return '';
         };
         const bodyText = html.replace(/<[^>]*>/g, '').replace(/\s+/g, '');
-        return (data.title || '') + bodyText + textFromObj(data) + "Read More → ログイン 検索 設定 Home Back Next";
+
+        let extraText = "Read More → ログイン 検索 設定 Home Back Next Profile More Articles";
+
+        if (data.layout === 'blog') {
+            // For blog layout, we list other articles, so we need their titles and descriptions
+            for (const page of allPages) {
+                if (page.layout === 'article' && !page.isSystem && page.path !== 'index.html') {
+                    extraText += (page.title || '') + (page.description || '') + (page.date || '') + (page.author || '') + (page.excerptText || '');
+                }
+            }
+        }
+
+        return (data.title || '') + bodyText + textFromObj(data) + extraText;
     }
 
     private resolveFontConfigs(data: any, config: SrnConfig): string[] {
