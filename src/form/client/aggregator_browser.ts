@@ -1,10 +1,6 @@
-import {
-  b64urlDecode,
-  decryptLayer2Envelope,
-  deriveOrgX25519KeyPair,
-  type Layer2Encrypted,
-  type OrgKeyPolicy,
-} from "./l2crypto";
+import { b64urlDecode, decryptLayer2Envelope, deriveOrgX25519KeyPair, type OrgKeyPolicy } from "./l2crypto";
+import { buildCsv, buildRowFromPlain, flattenForCsv } from "./aggregator_browser_csv";
+import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
 
 type L2KeyFile = {
   recipient_kid?: string;
@@ -22,77 +18,6 @@ type ExtractedPlain = {
   source: "l2" | "jsonld" | null;
 };
 
-function parseHtml(html: string): Document | null {
-  if (typeof DOMParser !== "undefined") {
-    return new DOMParser().parseFromString(html, "text/html");
-  }
-  if (typeof document !== "undefined") {
-    const doc = document.implementation.createHTMLDocument("");
-    doc.documentElement.innerHTML = html;
-    return doc;
-  }
-  return null;
-}
-
-function extractScriptById(html: string, id: string): string | null {
-  const doc = parseHtml(html);
-  if (doc) {
-    const script = doc.getElementById(id);
-    return script?.textContent ?? null;
-  }
-  const re = new RegExp(`<script[^>]*id=[\"']${id}[\"'][^>]*>([\\s\\S]*?)<\\/script>`, "i");
-  const match = html.match(re);
-  return match ? match[1] : null;
-}
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function extractScriptByType(html: string, type: string): string | null {
-  const doc = parseHtml(html);
-  if (doc) {
-    const script = doc.querySelector(`script[type="${type}"]`);
-    return script?.textContent ?? null;
-  }
-  const re = new RegExp(
-    `<script[^>]*type=[\"']${escapeRegex(type)}[\"'][^>]*>([\\s\\S]*?)<\\/script>`,
-    "i",
-  );
-  const match = html.match(re);
-  return match ? match[1] : null;
-}
-
-export function extractJsonLdFromHtml(html: string): any | null {
-  const dataLayer = extractScriptById(html, "data-layer");
-  if (dataLayer) {
-    try {
-      return JSON.parse(dataLayer);
-    } catch {
-      return null;
-    }
-  }
-  const ldScript = extractScriptByType(html, "application/ld+json");
-  if (ldScript) {
-    try {
-      return JSON.parse(ldScript);
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-export function extractL2EnvelopeFromHtml(html: string): Layer2Encrypted | null {
-  const script = extractScriptById(html, "weba-l2-envelope");
-  if (!script) return null;
-  try {
-    return JSON.parse(script) as Layer2Encrypted;
-  } catch {
-    return null;
-  }
-}
-
 function parseKeyJson(raw: string): L2KeyFile | null {
   if (!raw.trim()) return null;
   try {
@@ -108,59 +33,6 @@ function parseKeyScript(): L2KeyFile | null {
   const script = document.getElementById("weba-l2-keys");
   if (!script?.textContent) return null;
   return parseKeyJson(script.textContent);
-}
-
-export function flattenForCsv(obj: Record<string, any>): Record<string, string | number | boolean | null> {
-  const out: Record<string, string | number | boolean | null> = {};
-  const walk = (value: any, prefix: string) => {
-    if (value === null || value === undefined) {
-      out[prefix] = null;
-      return;
-    }
-    if (Array.isArray(value)) {
-      value.forEach((entry, idx) => {
-        walk(entry, prefix ? `${prefix}[${idx}]` : `[${idx}]`);
-      });
-      return;
-    }
-    if (typeof value === "object") {
-      Object.entries(value).forEach(([k, v]) => {
-        const next = prefix ? `${prefix}.${k}` : k;
-        walk(v, next);
-      });
-      return;
-    }
-    out[prefix] = value;
-  };
-  walk(obj, "");
-  if ("" in out) delete out[""];
-  return out;
-}
-
-export function buildRowFromPlain(params: {
-  plain: any;
-  filename: string;
-  includeJson?: boolean;
-  sig?: any;
-  omitKey?: (key: string) => boolean;
-}): { row: any; keys: Set<string> } {
-  const row: any = { _filename: params.filename };
-  const keys = new Set<string>(["_filename"]);
-  if (params.includeJson) {
-    keys.add("_json");
-    row._json = JSON.stringify(params.plain);
-  }
-  const flat = flattenForCsv(params.plain || {});
-  for (const key of Object.keys(flat)) {
-    if (params.omitKey && params.omitKey(key)) continue;
-    keys.add(key);
-    row[key] = flat[key];
-  }
-  if (params.sig) {
-    keys.add("_l2_sig");
-    row._l2_sig = JSON.stringify(params.sig);
-  }
-  return { row, keys };
 }
 
 async function extractPlainFromHtml(html: string, l2Keys?: L2KeyFile | null): Promise<ExtractedPlain> {
@@ -206,24 +78,7 @@ async function extractPlainFromHtml(html: string, l2Keys?: L2KeyFile | null): Pr
   return { source: null };
 }
 
-function escapeCsv(value: any): string {
-  if (value === null || value === undefined) return "";
-  const str = String(value);
-  if (/[",\n]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
-
-function buildCsv(rows: any[], keys: string[]): string {
-  const lines: string[] = [];
-  lines.push(keys.map(escapeCsv).join(","));
-  rows.forEach((row) => {
-    const line = keys.map((key) => escapeCsv(row[key])).join(",");
-    lines.push(line);
-  });
-  return "\ufeff" + lines.join("\n");
-}
+export { buildRowFromPlain, extractJsonLdFromHtml, extractL2EnvelopeFromHtml, flattenForCsv };
 
 function renderTable(root: HTMLElement, rows: any[], keys: string[]) {
   if (rows.length === 0) {

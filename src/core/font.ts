@@ -513,16 +513,63 @@ export async function getGlyphAsSvg(fontPath: string, identifier: string): Promi
         font = opentype.parse(arrayBuffer);
         fontCache[fontPath] = font;
     }
+    let glyphStore = (font as any).glyphs?.glyphs;
+    const glyphStoreArray = Array.isArray(glyphStore) ? glyphStore : null;
+    const glyphStoreMap = (!glyphStoreArray && glyphStore && typeof glyphStore === 'object')
+        ? (glyphStore as Record<string, opentype.Glyph>)
+        : null;
+    const needsReload = !glyphStoreArray && !glyphStoreMap;
+    const missingMetrics = typeof (font as any)._hmtxTableData === 'undefined';
+    if ((needsReload || missingMetrics) && typeof window === 'undefined') {
+        try {
+            font = opentype.loadSync(fontPath);
+            fontCache[fontPath] = font;
+            glyphStore = (font as any).glyphs?.glyphs;
+        } catch (e) {
+            // keep the parsed font as-is
+        }
+    }
+    const refreshedGlyphStoreArray = Array.isArray(glyphStore) ? glyphStore : null;
+    const refreshedGlyphStoreMap = (!refreshedGlyphStoreArray && glyphStore && typeof glyphStore === 'object')
+        ? (glyphStore as Record<string, opentype.Glyph>)
+        : null;
+
+    const safeGetGlyph = (gid: number): opentype.Glyph | null => {
+        try {
+            return font.glyphs.get(gid);
+        } catch (e) {
+            return null;
+        }
+    };
 
     let glyph: opentype.Glyph | null = null;
 
     // Try to find by Glyph Name (MJxxxx etc)
-    const numGlyphs = font.glyphs.length;
-    for (let i = 0; i < numGlyphs; i++) {
-        const g = font.glyphs.get(i);
-        if (g.name === identifier) {
-            glyph = g;
-            break;
+    if (refreshedGlyphStoreArray && refreshedGlyphStoreArray.length > 0) {
+        for (const g of refreshedGlyphStoreArray) {
+            if (g?.name === identifier) {
+                glyph = g;
+                break;
+            }
+        }
+    } else if (refreshedGlyphStoreMap) {
+        for (const g of Object.values(refreshedGlyphStoreMap)) {
+            if (g?.name === identifier) {
+                glyph = g;
+                break;
+            }
+        }
+    } else if (typeof (font as any).glyphs?.get === 'function') {
+        const numGlyphs = font.glyphs.length;
+        for (let i = 0; i < numGlyphs; i++) {
+            const g = safeGetGlyph(i);
+            if (!g) {
+                break;
+            }
+            if (g.name === identifier) {
+                glyph = g;
+                break;
+            }
         }
     }
 
@@ -532,7 +579,15 @@ export async function getGlyphAsSvg(fontPath: string, identifier: string): Promi
             const parts = identifier.split(':');
             if (parts.length > 1) {
                 const gid = parseInt(parts[1]!);
-                if (!isNaN(gid)) glyph = font.glyphs.get(gid);
+                if (!isNaN(gid)) {
+                    if (refreshedGlyphStoreArray && refreshedGlyphStoreArray[gid]) {
+                        glyph = refreshedGlyphStoreArray[gid];
+                    } else if (refreshedGlyphStoreMap && refreshedGlyphStoreMap[gid]) {
+                        glyph = refreshedGlyphStoreMap[gid];
+                    } else if (typeof (font as any).glyphs?.get === 'function') {
+                        glyph = safeGetGlyph(gid);
+                    }
+                }
             }
         }
     }

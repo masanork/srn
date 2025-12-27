@@ -8,12 +8,6 @@ import {
 
 let shouldFailUnlock = false;
 const prfKey = new Uint8Array(32).fill(7);
-mock.module("./webauthn", () => ({
-  derivePasskeyPrf: async () => {
-    if (shouldFailUnlock) throw new Error("PRF failure");
-    return prfKey;
-  },
-}));
 
 import { initL2Viewer } from "./l2viewer";
 
@@ -44,9 +38,23 @@ beforeEach(() => {
   (globalThis as any).HTMLElement = window.HTMLElement;
   (globalThis as any).HTMLButtonElement = window.HTMLButtonElement;
   (globalThis as any).Event = window.Event;
+  (globalThis as any).btoa = window.btoa.bind(window);
+  (globalThis as any).atob = window.atob.bind(window);
   if (!(globalThis as any).crypto?.subtle) {
     (globalThis as any).crypto = require("node:crypto").webcrypto;
   }
+  (globalThis as any).navigator = {
+    credentials: {
+      get: async () => {
+        if (shouldFailUnlock) throw new Error("PRF failure");
+        return {
+          getClientExtensionResults: () => ({
+            prf: { results: { first: prfKey.buffer } },
+          }),
+        };
+      },
+    },
+  };
   (globalThis as any).localStorage = localStorageMock;
   localStorageMock.clear();
 });
@@ -87,7 +95,7 @@ describe("Web/A L2 viewer", () => {
       <script id="weba-l2-keywrap" type="application/json">${JSON.stringify({
         alg: "WebAuthn-PRF-AESGCM-v1",
         kid: "issuer#passkey-1",
-        credential_id: "cred",
+        credential_id: b64urlEncode(new Uint8Array([1, 2, 3])),
         prf_salt: "salt",
         wrapped_key: b64urlEncode(wrapped),
       })}</script>

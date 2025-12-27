@@ -2,10 +2,6 @@ import { describe, expect, test, beforeEach, mock } from "bun:test";
 import { Window } from "happy-dom";
 import { b64urlEncode } from "./l2crypto";
 
-mock.module("./webauthn", () => ({
-  derivePasskeyPrf: async () => new Uint8Array(32).fill(9),
-}));
-
 import { initKeywrapTool } from "./keywrap_tool";
 
 let window: Window;
@@ -25,6 +21,15 @@ beforeEach(() => {
   if (!(globalThis as any).crypto?.subtle) {
     (globalThis as any).crypto = require("node:crypto").webcrypto;
   }
+  (globalThis as any).navigator = {
+    credentials: {
+      get: async () => ({
+        getClientExtensionResults: () => ({
+          prf: { results: { first: new Uint8Array(32).fill(9).buffer } },
+        }),
+      }),
+    },
+  };
 });
 
 describe("Web/A L2 keywrap tool", () => {
@@ -54,8 +59,9 @@ describe("Web/A L2 keywrap tool", () => {
 
     (document.getElementById("kwp-recipient-sk") as HTMLInputElement).value =
       b64urlEncode(recipientSk);
+    const credentialId = b64urlEncode(new Uint8Array([1, 2, 3]));
     (document.getElementById("kwp-credential-id") as HTMLInputElement).value =
-      "cred";
+      credentialId;
     (document.getElementById("kwp-kid") as HTMLInputElement).value =
       "issuer#passkey-1";
 
@@ -71,7 +77,7 @@ describe("Web/A L2 keywrap tool", () => {
     const output = document.getElementById("kwp-output") as HTMLPreElement;
     const parsed = JSON.parse(output.textContent || "{}");
     expect(parsed.alg).toBe("WebAuthn-PRF-AESGCM-v1");
-    expect(parsed.credential_id).toBe("cred");
+    expect(parsed.credential_id).toBe(credentialId);
     expect(parsed.wrapped_key).toBeTruthy();
   });
 
