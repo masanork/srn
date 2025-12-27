@@ -1,5 +1,6 @@
 
 import { globalSigner } from './signer';
+import { buildLayer2Envelope, type L2Config, type Layer2Encrypted } from './l2crypto';
 
 export class DataManager {
     private formId: string;
@@ -60,6 +61,11 @@ export class DataManager {
         return data;
     }
 
+    private getL2Config(): L2Config | null {
+        const w = window as any;
+        return w.webaL2Config || null;
+    }
+
     public async signAndDownload() {
         const data = this.updateJsonLd();
         const w = window as any;
@@ -67,6 +73,29 @@ export class DataManager {
         
         // Try to get template ID from document or use URL
         const templateId = window.location.href.split('#')[0];
+
+        const l2Config = this.getL2Config();
+        const l2Toggle = document.getElementById('weba-l2-encrypt') as HTMLInputElement | null;
+        const l2Enabled = !!(l2Config?.enabled && (l2Toggle ? l2Toggle.checked : l2Config.default_enabled));
+
+        if (l2Enabled) {
+            if (!l2Config?.recipient_kid || !l2Config?.recipient_x25519 || !l2Config?.layer1_ref) {
+                alert('L2 encryption config is missing required fields.');
+                return;
+            }
+            try {
+                const envelope = await buildLayer2Envelope({
+                    layer2_plain: data,
+                    config: l2Config,
+                    user_kid: l2Config.user_kid,
+                });
+                this.downloadHtml('submit', true, { l2Envelope: envelope, stripPlaintext: true });
+            } catch (e) {
+                console.error(e);
+                alert('L2 encryption failed. Please check your recipient key settings.');
+            }
+            return;
+        }
 
         // Ensure key is ready (triggers Passkey registration if needed)
         if (!globalSigner.getPublicKey()) {
@@ -92,7 +121,7 @@ export class DataManager {
 
         try {
             const signedVc = await globalSigner.sign(payload);
-            this.downloadHtml('submitted', true, signedVc);
+            this.downloadHtml('submitted', true, { embeddedVc: signedVc });
         } catch (e) {
             console.error(e);
             alert("Signing failed. Please ensure you are in a secure context (HTTPS/localhost).");
@@ -193,34 +222,75 @@ export class DataManager {
         });
     }
 
-    public downloadHtml(filenameSuffix: string, isFinal: boolean, embeddedVc?: any) {
+    public downloadHtml(
+        filenameSuffix: string,
+        isFinal: boolean,
+        options?: { embeddedVc?: any; l2Envelope?: Layer2Encrypted; stripPlaintext?: boolean },
+    ) {
         const w = window as any;
-        let htmlContent = document.documentElement.outerHTML;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(document.documentElement.outerHTML, 'text/html');
 
-        if (embeddedVc) {
-            const vcJson = JSON.stringify(embeddedVc, null, 2);
-            const vcScript = `\n<script type="application/ld+json" id="weba-user-vc">\n${vcJson}\n</script>\n`;
-            
-            // Add viewer UI for the user VC
-            const vcViewer = `
-                <div class="weba-user-verification no-print" style="margin-top: 2rem; padding: 1rem; border: 1px solid #10b981; border-radius: 8px; background: #f0fdf4; font-size: 0.85rem;">
-                    <details>
-                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #047857; font-weight: 600;">
-                            <span>✓</span> 利用者による署名の証明
-                        </summary>
-                        <div style="padding: 1rem 0;">
-                            <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${vcJson}</pre>
-                        </div>
-                    </details>
-                </div>
-            `;
-
-            if (htmlContent.includes('</body>')) {
-                htmlContent = htmlContent.replace('</body>', vcScript + vcViewer + '</body>');
-            } else {
-                htmlContent += vcScript + vcViewer;
-            }
+        if (options?.stripPlaintext) {
+            doc.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    input.checked = false;
+                    input.removeAttribute('checked');
+                } else {
+                    input.value = '';
+                    input.removeAttribute('value');
+                }
+            });
+            doc.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((area) => {
+                area.value = '';
+                area.textContent = '';
+            });
+            doc.querySelectorAll<HTMLSelectElement>('select').forEach((select) => {
+                select.selectedIndex = -1;
+                select.querySelectorAll('option').forEach((opt) => opt.removeAttribute('selected'));
+            });
+            doc.getElementById('json-ld')?.remove();
+            doc.getElementById('data-layer')?.remove();
+            const debug = doc.getElementById('json-debug');
+            if (debug) debug.textContent = '';
         }
+
+        if (options?.embeddedVc) {
+            const vcJson = JSON.stringify(options.embeddedVc, null, 2);
+            const vcScript = doc.createElement('script');
+            vcScript.type = 'application/ld+json';
+            vcScript.id = 'weba-user-vc';
+            vcScript.textContent = vcJson;
+            doc.body.appendChild(vcScript);
+
+            const vcViewer = doc.createElement('div');
+            vcViewer.className = 'weba-user-verification no-print';
+            vcViewer.style.cssText =
+                'margin-top:2rem;padding:1rem;border:1px solid #10b981;border-radius:8px;background:#f0fdf4;font-size:0.85rem;';
+            vcViewer.innerHTML = `
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #047857; font-weight: 600;">
+                        <span>✓</span> 利用者による署名の証明
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                    </div>
+                </details>
+            `;
+            const pre = vcViewer.querySelector('pre');
+            if (pre) pre.textContent = vcJson;
+            doc.body.appendChild(vcViewer);
+        }
+
+        if (options?.l2Envelope) {
+            const envScript = doc.createElement('script');
+            envScript.id = 'weba-l2-envelope';
+            envScript.type = 'application/json';
+            envScript.textContent = JSON.stringify(options.l2Envelope, null, 2);
+            doc.body.appendChild(envScript);
+        }
+
+        const htmlContent = doc.documentElement.outerHTML;
 
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);

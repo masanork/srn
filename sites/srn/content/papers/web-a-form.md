@@ -33,7 +33,33 @@ Web/A Form is a **single-file HTML form** generated from Markdown. It runs offli
 3. **Freeze & Bake**: Input values are baked into the HTML to create a static record.
 4. **Submit**: The final HTML is sent back as the official submission.
 
-### 2.2 Maker
+### 2.2 Optional Layer 2 Encryption (L2E)
+
+Web/A Form can optionally encrypt the Layer 2 payload (user answers) before submission. This aligns with the **Discussion Paper: Web/A Layer 2 Encryption** and keeps plaintext answers local to the form while producing a sealed envelope for recipients who hold the decryption keys.
+
+**Design intent**:
+- Preserve the file-first workflow while enabling confidentiality for sensitive fields.
+- Bind ciphertext to the specific Layer 1 template (preventing cut-and-paste between forms).
+- Keep encryption optional so existing deployments remain valid.
+
+**Operator flow**:
+1. The issuer distributes a form with a recipient encryption public key (X25519, optional ML-KEM-768).
+2. The user fills the form as usual.
+3. If “Encrypt L2” is enabled, the form produces a **Layer2Encrypted envelope** instead of plaintext L2.
+4. The issuer decrypts the envelope offline using the recipient private key.
+
+**Envelope binding**:
+Associated Data (AAD) includes `layer1_ref`, `recipient`, and `weba_version`, so tampering with these values breaks decryption.
+
+```json
+{
+  "layer1_ref": "sha256:...",
+  "recipient": "issuer#kem-2025",
+  "weba_version": "0.1"
+}
+```
+
+### 2.3 Maker
 
 Markdown-based syntax lets anyone build forms with validation, calculations, and dynamic tables without dedicated software.
 
