@@ -107,6 +107,11 @@ Web/A Form は、**任意オプションとして L2（回答データ）を暗�
 - テンプレートとの強い紐付け（回答の差し替え攻撃を抑止）
 - PQC（ML-KEM）への段階的移行に備えた設計
 
+**PQC（任意）**:
+- Frontmatter に `l2_recipient_pqc`（ML-KEM-768 公開鍵）を設定するとハイブリッド暗号になる。
+- CLI 鍵生成: `bun src/bin/weba-l2-crypto.ts gen-keys --pqc`
+- 集計ツール用の鍵ファイルには `recipient_pqc_kem` / `recipient_pqc_private` を追加できる。
+
 暗号化の詳細な仕様と使い方は、`Discussion Paper: Web/A Layer 2 Encryption` にまとめる。
 
 ---

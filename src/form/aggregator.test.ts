@@ -29,6 +29,18 @@ describe("Web/A Aggregator", () => {
     expect(extracted.plain?.foo).toBe("bar");
   });
 
+  test("falls back to JSON-LD when L2 keys are missing", async () => {
+    const html = `
+      <html><body>
+        <script id="weba-l2-envelope" type="application/json">{"layer1_ref":"sha256:abcd","layer2":{"recipient":"issuer#kem-2025"}}</script>
+        <script type="application/ld+json">{"foo":"bar"}</script>
+      </body></html>
+    `;
+    const extracted = await extractPlainFromHtml(html, null);
+    expect(extracted.source).toBe("jsonld");
+    expect(extracted.plain?.foo).toBe("bar");
+  });
+
   test("extracts and decrypts L2 envelope", async () => {
     const recipient = generateRecipientKeyPair();
     const user = generateUserKeyPair();

@@ -5,10 +5,13 @@ import * as path from 'path';
 import * as cheerio from 'cheerio';
 import * as csv from 'fast-csv';
 import { decryptLayer2 } from '../core/l2crypto';
+import { createMlKem768Provider } from '../core/pqc';
 
 export type L2KeyFile = {
     recipient_kid: string;
     recipient_x25519_private: string; // base64url
+    recipient_pqc_private?: string; // base64url
+    recipient_pqc_kem?: string;
 };
 
 function fromBase64Url(str: string): Uint8Array {
@@ -49,7 +52,18 @@ export async function extractPlainFromHtml(
         if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
             throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
         }
-        const payload = await decryptLayer2(l2Envelope, fromBase64Url(l2Keys.recipient_x25519_private));
+        const pqc =
+            l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === 'ML-KEM-768'
+                ? {
+                    kem: createMlKem768Provider(),
+                    recipientPrivateKey: fromBase64Url(l2Keys.recipient_pqc_private),
+                }
+                : undefined;
+        const payload = await decryptLayer2(
+            l2Envelope,
+            fromBase64Url(l2Keys.recipient_x25519_private),
+            pqc ? { pqc } : undefined
+        );
         const plain = (payload as any).layer2_plain ?? payload;
         const sig = (payload as any).layer2_sig;
         return { plain, sig, source: 'l2' };

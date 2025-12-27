@@ -68,6 +68,37 @@ bun build src/form/browser_maker.ts --outfile sites/weba/static/mkform.js
 bun src/form/cli.ts input.md > output.html
 ```
 
+## 3.5 L2 Encryption Frontmatter
+
+L2 暗号化を有効にする場合は、Markdown の Frontmatter に以下を追加します。
+
+```yaml
+---
+layout: form
+l2_encrypt: true
+l2_recipient_kid: "issuer#kem-2025"
+l2_recipient_x25519: "<base64url>"
+# l2_recipient_pqc: "<base64url>" # Optional. ML-KEM-768 公開鍵（ハイブリッド用）
+# l2_layer1_ref: "sha256:..."
+l2_encrypt_default: true
+l2_user_kid: "user#sig-1"
+---
+```
+
+PQC を使う場合は `l2_recipient_pqc` を指定します。未指定の場合は X25519 のみです。
+
+## 3.6 ブラウザでの PQC 復号
+
+ブラウザ側で PQC 復号を行う場合は、ML-KEM-768 のプロバイダを登録します。
+
+```ts
+import { createMlKem768Provider, installBrowserPqcProvider } from "./pqc";
+
+installBrowserPqcProvider(createMlKem768Provider());
+```
+
+`webaPqcKem` として登録されるため、L2 Viewer / Aggregator の復号に利用されます。
+
 ## 4. Excel 帳票からの変換ワークフロー
 
 Excel からの機械的な完全変換は難しいため、**MarkItDown + LLM** を前提とした半自動ワークフローを標準手順とします。

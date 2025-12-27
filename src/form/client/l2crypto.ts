@@ -7,6 +7,7 @@ export type L2Config = {
   enabled: boolean;
   recipient_kid: string;
   recipient_x25519: string;
+  recipient_pqc?: string;
   layer1_ref: string;
   weba_version?: string;
   default_enabled?: boolean;
@@ -57,6 +58,15 @@ export type L2Keywrap = {
   credential_id: string;
   aad?: string;
   rp_id?: string;
+};
+
+export type PqcKemProvider = {
+  kemId: string;
+  encapsulate: (recipientPublicKey: Uint8Array) => {
+    sharedSecret: Uint8Array;
+    encapsulation: Uint8Array;
+  };
+  decapsulate: (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => Uint8Array;
 };
 
 const L2_SIG_KEY_STORAGE = "weba_l2_ed25519_sk";
@@ -124,6 +134,18 @@ function buildAad(layer1Ref: string, recipientKid: string, webaVersion: string):
   return new TextEncoder().encode(canonicalJson(aadObj));
 }
 
+function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a, 0);
+  out.set(b, a.length);
+  return out;
+}
+
+function getPqcProvider(): PqcKemProvider | null {
+  const w = globalThis as any;
+  return w.webaPqcKem || null;
+}
+
 async function aesGcmEncrypt(
   plaintext: Uint8Array,
   keyBytes: Uint8Array,
@@ -170,6 +192,7 @@ export async function buildLayer2Envelope(params: {
   layer2_plain: unknown;
   config: L2Config;
   user_kid?: string;
+  pqcProvider?: PqcKemProvider | null;
 }): Promise<Layer2Encrypted> {
   const webaVersion = params.config.weba_version ?? "0.1";
   const recipientKid = params.config.recipient_kid;
@@ -201,7 +224,22 @@ export async function buildLayer2Envelope(params: {
   const ephPk = x25519.getPublicKey(ephSk);
   const ss1 = x25519.getSharedSecret(ephSk, recipientPub);
 
-  const prk = hkdf(sha256, ss1, aadBytes, undefined, 32);
+  let ikm = ss1;
+  let pqcEncapsulation: Uint8Array | undefined;
+  let kemId = "X25519";
+  if (params.config.recipient_pqc) {
+    const provider = params.pqcProvider ?? getPqcProvider();
+    if (!provider) {
+      throw new Error("PQC requested but no provider is available");
+    }
+    const pqcPub = b64urlDecode(params.config.recipient_pqc);
+    const kemResult = provider.encapsulate(pqcPub);
+    pqcEncapsulation = kemResult.encapsulation;
+    ikm = concatBytes(ss1, kemResult.sharedSecret);
+    kemId = `X25519+${provider.kemId}`;
+  }
+
+  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
   const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
   const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
 
@@ -213,13 +251,14 @@ export async function buildLayer2Envelope(params: {
     layer2: {
       enc: "HPKE-v1",
       suite: {
-        kem: "X25519",
+        kem: kemId,
         kdf: "HKDF-SHA256",
         aead: "AES-256-GCM",
       },
       recipient: recipientKid,
       encapsulated: {
         classical: b64urlEncode(ephPk),
+        ...(pqcEncapsulation ? { pqc: b64urlEncode(pqcEncapsulation) } : {}),
       },
       ciphertext: b64urlEncode(ciphertext),
       aad: b64urlEncode(aadBytes),
@@ -244,6 +283,7 @@ export function loadL2Config(): L2Config | null {
 export async function decryptLayer2Envelope(
   envelope: Layer2Encrypted,
   recipientSk: Uint8Array,
+  options?: { pqcProvider?: PqcKemProvider | null; pqcRecipientSk?: Uint8Array },
 ): Promise<Layer2Payload> {
   const aadBytes = b64urlDecode(envelope.layer2.aad);
   const aadObj = {
@@ -258,7 +298,18 @@ export async function decryptLayer2Envelope(
 
   const ephPub = b64urlDecode(envelope.layer2.encapsulated.classical);
   const ss1 = x25519.getSharedSecret(recipientSk, ephPub);
-  const prk = hkdf(sha256, ss1, aadBytes, undefined, 32);
+  let ikm = ss1;
+  if (envelope.layer2.encapsulated.pqc) {
+    const provider = options?.pqcProvider ?? getPqcProvider();
+    const pqcSk = options?.pqcRecipientSk;
+    if (!provider || !pqcSk) {
+      throw new Error("Missing PQC KEM for envelope");
+    }
+    const pqcEnc = b64urlDecode(envelope.layer2.encapsulated.pqc);
+    const ss2 = provider.decapsulate(pqcSk, pqcEnc);
+    ikm = concatBytes(ss1, ss2);
+  }
+  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
   const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
   const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
 

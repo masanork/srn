@@ -48,6 +48,11 @@ Web/A Form can optionally encrypt the Layer 2 payload (user answers) before subm
 3. If “Encrypt L2” is enabled, the form produces a **Layer2Encrypted envelope** instead of plaintext L2.
 4. The issuer decrypts the envelope offline using the recipient private key.
 
+**PQC (optional)**:
+- Add `l2_recipient_pqc` (ML-KEM-768 public key) in frontmatter to switch to hybrid mode.
+- CLI keys can be generated with `bun src/bin/weba-l2-crypto.ts gen-keys --pqc`.
+- Aggregator keys may include `recipient_pqc_kem` and `recipient_pqc_private` for batch decryption.
+
 **Decryption modes**:
 - **Passkey unlock (individual)**: recipient private key is wrapped by a Passkey; decryption happens in-browser with a single unlock action.
 - **Aggregator escrow (organization)**: a temporary recipient keypair is generated per form or campaign and the private key is pre-installed in the aggregator for batch decryption. This trades strict individual-only access for operational continuity.

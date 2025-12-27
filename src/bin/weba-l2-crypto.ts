@@ -13,6 +13,7 @@ import {
   Layer2Payload,
   Layer2Encrypted,
 } from "../core/l2crypto.ts";
+import { createMlKem768Provider, generateMlKem768KeyPair } from "../core/pqc";
 
 const program = new Command();
 
@@ -25,18 +26,25 @@ program
   .command("gen-keys")
   .description("Generate recipient (encryption) and user (signing) keypairs")
   .option("-o, --out <dir>", "Output directory", "./keys")
+  .option("--pqc", "Generate ML-KEM-768 keypair for hybrid mode")
   .action(async (options) => {
     const outDir = path.resolve(options.out);
     await fs.mkdir(outDir, { recursive: true });
 
     const recipient = generateRecipientKeyPair();
     const user = generateUserKeyPair();
+    const pqc = options.pqc ? generateMlKem768KeyPair() : null;
 
     const recipientKey = {
       kid: "issuer#kem-2025",
       publicKey: toBase64Url(recipient.publicKey),
       privateKey: toBase64Url(recipient.privateKey),
     };
+    if (pqc) {
+      recipientKey.pqc_kem = "ML-KEM-768";
+      recipientKey.pqc_publicKey = toBase64Url(pqc.publicKey);
+      recipientKey.pqc_privateKey = toBase64Url(pqc.privateKey);
+    }
 
     const userKey = {
       kid: "user#sig-1",
@@ -66,7 +74,7 @@ program
   .requiredOption("--out <file>", "Output envelope JSON")
   .action(async (options) => {
     const layer1Ref = options.layer1Ref;
-    const recipientKey = JSON.parse(await fs.readFile(options.recipientKey, "utf-8"));
+    const recipientKey: any = JSON.parse(await fs.readFile(options.recipientKey, "utf-8"));
     const userKey = JSON.parse(await fs.readFile(options.userKey, "utf-8"));
     const plain = JSON.parse(await fs.readFile(options.in, "utf-8"));
 
@@ -79,11 +87,20 @@ program
       ),
     };
 
+    const pqc =
+      recipientKey.pqc_publicKey && recipientKey.pqc_kem === "ML-KEM-768"
+        ? {
+            kem: createMlKem768Provider(),
+            recipientPublicKey: fromBase64Url(recipientKey.pqc_publicKey as string),
+          }
+        : undefined;
+
     const envelope = await encryptLayer2(
       payload,
       fromBase64Url(recipientKey.publicKey),
       layer1Ref,
-      recipientKey.kid
+      recipientKey.kid,
+      pqc ? { pqc } : undefined
     );
 
     await fs.writeFile(options.out, JSON.stringify(envelope, null, 2));
@@ -97,13 +114,22 @@ program
   .requiredOption("--user-pubkey <file>", "User's public key JSON (for verification)")
   .requiredOption("--in <file>", "Input envelope JSON")
   .action(async (options) => {
-    const recipientKey = JSON.parse(await fs.readFile(options.recipientKey, "utf-8"));
+    const recipientKey: any = JSON.parse(await fs.readFile(options.recipientKey, "utf-8"));
     const userKey = JSON.parse(await fs.readFile(options.userPubkey, "utf-8"));
     const envelope: Layer2Encrypted = JSON.parse(await fs.readFile(options.in, "utf-8"));
 
+    const pqc =
+      recipientKey.pqc_privateKey && recipientKey.pqc_kem === "ML-KEM-768"
+        ? {
+            kem: createMlKem768Provider(),
+            recipientPrivateKey: fromBase64Url(recipientKey.pqc_privateKey as string),
+          }
+        : undefined;
+
     const payload = await decryptLayer2(
       envelope,
-      fromBase64Url(recipientKey.privateKey)
+      fromBase64Url(recipientKey.privateKey),
+      pqc ? { pqc } : undefined
     );
 
     const isValid = verifyLayer2Signature(
