@@ -20,6 +20,13 @@ declare global {
 
 import { DEFAULT_MARKDOWN_EN, DEFAULT_MARKDOWN_JA } from './sample';
 
+function stripAggregatorOnly(html: string) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    wrapper.querySelectorAll('[data-preview-only="aggregator"]').forEach((el) => el.remove());
+    return wrapper.innerHTML;
+}
+
 function updatePreview() {
     console.log("Web/A Maker v3.0");
     const editor = document.getElementById('editor') as HTMLTextAreaElement;
@@ -40,7 +47,7 @@ function updatePreview() {
         return;
     }
 
-    preview.innerHTML = html;
+    preview.innerHTML = stripAggregatorOnly(html);
 
     // Initialize runtime behavior once without inline script injection
     if (!(window as any).isRuntimeLoaded) { // Check isRuntimeLoaded instead of recalculate
