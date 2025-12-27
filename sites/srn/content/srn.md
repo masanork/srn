@@ -25,12 +25,14 @@ font: Serif
         padding-top: 4rem;
     }
     .logo-area {
-        font-size: 7rem;
+        font-size: 8rem;
         margin-bottom: 0.5rem;
         color: var(--accent-color);
-        letter-spacing: -0.02em;
-        font-weight: 800;
+        letter-spacing: -0.08em;
+        font-weight: 900;
         line-height: 1;
+        -webkit-text-stroke: 1px var(--accent-color); /* Emulate extra boldness */
+        filter: contrast(1.2);
     }
     .lead {
         font-size: 1.25rem;
