@@ -25,14 +25,13 @@ font: Serif
         padding-top: 4rem;
     }
     .logo-area {
-        font-size: 8rem;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+        font-size: 7rem;
         margin-bottom: 0.5rem;
         color: var(--accent-color);
-        letter-spacing: -0.08em;
+        letter-spacing: -0.05em;
         font-weight: 900;
         line-height: 1;
-        -webkit-text-stroke: 1px var(--accent-color); /* Emulate extra boldness */
-        filter: contrast(1.2);
     }
     .lead {
         font-size: 1.25rem;
