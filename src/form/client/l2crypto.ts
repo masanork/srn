@@ -49,9 +49,26 @@ export type Layer2Encrypted = {
   };
 };
 
+export type L2Keywrap = {
+  alg: "WebAuthn-PRF-AESGCM-v1";
+  kid: string;
+  wrapped_key: string;
+  prf_salt: string;
+  credential_id: string;
+  aad?: string;
+  rp_id?: string;
+};
+
 const L2_SIG_KEY_STORAGE = "weba_l2_ed25519_sk";
 
-function b64urlEncode(bytes: Uint8Array): string {
+export function b64urlEncode(bytes: Uint8Array): string {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(bytes)
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+  }
   let binary = "";
   bytes.forEach((b) => {
     binary += String.fromCharCode(b);
@@ -60,9 +77,12 @@ function b64urlEncode(bytes: Uint8Array): string {
   return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function b64urlDecode(value: string): Uint8Array {
+export function b64urlDecode(value: string): Uint8Array {
   const pad = value.length % 4 === 0 ? "" : "=".repeat(4 - (value.length % 4));
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/") + pad;
+  if (typeof Buffer !== "undefined") {
+    return new Uint8Array(Buffer.from(base64, "base64"));
+  }
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) {
@@ -117,6 +137,33 @@ async function aesGcmEncrypt(
     plaintext,
   );
   return new Uint8Array(ct);
+}
+
+export async function wrapRecipientPrivateKey(params: {
+  recipientSk: Uint8Array;
+  prfKey: Uint8Array;
+  aad?: Uint8Array;
+}): Promise<Uint8Array> {
+  const prk = hkdf(sha256, params.prfKey, undefined, undefined, 32);
+  const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw"), 32);
+  const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw-iv"), 12);
+  const aad = params.aad ?? new Uint8Array();
+  return aesGcmEncrypt(params.recipientSk, key, iv, aad);
+}
+
+async function aesGcmDecrypt(
+  ciphertext: Uint8Array,
+  keyBytes: Uint8Array,
+  iv: Uint8Array,
+  aad: Uint8Array,
+): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv, additionalData: aad },
+    key,
+    ciphertext,
+  );
+  return new Uint8Array(pt);
 }
 
 export async function buildLayer2Envelope(params: {
@@ -192,4 +239,42 @@ export function loadL2Config(): L2Config | null {
   } catch {
     return null;
   }
+}
+
+export async function decryptLayer2Envelope(
+  envelope: Layer2Encrypted,
+  recipientSk: Uint8Array,
+): Promise<Layer2Payload> {
+  const aadBytes = b64urlDecode(envelope.layer2.aad);
+  const aadObj = {
+    layer1_ref: envelope.layer1_ref,
+    recipient: envelope.layer2.recipient,
+    weba_version: envelope.weba_version,
+  };
+  const expectedAad = new TextEncoder().encode(canonicalJson(aadObj));
+  if (b64urlEncode(expectedAad) !== envelope.layer2.aad) {
+    throw new Error("AAD mismatch");
+  }
+
+  const ephPub = b64urlDecode(envelope.layer2.encapsulated.classical);
+  const ss1 = x25519.getSharedSecret(recipientSk, ephPub);
+  const prk = hkdf(sha256, ss1, aadBytes, undefined, 32);
+  const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
+  const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
+
+  const ct = b64urlDecode(envelope.layer2.ciphertext);
+  const pt = await aesGcmDecrypt(ct, key, iv, aadBytes);
+  return JSON.parse(new TextDecoder().decode(pt)) as Layer2Payload;
+}
+
+export async function unwrapRecipientPrivateKey(params: {
+  keywrap: L2Keywrap;
+  prfKey: Uint8Array;
+}): Promise<Uint8Array> {
+  const prk = hkdf(sha256, params.prfKey, undefined, undefined, 32);
+  const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw"), 32);
+  const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw-iv"), 12);
+  const aad = params.keywrap.aad ? b64urlDecode(params.keywrap.aad) : new Uint8Array();
+  const wrapped = b64urlDecode(params.keywrap.wrapped_key);
+  return aesGcmDecrypt(wrapped, key, iv, aad);
 }

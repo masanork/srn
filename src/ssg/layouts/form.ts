@@ -33,11 +33,15 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
               user_kid: data.l2_user_kid || 'user#sig-1',
           }
         : null;
+    const l2Keywrap = data.l2_keywrap ? data.l2_keywrap : null;
 
     // Embed structure for client-side logic
     const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
     const l2ConfigScript = l2Config
         ? `<script id="weba-l2-config" type="application/json">${JSON.stringify(l2Config)}</script>`
+        : '';
+    const l2KeywrapScript = l2Keywrap
+        ? `<script id="weba-l2-keywrap" type="application/json">${JSON.stringify(l2Keywrap)}</script>`
         : '';
 
     const verificationDetails = vc ? `
@@ -87,6 +91,7 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
         </div>
         ${structureScript}
         ${l2ConfigScript}
+        ${l2KeywrapScript}
         <script src="./assets/form-bundle.js"></script>
     `;
 

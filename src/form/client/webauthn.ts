@@ -88,3 +88,32 @@ export async function signWithPasskey(credentialId: string, challengeBuffer: Arr
         clientDataJSON: bufferToBase64Url(response.clientDataJSON)
     };
 }
+
+export async function derivePasskeyPrf(credentialId: string, salt: Uint8Array) {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const assertion = await navigator.credentials.get({
+        publicKey: {
+            challenge,
+            allowCredentials: [{
+                id: base64UrlToBuffer(credentialId),
+                type: "public-key"
+            }],
+            userVerification: "required",
+            extensions: {
+                prf: {
+                    eval: {
+                        first: salt
+                    }
+                }
+            }
+        }
+    }) as PublicKeyCredential;
+
+    if (!assertion) throw new Error("Assertion failed");
+    const results = assertion.getClientExtensionResults() as any;
+    const prfOutput = results?.prf?.results?.first;
+    if (!prfOutput) {
+        throw new Error("PRF extension not available");
+    }
+    return new Uint8Array(prfOutput);
+}
