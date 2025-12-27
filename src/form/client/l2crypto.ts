@@ -12,6 +12,8 @@ export type L2Config = {
   weba_version?: string;
   default_enabled?: boolean;
   user_kid?: string;
+  campaign_id?: string;
+  key_policy?: OrgKeyPolicy;
 };
 
 export type Layer2Signature = {
@@ -47,6 +49,8 @@ export type Layer2Encrypted = {
   meta: {
     created_at: string;
     nonce: string;
+    campaign_id?: string;
+    key_policy?: OrgKeyPolicy;
   };
 };
 
@@ -68,6 +72,8 @@ export type PqcKemProvider = {
   };
   decapsulate: (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => Uint8Array;
 };
+
+export type OrgKeyPolicy = "campaign" | "campaign+layer1";
 
 const L2_SIG_KEY_STORAGE = "weba_l2_ed25519_sk";
 
@@ -139,6 +145,28 @@ function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
   out.set(a, 0);
   out.set(b, a.length);
   return out;
+}
+
+export function deriveOrgX25519KeyPair(params: {
+  orgRootKey: Uint8Array;
+  campaignId: string;
+  layer1Ref?: string;
+  keyPolicy?: OrgKeyPolicy;
+}) {
+  const policy = params.keyPolicy ?? "campaign+layer1";
+  if (policy === "campaign+layer1" && !params.layer1Ref) {
+    throw new Error("layer1_ref is required for campaign+layer1 policy");
+  }
+  const context = canonicalJson({
+    domain: "weba-l2/org-x25519",
+    campaign_id: params.campaignId,
+    key_policy: policy,
+    layer1_ref: policy === "campaign+layer1" ? params.layer1Ref : undefined,
+  });
+  const info = new TextEncoder().encode(context);
+  const seed = hkdf(sha256, params.orgRootKey, undefined, info, 32);
+  const publicKey = x25519.getPublicKey(seed);
+  return { publicKey, privateKey: seed, keyPolicy: policy };
 }
 
 function getPqcProvider(): PqcKemProvider | null {
@@ -266,6 +294,8 @@ export async function buildLayer2Envelope(params: {
     meta: {
       created_at: new Date().toISOString(),
       nonce: b64urlEncode(randomBytes(16)),
+      ...(params.config.campaign_id ? { campaign_id: params.config.campaign_id } : {}),
+      ...(params.config.key_policy ? { key_policy: params.config.key_policy } : {}),
     },
   };
 }

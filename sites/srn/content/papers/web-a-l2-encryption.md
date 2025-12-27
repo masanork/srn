@@ -233,6 +233,28 @@ For organizational workflows, a **temporary recipient key** may be generated per
 
 This mode can coexist with Passkey unlock (Key Wrap); issuers choose one or both based on risk tolerance.
 
+### 7.4.1. Root-Key Derivation (Accident Prevention)
+To avoid “wrong key” accidents, issuers can derive recipient keys from a fixed **organization root key** plus a **campaign ID** (optionally bound to `layer1_ref`). This removes manual key selection from operators:
+
+- **Root key** stays in the aggregator environment.
+- **Recipient public key** is derived deterministically during form generation.
+- Aggregator derives the **same private key** from the root key + campaign context.
+
+Recommended derivation context:
+- `campaign_id` (required)
+- `layer1_ref` (for `campaign+layer1` policy)
+
+This enforces consistent key usage across Form + Aggregator without distributing per-campaign private keys.
+
+#### Relationship to SRN Instance Key
+For tighter control, the **organization root key** itself can be deterministically derived from an **SRN instance master key**:
+
+```
+org_root_key = HKDF(srn_instance_key, info = "weba-l2/org-root" || org_id)
+```
+
+This keeps the instance master key offline and avoids manual org-root provisioning while still separating keys per organization.
+
 ### 7.5. Notes
 - This section defines the **conceptual flow**; exact KWP format is a spec extension.
 - The goal is **single action unlock** without external tools.

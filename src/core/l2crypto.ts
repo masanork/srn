@@ -40,6 +40,8 @@ export type Layer2Encrypted = {
   meta: {
     created_at: string;
     nonce: string; // base64url
+    campaign_id?: string;
+    key_policy?: OrgKeyPolicy;
   };
 };
 
@@ -77,11 +79,45 @@ export type PqcDecryptOptions = {
   recipientPrivateKey: Uint8Array;
 };
 
+export type OrgKeyPolicy = "campaign" | "campaign+layer1";
+
+export function deriveOrgRootKey(params: { srnInstanceKey: Uint8Array; orgId: string }) {
+  const context = canonicalJson({
+    domain: "weba-l2/org-root",
+    org_id: params.orgId,
+  });
+  const info = Buffer.from(context, "utf-8");
+  const rootKey = hkdf(sha256, params.srnInstanceKey, undefined, info, 32);
+  return rootKey;
+}
+
 function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
   const out = new Uint8Array(a.length + b.length);
   out.set(a, 0);
   out.set(b, a.length);
   return out;
+}
+
+export function deriveOrgX25519KeyPair(params: {
+  orgRootKey: Uint8Array;
+  campaignId: string;
+  layer1Ref?: string;
+  keyPolicy?: OrgKeyPolicy;
+}) {
+  const policy = params.keyPolicy ?? "campaign+layer1";
+  if (policy === "campaign+layer1" && !params.layer1Ref) {
+    throw new Error("layer1_ref is required for campaign+layer1 policy");
+  }
+  const context = canonicalJson({
+    domain: "weba-l2/org-x25519",
+    campaign_id: params.campaignId,
+    key_policy: policy,
+    layer1_ref: policy === "campaign+layer1" ? params.layer1Ref : undefined,
+  });
+  const info = Buffer.from(context, "utf-8");
+  const seed = hkdf(sha256, params.orgRootKey, undefined, info, 32);
+  const publicKey = x25519.getPublicKey(seed);
+  return { publicKey, privateKey: seed, keyPolicy: policy };
 }
 
 /**
@@ -142,7 +178,7 @@ export async function encryptLayer2(
   recipientPublicKey: Uint8Array,
   layer1Ref: string,
   recipientKid: string,
-  options?: { pqc?: PqcEncryptOptions }
+  options?: { pqc?: PqcEncryptOptions; meta?: { campaign_id?: string; key_policy?: OrgKeyPolicy } }
 ): Promise<Layer2Encrypted> {
   const webaVersion = "0.1";
   const createdAt = new Date().toISOString();
@@ -207,6 +243,8 @@ export async function encryptLayer2(
     meta: {
       created_at: createdAt,
       nonce: toBase64Url(nonce),
+      ...(options?.meta?.campaign_id ? { campaign_id: options.meta.campaign_id } : {}),
+      ...(options?.meta?.key_policy ? { key_policy: options.meta.key_policy } : {}),
     },
   };
 }

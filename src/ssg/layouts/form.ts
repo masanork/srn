@@ -27,10 +27,13 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
               enabled: true,
               recipient_kid: data.l2_recipient_kid,
               recipient_x25519: data.l2_recipient_x25519,
+              recipient_pqc: data.l2_recipient_pqc,
               layer1_ref: layer1Ref,
               weba_version: data.l2_weba_version || '0.1',
               default_enabled: data.l2_encrypt_default ?? true,
               user_kid: data.l2_user_kid || 'user#sig-1',
+              campaign_id: data.l2_campaign_id,
+              key_policy: data.l2_key_policy,
           }
         : null;
     const l2Keywrap = data.l2_keywrap ? data.l2_keywrap : null;

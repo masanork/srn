@@ -4799,6 +4799,22 @@ function concatBytes2(a, b) {
   out.set(b, a.length);
   return out;
 }
+function deriveOrgX25519KeyPair(params) {
+  const policy = params.keyPolicy ?? "campaign+layer1";
+  if (policy === "campaign+layer1" && !params.layer1Ref) {
+    throw new Error("layer1_ref is required for campaign+layer1 policy");
+  }
+  const context = canonicalJson({
+    domain: "weba-l2/org-x25519",
+    campaign_id: params.campaignId,
+    key_policy: policy,
+    layer1_ref: policy === "campaign+layer1" ? params.layer1Ref : undefined
+  });
+  const info = new TextEncoder().encode(context);
+  const seed = hkdf(sha256, params.orgRootKey, undefined, info, 32);
+  const publicKey = x25519.getPublicKey(seed);
+  return { publicKey, privateKey: seed, keyPolicy: policy };
+}
 function getPqcProvider() {
   const w = globalThis;
   return w.webaPqcKem || null;
@@ -4883,7 +4899,9 @@ async function buildLayer2Envelope(params) {
     },
     meta: {
       created_at: new Date().toISOString(),
-      nonce: b64urlEncode(randomBytes2(16))
+      nonce: b64urlEncode(randomBytes2(16)),
+      ...params.config.campaign_id ? { campaign_id: params.config.campaign_id } : {},
+      ...params.config.key_policy ? { key_policy: params.config.key_policy } : {}
     }
   };
 }
@@ -5622,7 +5640,7 @@ function parseKeyJson(raw) {
     return null;
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed.recipient_x25519_private)
+    if (!parsed.recipient_x25519_private && !parsed.org_root_key)
       return null;
     return parsed;
   } catch {
@@ -5688,7 +5706,24 @@ async function extractPlainFromHtml(html, l2Keys) {
     if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
       throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
     }
-    const recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+    let recipientSk = null;
+    if (l2Keys.org_root_key) {
+      const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
+      if (!campaignId) {
+        throw new Error("org_campaign_id is required for org_root_key");
+      }
+      const derived = deriveOrgX25519KeyPair({
+        orgRootKey: b64urlDecode(l2Keys.org_root_key),
+        campaignId,
+        layer1Ref: l2Envelope.layer1_ref,
+        keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy
+      });
+      recipientSk = derived.privateKey;
+    } else if (l2Keys.recipient_x25519_private) {
+      recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+    } else {
+      throw new Error("No recipient key provided");
+    }
     const pqc = l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === "ML-KEM-768" ? {
       pqcProvider: globalThis.webaPqcKem ?? null,
       pqcRecipientSk: b64urlDecode(l2Keys.recipient_pqc_private)

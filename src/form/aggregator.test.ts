@@ -11,6 +11,7 @@ import {
   encryptLayer2,
   generateRecipientKeyPair,
   generateUserKeyPair,
+  deriveOrgX25519KeyPair,
   signLayer2,
   type Layer2Payload,
 } from "../core/l2crypto";
@@ -69,6 +70,41 @@ describe("Web/A Aggregator", () => {
     const extracted = await extractPlainFromHtml(html, keys);
     expect(extracted.source).toBe("l2");
     expect(extracted.plain?.answer).toBe("yes");
+  });
+
+  test("decrypts with org root key", async () => {
+    const orgRoot = new Uint8Array(32).fill(9);
+    const derived = deriveOrgX25519KeyPair({
+      orgRootKey: orgRoot,
+      campaignId: "campaign-1",
+      layer1Ref: "sha256:abcd",
+      keyPolicy: "campaign+layer1",
+    });
+    const user = generateUserKeyPair();
+    const layer2Plain = { answer: "org" };
+    const sig = await signLayer2(layer2Plain, user.privateKey, "user#sig-1");
+    const payload: Layer2Payload = { layer2_plain: layer2Plain, layer2_sig: sig };
+    const envelope = await encryptLayer2(
+      payload,
+      derived.publicKey,
+      "sha256:abcd",
+      "issuer#kem-2025",
+      { meta: { campaign_id: "campaign-1", key_policy: "campaign+layer1" } }
+    );
+    const html = `
+      <html><body>
+        <script id="weba-l2-envelope" type="application/json">${JSON.stringify(envelope)}</script>
+      </body></html>
+    `;
+
+    const keys: L2KeyFile = {
+      org_root_key: Buffer.from(orgRoot).toString("base64url"),
+      org_campaign_id: "campaign-1",
+      org_key_policy: "campaign+layer1",
+    };
+    const extracted = await extractPlainFromHtml(html, keys);
+    expect(extracted.source).toBe("l2");
+    expect(extracted.plain?.answer).toBe("org");
   });
 
   test("throws on recipient_kid mismatch", async () => {

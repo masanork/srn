@@ -4,6 +4,8 @@ import * as path from "node:path";
 import {
   generateRecipientKeyPair,
   generateUserKeyPair,
+  deriveOrgX25519KeyPair,
+  deriveOrgRootKey,
   signLayer2,
   encryptLayer2,
   decryptLayer2,
@@ -13,6 +15,7 @@ import {
   Layer2Payload,
   Layer2Encrypted,
 } from "../core/l2crypto.ts";
+import { randomBytes } from "node:crypto";
 import { createMlKem768Provider, generateMlKem768KeyPair } from "../core/pqc";
 
 const program = new Command();
@@ -62,6 +65,96 @@ program
     );
 
     console.log(`Keys generated in ${outDir}`);
+  });
+
+program
+  .command("gen-org-root")
+  .description("Generate an organization root key (for derived recipient keys)")
+  .option("-o, --out <file>", "Output JSON file", "./keys/org-root.json")
+  .action(async (options) => {
+    const rootKey = randomBytes(32);
+    const payload = {
+      org_root_key: toBase64Url(rootKey),
+      created_at: new Date().toISOString(),
+    };
+    await fs.mkdir(path.dirname(path.resolve(options.out)), { recursive: true });
+    await fs.writeFile(options.out, JSON.stringify(payload, null, 2));
+    console.log(`Org root key saved to ${options.out}`);
+  });
+
+program
+  .command("gen-instance-key")
+  .description("Generate an SRN instance master key")
+  .option("-o, --out <file>", "Output JSON file", "./keys/srn-instance.json")
+  .action(async (options) => {
+    const instanceKey = randomBytes(32);
+    const payload = {
+      srn_instance_key: toBase64Url(instanceKey),
+      created_at: new Date().toISOString(),
+    };
+    await fs.mkdir(path.dirname(path.resolve(options.out)), { recursive: true });
+    await fs.writeFile(options.out, JSON.stringify(payload, null, 2));
+    console.log(`SRN instance key saved to ${options.out}`);
+  });
+
+program
+  .command("derive-org-root")
+  .description("Derive org root key from SRN instance key + org id")
+  .requiredOption("--instance-key <file>", "SRN instance key JSON")
+  .requiredOption("--org-id <id>", "Organization identifier")
+  .option("-o, --out <file>", "Output JSON file", "./keys/org-root.json")
+  .action(async (options) => {
+    const instance = JSON.parse(await fs.readFile(options.instanceKey, "utf-8"));
+    if (!instance.srn_instance_key) {
+      throw new Error("srn_instance_key is missing in instance key file");
+    }
+    const rootKey = deriveOrgRootKey({
+      srnInstanceKey: fromBase64Url(instance.srn_instance_key),
+      orgId: options.orgId,
+    });
+    const payload = {
+      org_id: options.orgId,
+      org_root_key: toBase64Url(rootKey),
+      created_at: new Date().toISOString(),
+    };
+    await fs.mkdir(path.dirname(path.resolve(options.out)), { recursive: true });
+    await fs.writeFile(options.out, JSON.stringify(payload, null, 2));
+    console.log(`Org root key saved to ${options.out}`);
+  });
+
+program
+  .command("derive-org-recipient")
+  .description("Derive a recipient X25519 keypair from org root + campaign")
+  .requiredOption("--org-root <file>", "Org root key JSON")
+  .requiredOption("--campaign-id <id>", "Campaign identifier")
+  .option("--layer1-ref <ref>", "Layer1 ref (required for campaign+layer1)")
+  .option("--policy <policy>", "campaign | campaign+layer1", "campaign+layer1")
+  .option("--recipient-kid <kid>", "Recipient key id")
+  .option("--out <file>", "Output JSON file", "./keys/recipient-derived.json")
+  .action(async (options) => {
+    const root = JSON.parse(await fs.readFile(options.orgRoot, "utf-8"));
+    if (!root.org_root_key) {
+      throw new Error("org_root_key is missing in org root file");
+    }
+    const policy = options.policy === "campaign" ? "campaign" : "campaign+layer1";
+    const derived = deriveOrgX25519KeyPair({
+      orgRootKey: fromBase64Url(root.org_root_key),
+      campaignId: options.campaignId,
+      layer1Ref: options.layer1Ref,
+      keyPolicy: policy,
+    });
+    const recipientKid = options.recipientKid || `org#${options.campaignId}`;
+    const payload = {
+      recipient_kid: recipientKid,
+      recipient_x25519: toBase64Url(derived.publicKey),
+      recipient_x25519_private: toBase64Url(derived.privateKey),
+      campaign_id: options.campaignId,
+      key_policy: derived.keyPolicy,
+      layer1_ref: options.layer1Ref || undefined,
+    };
+    await fs.mkdir(path.dirname(path.resolve(options.out)), { recursive: true });
+    await fs.writeFile(options.out, JSON.stringify(payload, null, 2));
+    console.log(`Derived recipient key saved to ${options.out}`);
   });
 
 program
