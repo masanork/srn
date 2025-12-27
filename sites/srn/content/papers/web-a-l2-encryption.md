@@ -178,6 +178,23 @@ Embed the key file in the aggregator HTML:
 
 Operationally, this aligns with the **Aggregator Escrow** mode: the organization pre-installs temporary keys in the aggregator so multiple operators can decrypt and export CSV safely.
 
+### 6.5.1. Aggregator Key File (JSON)
+Aggregator tooling accepts a key JSON file. Recommended fields:
+
+```json
+{
+  "recipient_kid": "issuer#kem-2025",
+  "recipient_x25519_private": "base64url(...)",
+  "recipient_pqc_kem": "ML-KEM-768",
+  "recipient_pqc_private": "base64url(...)",
+  "org_root_key": "base64url(...)",
+  "org_campaign_id": "campaign-1",
+  "org_key_policy": "campaign+layer1"
+}
+```
+
+You may provide **either** `recipient_x25519_private` or `org_root_key` (with campaign info). When `org_root_key` is used, the aggregator derives the private key deterministically and operators never choose keys manually.
+
 ### 6.6. PQC Enablement (Hybrid)
 PQC is **opt-in**. If `l2_recipient_pqc` is provided (ML-KEM-768 public key), encryption switches to **X25519 + ML-KEM-768**. Without it, the system remains classical-only.
 

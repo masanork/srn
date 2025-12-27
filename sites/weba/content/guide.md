@@ -105,6 +105,12 @@ bun src/bin/weba-l2-crypto.ts gen-instance-key --out ./keys/srn-instance.json
 bun src/bin/weba-l2-crypto.ts derive-org-root --instance-key ./keys/srn-instance.json --org-id org-1 --out ./keys/org-root.json
 ```
 
+Frontmatter 生成（派生公開鍵の埋め込み）:
+
+```bash
+bun src/bin/weba-l2-crypto.ts emit-frontmatter --org-root ./keys/org-root.json --campaign-id campaign-1 --layer1-ref sha256:... --policy campaign+layer1
+```
+
 ## 3.6 ブラウザでの PQC 復号
 
 ブラウザ側で PQC 復号を行う場合は、ML-KEM-768 のプロバイダを登録します。
