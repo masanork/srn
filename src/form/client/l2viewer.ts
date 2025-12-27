@@ -79,6 +79,7 @@ export function initL2Viewer() {
       });
       const payload = await decryptLayer2Envelope(envelope, recipientSk);
       applyLayer2Payload(payload.layer2_plain);
+      document.body.classList.add("weba-l2-readonly");
       output.textContent = JSON.stringify(payload.layer2_plain, null, 2);
       output.style.display = "block";
       const sigPre = sigDetails.querySelector("pre");
