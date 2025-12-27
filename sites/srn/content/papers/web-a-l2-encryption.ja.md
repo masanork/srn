@@ -164,6 +164,18 @@ l2_keywrap:                    # Optional. Passkey での復号を有効化
 - `items[0].amount` = `1200`
 - `items[1].amount` = `900`
 
+### 6.5. ブラウザ集計（鍵埋め込み）
+Aggregator は **ブラウザだけ** で動作させることもできます。受領者の秘密鍵を HTML に埋め込むことで、CLI を使わずに一括復号と CSV 出力が可能です。
+
+Aggregator HTML に鍵ファイルを埋め込みます:
+```html
+<script id="weba-l2-keys" type="application/json">
+{"recipient_kid":"issuer#kem-2025","recipient_x25519_private":"...base64url..."}
+</script>
+```
+
+これは **Aggregator Escrow** モードに相当します。テンポラリー鍵を集計ツールに仕込み、複数オペレーターが安全に復号・集計できるようにします。
+
 ## 7. ブラウザのみでの復号（Passkey 概念）
 Web/A は「単一 HTML で完結する」ことを重視するため、**ブラウザだけで復号できる UI** を想定します。
 

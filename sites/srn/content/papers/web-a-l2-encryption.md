@@ -165,6 +165,18 @@ becomes:
 - `items[0].amount` = `1200`
 - `items[1].amount` = `900`
 
+### 6.5. Browser Aggregator (Embedded Key)
+The aggregator can run **entirely in the browser** if the recipient private key is embedded in the HTML. This enables secure, offline batch decryption without installing CLI tools.
+
+Embed the key file in the aggregator HTML:
+```html
+<script id="weba-l2-keys" type="application/json">
+{"recipient_kid":"issuer#kem-2025","recipient_x25519_private":"...base64url..."}
+</script>
+```
+
+Operationally, this aligns with the **Aggregator Escrow** mode: the organization pre-installs temporary keys in the aggregator so multiple operators can decrypt and export CSV safely.
+
 ## 7. Browser-Only Decryption with Passkey (Concept)
 Web/A’s file-first model favors a **browser-only decryption flow** that works without external tooling. The intended UX is “one passkey action to open”.
 
