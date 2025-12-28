@@ -98,7 +98,6 @@ const AGG_BLOCK_EN = [
   "      format: currency",
   "export:",
   "  jsonl: true",
-  "  parquet: true",
   "```",
 ].join("\n");
 
@@ -202,7 +201,6 @@ const AGG_BLOCK_JA = [
   "      format: currency",
   "export:",
   "  jsonl: true",
-  "  parquet: true",
   "```",
 ].join("\n");
 
