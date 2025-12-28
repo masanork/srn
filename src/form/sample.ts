@@ -253,6 +253,26 @@ export const DEFAULT_MARKDOWN_EN = `# Team Dinner Poll (Sample)
 | Other | Other |
 
 ${AGG_BLOCK_EN}
+
+---
+
+## 5. Encryption Settings (Layer 2 Encryption Demo)
+
+This form includes demo settings for client-side encryption (E2EE).
+Change \`enabled: false\` to \`true\` below to automatically encrypt saved data.
+
+*For demo purposes, the private key required for decryption is provided below (Escrow Mode).*
+**Recipient Private Key:**
+\`Cfg8QV6TZhoBfS1fIkGijpYBzTnlUpQpzAn401mqrps\`
+
+<script id="weba-l2-config" type="application/json">
+{
+  "enabled": false,
+  "recipient_kid": "demo-key-01",
+  "recipient_x25519": "aMk6CMXJ_gyo2shSFE8sGNseEHqoYuSA-TPTF8fsWxE",
+  "layer1_ref": "demo-form-v1"
+}
+</script>
 `;
 
 export const DEFAULT_MARKDOWN_JA = `# 飲み会日程調整（サンプル）
@@ -304,4 +324,24 @@ export const DEFAULT_MARKDOWN_JA = `# 飲み会日程調整（サンプル）
 | Other | その他 |
 
 ${AGG_BLOCK_JA}
+
+---
+
+## 5. 暗号化設定 (Layer 2 Encryption Demo)
+
+このフォームはクライアントサイド暗号化 (E2EE) のデモ設定を含んでいます。
+以下の設定の \`enabled: false\` を \`true\` に書き換えると、保存データが自動的に暗号化されます。
+
+※ デモ用のため、復号に必要な秘密鍵を以下に公開します（Escrow Mode）。
+**受信者秘密鍵 (Private Key):**
+\`Cfg8QV6TZhoBfS1fIkGijpYBzTnlUpQpzAn401mqrps\`
+
+<script id="weba-l2-config" type="application/json">
+{
+  "enabled": false,
+  "recipient_kid": "demo-key-01",
+  "recipient_x25519": "aMk6CMXJ_gyo2shSFE8sGNseEHqoYuSA-TPTF8fsWxE",
+  "layer1_ref": "demo-form-v1"
+}
+</script>
 `;
