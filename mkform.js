@@ -9931,66 +9931,66 @@ var AGG_BLOCK_EN = [
   "    cuisine: Japanese",
   "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-05",
+  '      - date: "2026-01-05"',
   "        available: true",
-  "      - date: 2026-01-07",
+  '      - date: "2026-01-07"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: Mei",
   "    team_name: Design",
   "    cuisine: Italian",
   "    budget: 7000",
   "    availability:",
-  "      - date: 2026-01-06",
+  '      - date: "2026-01-06"',
   "        available: true",
-  "      - date: 2026-01-08",
+  '      - date: "2026-01-08"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: Ken",
   "    team_name: Sales",
   "    cuisine: BBQ",
   "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-05",
+  '      - date: "2026-01-05"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
-  "      - date: 2026-01-16",
+  '      - date: "2026-01-16"',
   "        available: true",
   "  - responder_name: Yui",
   "    team_name: Ops",
   "    cuisine: Sushi",
   "    budget: 7500",
   "    availability:",
-  "      - date: 2026-01-07",
+  '      - date: "2026-01-07"',
   "        available: true",
-  "      - date: 2026-01-13",
+  '      - date: "2026-01-13"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: Sora",
   "    team_name: Data",
   "    cuisine: Korean",
   "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-08",
+  '      - date: "2026-01-08"',
   "        available: true",
-  "      - date: 2026-01-12",
+  '      - date: "2026-01-12"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: Rin",
   "    team_name: HR",
   "    cuisine: Chinese",
   "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-06",
+  '      - date: "2026-01-06"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
-  "      - date: 2026-01-15",
+  '      - date: "2026-01-15"',
   "        available: true",
   "dashboard:",
   "  title: Dinner Poll Dashboard",
@@ -10019,7 +10019,6 @@ var AGG_BLOCK_EN = [
   "      value: budget",
   "      bin: 1000",
   "      max: 15000",
-  "      format: currency",
   "export:",
   "  jsonl: true",
   "```"
@@ -10034,66 +10033,66 @@ var AGG_BLOCK_JA = [
   "    cuisine: 和食",
   "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-05",
+  '      - date: "2026-01-05"',
   "        available: true",
-  "      - date: 2026-01-07",
+  '      - date: "2026-01-07"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: 芽衣",
   "    team_name: デザイン",
   "    cuisine: イタリアン",
   "    budget: 7000",
   "    availability:",
-  "      - date: 2026-01-06",
+  '      - date: "2026-01-06"',
   "        available: true",
-  "      - date: 2026-01-08",
+  '      - date: "2026-01-08"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: 健",
   "    team_name: セールス",
   "    cuisine: 焼肉",
   "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-05",
+  '      - date: "2026-01-05"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
-  "      - date: 2026-01-16",
+  '      - date: "2026-01-16"',
   "        available: true",
   "  - responder_name: 結衣",
   "    team_name: オペレーション",
   "    cuisine: 寿司",
   "    budget: 7500",
   "    availability:",
-  "      - date: 2026-01-07",
+  '      - date: "2026-01-07"',
   "        available: true",
-  "      - date: 2026-01-13",
+  '      - date: "2026-01-13"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: 空",
   "    team_name: データ",
   "    cuisine: 韓国料理",
   "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-08",
+  '      - date: "2026-01-08"',
   "        available: true",
-  "      - date: 2026-01-12",
+  '      - date: "2026-01-12"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
   "  - responder_name: 凛",
   "    team_name: 人事",
   "    cuisine: 中華",
   "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-06",
+  '      - date: "2026-01-06"',
   "        available: true",
-  "      - date: 2026-01-14",
+  '      - date: "2026-01-14"',
   "        available: true",
-  "      - date: 2026-01-15",
+  '      - date: "2026-01-15"',
   "        available: true",
   "dashboard:",
   "  title: 飲み会ダッシュボード",
@@ -10122,7 +10121,6 @@ var AGG_BLOCK_JA = [
   "      value: budget",
   "      bin: 1000",
   "      max: 15000",
-  "      format: currency",
   "export:",
   "  jsonl: true",
   "```"
@@ -11602,21 +11600,29 @@ window.addEventListener("DOMContentLoaded", () => {
   if (!formVal || lang === "ja" && isDefaultEn || lang === "en" && isDefaultJa) {
     editorForm.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
   }
+  const pqcBtn = document.createElement("button");
+  pqcBtn.className = "preview-btn";
+  pqcBtn.textContent = lang === "ja" ? "\uD83D\uDEE1️ PQC設定" : "\uD83D\uDEE1️ Setup PQC";
+  pqcBtn.style.border = "1px solid #7c3aed";
+  pqcBtn.style.color = "#7c3aed";
+  pqcBtn.style.marginLeft = "8px";
+  pqcBtn.onclick = () => setupEncryption(true);
   const encBtn = document.createElement("button");
   encBtn.className = "preview-btn";
-  encBtn.textContent = lang === "ja" ? "\uD83D\uDD11 暗号化設定 (Passkey)" : "\uD83D\uDD11 Setup Encryption (Passkey)";
+  encBtn.textContent = lang === "ja" ? "\uD83D\uDD11 暗号化設定" : "\uD83D\uDD11 Setup Encryption";
   encBtn.style.border = "1px solid #10b981";
   encBtn.style.color = "#059669";
-  encBtn.onclick = setupEncryption;
+  encBtn.onclick = () => setupEncryption(false);
   const headerLeft = document.querySelector(".pane-header .header-left");
   if (headerLeft) {
     headerLeft.appendChild(encBtn);
+    headerLeft.appendChild(pqcBtn);
   }
   window.setupEncryption = setupEncryption;
   window.setPreviewMode("form");
   updatePreview();
 });
-async function setupEncryption() {
+async function setupEncryption(usePqc = false) {
   try {
     const username = prompt("User Name for Passkey:", "demo-user");
     if (!username)
@@ -11639,7 +11645,13 @@ async function setupEncryption() {
       recipient_x25519: pubKey,
       layer1_ref: "demo-personal"
     };
+    let explanation = "Encryption Enabled via Passkey (X25519).";
+    if (usePqc) {
+      newConfig.recipient_pqc = "ML-KEM-768";
+      explanation = "Encryption Enabled: Hybrid (X25519 + ML-KEM-768).";
+    }
     const newBlock = `<script id="weba-l2-config" type="application/json">
+// ${explanation}
 ${JSON.stringify(newConfig, null, 2)}
 </script>`;
     if (val.match(configRegex)) {
@@ -11652,12 +11664,14 @@ ${newBlock}`;
     val = val.replace(/\*For demo purposes, decryption is automatically handled.*\*/g, "");
     val = val.replace(/※ デモ用のため、以下のキャンペーンIDが設定されている場合.*\*/g, "");
     val = val.replace(/※ デモ用のため、復号に必要な秘密鍵を以下に公開します.*\*/g, "");
-    val = val.replace(/Change `enabled: false` to `true` below.*/g, "Encryption Enabled via Passkey.");
+    val = val.replace(/Change `enabled: false` to `true` below.*/g, explanation);
+    val = val.replace(/Encryption Enabled via Passkey\./g, explanation);
     editor.value = val;
     updatePreview();
     alert(`Encryption configured!
 User: ${username}
-Public Key: ${pubKey}`);
+${usePqc ? `Mode: Hybrid PQC (ML-KEM-768)
+` : ""}Public Key: ${pubKey}`);
   } catch (e) {
     console.error(e);
     alert("Setup failed: " + e.message);
