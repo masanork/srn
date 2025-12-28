@@ -5,68 +5,68 @@ const AGG_BLOCK_EN = [
   "  - responder_name: Akira",
   "    team_name: Platform",
   "    cuisine: Japanese",
-  "    budget: 5000",
+  "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-05",
+  "      - date: \"2026-01-05\"",
   "        available: true",
-  "      - date: 2026-01-07",
+  "      - date: \"2026-01-07\"",
   "        available: true",
-  "      - date: 2026-01-12",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: Mei",
   "    team_name: Design",
   "    cuisine: Italian",
   "    budget: 7000",
   "    availability:",
-  "      - date: 2026-01-06",
+  "      - date: \"2026-01-06\"",
   "        available: true",
-  "      - date: 2026-01-08",
+  "      - date: \"2026-01-08\"",
   "        available: true",
-  "      - date: 2026-01-14",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: Ken",
   "    team_name: Sales",
   "    cuisine: BBQ",
-  "    budget: 11000",
+  "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-05",
+  "      - date: \"2026-01-05\"",
   "        available: true",
-  "      - date: 2026-01-09",
+  "      - date: \"2026-01-14\"",
   "        available: true",
-  "      - date: 2026-01-16",
+  "      - date: \"2026-01-16\"",
   "        available: true",
   "  - responder_name: Yui",
   "    team_name: Ops",
   "    cuisine: Sushi",
-  "    budget: 9000",
+  "    budget: 7500",
   "    availability:",
-  "      - date: 2026-01-07",
+  "      - date: \"2026-01-07\"",
   "        available: true",
-  "      - date: 2026-01-13",
+  "      - date: \"2026-01-13\"",
   "        available: true",
-  "      - date: 2026-01-15",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: Sora",
   "    team_name: Data",
   "    cuisine: Korean",
-  "    budget: 13000",
+  "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-08",
+  "      - date: \"2026-01-08\"",
   "        available: true",
-  "      - date: 2026-01-12",
+  "      - date: \"2026-01-12\"",
   "        available: true",
-  "      - date: 2026-01-14",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: Rin",
   "    team_name: HR",
   "    cuisine: Chinese",
-  "    budget: 3000",
+  "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-06",
+  "      - date: \"2026-01-06\"",
   "        available: true",
-  "      - date: 2026-01-09",
+  "      - date: \"2026-01-14\"",
   "        available: true",
-  "      - date: 2026-01-15",
+  "      - date: \"2026-01-15\"",
   "        available: true",
   "dashboard:",
   "  title: Dinner Poll Dashboard",
@@ -95,7 +95,6 @@ const AGG_BLOCK_EN = [
   "      value: budget",
   "      bin: 1000",
   "      max: 15000",
-  "      format: currency",
   "export:",
   "  jsonl: true",
   "```",
@@ -108,68 +107,68 @@ const AGG_BLOCK_JA = [
   "  - responder_name: 明",
   "    team_name: プラットフォーム",
   "    cuisine: 和食",
-  "    budget: 5000",
+  "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-05",
+  "      - date: \"2026-01-05\"",
   "        available: true",
-  "      - date: 2026-01-07",
+  "      - date: \"2026-01-07\"",
   "        available: true",
-  "      - date: 2026-01-12",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: 芽衣",
   "    team_name: デザイン",
   "    cuisine: イタリアン",
   "    budget: 7000",
   "    availability:",
-  "      - date: 2026-01-06",
+  "      - date: \"2026-01-06\"",
   "        available: true",
-  "      - date: 2026-01-08",
+  "      - date: \"2026-01-08\"",
   "        available: true",
-  "      - date: 2026-01-14",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: 健",
   "    team_name: セールス",
   "    cuisine: 焼肉",
-  "    budget: 11000",
+  "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-05",
+  "      - date: \"2026-01-05\"",
   "        available: true",
-  "      - date: 2026-01-09",
+  "      - date: \"2026-01-14\"",
   "        available: true",
-  "      - date: 2026-01-16",
+  "      - date: \"2026-01-16\"",
   "        available: true",
   "  - responder_name: 結衣",
   "    team_name: オペレーション",
   "    cuisine: 寿司",
-  "    budget: 9000",
+  "    budget: 7500",
   "    availability:",
-  "      - date: 2026-01-07",
+  "      - date: \"2026-01-07\"",
   "        available: true",
-  "      - date: 2026-01-13",
+  "      - date: \"2026-01-13\"",
   "        available: true",
-  "      - date: 2026-01-15",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: 空",
   "    team_name: データ",
   "    cuisine: 韓国料理",
-  "    budget: 13000",
+  "    budget: 8000",
   "    availability:",
-  "      - date: 2026-01-08",
+  "      - date: \"2026-01-08\"",
   "        available: true",
-  "      - date: 2026-01-12",
+  "      - date: \"2026-01-12\"",
   "        available: true",
-  "      - date: 2026-01-14",
+  "      - date: \"2026-01-14\"",
   "        available: true",
   "  - responder_name: 凛",
   "    team_name: 人事",
   "    cuisine: 中華",
-  "    budget: 3000",
+  "    budget: 6000",
   "    availability:",
-  "      - date: 2026-01-06",
+  "      - date: \"2026-01-06\"",
   "        available: true",
-  "      - date: 2026-01-09",
+  "      - date: \"2026-01-14\"",
   "        available: true",
-  "      - date: 2026-01-15",
+  "      - date: \"2026-01-15\"",
   "        available: true",
   "dashboard:",
   "  title: 飲み会ダッシュボード",
@@ -198,7 +197,6 @@ const AGG_BLOCK_JA = [
   "      value: budget",
   "      bin: 1000",
   "      max: 15000",
-  "      format: currency",
   "export:",
   "  jsonl: true",
   "```",
@@ -256,21 +254,22 @@ ${AGG_BLOCK_EN}
 
 ---
 
-## 5. Encryption Settings (Layer 2 Encryption Demo)
+## 5. Encryption Settings (Config)
 
 This form includes demo settings for client-side encryption (E2EE).
 Change \`enabled: false\` to \`true\` below to automatically encrypt saved data.
 
-*For demo purposes, the private key required for decryption is provided below (Escrow Mode).*
-**Recipient Private Key:**
-\`Cfg8QV6TZhoBfS1fIkGijpYBzTnlUpQpzAn401mqrps\`
+> [!TIP]
+> **Try Personal Mode (Passkey Encryption)**
+> Click the **"🔑 Setup Encryption (Passkey)"** button in the top toolbar to automatically securely configure this form with your own Passkey. This will overwrite the settings below.
+
+*To decrypt this data later, you MUST use the Personal Mode setup.*
 
 <script id="weba-l2-config" type="application/json">
 {
   "enabled": false,
-  "recipient_kid": "demo-key-01",
-  "recipient_x25519": "aMk6CMXJ_gyo2shSFE8sGNseEHqoYuSA-TPTF8fsWxE",
-  "layer1_ref": "demo-form-v1"
+  "recipient_kid": "user-key-01",
+  "recipient_x25519": ""
 }
 </script>
 `;
@@ -327,21 +326,22 @@ ${AGG_BLOCK_JA}
 
 ---
 
-## 5. 暗号化設定 (Layer 2 Encryption Demo)
+## 5. 暗号化設定 (Config)
 
 このフォームはクライアントサイド暗号化 (E2EE) のデモ設定を含んでいます。
 以下の設定の \`enabled: false\` を \`true\` に書き換えると、保存データが自動的に暗号化されます。
 
-※ デモ用のため、復号に必要な秘密鍵を以下に公開します（Escrow Mode）。
-**受信者秘密鍵 (Private Key):**
-\`Cfg8QV6TZhoBfS1fIkGijpYBzTnlUpQpzAn401mqrps\`
+> [!TIP]
+> **パーソナルモード (Passkey暗号化) を試す**
+> 上部ツールバーにある **「🔑 暗号化設定 (Passkey)」** ボタンをクリックすると、あなたのPasskeyを使ってこのフォームを安全に再設定できます（以下の設定が上書きされます）。
+
+※ これらのデータを後で復号するには、パーソナルモードでの設定が必須です（自動復号は行われません）。
 
 <script id="weba-l2-config" type="application/json">
 {
   "enabled": false,
-  "recipient_kid": "demo-key-01",
-  "recipient_x25519": "aMk6CMXJ_gyo2shSFE8sGNseEHqoYuSA-TPTF8fsWxE",
-  "layer1_ref": "demo-form-v1"
+  "recipient_kid": "user-key-01",
+  "recipient_x25519": ""
 }
 </script>
 `;

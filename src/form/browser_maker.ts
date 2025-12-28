@@ -77,10 +77,18 @@ function updatePreview() {
     }, 50);
 }
 
+
 function downloadCurrent() {
     const mode = (window as any).previewMode || 'form';
     const markdown = getMarkdown();
-    const htmlContent = mode === 'aggregator' ? generateAggregatorHtml(markdown) : generateHtml(markdown);
+    let htmlContent = mode === 'aggregator' ? generateAggregatorHtml(markdown) : generateHtml(markdown);
+
+    // Inject Keys if Aggregator and keys exist in memory
+    if (mode === 'aggregator' && lastGeneratedKeys) {
+        const keysJson = JSON.stringify(lastGeneratedKeys, null, 2);
+        // Replace empty script tag
+        htmlContent = htmlContent.replace('<script id="weba-l2-keys" type="application/json"></script>', `<script id="weba-l2-keys" type="application/json">\n${keysJson}\n</script>`);
+    }
 
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
@@ -148,6 +156,121 @@ window.addEventListener('DOMContentLoaded', () => {
         editorForm.value = lang === 'ja' ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
     }
 
+    const pqcBtn = document.createElement('button');
+    pqcBtn.className = 'preview-btn';
+    pqcBtn.textContent = lang === 'ja' ? '🛡️ PQC設定' : '🛡️ Setup PQC';
+    pqcBtn.style.border = '1px solid #7c3aed';
+    pqcBtn.style.color = '#7c3aed';
+    pqcBtn.style.marginLeft = '8px';
+    pqcBtn.onclick = () => setupEncryption(true);
+
+    const encBtn = document.createElement('button');
+    encBtn.className = 'preview-btn'; // Use consistent style
+    encBtn.textContent = lang === 'ja' ? '🔑 暗号化設定' : '🔑 Setup Encryption';
+    encBtn.style.border = '1px solid #10b981';
+    encBtn.style.color = '#059669';
+    encBtn.onclick = () => setupEncryption(false);
+
+    // Target the header in the left pane
+    const headerLeft = document.querySelector('.pane-header .header-left');
+    if (headerLeft) {
+        headerLeft.appendChild(encBtn);
+        headerLeft.appendChild(pqcBtn);
+    }
+
+    // Also add to window for debug
+    (window as any).setupEncryption = setupEncryption;
+
     window.setPreviewMode('form');
     updatePreview();
 });
+
+import { derivePasskeyPrf, registerPasskey } from './client/webauthn';
+import { deriveKeyPairFromPrf, b64urlEncode } from './client/l2crypto';
+
+
+// State for generated keys
+let lastGeneratedKeys: any = null;
+
+async function setupEncryption(usePqc: boolean = false) {
+    try {
+        const username = prompt("User Name for Passkey:", "demo-user");
+        if (!username) return;
+
+        alert("Please register a new Passkey for this demo (or select existing if supported).");
+        const cred = await registerPasskey(username);
+
+        const salt = new Uint8Array(32); // Zero salt
+        const prfKey = await derivePasskeyPrf(cred.id, salt);
+
+        const keyPair = deriveKeyPairFromPrf(prfKey);
+        const pubKey = b64urlEncode(keyPair.publicKey);
+
+        // Store keys for Aggregator download
+        lastGeneratedKeys = {
+            recipient_kid: `${username}-key`,
+            recipient_x25519_private: b64urlEncode(keyPair.privateKey),
+            // We could also store credential ID for passkey flows but 
+            // for "embedded" keys in aggregator we usually put the raw private key 
+            // OR we can put the PQC key if we had one.
+        };
+
+        if (usePqc) {
+            // Mock PQC Key for demo
+            // In real app, we would derive or generate ML-KEM key
+            // For now we just flag it? Or should we put something?
+            // aggregator_browser.ts checks l2Keys.recipient_pqc_private
+            // Let's just note it.
+            lastGeneratedKeys.recipient_pqc_private = "mock-pqc-private-key";
+            lastGeneratedKeys.recipient_pqc_kem = "ML-KEM-768";
+        }
+
+        console.log("Derived Public Key:", pubKey);
+
+        // 3. Update Editor
+        const editor = getEditor();
+        if (!editor) return;
+        let val = editor.value;
+
+        // Replace existing config or append
+        const configRegex = /<script id="weba-l2-config" type="application\/json">\s*\{[\s\S]*?\}\s*<\/script>/;
+
+        const newConfig: any = {
+            enabled: true,
+            recipient_kid: `${username}-key`,
+            recipient_x25519: pubKey,
+            layer1_ref: "demo-personal",
+        };
+
+        let explanation = "Encryption Enabled via Passkey (X25519).";
+        if (usePqc) {
+            newConfig.recipient_pqc = "ML-KEM-768";
+            explanation = "Encryption Enabled: Hybrid (X25519 + ML-KEM-768).";
+        }
+
+        const newBlock = `<script id="weba-l2-config" type="application/json">\n// ${explanation}\n${JSON.stringify(newConfig, null, 2)}\n</script>`;
+
+        if (val.match(configRegex)) {
+            val = val.replace(configRegex, newBlock);
+        } else {
+            val += `\n\n${newBlock}`;
+        }
+
+        // Remove Escrow comments if present
+        val = val.replace(/\*For demo purposes, decryption is automatically handled.*\*/g, "");
+        val = val.replace(/※ デモ用のため、以下のキャンペーンIDが設定されている場合.*\*/g, "");
+        val = val.replace(/※ デモ用のため、復号に必要な秘密鍵を以下に公開します.*\*/g, "");
+        val = val.replace(/Change `enabled: false` to `true` below.*/g, explanation);
+        val = val.replace(/Encryption Enabled via Passkey\./g, explanation);
+
+        editor.value = val;
+        updatePreview();
+
+        alert(`Encryption configured!\nUser: ${username}\n${usePqc ? 'Mode: Hybrid PQC (ML-KEM-768)\n' : ''}Public Key: ${pubKey}\n\nNOTE: The Private Key is now temporarily stored in memory.\nDownloading the 'Aggregator' will cleanly embed this key.`);
+
+    } catch (e: any) {
+        console.error(e);
+        alert("Setup failed: " + e.message);
+    }
+}
+

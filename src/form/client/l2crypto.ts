@@ -169,6 +169,13 @@ export function deriveOrgX25519KeyPair(params: {
   return { publicKey, privateKey: seed, keyPolicy: policy };
 }
 
+export function deriveKeyPairFromPrf(prfKey: Uint8Array) {
+  const info = new TextEncoder().encode("weba-l2/user-x25519");
+  const seed = hkdf(sha256, prfKey, undefined, info, 32);
+  const publicKey = x25519.getPublicKey(seed);
+  return { publicKey, privateKey: seed };
+}
+
 function getPqcProvider(): PqcKemProvider | null {
   const w = globalThis as any;
   return w.webaPqcKem || null;
