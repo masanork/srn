@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web/A Form Maker</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <style>
@@ -213,6 +214,7 @@
             border-bottom: 1px solid #e5e7eb;
             flex-wrap: wrap;
         }
+
         .tab-btn {
             background: #f1f5f9;
             border: 1px solid #e5e7eb;
@@ -224,9 +226,11 @@
             font-weight: 600;
             color: #64748b;
         }
+
         .tab-btn:hover {
             background: #e2e8f0;
         }
+
         .tab-btn.active {
             background: #fff;
             color: #111827;
@@ -234,16 +238,26 @@
             position: relative;
             top: 1px;
         }
+
         .tab-content {
             display: none;
             animation: fadeIn 0.2s ease-in-out;
         }
+
         .tab-content.active {
             display: block;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -253,6 +267,10 @@
         <div class="pane-header">
             <div class="header-left">
                 <span data-i18n="md_def">Markdown Definition</span>
+                <input type="file" id="load-tool-input" style="display:none" accept=".html"
+                    onchange="loadToolFile(this)" />
+                <button class="preview-btn" onclick="document.getElementById('load-tool-input').click()"
+                    style="border-color:#6366f1; color:#4f46e5;">📂 Load Tool</button>
             </div>
         </div>
         <textarea id="editor-form" class="editor-area" spellcheck="false" oninput="parseAndRender()"></textarea>
