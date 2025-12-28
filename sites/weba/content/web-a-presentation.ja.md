@@ -4,37 +4,52 @@ description: "記事として読めて、そのまま全画面スライドにも
 layout: article
 lang: ja
 presentation: true
+presentation_template: sorane
 date: 2025-02-01
 ---
 
-# Web/A in One Deck
-
-Web/Aは「読む・配る・検証する」を**1つのHTML**で完結させる、アーカイブ指向のドキュメント形式です。
-
----
-
-## なぜ今、Web/Aなのか
-
-- PDFは強いが、**更新・検証・構造化**に弱い
-- Webは柔軟だが、**長期保存**や真正性に弱い
-- 現場は「**配りやすさ**」と「**信頼性**」の両立に困っている
+<div class="slide-cover">
+<div class="slide-logo">空音</div>
+<h1>Web/A in One Deck</h1>
+<div class="slide-divider"></div>
+<p class="slide-subtitle">Web/Aは「読む・配る・検証する」を<strong>1つのHTML</strong>で完結させる、アーカイブ指向のドキュメント形式です。</p>
+</div>
 
 ---
 
-## Web/A = HTML完結のアーカイブ
-
-- 依存ゼロの**単一HTML**
-- フォントも画像も**埋め込み済み**
-- オフラインで**100年読める**ことを前提に設計
+<div class="slide-section">
+<div class="slide-kicker">Context</div>
+<h2>なぜ今、Web/Aなのか</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>PDFは強いが、<strong>更新・検証・構造化</strong>に弱い</li>
+  <li>Webは柔軟だが、<strong>長期保存</strong>や真正性に弱い</li>
+  <li>現場は「<strong>配りやすさ</strong>」と「<strong>信頼性</strong>」の両立に困っている</li>
+</ul>
+</div>
 
 ---
 
-## Web/Aの3層モデル
+<div class="slide-card">
+<h2>Web/A = HTML完結のアーカイブ</h2>
+<ul>
+  <li>依存ゼロの<strong>単一HTML</strong></li>
+  <li>フォントも画像も<strong>埋め込み済み</strong></li>
+  <li>オフラインで<strong>100年読める</strong>ことを前提に設計</li>
+</ul>
+</div>
 
-- **Layer 1: Signed Content**（署名付きの不変データ）
-- **Layer 2: Confidential Payload**（受領者限定の暗号化）
-- **Layer 3: Presentation**（可変レイアウト/UI）
+---
 
+<div class="slide-split">
+<div>
+<h2>Web/Aの3層モデル</h2>
+<ul>
+  <li><strong>Layer 1:</strong> Signed Content（署名付きの不変データ）</li>
+  <li><strong>Layer 2:</strong> Confidential Payload（受領者限定の暗号化）</li>
+  <li><strong>Layer 3:</strong> Presentation（可変レイアウト/UI）</li>
+</ul>
+</div>
 <div class="presentation-figure">
 <svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="weba-structure-title weba-structure-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
   <title id="weba-structure-title">Web/A 文書構造</title>
@@ -83,6 +98,7 @@ Web/Aは「読む・配る・検証する」を**1つのHTML**で完結させる
   <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
   <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + ML-DSA-44 (耐量子)</text>
 </svg>
+</div>
 </div>
 
 ---
