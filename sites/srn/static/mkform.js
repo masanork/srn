@@ -1,3 +1,4 @@
+window.__WEBA_BUILD_TIME__='2025-12-28T23:42:10Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -3325,6 +3326,7 @@ function generateAggregatorHtml(markdown) {
   const { jsonStructure } = parseMarkdown(markdown);
   const aggSpec = jsonStructure.aggSpec ? JSON.stringify(jsonStructure.aggSpec) : "";
   const sourceMd = markdown.replace(/<\/script>/g, "<\\/script>");
+  const buildStamp = typeof window !== "undefined" && window.__WEBA_BUILD_TIME__ ? window.__WEBA_BUILD_TIME__ : "";
   return `<!DOCTYPE html><html><head><title>Aggregator</title><style>
     body{font-family:sans-serif;max-width:1100px;margin:0 auto;padding:2rem;}
     h1{margin-bottom:1.5rem;}
@@ -3360,7 +3362,7 @@ function generateAggregatorHtml(markdown) {
     .agg-bar-value{font-weight:600;white-space:nowrap;}
     .agg-dashboard-table{margin-bottom:1rem;}
     .agg-table-title{font-weight:600;margin-bottom:0.35rem;}
-    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script>window.__WEBA_BUILD_TIME__=${JSON.stringify(buildStamp)};</script><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
 
 // src/form/sample.ts
@@ -5702,6 +5704,12 @@ function installBrowserPqcProvider(provider) {
 }
 
 // src/form/browser_maker.ts
+var BUILD_TIME = typeof window !== "undefined" && window.__WEBA_BUILD_TIME__ ? window.__WEBA_BUILD_TIME__ : "";
+function formatBuildStamp(value) {
+  if (!value)
+    return "Build: dev";
+  return `Build: ${value.replace("T", " ").replace(".000Z", "Z")}`;
+}
 function getEditor() {
   return document.getElementById("editor-form");
 }
@@ -5802,6 +5810,7 @@ function applyI18n() {
   });
 }
 window.addEventListener("DOMContentLoaded", () => {
+  window.__WEBA_BUILD_TIME__ = BUILD_TIME;
   applyI18n();
   const editorForm = getEditor();
   if (!editorForm)
@@ -5824,6 +5833,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const headerLeft = document.querySelector(".pane-header .header-left");
   if (headerLeft) {
     headerLeft.appendChild(encBtn);
+  }
+  const buildEl = document.getElementById("build-stamp");
+  if (buildEl) {
+    buildEl.textContent = formatBuildStamp(BUILD_TIME);
+    buildEl.title = BUILD_TIME ? `Built at ${BUILD_TIME}` : "Build time not available";
   }
   try {
     const provider = createMlKem768Provider();

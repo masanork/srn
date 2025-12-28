@@ -21,6 +21,15 @@ declare global {
 
 import { DEFAULT_MARKDOWN_EN, DEFAULT_MARKDOWN_JA } from './sample';
 
+const BUILD_TIME = (typeof window !== 'undefined' && (window as any).__WEBA_BUILD_TIME__)
+    ? (window as any).__WEBA_BUILD_TIME__
+    : '';
+
+function formatBuildStamp(value: string): string {
+    if (!value) return 'Build: dev';
+    return `Build: ${value.replace('T', ' ').replace('.000Z', 'Z')}`;
+}
+
 function getEditor(): HTMLTextAreaElement | null {
     return document.getElementById('editor-form') as HTMLTextAreaElement | null;
 }
@@ -142,6 +151,7 @@ function applyI18n() {
 
 // Init
 window.addEventListener('DOMContentLoaded', () => {
+    (window as any).__WEBA_BUILD_TIME__ = BUILD_TIME;
     applyI18n();
     const editorForm = getEditor();
     if (!editorForm) return;
@@ -169,6 +179,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const headerLeft = document.querySelector('.pane-header .header-left');
     if (headerLeft) {
         headerLeft.appendChild(encBtn);
+    }
+
+    const buildEl = document.getElementById('build-stamp');
+    if (buildEl) {
+        buildEl.textContent = formatBuildStamp(BUILD_TIME);
+        buildEl.title = BUILD_TIME ? `Built at ${BUILD_TIME}` : 'Build time not available';
     }
 
     // Install PQC provider for the Maker UI context
@@ -339,4 +355,3 @@ async function loadToolFile(input: HTMLInputElement) {
     }
 }
 window.loadToolFile = loadToolFile;
-

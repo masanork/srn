@@ -1,314 +1,225 @@
 ---
-title: "Discussion Paper: Web/A Layer 2 Encryption"
+title: "Technical Report: Web/A Layer 2 Encryption Architecture"
 layout: article
 author: "Web/A Project"
-date: 2025-12-27
+date: 2025-12-29
 ---
 
-# Web/A Layer 2 Encryption: Privacy-Preserving Form Submissions
+# Web/A Layer 2 Encryption Architecture
+**Confidentiality and Privacy for Distributed Form Data**
 
 ## 1. Abstract
-This paper defines the **Layer 2 Encryption** layer for Web/A documents. While Layer 1 ensures the integrity of the document template (the "Question"), and Layer 2 (Signature) ensures the authenticity of the user's response (the "Answer"), Layer 2 Encryption provides **Confidentiality**. This ensures that sensitive user data is only readable by the intended recipient (the Issuer/Aggregator), even when the document is transported over untrusted channels or stored in browser-local storage.
+This report details the architectural design and implementation of **Layer 2 Encryption** for the Web/A protocol. Web/A Layer 2 Encryption provides end-to-end confidentiality for user responses (Layer 2) in a file-centric, serverless environment. By utilizing a Hybrid Public Key Encryption (HPKE)-like construction, it ensures that sensitive data is readable only by the intended recipient (Issuer/Aggregator), protecting it during transit and storage. The system supports a hybrid Post-Quantum Cryptography (PQC) mode and integrates with WebAuthn PRF for browser-native decryption.
 
-## 2. Threat Model
-- **Confidentiality**: Protect User Answers from intermediaries (email providers, CDNs, malicious browser extensions).
-- **Integrity-Linked**: Ensure the ciphertext is cryptographically bound to the specific version of the Layer 1 Template (preventing "cut-and-paste" attacks where answers are moved to a different form).
-- **Future-Proofing**: Provide a hybrid path for Post-Quantum Cryptography (PQC) while maintaining compatibility with current high-performance ECC.
+## 2. Introduction
+In the Web/A model, documents are self-contained artifacts. A "Form" (Layer 1) is a static file that users fill out to generate an "Answer" (Layer 2). Unlike traditional web forms that POST data to a specific server, Web/A answers can be transported via any channel (email, USB, IPFS, etc.).
 
-## 2.5. Integration with Web/A Form (Opt-in)
-Layer 2 Encryption is optional for Web/A Form. When enabled, the form emits a **Layer2Encrypted** envelope instead of plaintext L2. When disabled, the form behaves exactly as today.
+This decoupled architecture necessitates a robust encryption mechanism that:
+1.  **Protects Confidentiality**: Data must remain encrypted at rest and in transit.
+2.  **Binds to Context**: Answers must be cryptographically bound to the specific question (Layer 1) to prevent splicing attacks.
+3.  **Enables Offline Operations**: Decryption should be possible in offline environments (e.g., local browser, air-gapped aggregators).
 
-Operational assumptions:
-- The issuer distributes the form together with a recipient encryption public key (X25519, optional ML-KEM-768).
-- The form UI exposes a clear “Encrypt L2” toggle and explains who can decrypt.
-- The encrypted envelope binds to the form’s `layer1_ref` via AAD so answers cannot be transplanted to a different template.
+## 3. Architecture Overview
 
-## 3. Cryptographic Construction
+Layer 2 Encryption acts as a wrapper around the standard signed Layer 2 payload.
 
-### 3.1. HPKE-like Hybrid Encryption
-Web/A L2 uses a construction inspired by **HPKE (RFC 9180)**, optimized for JSON-based document workflows.
+```mermaid
+flowchart LR
+    User[User Input] --> Plain[L2 Plaintext]
+    Plain --> Sign[Signer (Ed25519)]
+    Sign --> Signed[L2 Payload\n(Signed)]
+    Signed --> Encrypt[Encrypter\n(HPKE/X25519)]
+    Encrypt --> Envelope[L2 Encrypted Envelope]
+    
+    subgraph Browser/Client
+    User
+    Plain
+    Sign
+    Signed
+    Encrypt
+    end
+    
+    Envelope --> Storage[Storage/Transport]
+    Storage --> Decrypt[Decrypter]
+    Decrypt --> Verify[Signature Verifier]
+    Verify --> Data[Validated Data]
 
-- **KEM (Key Encapsulation Mechanism)**: 
-  - Classical: **X25519**
-  - Post-Quantum (Optional): **ML-KEM-768 (Kyber)**
-- **KDF (Key Derivation Function)**: **HKDF-SHA256**
-- **AEAD (Authenticated Encryption with Associated Data)**: **AES-256-GCM**
-
-### 3.2. Associated Data (AAD) Binding
-To prevent re-binding attacks, the AEAD `aad` includes the `layer1_ref` (hash of the template). If the `layer1_ref` in the envelope does not match the one used during encryption, decryption will fail.
-
-```json
-{
-  "layer1_ref": "sha256:...",
-  "recipient": "issuer#kem-2025",
-  "weba_version": "0.1"
-}
+    subgraph Aggregator/Issuer
+    Decrypt
+    Verify
+    Data
+    end
 ```
 
-### 3.3. Deterministic Canonicalization
-For both signing and AAD preparation, Web/A uses a simplified **Canonical JSON**:
-1. Lexicographical sorting of keys.
-2. No insignificant whitespace.
-3. UTF-8 encoding.
-4. Floating-point numbers are discouraged (or stringified) to ensure cross-platform stability.
+### 3.1. Design Principles
+*   **Identity Separation**: Signing (Authentication) and Encryption (Confidentiality) use different keys. Signing keys are user-controlled (ephemeral or persistent), while encryption keys are issuer-controlled.
+*   **Hybrid Encryption**: We use a KEM (Key Encapsulation Mechanism) + DEM (Data Encapsulation Mechanism) approach, allowing efficient encryption of large payloads.
+*   **Context Binding**: Using AEAD (Authenticated Encryption with Associated Data), we bind the encryption to the Layer 1 hash (`layer1_ref`), ensuring that an encrypted answer cannot be validly decrypted in the context of a different form.
 
-## 4. Data Structures
+## 4. Cryptographic Specifications
 
-### 4.1. Layer 2 Payload (Plaintext before encryption)
-```json
-{
-  "layer2_plain": {
-    "name": "John Doe",
-    "medical_history": "..."
-  },
-  "layer2_sig": {
-    "alg": "Ed25519",
-    "kid": "user#sig-1",
-    "sig": "base64...",
-    "created_at": "2025-12-27T..."
-  }
-}
+The protocol uses a suite inspired by **HPKE (RFC 9180)** but optimized for JSON/JavaScript environments.
+
+| Component | Primitive | Notes |
+| :--- | :--- | :--- |
+| **Signing** | Ed25519 | For user authentication of the plaintext. |
+| **KEM** | X25519 | Classical Diffie-Hellman (Curve25519). |
+| **KEM (PQC)** | ML-KEM-768 | Optional hybrid extension (Kyber). |
+| **KDF** | HKDF-SHA256 | Key Derivation Function. |
+| **AEAD** | AES-256-GCM | Authenticated Encryption. |
+
+### 4.1. Encryption Process
+
+```mermaid
+sequenceDiagram
+    participant P as Payload (Signed)
+    participant E as Ephemeral KeyGen
+    participant K as KDF (HKDF)
+    participant C as Cipher (AES-GCM)
+    participant R as Recipient Key
+    
+    Note over P: Input: Signed Layer 2 Payload
+    E->>E: Generate Ephemeral (priv, pub)
+    E->>R: ECDH(Ephemeral_Priv, Recipient_Pub) -> SharedSecret
+    
+    Note over K: Salt = AAD (Layer1 Ref + Recipient ID)
+    K->>K: HKDF(SharedSecret, Salt) -> (Key, IV)
+    
+    C->>C: Encrypt(Payload, Key, IV, AAD)
+    C->>P: Ciphertext + Tag
+    
+    Note over P: Output: Encrypted Envelope
 ```
 
-### 4.2. Layer 2 Encrypted Envelope
-```json
-{
-  "weba_version": "0.1",
-  "layer1_ref": "sha256:...",
-  "layer2": {
-    "enc": "HPKE-v1",
-    "suite": {
-      "kem": "X25519(+ML-KEM-768)",
-      "kdf": "HKDF-SHA256",
-      "aead": "AES-256-GCM"
-    },
-    "recipient": "issuer#kem-2025",
-    "encapsulated": {
-      "classical": "base64(ephemeral_pk)",
-      "pqc": "base64(kem_ct)"
-    },
-    "ciphertext": "base64(aead_ct)",
-    "aad": "base64(aad_json)"
-  },
-  "meta": {
-    "created_at": "2025-12-27T...",
-    "nonce": "base64..."
-  }
-}
+1.  **Input**: A signed `Layer2Payload` and a target `layer1_ref`.
+2.  **AAD Construction**: A canonical JSON string binding the context:
+    ```json
+    {"layer1_ref": "...", "recipient": "...", "weba_version": "0.1"}
+    ```
+3.  **KEM**: Generate an ephemeral X25519 key pair. Compute shared secret with Recipient Public Key.
+    *   *Hybrid PQC*: If enabled, also generate PQC encapsulation and concatenate shared secrets.
+4.  **KDF**: Derive `key` (32 bytes) and `iv` (12 bytes) using HKDF-SHA256. The AAD is used as the salt.
+5.  **AEAD**: Encrypt the payload using AES-256-GCM with the derived key, IV, and AAD.
+
+### 4.2. Data Structures
+
+#### Layer 2 Payload (Inner)
+The plaintext data, signed by the user.
+
+```typescript
+type Layer2Payload = {
+  layer2_plain: any; // The form data
+  layer2_sig: {
+    alg: "Ed25519";
+    kid: string;     // e.g., "user#sig-1"
+    sig: string;     // base64url encoded signature
+    created_at: string;
+  };
+};
 ```
 
-## 5. Implementation Notes (Bun/TypeScript)
-- Use `@noble/curves/ed25519` and `x25519` for elliptic curve operations.
-- Use `node:crypto` for `hkdf`, `randomBytes`, and `createCipheriv` (AES-GCM).
-- Implementation should be minimal and self-contained to allow easy porting to browser environments.
+#### Layer 2 Encrypted Envelope (Outer)
+The final artifact embedded in the HTML or JSON output.
 
-## 6. Usage (Web/A Form Integration)
-
-### 6.1. Enable Encryption in Frontmatter
-Add the following fields to a Web/A Form Markdown file to enable L2 encryption. This will inject the recipient key and show a toggle in the form UI.
-
-```yaml
----
-layout: form
-l2_encrypt: true
-l2_recipient_kid: "issuer#kem-2025"
-l2_recipient_x25519: "<base64url>"
-# l2_recipient_pqc: "<base64url>" # Optional. ML-KEM-768 public key for hybrid mode.
-# l2_layer1_ref: "sha256:..."  # Optional. If omitted, it derives from the template VC digest.
-l2_encrypt_default: true       # Optional. Default toggle state.
-l2_user_kid: "user#sig-1"       # Optional. User signature key id.
-l2_keywrap:                    # Optional. Enables passkey unlock for recipient.
-  alg: "WebAuthn-PRF-AESGCM-v1"
-  kid: "issuer#passkey-1"
-  credential_id: "base64url(...)"
-  prf_salt: "base64url(...)"
-  wrapped_key: "base64url(...)"
-  aad: "base64url(layer1_ref)"
----
+```typescript
+type Layer2Encrypted = {
+  weba_version: string;
+  layer1_ref: string; // Critical: binds to the form template
+  layer2: {
+    enc: "HPKE-v1";
+    suite: {
+      kem: "X25519" | "X25519+ML-KEM-768";
+      kdf: "HKDF-SHA256";
+      aead: "AES-256-GCM";
+    };
+    recipient: string; // Key ID of the recipient
+    encapsulated: {
+      classical: string; // base64url(ephemeral_pk)
+      pqc?: string;      // base64url(kem_ct) [Optional]
+    };
+    ciphertext: string;  // base64url(aes_ct + auth_tag)
+    aad: string;         // base64url(aad_json)
+  };
+  meta: {
+    created_at: string;
+    nonce: string;
+    campaign_id?: string;
+  };
+};
 ```
 
-### 6.2. User Flow
-1. Issuer distributes the form with recipient public keys embedded.
-2. User fills the form as usual.
-3. User toggles “Encrypt L2” on (default can be pre-set).
-4. Submission produces a Layer2Encrypted envelope instead of plaintext L2.
+## 5. Key Management & Hierarchy
 
-### 6.3. Output Artifacts
-When encryption is enabled:
-- The encrypted envelope is stored in `<script id="weba-l2-envelope" type="application/json">`.
-- Plaintext JSON-LD is removed from the output HTML.
-- The envelope is bound to `layer1_ref` via AAD (tampering breaks decryption).
+To manage keys effectively across many campaigns and forms, Web/A employs a hierarchical key derivation scheme for organizations.
 
-### 6.4. Aggregation Output (CSV + Optional JSON)
-For aggregation pipelines, L2 plaintext can be emitted to CSV using flattened keys. Arrays are indexed with `[]` and objects use dot notation.
+### 5.1. Organization Key Derivation
+Instead of managing thousands of random key pairs, an organization maintains a single **SRN Instance Key**.
 
-Examples:
-- `org.name`
-- `items[0].amount`
-
-If raw JSON is needed, aggregation can include a `_json` column via `--include-json` to preserve the original structure.
-This makes it possible to reconstruct nested data or run custom post-processing later.
-
-**Flattening rules**:
-- Objects are flattened with `.` (dot) separators.
-- Arrays are flattened with `[index]` suffixes.
-- `null` / `undefined` are exported as empty or null values depending on CSV handling.
-
-**Example**:
-```json
-{
-  "org": { "name": "ACME" },
-  "items": [{ "amount": 1200 }, { "amount": 900 }]
-}
-```
-becomes:
-- `org.name` = `ACME`
-- `items[0].amount` = `1200`
-- `items[1].amount` = `900`
-
-### 6.5. Browser Aggregator (Embedded Key)
-The aggregator can run **entirely in the browser** if the recipient private key is embedded in the HTML. This enables secure, offline batch decryption without installing CLI tools.
-
-Embed the key file in the aggregator HTML:
-```html
-<script id="weba-l2-keys" type="application/json">
-{"recipient_kid":"issuer#kem-2025","recipient_x25519_private":"...base64url..."}
-</script>
+```mermaid
+graph TD
+    Instance[SRN Instance Key] -->|HKDF "org-root"| Root[Org Root Key]
+    Root -->|HKDF "campaign+layer1"| Campaign[Campaign/Form Key]
+    
+    subgraph Per-Form
+    Campaign --> Pub[Public Key (embedded in Form)]
+    Campaign --> Priv[Private Key (used by Aggregator)]
+    end
 ```
 
-Operationally, this aligns with the **Aggregator Escrow** mode: the organization pre-installs temporary keys in the aggregator so multiple operators can decrypt and export CSV safely.
+*   **SRN Instance Key**: The master secret for the server/node.
+*   **Org Root Key**: Derived per organization ID. Allows multi-tenant isolation.
+*   **Campaign/Form Key**: Derived for a specific campaign or form (`layer1_ref`).
 
-### 6.5.1. Aggregator Key File (JSON)
-Aggregator tooling accepts a key JSON file. Recommended fields:
+This ensures that compromising a key for one form does not compromise past or future forms.
 
-```json
-{
-  "recipient_kid": "issuer#kem-2025",
-  "recipient_x25519_private": "base64url(...)",
-  "recipient_pqc_kem": "ML-KEM-768",
-  "recipient_pqc_private": "base64url(...)",
-  "org_root_key": "base64url(...)",
-  "org_campaign_id": "campaign-1",
-  "org_key_policy": "campaign+layer1"
-}
+### 5.2. Aggregator Escrow
+In the "Aggregator Escrow" model, the derived private key for a specific form is temporarily provided to the aggregator tool (browser-based or CLI). This allows authorized operators to batch-decrypt responses without needing access to the master root key.
+
+## 6. Browser Integration & WebAuthn PRF
+
+For individual recipients (e.g., a doctor receiving a patient form directly), we support **Browser-Only Decryption** using WebAuthn PRF (Pseudo-Random Function).
+
+### 6.1. Key Wrapping Flow
+1.  **Setup**: The recipient generates a persistent L2 encryption key pair.
+2.  **Wrapping**: The private key is encrypted (wrapped) using a key derived from their Passkey (WebAuthn PRF).
+3.  **Embedding**: The wrapped key is embedded in the Form HTML or the Aggregator HTML.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Auth as WebAuthn/Authenticator
+    
+    User->>Browser: Click "Unlock with Passkey"
+    Browser->>Auth: get() with PRF extension
+    Auth-->>Browser: PRF Output (Seed)
+    Browser->>Browser: HKDF(Seed) -> Wrap Key
+    Browser->>Browser: AES-Decrypt(Wrapped Private Key)
+    Browser->>Browser: Decrypt L2 Envelope
+    Browser->>User: Show Plaintext Data
 ```
 
-You may provide **either** `recipient_x25519_private` or `org_root_key` (with campaign info). When `org_root_key` is used, the aggregator derives the private key deterministically and operators never choose keys manually.
+This enables a "smart document" experience where the file itself verifies the user's identity via biometric/security key before revealing its contents, without contacting any central server.
 
-### 6.6. PQC Enablement (Hybrid)
-PQC is **opt-in**. If `l2_recipient_pqc` is provided (ML-KEM-768 public key), encryption switches to **X25519 + ML-KEM-768**. Without it, the system remains classical-only.
+## 7. Security Considerations
 
-**CLI example**:
-- Generate keys with PQC: `bun src/bin/weba-l2-crypto.ts gen-keys --pqc`
-- The recipient key JSON will include `pqc_kem`, `pqc_publicKey`, `pqc_privateKey` fields.
+### 7.1. Context Binding (Anti-Splicing)
+A critical threat is an attacker taking an encrypted answer from Form A (e.g., "Sign up for Newsletter") and injecting it into Form B (e.g., "Authorize Transfer").
+*   **Mitigation**: The `layer1_ref` (hash of the Form) is included in the **AAD**.
+*   **Effect**: If the envelope is moved to a form with a different `layer1_ref`, the AEAD decryption will fail (Auth Tag mismatch) because the AAD verification fails.
 
-**Browser note**:
-To decrypt PQC envelopes in-browser (viewer or aggregator), install a PQC provider (ML-KEM-768) and expose it as `webaPqcKem`.
+### 7.2. Forward Secrecy
+*   **Current State**: The scheme uses static recipient public keys. If the recipient's private key is compromised, past messages can be decrypted.
+*   **Mitigation**: Use distinct keys per campaign (Key Derivation) and rotate keys frequently. The hierarchical derivation makes rotation cheap (no storage cost).
 
-## 7. Browser-Only Decryption with Passkey (Concept)
-Web/A’s file-first model favors a **browser-only decryption flow** that works without external tooling. The intended UX is “one passkey action to open”.
+### 7.3. Post-Quantum Readiness
+*   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today cannot be decrypted by future quantum computers, provided the quantum computer cannot break SHA-256 (used in HKDF) or AES-256.
 
-### 7.1. Key Wrap Concept
-To enable browser-only decryption, the recipient’s **CEK (content-encryption key)** is wrapped with a Passkey-protected key and embedded alongside the envelope:
+## 8. Current Implementation Status
+*   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`).
+*   **Browser Support**: Verified in Chrome/Edge/Safari. PQC support requires a WASM polyfill (e.g., specific libraries).
+*   **WebAuthn PRF**: Implemented but requires browser support (Chrome/Edge stable).
+*   **CLI Tooling**: `weba-l2-crypto` CLI supports key generation and manual encryption/decryption.
 
-- The form carries a **Key Wrap Package** (KWP) that can be unlocked via WebAuthn.
-- The KWP contains an encrypted CEK and the metadata required to unlock it.
-- The recipient authenticates via Passkey → browser unwraps CEK → decrypts L2 envelope.
-
-This preserves the file-first property: a single HTML file still carries all data needed, yet only the intended recipient can decrypt.
-
-### 7.2. Proposed Data Blocks
-```json
-// Embedded in HTML (example IDs)
-{
-  "weba-l2-envelope": { /* Layer2Encrypted */ },
-  "weba-l2-keywrap": {
-    "alg": "WebAuthn-PRF-AESGCM-v1",
-    "kid": "issuer#passkey-1",
-    "wrapped_key": "base64url(...)",
-    "credential_id": "base64url(...)",
-    "prf_salt": "base64url(...)",
-    "aad": "base64url(layer1_ref)"
-  }
-}
-```
-
-### 7.3. Unlock Flow (Recipient)
-1. Recipient opens the HTML file in a browser.
-2. Click **Unlock (Passkey)**.
-3. WebAuthn `get()` is invoked for the configured credential ID.
-4. The browser derives/unwraps CEK and decrypts the L2 envelope.
-5. Decrypted payload is rendered in a read-only view (no plaintext stored unless explicitly exported).
-
-### 7.4. Organization Mode (Aggregator Escrow)
-For organizational workflows, a **temporary recipient key** may be generated per form and **pre-installed in the aggregator** for batch decryption. This provides a practical fallback when relying solely on an individual’s Passkey is operationally risky.
-
-- The form is encrypted to the temporary recipient public key.
-- The aggregator stores the corresponding private key and can decrypt in bulk.
-- This is an **opt-in escrow** model; it trades stronger individual-only access for operational continuity.
-- Key rotation is straightforward: issue new temp keys per campaign or per form.
-
-This mode can coexist with Passkey unlock (Key Wrap); issuers choose one or both based on risk tolerance.
-
-### 7.4.1. Root-Key Derivation (Accident Prevention)
-To avoid “wrong key” accidents, issuers can derive recipient keys from a fixed **organization root key** plus a **campaign ID** (optionally bound to `layer1_ref`). This removes manual key selection from operators:
-
-- **Root key** stays in the aggregator environment.
-- **Recipient public key** is derived deterministically during form generation.
-- Aggregator derives the **same private key** from the root key + campaign context.
-
-Recommended derivation context:
-- `campaign_id` (required)
-- `layer1_ref` (for `campaign+layer1` policy)
-
-This enforces consistent key usage across Form + Aggregator without distributing per-campaign private keys.
-
-#### Relationship to SRN Instance Key
-For tighter control, the **organization root key** itself can be deterministically derived from an **SRN instance master key**:
-
-```
-org_root_key = HKDF(srn_instance_key, info = "weba-l2/org-root" || org_id)
-```
-
-This keeps the instance master key offline and avoids manual org-root provisioning while still separating keys per organization.
-
-### 7.5. Notes
-- This section defines the **conceptual flow**; exact KWP format is a spec extension.
-- The goal is **single action unlock** without external tools.
-- If KWP is absent, offline decryption via CLI remains the fallback.
-
-### 7.6. Key Wrap Mechanics (Proposed)
-The Key Wrap Package (KWP) wraps the **recipient X25519 private key** so it can only be unlocked with the recipient’s Passkey. The CEK is still derived at decryption time from the envelope and the unwrapped private key.
-
-**Inputs**:
-- `recipient_x25519_sk`: recipient private key (32 bytes).
-- `credential_id`: passkey identifier for the recipient.
-- `prf_salt`: per-form salt for PRF key derivation.
-- `aad`: optional context binding (e.g., `layer1_ref`).
-
-**Derivation (sketch)**:
-1. Call WebAuthn `get()` with **PRF extension** and `prf_salt`.
-2. Obtain `prf_output` from `getClientExtensionResults().prf.results.first`.
-3. Derive wrap key/iv via HKDF-SHA256:
-   - `wrap_key = HKDF(prf_output, info="weba-l2/kw", 32)`
-   - `wrap_iv  = HKDF(prf_output, info="weba-l2/kw-iv", 12)`
-4. Encrypt `recipient_x25519_sk` with AES-256-GCM using `wrap_key`, `wrap_iv`, and `aad`.
-5. Store the ciphertext as `wrapped_key` in the KWP.
-
-**Unwrap**:
-1. Re-run WebAuthn `get()` with the same PRF salt.
-2. Re-derive `wrap_key`/`wrap_iv`.
-3. Decrypt `wrapped_key` to recover `recipient_x25519_sk`.
-
-This preserves “single action unlock” while keeping all materials inside the HTML file. If PRF is unavailable, fallback to CLI decryption.
-
-### 7.7. Browser UI/UX (Proposed)
-**Unlock panel** (visible when `weba-l2-envelope` is present):
-- Button: “Unlock (Passkey)”
-- Status line: “Waiting for passkey…” / “Unlocked”
-- Optional: “Export decrypted JSON” (explicit user action)
-
-**Behavior**:
-- Until unlock, no plaintext L2 data is displayed or stored.
-- After unlock, render a read-only view of `layer2_plain`.
-- Optionally allow exporting the decrypted payload as JSON/CSV.
+## 9. Conclusion
+Web/A Layer 2 Encryption provides a robust, flexible, and future-proof confidentiality layer for serverless forms. By leveraging standard primitives (HPKE, AES-GCM) and modern browser capabilities (WebAuthn PRF), it enables secure workflows ranging from personal medical forms to large-scale organizational surveys without centralized infrastructure dependency.

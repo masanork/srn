@@ -5,6 +5,17 @@ import type { L2KeyFile, Layer2Signature } from "./l2crypto";
 import { globalSigner } from "./signer";
 import { parseMarkdown } from "../parser";
 
+const BUILD_TIME = (typeof window !== "undefined" && (window as any).__WEBA_BUILD_TIME__)
+  ? (window as any).__WEBA_BUILD_TIME__
+  : ((typeof process !== "undefined" && process.env && process.env.BUILD_TIME)
+    ? process.env.BUILD_TIME
+    : "");
+
+function formatBuildStamp(value: string): string {
+  if (!value) return "Build: dev";
+  return `Build: ${value.replace("T", " ").replace(".000Z", "Z")}`;
+}
+
 /**
  * Aggregator Configuration / Specification
  */
@@ -544,8 +555,11 @@ export function initAggregatorBrowser() {
     <div class="agg-layout">
       <aside class="agg-sidebar">
         <div class="agg-brand">
-          <div class="brand-logo">Agg</div>
-          <h1>Web/A Aggregator</h1>
+          <div class="agg-brand-main">
+            <div class="brand-logo">Agg</div>
+            <h1>Web/A Aggregator</h1>
+          </div>
+          <div class="agg-build-stamp" id="weba-agg-build"></div>
         </div>
 
         <div class="agg-config-card">
@@ -611,9 +625,11 @@ export function initAggregatorBrowser() {
       .agg-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
       .agg-main { flex: 1; display: flex; flex-direction: column; gap: 24px; }
 
-      .agg-brand { padding: 12px 0; display: flex; align-items: center; gap: 12px; }
+      .agg-brand { padding: 12px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .agg-brand-main { display: flex; align-items: center; gap: 12px; }
       .brand-logo { background: var(--agg-primary); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
       .agg-brand h1 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+      .agg-build-stamp { font-size: 0.65rem; color: var(--agg-text-dim); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--agg-border); background: #f1f5f9; white-space: nowrap; }
 
       .agg-config-card, .agg-actions-card { background: var(--agg-card-bg); border: 1px solid var(--agg-border); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
       .card-header { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: var(--agg-text-dim); margin-bottom: 16px; border-bottom: 1px solid var(--agg-border); padding-bottom: 8px; }
@@ -742,6 +758,7 @@ export function initAggregatorBrowser() {
   const keyStatus = root.querySelector<HTMLDivElement>("#weba-agg-key-status");
   const passkeyBtn = root.querySelector<HTMLButtonElement>("#weba-agg-passkey");
   const clearBtn = root.querySelector<HTMLButtonElement>("#weba-agg-clear");
+  const buildStamp = root.querySelector<HTMLDivElement>("#weba-agg-build");
 
   let cachedCsv = "";
   let cachedJsonl = "";
@@ -757,6 +774,10 @@ export function initAggregatorBrowser() {
   }
   if (aggSpec?.export?.jsonl === false && dlJsonBtn) {
     dlJsonBtn.disabled = true;
+  }
+  if (buildStamp) {
+    buildStamp.textContent = formatBuildStamp(BUILD_TIME);
+    buildStamp.title = BUILD_TIME ? `Built at ${BUILD_TIME}` : "Build time not available";
   }
 
   const setResultsVisible = (visible: boolean) => {
