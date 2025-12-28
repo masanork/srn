@@ -9,8 +9,8 @@
   "scripts": {
     "build": "bun run build:blog && bun run build:srn && bun run build:weba",
     "build:blog": "bun run src/ssg/index.ts --site my-blog",
-    "build:srn": "bun run scripts/embed_parquet_wasm.ts && bun build src/form/browser_maker.ts --outfile sites/srn/static/mkform.js && cp src/form/index.html sites/srn/static/maker.html && bun run src/ssg/index.ts --site srn",
-    "build:weba": "bun run scripts/embed_parquet_wasm.ts && bun build src/form/browser_maker.ts --outfile sites/weba/static/mkform.js && cp src/form/index.html sites/weba/static/maker.html && bun run src/ssg/index.ts --site weba",
+    "build:srn": "bun run scripts/embed_parquet_wasm.ts && bun run scripts/build_parquet_bundle.ts && bun build src/form/browser_maker.ts --outfile sites/srn/static/mkform.js && cp src/form/index.html sites/srn/static/maker.html && bun run src/ssg/index.ts --site srn",
+    "build:weba": "bun run scripts/embed_parquet_wasm.ts && bun run scripts/build_parquet_bundle.ts && bun build src/form/browser_maker.ts --outfile sites/weba/static/mkform.js && cp src/form/index.html sites/weba/static/maker.html && bun run src/ssg/index.ts --site weba",
     "build:full": "bun run src/ssg/index.ts --site my-blog --clean && bun run src/ssg/index.ts --site srn --clean && bun run src/ssg/index.ts --site weba --clean",
     "dev": "bun --watch src/ssg/index.ts",
     "deploy": "bun run deploy:blog && bun run deploy:srn && bun run deploy:weba",
