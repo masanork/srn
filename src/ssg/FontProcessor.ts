@@ -182,6 +182,7 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
 
         let extraText = "Read More → ログイン 検索 設定 Home Back Next Profile More Articles";
         extraText += " Presentation Exit プレゼンテーション 終了";
+        extraText += " 発行元による真正性の証明 Issuer Authenticity Proof AI Generated Antigravity";
         extraText += " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/:";
 
         if (data.layout === 'blog') {

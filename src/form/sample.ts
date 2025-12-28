@@ -217,19 +217,14 @@ export const DEFAULT_MARKDOWN_EN = `# Team Dinner Poll (Sample)
 
 ## 2. Availability (Jan 2026 weekdays)
 
+*If none of these dates work, please **add rows using the '+' button** below.*
+
 [dynamic-table:availability]
 | Date | Available | Note |
 |---|---|---|
 | [date:date (val="2026-01-05")] | [checkbox:available] | [text:note (placeholder="After 19:00 ok")] |
 | [date:date (val="2026-01-06")] | [checkbox:available] | [text:note (placeholder="Remote only")] |
 | [date:date (val="2026-01-07")] | [checkbox:available] | [text:note (placeholder="Leaving early")] |
-| [date:date (val="2026-01-08")] | [checkbox:available] | [text:note (placeholder="Any time")] |
-| [date:date (val="2026-01-09")] | [checkbox:available] | [text:note (placeholder="After 20:00")] |
-| [date:date (val="2026-01-12")] | [checkbox:available] | [text:note (placeholder="Any time")] |
-| [date:date (val="2026-01-13")] | [checkbox:available] | [text:note (placeholder="After 19:00")] |
-| [date:date (val="2026-01-14")] | [checkbox:available] | [text:note (placeholder="Maybe")] |
-| [date:date (val="2026-01-15")] | [checkbox:available] | [text:note (placeholder="Any time")] |
-| [date:date (val="2026-01-16")] | [checkbox:available] | [text:note (placeholder="After 19:30")] |
 
 ---
 
@@ -273,19 +268,14 @@ export const DEFAULT_MARKDOWN_JA = `# 飲み会日程調整（サンプル）
 
 ## 2. 出席可否（2026年1月の平日）
 
+※ 既存の日程で都合がつかない場合は、**表の下の「＋」ボタンで行を追加**して、候補日を提案してください。
+
 [dynamic-table:availability]
 | 日付 | 出席可 | メモ |
 |---|---|---|
 | [date:date (val="2026-01-05")] | [checkbox:available] | [text:note (placeholder="19時以降OK")] |
 | [date:date (val="2026-01-06")] | [checkbox:available] | [text:note (placeholder="オンラインのみ")] |
 | [date:date (val="2026-01-07")] | [checkbox:available] | [text:note (placeholder="早めに退出")] |
-| [date:date (val="2026-01-08")] | [checkbox:available] | [text:note (placeholder="終日OK")] |
-| [date:date (val="2026-01-09")] | [checkbox:available] | [text:note (placeholder="20時以降")] |
-| [date:date (val="2026-01-12")] | [checkbox:available] | [text:note (placeholder="終日OK")] |
-| [date:date (val="2026-01-13")] | [checkbox:available] | [text:note (placeholder="19時以降")] |
-| [date:date (val="2026-01-14")] | [checkbox:available] | [text:note (placeholder="要確認")] |
-| [date:date (val="2026-01-15")] | [checkbox:available] | [text:note (placeholder="終日OK")] |
-| [date:date (val="2026-01-16")] | [checkbox:available] | [text:note (placeholder="19時半以降")] |
 
 ---
 
