@@ -126,15 +126,15 @@ function selectValues(source: any, path: string): any[] {
   const segments = normalized.split(".");
   let current: any[] = [source];
   for (const segment of segments) {
-    const match = segment.match(/^(.*)\\[(\\d*)\\]$/);
+    const match = segment.match(/^(.*)\[(\d*)\]$/);
     const key = match ? match[1] : segment;
     const indexPart = match ? match[2] : null;
     const isArrayAll = match && indexPart === "";
-    const index = match && indexPart !== "" ? parseInt(indexPart, 10) : null;
+    const index = (match && indexPart !== "" && indexPart !== null) ? parseInt(indexPart as string, 10) : null;
     const next: any[] = [];
     for (const item of current) {
       if (item === null || item === undefined) continue;
-      const value = key ? item[key] : item;
+      const value = key ? (item as any)[key] : item;
       if (isArrayAll) {
         if (Array.isArray(value)) next.push(...value);
         continue;
@@ -373,8 +373,8 @@ function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawP
     if (table.sort) {
       const order = table.sort.order === "asc" ? 1 : -1;
       rows.sort((a, b) => {
-        const av = a.metricValues[table.sort!.by];
-        const bv = b.metricValues[table.sort!.by];
+        const av = a.metricValues[table.sort!.by] ?? "";
+        const bv = b.metricValues[table.sort!.by] ?? "";
         if (av === bv) return 0;
         return av > bv ? order : -order;
       });
@@ -415,8 +415,8 @@ async function extractPlainFromHtml(html: string, l2Keys?: L2KeyFile | null): Pr
         const derived = deriveOrgX25519KeyPair({
           orgRootKey: b64urlDecode(l2Keys.org_root_key),
           campaignId,
-          layer1Ref: l2Envelope.layer1_ref,
-          keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy,
+          layer1Ref: l2Envelope.layer1_ref || "",
+          keyPolicy: (l2Keys.org_key_policy || l2Envelope.meta?.key_policy) as OrgKeyPolicy,
         });
         recipientSk = derived.privateKey;
       } else if (l2Keys.recipient_x25519_private) {
@@ -458,14 +458,62 @@ function renderTable(root: HTMLElement, rows: any[], keys: string[]) {
   }
   const header = keys.map((key) => `<th>${key}</th>`).join("");
   const body = rows
-    .slice(0, 20)
-    .map((row) => {
+    .map((row, idx) => {
       const cells = keys.map((key) => `<td>${row[key] ?? ""}</td>`).join("");
-      return `<tr>${cells}</tr>`;
+      return `<tr style="cursor:pointer" onclick="window.showRecordDetail(${idx})">${cells}</tr>`;
     })
     .join("");
-  root.innerHTML = `<table class="agg-table"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+  root.innerHTML = `<div class="agg-table-title">Records (Click row to view details)</div><table class="agg-table"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+  (window as any)._aggRows = rows;
 }
+
+function showRecordDetail(idx: number) {
+  const rows = (window as any)._aggRows;
+  if (!rows || !rows[idx]) return;
+  const row = rows[idx];
+  const detailRoot = document.getElementById("weba-agg-detail");
+  if (!detailRoot) return;
+
+  const raw = row._raw || {};
+  let fieldsHtml = "";
+
+  const flatten = (obj: any, prefix = "") => {
+    for (const k in obj) {
+      if (k === "_raw" || k === "_sig") continue;
+      const val = obj[k];
+      const label = prefix ? `${prefix}.${k}` : k;
+      if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+        flatten(val, label);
+      } else {
+        const displayVal = Array.isArray(val) ? JSON.stringify(val, null, 2) : val;
+        fieldsHtml += `<div class="detail-field">
+          <div class="detail-label">${label}</div>
+          <div class="detail-value">${displayVal}</div>
+        </div>`;
+      }
+    }
+  };
+  flatten(raw);
+
+  detailRoot.innerHTML = `
+    <div class="detail-overlay" onclick="this.parentElement.innerHTML=''">
+      <div class="detail-modal" onclick="event.stopPropagation()">
+        <div class="detail-header">
+          <h3>Record Detail: ${row._filename || "unnamed"}</h3>
+          <button onclick="this.closest('.detail-overlay').parentElement.innerHTML=''">✕</button>
+        </div>
+        <div class="detail-body">
+          ${fieldsHtml}
+          <div class="detail-raw">
+            <h4>Raw JSON</h4>
+            <pre>${JSON.stringify(raw, null, 2)}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+(window as any).showRecordDetail = showRecordDetail;
 
 export function initAggregatorBrowser() {
   const root = document.getElementById("aggregator-root");
@@ -498,6 +546,21 @@ export function initAggregatorBrowser() {
     </div>
     <div id="weba-agg-dashboard" class="agg-dashboard"></div>
     <div id="weba-agg-output" class="agg-output"></div>
+    <div id="weba-agg-detail"></div>
+    <style>
+      .detail-field { margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+      .detail-label { font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; }
+      .detail-value { font-size: 1rem; color: #111; margin-top: 2px; white-space: pre-wrap; word-break: break-all; }
+      .detail-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+      .detail-modal { background: #fff; width: 100%; max-width: 800px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+      .detail-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+      .detail-header h3 { margin: 0; font-size: 1.1rem; }
+      .detail-header button { border: none; background: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+      .detail-body { padding: 20px; overflow-y: auto; flex: 1; }
+      .detail-raw h4 { margin: 20px 0 10px; border-top: 2px solid #eee; padding-top: 20px; }
+      .detail-raw pre { background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 0.8rem; border: 1px solid #e2e8f0; }
+      .agg-table tr:hover { background: #f8fafc; }
+    </style>
   `;
 
   const fileInput = root.querySelector<HTMLInputElement>("#weba-agg-files");
@@ -609,7 +672,13 @@ export function initAggregatorBrowser() {
     const keys = new Set<string>(["_filename"]);
     let processed = 0;
     let errors = 0;
-    rawPayloads = [...samplePayloads];
+    // Priority: Files > Samples
+    // If files are selected, we ignore samples.
+    if (fileInput?.files && fileInput.files.length > 0) {
+      rawPayloads = [];
+    } else {
+      rawPayloads = [...samplePayloads];
+    }
 
     // Priority: Passkey > Embedded > Demo
     const l2Keys = passkeyDerivedKeys || embeddedKey;
@@ -624,11 +693,11 @@ export function initAggregatorBrowser() {
             const built = buildRowFromPlain({
               plain: extracted.plain,
               filename: file.name,
-              includeJson: includeJson?.checked,
+              includeJson: !!includeJson?.checked,
               sig: extracted.sig,
             });
             built.keys.forEach((key) => keys.add(key));
-            rows.push(built.row);
+            rows.push({ ...built.row, _raw: extracted.plain, _sig: extracted.sig }); // Store raw for detail view
             processed += 1;
             continue;
           }
@@ -638,14 +707,15 @@ export function initAggregatorBrowser() {
             const built = buildRowFromPlain({
               plain: extracted.plain,
               filename: file.name,
-              includeJson: includeJson?.checked,
+              includeJson: !!includeJson?.checked,
               omitKey: (key) => key.startsWith("@"),
             });
             built.keys.forEach((key) => keys.add(key));
-            rows.push(built.row);
+            rows.push({ ...built.row, _raw: extracted.plain });
             processed += 1;
             continue;
           }
+
           errors += 1;
         } catch (e) {
           console.error(e);
