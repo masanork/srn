@@ -3026,7 +3026,7 @@ function parseMarkdown(text) {
       currentMasterKey = masterMatch[1] || "";
       return;
     }
-    const dynTableMatch = trimmed.match(/^\[dynamic-table:([^\]]+)\]$/);
+    const dynTableMatch = trimmed.match(/^\[dynamic\s*-?\s*table:([^\]]+)\]$/);
     if (dynTableMatch) {
       currentDynamicTableKey = dynTableMatch[1] || "";
       jsonStructure.tables[currentDynamicTableKey] = [];
@@ -23084,7 +23084,7 @@ function generateAggregatorHtml(markdown) {
 }
 
 // src/form/sample.ts
-var DEFAULT_MARKDOWN_EN = `# IT Services Estimate (Sample)
+var DEFAULT_MARKDOWN_EN = `# Services Estimate (Sample)
 ---
 
 ## 1. Project Summary
@@ -23191,7 +23191,7 @@ export:
   parquet: false
 \`\`\`
   `;
-var DEFAULT_MARKDOWN_JA = `# IT見積書（サンプル）
+var DEFAULT_MARKDOWN_JA = `# 見積書（サンプル）
 ---
 
 ## 1. プロジェクト概要

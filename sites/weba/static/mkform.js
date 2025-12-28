@@ -3026,7 +3026,7 @@ function parseMarkdown(text) {
       currentMasterKey = masterMatch[1] || "";
       return;
     }
-    const dynTableMatch = trimmed.match(/^\[dynamic-table:([^\]]+)\]$/);
+    const dynTableMatch = trimmed.match(/^\[dynamic\s*-?\s*table:([^\]]+)\]$/);
     if (dynTableMatch) {
       currentDynamicTableKey = dynTableMatch[1] || "";
       jsonStructure.tables[currentDynamicTableKey] = [];
@@ -23084,7 +23084,7 @@ function generateAggregatorHtml(markdown) {
 }
 
 // src/form/sample.ts
-var DEFAULT_MARKDOWN_EN = `# IT Services Estimate (Sample)
+var DEFAULT_MARKDOWN_EN = `# Services Estimate (Sample)
 ---
 
 ## 1. Project Summary
@@ -23191,7 +23191,7 @@ export:
   parquet: false
 \`\`\`
   `;
-var DEFAULT_MARKDOWN_JA = `# IT見積書（サンプル）
+var DEFAULT_MARKDOWN_JA = `# 見積書（サンプル）
 ---
 
 ## 1. プロジェクト概要
@@ -23300,11 +23300,11 @@ export:
   `;
 
 // src/form/browser_maker.ts
-function getEditor(mode) {
-  return document.getElementById(mode === "form" ? "editor-form" : "editor-aggregator");
+function getEditor() {
+  return document.getElementById("editor-form");
 }
-function getMarkdown(mode) {
-  const editor = getEditor(mode);
+function getMarkdown() {
+  const editor = getEditor();
   return editor ? editor.value : "";
 }
 function stripAggregatorOnly(html) {
@@ -23319,15 +23319,19 @@ function updatePreview() {
   if (!preview)
     return;
   const mode = window.previewMode || "form";
-  const markdown = getMarkdown(mode);
+  const markdown = getMarkdown();
   const { html, jsonStructure } = parseMarkdown(markdown);
   window.generatedJsonStructure = jsonStructure;
   if (mode === "aggregator") {
     const aggHtml = generateAggregatorHtml(markdown);
     preview.innerHTML = `<iframe id="preview-frame" style="width:100%; height:100%; border:0;"></iframe>`;
     const frame = document.getElementById("preview-frame");
-    if (frame)
-      frame.srcdoc = aggHtml;
+    if (frame) {
+      const blob = new Blob([aggHtml], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      frame.src = url;
+      frame.onload = () => URL.revokeObjectURL(url);
+    }
     return;
   }
   preview.innerHTML = stripAggregatorOnly(html);
@@ -23345,7 +23349,7 @@ function updatePreview() {
 }
 function downloadCurrent() {
   const mode = window.previewMode || "form";
-  const markdown = getMarkdown(mode);
+  const markdown = getMarkdown();
   const htmlContent = mode === "aggregator" ? generateAggregatorHtml(markdown) : generateHtml(markdown);
   const blob = new Blob([htmlContent], { type: "text/html" });
   const url = URL.createObjectURL(blob);
@@ -23362,22 +23366,7 @@ window.setPreviewMode = (mode) => {
   document.querySelectorAll(".preview-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.preview === mode);
   });
-  if (window.editorMode !== mode) {
-    window.setEditorMode(mode);
-  }
   updatePreview();
-};
-window.setEditorMode = (mode) => {
-  window.editorMode = mode;
-  document.querySelectorAll(".editor-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.editor === mode);
-  });
-  const formEditor = getEditor("form");
-  const aggEditor = getEditor("aggregator");
-  if (formEditor)
-    formEditor.style.display = mode === "form" ? "block" : "none";
-  if (aggEditor)
-    aggEditor.style.display = mode === "aggregator" ? "block" : "none";
 };
 function applyI18n() {
   const RESOURCES = {
@@ -23386,18 +23375,14 @@ function applyI18n() {
       btn_download: "Download",
       preview: "Preview",
       btn_preview_form: "Form",
-      btn_preview_agg: "Aggregator",
-      btn_editor_form: "Form",
-      btn_editor_agg: "Aggregator"
+      btn_preview_agg: "Aggregator"
     },
     ja: {
       md_def: "定義 (Markdown)",
       btn_download: "ダウンロード",
       preview: "プレビュー",
       btn_preview_form: "入力画面",
-      btn_preview_agg: "集計プレビュー",
-      btn_editor_form: "入力画面",
-      btn_editor_agg: "集計定義"
+      btn_preview_agg: "集計画面"
     }
   };
   const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
@@ -23410,24 +23395,18 @@ function applyI18n() {
 }
 window.addEventListener("DOMContentLoaded", () => {
   applyI18n();
-  const editorForm = getEditor("form");
-  const editorAgg = getEditor("aggregator");
-  if (!editorForm || !editorAgg)
+  const editorForm = getEditor();
+  if (!editorForm)
     return;
   const navLang = navigator.language || "en";
   const lang = navLang.startsWith("ja") ? "ja" : "en";
   console.log(`Language detection: navigator.language='${navLang}' -> using '${lang}' sample.`);
   const formVal = editorForm.value.trim();
-  const aggVal = editorAgg.value.trim();
   const isDefaultEn = formVal === DEFAULT_MARKDOWN_EN.trim();
   const isDefaultJa = formVal === DEFAULT_MARKDOWN_JA.trim();
   if (!formVal || lang === "ja" && isDefaultEn || lang === "en" && isDefaultJa) {
     editorForm.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
   }
-  if (!aggVal || aggVal === DEFAULT_MARKDOWN_EN.trim() || aggVal === DEFAULT_MARKDOWN_JA.trim()) {
-    editorAgg.value = editorForm.value;
-  }
-  window.setEditorMode("form");
   window.setPreviewMode("form");
   updatePreview();
 });
