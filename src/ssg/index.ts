@@ -68,7 +68,7 @@ async function build() {
 
         // Render via Layout Manager
         const { html: finalHtml, vc } = await layoutManager.render({
-            data, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir: DIST_DIR, relPath: file
+            data, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir: DIST_DIR, relPath: file, contentDir: CONTENT_DIR
         });
 
         // Write Outputs

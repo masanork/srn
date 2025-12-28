@@ -3,6 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
 import * as cheerio from 'cheerio';
+import matter from 'gray-matter';
+import { marked } from 'marked';
 
 import { articleLayout } from './layouts/article.js';
 import { blogLayout } from './layouts/blog.js';
@@ -21,12 +23,13 @@ export interface LayoutContext {
     idManager: IdentityManager;
     distDir: string;
     relPath: string;
+    contentDir: string;
 }
 
 export class LayoutManager {
     async render(ctx: LayoutContext): Promise<{ html: string, vc?: any }> {
         const { data, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir, relPath } = ctx;
-        
+
         let finalHtml = '';
         let vc: any = null;
 
@@ -41,14 +44,44 @@ export class LayoutManager {
                     }
                 });
                 finalHtml = formLayout(data, content, fontCss, safeFontFamilies, vc);
-                
+
                 // Extra output: Report page
                 const reportHtml = formReportLayout(data, content, fontCss, safeFontFamilies);
                 await fs.writeFile(path.join(distDir, relPath.replace('.md', '.report.html')), reportHtml);
                 break;
 
             case 'blog':
-                finalHtml = blogLayout(data, allPages, fontCss, safeFontFamilies, htmlContent);
+                // Find the latest article
+                const articles = allPages.filter(item =>
+                    item.layout === 'article' &&
+                    !item.isSystem &&
+                    item.path !== 'index.html'
+                );
+                let latestArticleContent = '';
+                let latestArticleData = null;
+                let latestArticlePath = '';
+
+                if (articles.length > 0) {
+                    const latest = articles[0]; // allPages is already sorted by date desc
+                    // Convert dist path (html) back to source path (md)
+                    // This is a bit heuristics-based: .html -> .md
+                    const sourceName = path.basename(latest.path).replace('.html', '.md');
+                    // We assume flat structure or we need to find it. 
+                    // ctx.allPages items don't have source path, only dist path.
+                    // But in this simple blog, flattened structure or same relative path is common.
+                    // Let's assume the relative path in dist mirrors relative path in content.
+                    const sourcePath = path.join(ctx.contentDir, latest.path.replace('.html', '.md'));
+
+                    if (await fs.pathExists(sourcePath)) {
+                        const raw = await fs.readFile(sourcePath, 'utf-8');
+                        const { data: aData, content: aContent } = matter(raw);
+                        latestArticleData = { ...aData, path: latest.path };
+                        latestArticleContent = await marked.parse(aContent) as string;
+                        latestArticlePath = latest.path;
+                    }
+                }
+
+                finalHtml = blogLayout(data, allPages, fontCss, safeFontFamilies, htmlContent, latestArticleContent, latestArticleData);
                 break;
 
             case 'verifier':
