@@ -50,6 +50,9 @@ export function generateAggregatorHtml(markdown: string): string {
     const { jsonStructure } = parseMarkdown(markdown);
     const aggSpec = jsonStructure.aggSpec ? JSON.stringify(jsonStructure.aggSpec) : '';
     const sourceMd = markdown.replace(/<\/script>/g, '<\\/script>');
+    const buildStamp = (typeof window !== 'undefined' && (window as any).__WEBA_BUILD_TIME__)
+        ? (window as any).__WEBA_BUILD_TIME__
+        : '';
     return `<!DOCTYPE html><html><head><title>Aggregator</title><style>
     body{font-family:sans-serif;max-width:1100px;margin:0 auto;padding:2rem;}
     h1{margin-bottom:1.5rem;}
@@ -85,5 +88,5 @@ export function generateAggregatorHtml(markdown: string): string {
     .agg-bar-value{font-weight:600;white-space:nowrap;}
     .agg-dashboard-table{margin-bottom:1rem;}
     .agg-table-title{font-weight:600;margin-bottom:0.35rem;}
-    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script>window.__WEBA_BUILD_TIME__=${JSON.stringify(buildStamp)};</script><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
