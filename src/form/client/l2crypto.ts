@@ -16,6 +16,12 @@ export type L2Config = {
   key_policy?: OrgKeyPolicy;
 };
 
+export type L2KeyFile = {
+  recipient_kid?: string;
+  recipient_x25519_private?: string;
+  org_root_key?: string;
+};
+
 export type Layer2Signature = {
   alg: "Ed25519";
   kid: string;
@@ -187,11 +193,11 @@ async function aesGcmEncrypt(
   iv: Uint8Array,
   aad: Uint8Array,
 ): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt"]);
+  const key = await crypto.subtle.importKey("raw", keyBytes as any, "AES-GCM", false, ["encrypt"]);
   const ct = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, additionalData: aad },
+    { name: "AES-GCM", iv: iv as any, additionalData: aad as any },
     key,
-    plaintext,
+    plaintext as any,
   );
   return new Uint8Array(ct);
 }
@@ -214,11 +220,11 @@ async function aesGcmDecrypt(
   iv: Uint8Array,
   aad: Uint8Array,
 ): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+  const key = await crypto.subtle.importKey("raw", keyBytes as any, "AES-GCM", false, ["decrypt"]);
   const pt = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, additionalData: aad },
+    { name: "AES-GCM", iv: iv as any, additionalData: aad as any },
     key,
-    ciphertext,
+    ciphertext as any,
   );
   return new Uint8Array(pt);
 }

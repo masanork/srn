@@ -2,7 +2,7 @@ import { ed25519 } from '@noble/curves/ed25519.js';
 // @ts-ignore
 import canonicalize from 'canonicalize';
 import { decode } from 'cbor-x';
-import { registerPasskey, signWithPasskey } from './webauthn';
+import { registerPasskey, signWithPasskey, derivePasskeyPrf } from './webauthn';
 
 // Hex Helpers
 function bytesToHex(bytes: Uint8Array): string {
@@ -170,6 +170,16 @@ export class Signer {
                     proofValue: bytesToHex(signature)
                 }
             };
+        }
+    }
+
+    public async derivePrf(salt: Uint8Array): Promise<Uint8Array | null> {
+        if (!this.credentialId) return null;
+        try {
+            return await derivePasskeyPrf(this.credentialId, salt);
+        } catch (e) {
+            console.error("PRF derivation failed", e);
+            return null;
         }
     }
 }

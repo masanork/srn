@@ -281,6 +281,16 @@ async function loadToolFile(input: HTMLInputElement) {
         const text = await file.text();
         const doc = new DOMParser().parseFromString(text, "text/html");
 
+        // 0. Recover Source Markdown
+        const sourceEl = doc.getElementById('weba-source-markdown');
+        if (sourceEl) {
+            const editor = getEditor();
+            if (editor) {
+                editor.value = sourceEl.textContent || '';
+                // Note: we don't call updatePreview() yet as we might be in aggregator mode
+            }
+        }
+
         // 1. Recover Aggregation Spec
         const specEl = doc.getElementById('weba-agg-spec');
         if (specEl) {
