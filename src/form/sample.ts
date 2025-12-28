@@ -1,5 +1,5 @@
 
-export const DEFAULT_MARKDOWN_EN = `# IT Services Estimate (Sample)
+export const DEFAULT_MARKDOWN_EN = `# Services Estimate (Sample)
 ---
 
 ## 1. Project Summary
@@ -107,7 +107,7 @@ export:
 \`\`\`
   `;
 
-export const DEFAULT_MARKDOWN_JA = `# IT見積書（サンプル）
+export const DEFAULT_MARKDOWN_JA = `# 見積書（サンプル）
 ---
 
 ## 1. プロジェクト概要
