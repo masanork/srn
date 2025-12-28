@@ -1,49 +1,41 @@
-type ParquetWasmApi = {
-  init?: () => Promise<void> | void;
-  tableFromJSON?: (records: any[]) => any;
-  writeParquet?: (table: any) => Uint8Array;
-  fromJson?: (records: any[]) => Uint8Array;
-};
+import { tableFromJSON, tableToIPC } from "apache-arrow";
+import { initSync, Table, writeParquet } from "parquet-wasm/esm";
+import { PARQUET_WASM_BASE64 } from "./parquet_wasm_embed";
 
 type ParquetProvider = {
   export: (records: any[]) => Promise<Uint8Array>;
-  isReady?: () => boolean;
 };
 
-const PARQUET_INIT_FLAG = "__webaParquetInit";
+let isInitialized = false;
 
-const isParquetReady = () => {
-  return !!(globalThis as any).parquetWasm;
+const decodeBase64 = (b64: string): Uint8Array => {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 };
 
-const ensureInit = async (wasm: ParquetWasmApi) => {
-  if (typeof wasm.init !== "function") return;
-  if ((wasm as any)[PARQUET_INIT_FLAG]) return;
-  await wasm.init();
-  (wasm as any)[PARQUET_INIT_FLAG] = true;
+const ensureInit = () => {
+  if (isInitialized) return;
+  const wasmBytes = decodeBase64(PARQUET_WASM_BASE64);
+  initSync(wasmBytes);
+  isInitialized = true;
 };
 
 const exportParquet = async (records: any[]): Promise<Uint8Array> => {
-  const wasm = (globalThis as any).parquetWasm as ParquetWasmApi | undefined;
-  if (!wasm) {
-    throw new Error("parquetWasm is not loaded");
-  }
-  await ensureInit(wasm);
-  if (wasm.tableFromJSON && wasm.writeParquet) {
-    const table = wasm.tableFromJSON(records);
-    return wasm.writeParquet(table);
-  }
-  if (wasm.fromJson) {
-    return wasm.fromJson(records);
-  }
-  throw new Error("Unsupported parquetWasm API");
+  ensureInit();
+  const table = tableFromJSON(records);
+  const ipc = tableToIPC(table, "stream");
+  const wasmTable = Table.fromIPCStream(ipc);
+  return writeParquet(wasmTable);
 };
 
 export function registerParquetProvider() {
   if ((globalThis as any).webaParquet) return;
   const provider: ParquetProvider = {
     export: exportParquet,
-    isReady: isParquetReady,
   };
   (globalThis as any).webaParquet = provider;
 }
