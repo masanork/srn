@@ -93,6 +93,7 @@ describe("Web/A L2 crypto", () => {
   });
 
   test("PQC config requires provider", async () => {
+    (globalThis as any).webaPqcKem = null;
     localStorageMock.clear();
     const recipientSk = x25519.utils.randomSecretKey();
     const recipientPk = x25519.getPublicKey(recipientSk);
