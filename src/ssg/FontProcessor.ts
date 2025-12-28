@@ -181,6 +181,8 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
         const bodyText = html.replace(/<[^>]*>/g, '').replace(/\s+/g, '');
 
         let extraText = "Read More → ログイン 検索 設定 Home Back Next Profile More Articles";
+        extraText += " Presentation Exit プレゼンテーション 終了";
+        extraText += " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/:";
 
         if (data.layout === 'blog') {
             // For blog layout, we list other articles, so we need their titles and descriptions
