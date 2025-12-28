@@ -10185,6 +10185,10 @@ ${AGG_BLOCK_EN}
 This form includes demo settings for client-side encryption (E2EE).
 Change \`enabled: false\` to \`true\` below to automatically encrypt saved data.
 
+> [!TIP]
+> **Try Personal Mode (Passkey Encryption)**
+> Click the **"\uD83D\uDD11 Setup Encryption (Passkey)"** button in the top toolbar to automatically securely configure this form with your own Passkey. This will overwrite the settings below.
+
 *For demo purposes, decryption is automatically handled when using the campaign ID below (Escrow Mode).*
 
 <script id="weba-l2-config" type="application/json">
@@ -10253,6 +10257,10 @@ ${AGG_BLOCK_JA}
 
 このフォームはクライアントサイド暗号化 (E2EE) のデモ設定を含んでいます。
 以下の設定の \`enabled: false\` を \`true\` に書き換えると、保存データが自動的に暗号化されます。
+
+> [!TIP]
+> **パーソナルモード (Passkey暗号化) を試す**
+> 上部ツールバーにある **「\uD83D\uDD11 暗号化設定 (Passkey)」** ボタンをクリックすると、あなたのPasskeyを使ってこのフォームを安全に再設定できます（以下の設定が上書きされます）。
 
 ※ デモ用のため、以下のキャンペーンIDが設定されている場合、復号は自動的に行われます（Escrow Mode）。
 
@@ -11599,17 +11607,14 @@ window.addEventListener("DOMContentLoaded", () => {
     editorForm.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
   }
   const encBtn = document.createElement("button");
-  encBtn.className = "secondary";
+  encBtn.className = "preview-btn";
   encBtn.textContent = lang === "ja" ? "\uD83D\uDD11 暗号化設定 (Passkey)" : "\uD83D\uDD11 Setup Encryption (Passkey)";
-  encBtn.style.marginLeft = "10px";
+  encBtn.style.border = "1px solid #10b981";
+  encBtn.style.color = "#059669";
   encBtn.onclick = setupEncryption;
-  const toolbar = document.querySelector(".form-toolbar");
-  if (toolbar) {
-    toolbar.appendChild(encBtn);
-  } else {
-    const header = document.querySelector(".preview-header .actions");
-    if (header)
-      header.appendChild(encBtn);
+  const headerLeft = document.querySelector(".pane-header .header-left");
+  if (headerLeft) {
+    headerLeft.appendChild(encBtn);
   }
   window.setupEncryption = setupEncryption;
   window.setPreviewMode("form");
