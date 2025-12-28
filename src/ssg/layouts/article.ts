@@ -1,4 +1,6 @@
 import { baseLayout } from './base.js';
+import fs from 'fs-extra';
+import path from 'path';
 
 export interface ArticleData {
     title: string;
@@ -13,6 +15,8 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
     const siteDid = vc?.issuer || "did:web:masanork.github.io:srn";
     const lang = (data.lang || 'ja').toString();
     const presentationEnabled = data.presentation === true;
+    const presentationTemplate = (data.presentation_template || 'sorane').toString();
+    const presentationCss = presentationEnabled ? loadPresentationCss() : '';
 
     // Construct schema.org JSON-LD
     const schema = {
@@ -78,40 +82,7 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
 
     const presentationAssets = presentationEnabled
         ? `
-        <style>
-            .presentation-actions { position: sticky; top: 1rem; display: flex; justify-content: flex-end; margin-bottom: 1rem; z-index: 5; }
-            .presentation-toggle { border: 1px solid #111; background: #111; color: #fff; padding: 0.5rem 0.9rem; border-radius: 999px; font-size: 0.85rem; cursor: pointer; letter-spacing: 0.02em; }
-            .presentation-toggle:hover { background: #333; }
-            .presentation-enabled .article-body hr { border: none; border-top: 1px dashed #e5e7eb; margin: 2.5rem 0; }
-            body.presentation-mode { overflow: hidden; }
-            .presentation-overlay { position: fixed; inset: 0; background: #0b0b0d; color: #f9fafb; display: none; flex-direction: column; z-index: 2000; }
-            .presentation-overlay.active { display: flex; }
-            .presentation-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem 0; font-size: 0.85rem; color: #cbd5f5; }
-            .presentation-toolbar button { border: 1px solid #94a3b8; background: transparent; color: #e2e8f0; padding: 0.4rem 0.8rem; border-radius: 999px; cursor: pointer; }
-            .presentation-slide-container { flex: 1; display: flex; align-items: center; justify-content: center; }
-            .presentation-slide { display: none; width: 100%; height: 100%; padding: 5vh 6vw; box-sizing: border-box; }
-            .presentation-slide.active { display: flex; flex-direction: column; justify-content: center; gap: 2.2rem; }
-            .presentation-slide h1 { font-size: clamp(3.2rem, 7.5vw, 6.2rem); line-height: 1.05; margin: 0; color: #f9fafb; }
-            .presentation-slide h2 { font-size: clamp(2.4rem, 5.5vw, 4.4rem); margin: 0; color: #f9fafb; }
-            .presentation-slide h3 { font-size: clamp(1.6rem, 3.6vw, 2.8rem); margin: 0; color: #c7d2fe; }
-            .presentation-slide p { font-size: clamp(1.3rem, 2.6vw, 2rem); line-height: 1.5; color: #e2e8f0; }
-            .presentation-slide ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
-            .presentation-slide li { font-size: clamp(1.3rem, 2.5vw, 1.9rem); color: #e2e8f0; position: relative; padding-left: 1.6rem; }
-            .presentation-slide li::before { content: "◆"; position: absolute; left: 0; top: 0.2rem; color: #60a5fa; font-size: 1rem; }
-            .presentation-slide .presentation-figure { display: flex; justify-content: center; align-items: center; }
-            .presentation-slide .presentation-figure svg { max-width: 90vw; max-height: 60vh; width: 100%; height: auto; }
-            body.presentation-mode .presentation-slide { padding: 4vh 5vw; gap: 2.6rem; }
-            body.presentation-mode .presentation-slide h1 { font-size: clamp(3.8rem, 9vw, 7.2rem); color: #f9fafb; }
-            body.presentation-mode .presentation-slide h2 { font-size: clamp(2.8rem, 6.5vw, 5.2rem); color: #f9fafb; }
-            body.presentation-mode .presentation-slide h3 { font-size: clamp(1.9rem, 4.2vw, 3.4rem); color: #c7d2fe; }
-            body.presentation-mode .presentation-slide p { font-size: clamp(1.6rem, 3vw, 2.4rem); }
-            body.presentation-mode .presentation-slide li { font-size: clamp(1.6rem, 2.9vw, 2.3rem); }
-            body.presentation-mode .presentation-slide .presentation-figure svg { max-height: 70vh; }
-            .presentation-footer { padding: 0 2rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #94a3b8; }
-            .presentation-progress { display: flex; gap: 0.35rem; align-items: center; }
-            .presentation-dot { width: 6px; height: 6px; border-radius: 999px; background: #1f2937; }
-            .presentation-dot.active { background: #60a5fa; }
-        </style>
+        <style>${presentationCss}</style>
         <script>
             (() => {
                 const toggle = document.querySelector('[data-presentation-toggle]');
@@ -128,7 +99,7 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
                 const buildSlides = () => {
                     if (overlay) return;
                     overlay = document.createElement('div');
-                    overlay.className = 'presentation-overlay';
+                    overlay.className = 'presentation-overlay presentation-template-${presentationTemplate}';
                     overlay.innerHTML = \`
                         <div class="presentation-toolbar">
                             <div>${data.title}</div>
@@ -264,6 +235,20 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
         fontFamilies,
         jsonLd: schema,
         lang: lang,
-        className: `layout-${data.layout || 'article'}`
+        className: `layout-${data.layout || 'article'}${presentationEnabled ? ` presentation-template-${presentationTemplate}` : ''}`
     });
+}
+
+let cachedPresentationCss: string | null = null;
+
+function loadPresentationCss(): string {
+    if (cachedPresentationCss) return cachedPresentationCss;
+    const cssPath = path.join(process.cwd(), 'src', 'ssg', 'assets', 'presentation.css');
+    try {
+        cachedPresentationCss = fs.readFileSync(cssPath, 'utf-8');
+    } catch (err) {
+        console.warn('Failed to load presentation.css', err);
+        cachedPresentationCss = '';
+    }
+    return cachedPresentationCss;
 }

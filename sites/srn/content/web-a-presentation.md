@@ -4,37 +4,52 @@ description: "A single article that turns into full-screen slides to explain Web
 layout: article
 lang: en
 presentation: true
+presentation_template: sorane
 date: 2025-02-01
 ---
 
-# Web/A in One Deck
-
-Web/A is an archival document format that makes **reading, sharing, and verifying** possible with a single HTML file.
-
----
-
-## Why Web/A
-
-- PDF is durable, but weak in **structure, verification, and evolution**
-- The Web is flexible, but weak in **long-term preservation**
-- Teams need both **easy distribution** and **trustworthiness**
+<div class="slide-cover">
+<div class="slide-logo">SORANE</div>
+<h1>Web/A in One Deck</h1>
+<div class="slide-divider"></div>
+<p class="slide-subtitle">An archival document format that makes <strong>reading, sharing, and verifying</strong> possible with a single HTML file.</p>
+</div>
 
 ---
 
-## HTML-Complete by Design
-
-- **Single-file** HTML delivery
-- Fonts and assets **embedded**
-- Designed to stay readable **for decades**
+<div class="slide-section">
+<div class="slide-kicker">Context</div>
+<h2>Why Web/A</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>PDF is durable, but weak in <strong>structure, verification, and evolution</strong></li>
+  <li>The Web is flexible, but weak in <strong>long-term preservation</strong></li>
+  <li>Teams need both <strong>easy distribution</strong> and <strong>trustworthiness</strong></li>
+</ul>
+</div>
 
 ---
 
-## The 3-Layer Model
+<div class="slide-card">
+<h2>HTML-Complete by Design</h2>
+<ul>
+  <li><strong>Single-file</strong> HTML delivery</li>
+  <li>Fonts and assets <strong>embedded</strong></li>
+  <li>Designed to stay readable <strong>for decades</strong></li>
+</ul>
+</div>
 
-- **Layer 1: Signed Content** (immutable truth)
-- **Layer 2: Confidential Payload** (recipient-only encryption)
-- **Layer 3: Presentation** (flexible layouts & UI)
+---
 
+<div class="slide-split">
+<div>
+<h2>The 3-Layer Model</h2>
+<ul>
+  <li><strong>Layer 1:</strong> Signed Content (immutable truth)</li>
+  <li><strong>Layer 2:</strong> Confidential Payload (recipient-only encryption)</li>
+  <li><strong>Layer 3:</strong> Presentation (flexible layouts & UI)</li>
+</ul>
+</div>
 <div class="presentation-figure">
 <svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="weba-structure-title weba-structure-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
   <title id="weba-structure-title">Web/A Document Structure</title>
@@ -83,6 +98,7 @@ Web/A is an archival document format that makes **reading, sharing, and verifyin
   <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
   <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">Issuer Signature: Ed25519 + PQC</text>
 </svg>
+</div>
 </div>
 
 ---
