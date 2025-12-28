@@ -2,6 +2,7 @@
 // Client-side execution entry point
 import { initRuntime } from './runtime';
 import { SearchEngine } from './search';
+import './parquet_provider';
 
 const search = new SearchEngine();
 (window as any).GlobalSearch = search;
