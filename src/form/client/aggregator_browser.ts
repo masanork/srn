@@ -3,6 +3,7 @@ import { buildCsv, buildRowFromPlain } from "./aggregator_browser_csv";
 import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf } from "./l2crypto";
 import type { L2KeyFile, Layer2Signature } from "./l2crypto";
 import { globalSigner } from "./signer";
+import { parseMarkdown } from "../parser";
 
 /**
  * Aggregator Configuration / Specification
@@ -210,6 +211,143 @@ function renderTable(root: HTMLElement, rows: any[], keys: string[]) {
   (window as any)._aggRows = rows;
 }
 
+let cachedFormHtml: string | null = null;
+let cachedFormStructure: any | null = null;
+
+function getSourceMarkdown(): string | null {
+  const el = document.getElementById("weba-source-markdown");
+  if (!el) return null;
+  return el.textContent || null;
+}
+
+function getFormTemplate(): { html: string; structure: any } | null {
+  if (cachedFormHtml && cachedFormStructure) {
+    return { html: cachedFormHtml, structure: cachedFormStructure };
+  }
+  const source = getSourceMarkdown();
+  if (!source) return null;
+  const parsed = parseMarkdown(source);
+  cachedFormHtml = parsed.html;
+  cachedFormStructure = parsed.jsonStructure;
+  return { html: parsed.html, structure: parsed.jsonStructure };
+}
+
+function getValueByPath(source: any, path: string): any {
+  if (!path) return undefined;
+  const normalized = path.trim().replace(/^\$\./, "");
+  if (!normalized) return undefined;
+  const segments = normalized.split(".");
+  let current: any = source;
+  for (const segment of segments) {
+    if (current === null || current === undefined) return undefined;
+    const match = segment.match(/^(.*)\[(\d+)\]$/);
+    if (match) {
+      const key = match[1];
+      const index = parseInt(match[2], 10);
+      const value = key ? current[key] : current;
+      current = Array.isArray(value) ? value[index] : undefined;
+      continue;
+    }
+    current = current[segment];
+  }
+  return current;
+}
+
+function setInputValue(input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: any) {
+  if (input instanceof HTMLInputElement && input.type === "checkbox") {
+    input.checked = !!value;
+    return;
+  }
+  const normalized = value === null || value === undefined ? "" : String(value);
+  (input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value = normalized;
+}
+
+function renderExtraFields(raw: any, structure: any): string {
+  const fields = Array.isArray(structure?.fields) ? structure.fields : [];
+  const fieldKeys = new Set(fields.map((f: any) => f.key));
+  const tableKeys = new Set(Object.keys(structure?.tables || {}));
+  let extraHtml = "";
+  let extraHeaderAdded = false;
+
+  for (const k in raw) {
+    if (k.startsWith("@") || k.startsWith("_") || fieldKeys.has(k) || tableKeys.has(k)) continue;
+    if (!extraHeaderAdded) {
+      extraHtml += '<div class="detail-group-header">Extra Information</div>';
+      extraHeaderAdded = true;
+    }
+    extraHtml += `
+      <div class="detail-row">
+        <div class="detail-key">${k}</div>
+        <div class="detail-val-box"><pre class="val-json">${JSON.stringify(raw[k], null, 2)}</pre></div>
+      </div>
+    `;
+  }
+
+  return extraHtml;
+}
+
+function populateFormPreview(root: HTMLElement, raw: any) {
+  const plain = raw || {};
+
+  root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+    "input[data-json-path], textarea[data-json-path], select[data-json-path]",
+  ).forEach((input) => {
+    const key = input.dataset.jsonPath || "";
+    const val = getValueByPath(plain, key);
+    setInputValue(input, val);
+  });
+
+  root.querySelectorAll<HTMLInputElement>("input[type='radio']").forEach((input) => {
+    const key = input.name;
+    if (!key) return;
+    const val = getValueByPath(plain, key);
+    if (val !== undefined) {
+      input.checked = String(val) === input.value;
+    }
+  });
+
+  root.querySelectorAll<HTMLTableElement>(".data-table.dynamic").forEach((table) => {
+    const tableKey = table.getAttribute("data-table-key") || "";
+    if (!tableKey) return;
+    const rows = Array.isArray(plain[tableKey]) ? plain[tableKey] : [];
+    const tbody = table.querySelector("tbody");
+    const templateRow = tbody?.querySelector("tr.template-row") as HTMLTableRowElement | null;
+    if (!tbody || !templateRow) return;
+
+    templateRow.style.display = "none";
+    rows.forEach((rowData, index) => {
+      const newRow = templateRow.cloneNode(true) as HTMLTableRowElement;
+      newRow.classList.remove("template-row");
+      newRow.style.display = "";
+      newRow.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+        "input, textarea, select",
+      ).forEach((input) => {
+        const key = (input as HTMLInputElement).dataset.baseKey || (input as HTMLInputElement).dataset.jsonPath;
+        if (!key) return;
+        setInputValue(input, rowData?.[key]);
+      });
+      newRow.querySelectorAll<HTMLInputElement>(".auto-num").forEach((input) => {
+        if (!input.value) input.value = String(index + 1);
+      });
+      newRow.querySelectorAll<HTMLElement>(".remove-row-btn").forEach((btn) => {
+        btn.style.display = "none";
+      });
+      tbody.appendChild(newRow);
+    });
+  });
+
+  root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+    "input, textarea, select",
+  ).forEach((input) => {
+    input.disabled = true;
+    input.classList.add("readonly");
+  });
+
+  root.querySelectorAll<HTMLElement>(".add-row-btn").forEach((btn) => {
+    btn.style.display = "none";
+  });
+}
+
 function showRecordDetail(idx: number) {
   const rows = (window as any)._aggRows;
   if (!rows || !rows[idx]) return;
@@ -220,13 +358,18 @@ function showRecordDetail(idx: number) {
   const raw = row._raw || {};
   let fieldsHtml = "";
 
+  const template = getFormTemplate();
+  let formPreviewHtml = "";
+
   // Try to use form structure if available for better UI
   const webaStructureEl = document.getElementById('weba-structure');
   let formFields: any[] = [];
+  let formStructure: any = null;
   if (webaStructureEl) {
     try {
       const struct = JSON.parse(webaStructureEl.textContent!);
       formFields = struct.fields || [];
+      formStructure = struct;
     } catch { }
   }
 
@@ -240,7 +383,14 @@ function showRecordDetail(idx: number) {
     return `<span class="val-text">${val}</span>`;
   };
 
-  if (formFields.length > 0) {
+  if (template) {
+    formPreviewHtml = `
+      <div class="detail-form-preview" id="weba-agg-form-preview">
+        ${template.html}
+      </div>
+      ${renderExtraFields(raw, template.structure || formStructure || {})}
+    `;
+  } else if (formFields.length > 0) {
     formFields.forEach(f => {
       if (f.type === 'calc') return; // Skip calculated fields
       const val = raw[f.key];
@@ -297,9 +447,7 @@ function showRecordDetail(idx: number) {
           <button class="close-btn" id="weba-detail-close">✕</button>
         </div>
         <div class="detail-modal-body">
-          <div class="form-view">
-            ${fieldsHtml}
-          </div>
+          ${formPreviewHtml || `<div class="form-view">${fieldsHtml}</div>`}
           <details class="raw-data-section">
             <summary>View Raw Source Data (JSON)</summary>
             <pre>${JSON.stringify(raw, null, 2)}</pre>
@@ -319,6 +467,11 @@ function showRecordDetail(idx: number) {
   };
   overlay?.addEventListener('click', (e) => { e.stopPropagation(); if (e.target === overlay) close(); });
   closeBtn?.addEventListener('click', (e) => { e.stopPropagation(); close(); });
+
+  const formPreview = document.getElementById("weba-agg-form-preview");
+  if (formPreview) {
+    populateFormPreview(formPreview, raw);
+  }
 }
 (window as any).showRecordDetail = showRecordDetail;
 
@@ -435,8 +588,10 @@ export function initAggregatorBrowser() {
       </aside>
 
       <main class="agg-main">
-        <div id="weba-agg-dashboard" class="agg-dashboard"></div>
-        <div id="weba-agg-output" class="agg-output"></div>
+        <div id="weba-agg-results" class="agg-results is-hidden">
+          <div id="weba-agg-dashboard" class="agg-dashboard"></div>
+          <div id="weba-agg-output" class="agg-output"></div>
+        </div>
       </main>
     </div>
 
@@ -489,6 +644,8 @@ export function initAggregatorBrowser() {
       .agg-btn-text { background: none; border: none; color: #ef4444; font-size: 0.85rem; padding: 8px; cursor: pointer; width: 100%; margin-top: 12px; }
 
       .agg-status-message { font-size: 0.85rem; color: var(--agg-text-dim); text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--agg-border); }
+
+      .agg-results.is-hidden { display: none; }
 
       /* Dashboard */
       .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
@@ -553,6 +710,20 @@ export function initAggregatorBrowser() {
       .raw-data-section { margin-top: 32px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
       .raw-data-section summary { font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--agg-text-dim); }
       .raw-data-section pre { margin-top: 12px; font-size: 0.75rem; background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; }
+
+      .detail-form-preview { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+      .detail-form-preview .form-row { margin-bottom: 16px; }
+      .detail-form-preview .form-label { font-weight: 600; margin-bottom: 6px; display: block; }
+      .detail-form-preview .form-input { width: 100%; padding: 8px 10px; border: 1px solid #cbd5f5; border-radius: 6px; background: #f8fafc; }
+      .detail-form-preview .form-input.readonly { color: #0f172a; }
+      .detail-form-preview .table-wrapper { overflow-x: auto; }
+      .detail-form-preview table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+      .detail-form-preview th, .detail-form-preview td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+      .detail-form-preview .remove-row-btn { display: none; }
+      .detail-form-preview .tabs-nav { display: none; }
+      .detail-form-preview .tab-content { display: block; }
+      .detail-form-preview .form-toolbar { display: none; }
+      .detail-form-preview .no-print { display: none; }
     </style>
   `;
 
@@ -563,6 +734,7 @@ export function initAggregatorBrowser() {
   const status = root.querySelector<HTMLDivElement>("#weba-agg-status");
   const output = root.querySelector<HTMLDivElement>("#weba-agg-output");
   const dashboard = root.querySelector<HTMLDivElement>("#weba-agg-dashboard");
+  const results = root.querySelector<HTMLDivElement>("#weba-agg-results");
   const includeJson = root.querySelector<HTMLInputElement>("#weba-agg-include-json");
   const runBtn = root.querySelector<HTMLButtonElement>("#weba-agg-run");
   const dlBtn = root.querySelector<HTMLButtonElement>("#weba-agg-download");
@@ -578,12 +750,6 @@ export function initAggregatorBrowser() {
 
   const embeddedKey = parseKeyScript();
   const aggSpec = parseAggSpecScript();
-  const samplePayloads = Array.isArray(aggSpec?.samples)
-    ? aggSpec!.samples.map((plain, idx) => ({
-      filename: `sample-${idx + 1}.json`,
-      plain,
-    }))
-    : [];
 
   if (keyStatus) {
     keyStatus.textContent = embeddedKey?.recipient_kid ? `Loaded (${embeddedKey.recipient_kid})` : embeddedKey ? "Loaded" : "No keys detected";
@@ -592,6 +758,11 @@ export function initAggregatorBrowser() {
   if (aggSpec?.export?.jsonl === false && dlJsonBtn) {
     dlJsonBtn.disabled = true;
   }
+
+  const setResultsVisible = (visible: boolean) => {
+    if (!results) return;
+    results.classList.toggle("is-hidden", !visible);
+  };
 
   passkeyBtn?.addEventListener("click", async () => {
     try {
@@ -643,13 +814,15 @@ export function initAggregatorBrowser() {
     const allFiles = [...files1, ...files2].filter(f => f.name.toLowerCase().endsWith(".html") && !f.name.startsWith("."));
 
     const hasFiles = allFiles.length > 0;
-    if (!hasFiles && samplePayloads.length === 0) {
+    if (!hasFiles) {
       if (status) status.textContent = "Select HTML files first.";
+      setResultsVisible(false);
       return;
     }
     if (status) status.textContent = "Processing...";
     if (dlBtn) dlBtn.disabled = true;
     if (dlJsonBtn) dlJsonBtn.disabled = true;
+    setResultsVisible(true);
 
     const aggHeader = root.querySelector<HTMLDivElement>(".agg-brand h1");
     rawPayloads = [];
@@ -660,48 +833,32 @@ export function initAggregatorBrowser() {
 
     const l2Keys = passkeyDerivedKeys || embeddedKey;
 
-    if (hasFiles) {
-      if (aggHeader) aggHeader.innerHTML = 'Web/A Aggregator <span style="font-size:0.75rem; background:#10b981; color:white; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle;">REAL DATA</span>';
-      console.log(`Running aggregation on ${allFiles.length} files...`);
-      for (const file of allFiles) {
-        try {
-          const html = await file.text();
-          const extracted = await extractPlainFromHtml(html, l2Keys);
-          if (extracted.source !== "unknown" && extracted.plain) {
-            rawPayloads.push({ filename: file.name, plain: extracted.plain, sig: extracted.sig });
-            const built = buildRowFromPlain({
-              plain: extracted.plain,
-              filename: file.name,
-              includeJson: !!includeJson?.checked,
-              sig: extracted.sig,
-              omitKey: (key) => key.startsWith("@"),
-            });
-            built.keys.forEach((key) => keys.add(key));
-            rows.push({ ...built.row, _raw: extracted.plain, _sig: extracted.sig });
-            processed += 1;
-          } else {
-            console.warn(`Could not extract from ${file.name}`);
-            errors += 1;
-          }
-        } catch (e) {
-          console.error(`Error processing ${file.name}`, e);
+    if (aggHeader) aggHeader.innerHTML = 'Web/A Aggregator <span style="font-size:0.75rem; background:#10b981; color:white; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle;">REAL DATA</span>';
+    console.log(`Running aggregation on ${allFiles.length} files...`);
+    for (const file of allFiles) {
+      try {
+        const html = await file.text();
+        const extracted = await extractPlainFromHtml(html, l2Keys);
+        if (extracted.source !== "unknown" && extracted.plain) {
+          rawPayloads.push({ filename: file.name, plain: extracted.plain, sig: extracted.sig });
+          const built = buildRowFromPlain({
+            plain: extracted.plain,
+            filename: file.name,
+            includeJson: !!includeJson?.checked,
+            sig: extracted.sig,
+            omitKey: (key) => key.startsWith("@"),
+          });
+          built.keys.forEach((key) => keys.add(key));
+          rows.push({ ...built.row, _raw: extracted.plain, _sig: extracted.sig });
+          processed += 1;
+        } else {
+          console.warn(`Could not extract from ${file.name}`);
           errors += 1;
         }
+      } catch (e) {
+        console.error(`Error processing ${file.name}`, e);
+        errors += 1;
       }
-    } else {
-      if (aggHeader) aggHeader.innerHTML = 'Web/A Aggregator <span style="font-size:0.75rem; background:#64748b; color:white; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle;">SAMPLES</span>';
-      console.log("Running aggregation on sample data...");
-      samplePayloads.forEach((payload) => {
-        rawPayloads.push(payload);
-        const built = buildRowFromPlain({
-          plain: payload.plain,
-          filename: payload.filename,
-          includeJson: !!includeJson?.checked,
-        });
-        built.keys.forEach((key) => keys.add(key));
-        rows.push({ ...built.row, _raw: payload.plain });
-        processed += 1;
-      });
     }
 
     const sortedKeys = Array.from(keys).sort((a, b) => {
@@ -730,10 +887,6 @@ export function initAggregatorBrowser() {
     if (output) renderTable(output, rows, sortedKeys);
   };
 
-  if (samplePayloads.length > 0 && (!fileInput?.files || fileInput.files.length === 0)) {
-    runAggregation();
-  }
-
   clearBtn?.addEventListener("click", () => {
     rawPayloads = [];
     cachedCsv = "";
@@ -745,6 +898,7 @@ export function initAggregatorBrowser() {
     if (dlJsonBtn) dlJsonBtn.disabled = true;
     if (dashboard) dashboard.innerHTML = "";
     if (output) output.innerHTML = "";
+    setResultsVisible(false);
     (window as any)._aggRows = [];
   });
 
