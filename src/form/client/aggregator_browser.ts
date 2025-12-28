@@ -361,11 +361,26 @@ export function initAggregatorBrowser() {
   if (aggSpec?.export?.jsonl === false && dlJsonBtn) {
     dlJsonBtn.disabled = true;
   }
-  const parquetProvider = (globalThis as any).webaParquet;
-  const parquetReady = aggSpec?.export?.parquet && parquetProvider?.export;
+  const isParquetReady = () => {
+    const provider = (globalThis as any).webaParquet;
+    return !!(aggSpec?.export?.parquet && provider?.export);
+  };
+  let parquetReady = isParquetReady();
   if (dlParquetBtn) {
     dlParquetBtn.disabled = !parquetReady;
-    dlParquetBtn.title = parquetReady ? "" : "Parquet export provider not available";
+    dlParquetBtn.title = parquetReady ? "" : "Parquet export is loading";
+  }
+  if (!parquetReady && aggSpec?.export?.parquet) {
+    const waitForProvider = window.setInterval(() => {
+      parquetReady = isParquetReady();
+      if (parquetReady) {
+        if (dlParquetBtn) {
+          dlParquetBtn.disabled = false;
+          dlParquetBtn.title = "";
+        }
+        window.clearInterval(waitForProvider);
+      }
+    }, 300);
   }
 
   const runAggregation = async () => {
@@ -478,7 +493,10 @@ export function initAggregatorBrowser() {
   });
 
   dlParquetBtn?.addEventListener("click", async () => {
-    if (!parquetReady || !rawPayloads.length) return;
+    if (!parquetReady || !rawPayloads.length) {
+      if (status) status.textContent = "Parquet export is not ready yet.";
+      return;
+    }
     try {
       const bytes = await parquetProvider.export(rawPayloads.map((p) => ({
         _filename: p.filename,

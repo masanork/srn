@@ -5,6 +5,7 @@
  */
 import { parseMarkdown } from './parser';
 import { CLIENT_BUNDLE } from './client/embed';
+import { PARQUET_BUNDLE } from './client/parquet_embed';
 
 export const RUNTIME_SCRIPT = CLIENT_BUNDLE;
 
@@ -36,6 +37,8 @@ export function generateHtml(markdown: string): string {
 export function generateAggregatorHtml(markdown: string): string {
     const { jsonStructure } = parseMarkdown(markdown);
     const aggSpec = jsonStructure.aggSpec ? JSON.stringify(jsonStructure.aggSpec) : '';
+    const parquetEnabled = jsonStructure.aggSpec?.export?.parquet;
+    const parquetScript = parquetEnabled ? `<script type="module">${PARQUET_BUNDLE}</script>` : '';
     return `<!DOCTYPE html><html><head><title>Aggregator</title><style>
     body{font-family:sans-serif;max-width:1100px;margin:0 auto;padding:2rem;}
     h1{margin-bottom:1.5rem;}
@@ -62,5 +65,5 @@ export function generateAggregatorHtml(markdown: string): string {
     .agg-card-value{font-size:1.25rem;font-weight:700;}
     .agg-dashboard-table{margin-bottom:1rem;}
     .agg-table-title{font-weight:600;margin-bottom:0.35rem;}
-    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-l2-keys" type="application/json"></script>${parquetScript}<script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
