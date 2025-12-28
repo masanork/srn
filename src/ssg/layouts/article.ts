@@ -15,8 +15,8 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
     const siteDid = vc?.issuer || "did:web:masanork.github.io:srn";
     const lang = (data.lang || 'ja').toString();
     const presentationEnabled = data.presentation === true;
-    const presentationTemplate = (data.presentation_template || 'sorane').toString();
-    const presentationCss = presentationEnabled ? loadPresentationCss() : '';
+    const presentationTemplate = normalizeTemplateName((data.presentation_template || 'sorane').toString()) || 'sorane';
+    const presentationCss = presentationEnabled ? loadPresentationCss(presentationTemplate) : '';
 
     // Construct schema.org JSON-LD
     const schema = {
@@ -239,16 +239,31 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
     });
 }
 
-let cachedPresentationCss: string | null = null;
+const cachedPresentationCss = new Map<string, string>();
 
-function loadPresentationCss(): string {
-    if (cachedPresentationCss) return cachedPresentationCss;
-    const cssPath = path.join(process.cwd(), 'src', 'ssg', 'assets', 'presentation.css');
+function loadPresentationCss(template: string): string {
+    const safeTemplate = normalizeTemplateName(template) || 'sorane';
+    const cached = cachedPresentationCss.get(safeTemplate);
+    if (cached) return cached;
+    const basePath = path.join(process.cwd(), 'src', 'ssg', 'assets', 'presentation', 'base.css');
+    const templatePath = path.join(process.cwd(), 'src', 'ssg', 'assets', 'presentation', 'templates', `${safeTemplate}.css`);
+    let css = '';
     try {
-        cachedPresentationCss = fs.readFileSync(cssPath, 'utf-8');
+        css += fs.readFileSync(basePath, 'utf-8');
     } catch (err) {
-        console.warn('Failed to load presentation.css', err);
-        cachedPresentationCss = '';
+        console.warn('Failed to load presentation base CSS', err);
     }
-    return cachedPresentationCss;
+    if (fs.existsSync(templatePath)) {
+        try {
+            css += `\n${fs.readFileSync(templatePath, 'utf-8')}`;
+        } catch (err) {
+            console.warn(`Failed to load presentation template CSS (${safeTemplate})`, err);
+        }
+    }
+    cachedPresentationCss.set(safeTemplate, css);
+    return css;
+}
+
+function normalizeTemplateName(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
 }
