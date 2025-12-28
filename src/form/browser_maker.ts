@@ -7,7 +7,9 @@ declare global {
     interface Window {
         parseAndRender: () => void;
         downloadCurrent: () => void;
+        loadToolFile: (input: HTMLInputElement) => void;
         setPreviewMode: (mode: 'form' | 'aggregator') => void;
+        setupEncryption: () => void;
         generatedJsonStructure: any;
         isRuntimeLoaded: boolean;
         previewMode?: 'form' | 'aggregator';
@@ -270,4 +272,61 @@ async function setupEncryption() {
         alert("Setup failed: " + e.message);
     }
 }
+
+async function loadToolFile(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+        const text = await file.text();
+        const doc = new DOMParser().parseFromString(text, "text/html");
+
+        // 1. Recover Aggregation Spec
+        const specEl = doc.getElementById('weba-agg-spec');
+        if (specEl) {
+            try {
+                const spec = JSON.parse(specEl.textContent || '');
+                console.log("Recovered Aggregator Spec:", spec);
+            } catch (e) {
+                console.warn("Failed to parse Aggregation Spec");
+            }
+        }
+
+        // 2. Recover Encryption Keys
+        const keysEl = doc.getElementById('weba-l2-key') || doc.getElementById('weba-l2-keys');
+        if (keysEl) {
+            try {
+                lastGeneratedKeys = JSON.parse(keysEl.textContent || '');
+                console.log("Recovered Encryption Keys:", lastGeneratedKeys);
+            } catch (e) {
+                console.warn("Failed to parse Encryption Keys");
+            }
+        }
+
+        // 3. Switch to Aggregator Mode and Show the tool
+        window.setPreviewMode('aggregator');
+
+        // We override updatePreview logic temporarily for the loaded file
+        const preview = document.getElementById('preview');
+        if (preview) {
+            preview.innerHTML = `<iframe id="preview-frame" style="width:100%; height:100%; border:0;"></iframe>`;
+            const frame = document.getElementById('preview-frame') as HTMLIFrameElement | null;
+            if (frame) {
+                // Use the loaded HTML but ensure it runs on the same origin (blob from current page)
+                const blob = new Blob([text], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                frame.src = url;
+                frame.onload = () => URL.revokeObjectURL(url);
+            }
+        }
+
+        alert("Tool Loaded Successfully!\nYou can now use use your Passkey to aggregate files within this preview.");
+    } catch (e) {
+        console.error(e);
+        alert("Failed to load tool.");
+    } finally {
+        input.value = '';
+    }
+}
+window.loadToolFile = loadToolFile;
 

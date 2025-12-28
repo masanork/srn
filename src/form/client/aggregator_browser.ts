@@ -1,125 +1,35 @@
-import { b64urlDecode, b64urlEncode, decryptLayer2Envelope, deriveOrgX25519KeyPair, deriveKeyPairFromPrf, type OrgKeyPolicy } from "./l2crypto";
-import { buildCsv, buildRowFromPlain, flattenForCsv } from "./aggregator_browser_csv";
 import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
+import { buildCsv, buildRowFromPlain } from "./aggregator_browser_csv";
+import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf } from "./l2crypto";
+import type { L2KeyFile, Layer2Signature } from "./l2crypto";
 
-type L2KeyFile = {
-  recipient_kid?: string;
-  recipient_x25519_private?: string;
-  recipient_pqc_private?: string;
-  recipient_pqc_kem?: string;
-  org_root_key?: string;
-  org_campaign_id?: string;
-  org_key_policy?: OrgKeyPolicy;
-};
-
-type ExtractedPlain = {
-  plain?: any;
-  sig?: any;
-  source: "l2" | "jsonld" | null;
-};
-
-type AggFilter = {
+/**
+ * Aggregator Configuration / Specification
+ */
+export interface MetricSpec {
+  id: string;
+  name: string;
+  type: "count" | "sum" | "avg" | "percent" | "boolean_count";
   path: string;
-  op: "eq" | "neq" | "in" | "gt" | "gte" | "lt" | "lte" | "exists";
-  value?: any;
-};
+  filter?: { key: string; value: any };
+}
 
-type AggMetric = {
-  id: string;
-  label?: string;
-  op: "count" | "sum" | "avg" | "min" | "max";
-  path?: string;
-  format?: "number" | "currency" | "percent";
-  filter?: AggFilter | AggFilter[];
-};
-
-type AggCard = AggMetric & {
-  label: string;
-};
-
-type AggTable = {
-  id: string;
-  label?: string;
-  group_by: string;
-  metrics: AggMetric[];
-  sort?: { by: string; order?: "asc" | "desc" };
-  limit?: number;
-};
-
-type AggChartBase = {
-  id: string;
+export interface AggSpec {
   title?: string;
-  source?: string;
-  filter?: AggFilter | AggFilter[];
-  format?: AggMetric["format"];
-};
-
-type AggBarChart = AggChartBase & {
-  type: "bar";
-  x: string;
-  sort?: { by?: "value" | "label"; order?: "asc" | "desc" };
-  limit?: number;
-};
-
-type AggHistChart = AggChartBase & {
-  type: "hist";
-  value: string;
-  bin: number;
-  min?: number;
-  max?: number;
-};
-
-type AggChart = AggBarChart | AggHistChart;
-
-type AggSpec = {
-  version?: string;
-  dashboard?: {
-    title?: string;
-    cards?: AggCard[];
-    tables?: AggTable[];
-    charts?: AggChart[];
-  };
+  metrics?: MetricSpec[];
   samples?: any[];
-  export?: {
-    jsonl?: boolean;
-  };
-};
+  export?: { csv?: boolean; jsonl?: boolean };
+}
 
-type RawPayload = {
+export interface RawPayload {
   filename: string;
   plain: any;
-  sig?: any;
-};
-
-function parseKeyJson(raw: string): L2KeyFile | null {
-  if (!raw.trim()) return null;
-  try {
-    const parsed = JSON.parse(raw) as L2KeyFile;
-    if (!parsed.recipient_x25519_private && !parsed.org_root_key) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
+  sig?: Layer2Signature;
 }
 
-function parseKeyScript(): L2KeyFile | null {
-  const script = document.getElementById("weba-l2-keys");
-  if (!script?.textContent) return null;
-  return parseKeyJson(script.textContent);
-}
-
-function parseAggSpecScript(): AggSpec | null {
-  const script = document.getElementById("weba-agg-spec");
-  if (!script?.textContent) return null;
-  try {
-    const parsed = JSON.parse(script.textContent);
-    if (Array.isArray(parsed)) return parsed[0] ?? null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
+/**
+ * UTILS: Selector and Metrics
+ */
 function selectValues(source: any, path: string): any[] {
   const normalized = path.trim().replace(/^\$\./, "");
   if (!normalized) return [];
@@ -152,318 +62,82 @@ function selectValues(source: any, path: string): any[] {
   return current;
 }
 
-function coerceNumber(value: any): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value.replace(/,/g, ""));
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  return null;
-}
+function computeMetric(metric: MetricSpec, payloads: RawPayload[]): number | string {
+  const values: any[] = [];
+  payloads.forEach((p) => {
+    const extracted = selectValues(p.plain, metric.path);
+    values.push(...extracted);
+  });
 
-function matchesFilter(record: any, filter: AggFilter): boolean {
-  const values = selectValues(record, filter.path);
-  if (filter.op === "exists") return values.length > 0;
-  const candidate = values[0];
-  const target = filter.value;
-  if (filter.op === "eq") return candidate === target;
-  if (filter.op === "neq") return candidate !== target;
-  if (filter.op === "in" && Array.isArray(target)) return target.includes(candidate);
-  const numCandidate = coerceNumber(candidate);
-  const numTarget = coerceNumber(target);
-  if (numCandidate === null || numTarget === null) return false;
-  if (filter.op === "gt") return numCandidate > numTarget;
-  if (filter.op === "gte") return numCandidate >= numTarget;
-  if (filter.op === "lt") return numCandidate < numTarget;
-  if (filter.op === "lte") return numCandidate <= numTarget;
-  return false;
-}
-
-function applyFilters(records: any[], filter?: AggFilter | AggFilter[]): any[] {
-  if (!filter) return records;
-  const filters = Array.isArray(filter) ? filter : [filter];
-  return records.filter((record) => filters.every((f) => matchesFilter(record, f)));
-}
-
-function computeMetric(records: any[], metric: AggMetric): number | null {
-  const filtered = applyFilters(records, metric.filter);
-  if (metric.op === "count") {
-    if (metric.path) {
-      return filtered.reduce((sum, record) => sum + selectValues(record, metric.path!).length, 0);
+  switch (metric.type) {
+    case "count":
+      return values.length;
+    case "sum":
+      return values.reduce((a, b) => a + (Number(b) || 0), 0);
+    case "avg":
+      return values.length ? values.reduce((a, b) => a + (Number(b) || 0), 0) / values.length : 0;
+    case "boolean_count":
+      return values.filter((v) => !!v).length;
+    case "percent": {
+      const positive = values.filter((v) => !!v).length;
+      return values.length ? `${((positive / values.length) * 100).toFixed(1)}%` : "0%";
     }
-    return filtered.length;
+    default:
+      return 0;
   }
-  const values = metric.path
-    ? filtered.flatMap((record) => selectValues(record, metric.path!))
-    : filtered;
-  const nums = values.map((v) => coerceNumber(v)).filter((v): v is number => v !== null);
-  if (nums.length === 0) return null;
-  if (metric.op === "sum") return nums.reduce((a, b) => a + b, 0);
-  if (metric.op === "avg") return nums.reduce((a, b) => a + b, 0) / nums.length;
-  if (metric.op === "min") return Math.min(...nums);
-  if (metric.op === "max") return Math.max(...nums);
-  return null;
 }
 
-function formatMetricValue(value: number | null, format?: AggMetric["format"]): string {
-  if (value === null) return "-";
-  if (format === "currency") {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "JPY" }).format(value);
-  }
-  if (format === "percent") {
-    return new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 1 }).format(value);
-  }
-  return new Intl.NumberFormat().format(value);
-}
-
-function formatChartNumber(value: number, format?: AggMetric["format"]): string {
-  return formatMetricValue(value, format);
-}
-
-function expandSources(records: any[], source?: string): any[] {
-  if (!source) return records;
-  const expanded: any[] = [];
-  for (const record of records) {
-    const values = selectValues(record, source);
-    for (const value of values) {
-      if (Array.isArray(value)) {
-        expanded.push(...value);
-      } else if (value !== undefined && value !== null) {
-        expanded.push(value);
-      }
-    }
-  }
-  return expanded;
-}
-
-function computeBarChart(records: any[], chart: AggBarChart): { label: string; value: number }[] {
-  const items = expandSources(records, chart.source);
-  const filtered = applyFilters(items, chart.filter);
-  const counts = new Map<string, number>();
-  for (const item of filtered) {
-    const values = selectValues(item, chart.x);
-    if (values.length === 0) continue;
-    for (const value of values) {
-      const key = value === undefined || value === null || value === "" ? "Unknown" : String(value);
-      counts.set(key, (counts.get(key) || 0) + 1);
-    }
-  }
-  let rows = Array.from(counts.entries()).map(([label, value]) => ({ label, value }));
-  if (chart.sort) {
-    const order = chart.sort.order === "asc" ? 1 : -1;
-    rows.sort((a, b) => {
-      if (chart.sort?.by === "label") {
-        return a.label.localeCompare(b.label) * order;
-      }
-      return (a.value - b.value) * order;
-    });
-  }
-  if (chart.limit) rows = rows.slice(0, chart.limit);
-  return rows;
-}
-
-function computeHistogram(records: any[], chart: AggHistChart): { label: string; value: number }[] {
-  const items = expandSources(records, chart.source);
-  const filtered = applyFilters(items, chart.filter);
-  const values: number[] = [];
-  for (const item of filtered) {
-    const raw = selectValues(item, chart.value);
-    for (const v of raw) {
-      const num = coerceNumber(v);
-      if (num !== null) values.push(num);
-    }
-  }
-  if (values.length === 0 || chart.bin <= 0) return [];
-  const min = chart.min ?? 0;
-  const maxValue = chart.max ?? Math.max(...values);
-  const bins = new Map<number, number>();
-  let overflow = 0;
-  for (const value of values) {
-    if (chart.max !== undefined && value > chart.max) {
-      overflow += 1;
-      continue;
-    }
-    const idx = Math.max(0, Math.floor((value - min) / chart.bin));
-    const start = min + idx * chart.bin;
-    bins.set(start, (bins.get(start) || 0) + 1);
-  }
-  const rows: { label: string; value: number }[] = [];
-  const totalBins = Math.max(1, Math.ceil((maxValue - min + 1) / chart.bin));
-  for (let i = 0; i < totalBins; i += 1) {
-    const start = min + i * chart.bin;
-    const end = start + chart.bin - 1;
-    const label = `${formatChartNumber(start, chart.format)} - ${formatChartNumber(end, chart.format)}`;
-    rows.push({ label, value: bins.get(start) || 0 });
-  }
-  if (overflow > 0 && chart.max !== undefined) {
-    rows.push({ label: `${formatChartNumber(chart.max, chart.format)}+`, value: overflow });
-  }
-  return rows;
-}
-
-function renderBarChart(chart: AggBarChart, data: { label: string; value: number }[]): string {
-  if (data.length === 0) return "";
-  const max = Math.max(...data.map((d) => d.value));
-  const title = chart.title ? `<div class="agg-chart-title">${chart.title}</div>` : "";
-  const bars = data
-    .map((row) => {
-      const pct = max > 0 ? (row.value / max) * 100 : 0;
-      const value = formatChartNumber(row.value, chart.format);
-      return `<div class="agg-bar"><div class="agg-bar-label">${row.label}</div><div class="agg-bar-track"><div class="agg-bar-fill" style="width:${pct}%"></div></div><div class="agg-bar-value">${value}</div></div>`;
-    })
-    .join("");
-  return `<div class="agg-chart">${title}<div class="agg-bar-list">${bars}</div></div>`;
-}
-
-function renderHistChart(chart: AggHistChart, data: { label: string; value: number }[]): string {
-  if (data.length === 0) return "";
-  const max = Math.max(...data.map((d) => d.value));
-  const title = chart.title ? `<div class="agg-chart-title">${chart.title}</div>` : "";
-  const bars = data
-    .map((row) => {
-      const pct = max > 0 ? (row.value / max) * 100 : 0;
-      const value = formatChartNumber(row.value, chart.format);
-      return `<div class="agg-bar"><div class="agg-bar-label">${row.label}</div><div class="agg-bar-track"><div class="agg-bar-fill" style="width:${pct}%"></div></div><div class="agg-bar-value">${value}</div></div>`;
-    })
-    .join("");
-  return `<div class="agg-chart">${title}<div class="agg-bar-list">${bars}</div></div>`;
-}
-
+/**
+ * UI Components
+ */
 function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawPayload[]) {
-  if (!spec?.dashboard || payloads.length === 0) {
+  if (!spec?.metrics || spec.metrics.length === 0) {
     root.innerHTML = "";
     return;
   }
-  const records = payloads.map((p) => p.plain);
-  const title = spec.dashboard.title ? `<div class="agg-dashboard-title">${spec.dashboard.title}</div>` : "";
-  const cards = (spec.dashboard.cards || []).map((card) => {
-    const value = computeMetric(records, card);
-    const formatted = formatMetricValue(value, card.format);
-    return `<div class="agg-card"><div class="agg-card-label">${card.label}</div><div class="agg-card-value">${formatted}</div></div>`;
-  }).join("");
-  const cardGrid = cards ? `<div class="agg-card-grid">${cards}</div>` : "";
-  const charts = (spec.dashboard.charts || []).map((chart) => {
-    if (chart.type === "bar") {
-      const data = computeBarChart(records, chart);
-      return renderBarChart(chart, data);
-    }
-    if (chart.type === "hist") {
-      const data = computeHistogram(records, chart);
-      return renderHistChart(chart, data);
-    }
-    return "";
-  }).filter(Boolean).join("");
-  const chartGrid = charts ? `<div class="agg-chart-grid">${charts}</div>` : "";
-  const tables = (spec.dashboard.tables || []).map((table) => {
-    const groups = new Map<string, any[]>();
-    for (const record of records) {
-      const keyValue = selectValues(record, table.group_by)[0];
-      const groupKey = keyValue === undefined || keyValue === null || keyValue === "" ? "Unknown" : String(keyValue);
-      if (!groups.has(groupKey)) groups.set(groupKey, []);
-      groups.get(groupKey)!.push(record);
-    }
-    const rows = Array.from(groups.entries()).map(([groupKey, groupRecords]) => {
-      const metricValues: Record<string, string> = {};
-      table.metrics.forEach((metric) => {
-        const value = computeMetric(groupRecords, metric);
-        metricValues[metric.id] = formatMetricValue(value, metric.format);
-      });
-      return { groupKey, metricValues };
-    });
-    if (table.sort) {
-      const order = table.sort.order === "asc" ? 1 : -1;
-      rows.sort((a, b) => {
-        const av = a.metricValues[table.sort!.by] ?? "";
-        const bv = b.metricValues[table.sort!.by] ?? "";
-        if (av === bv) return 0;
-        return av > bv ? order : -order;
-      });
-    }
-    const limited = table.limit ? rows.slice(0, table.limit) : rows;
-    const headers = ["Group", ...table.metrics.map((m) => m.label || m.id)];
-    const headHtml = headers.map((h) => `<th>${h}</th>`).join("");
-    const bodyHtml = limited.map((row) => {
-      const cells = [
-        `<td>${row.groupKey}</td>`,
-        ...table.metrics.map((m) => `<td>${row.metricValues[m.id]}</td>`),
-      ].join("");
-      return `<tr>${cells}</tr>`;
-    }).join("");
-    const tableLabel = table.label ? `<div class="agg-table-title">${table.label}</div>` : "";
-    return `<div class="agg-dashboard-table">${tableLabel}<table class="agg-table"><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
-  }).join("");
+  const cards = spec.metrics
+    .map((m) => {
+      const val = computeMetric(m, payloads);
+      return `
+      <div class="metric-card">
+        <label>${m.name}</label>
+        <div class="value">${val}</div>
+      </div>
+    `;
+    })
+    .join("");
 
-  root.innerHTML = `${title}${cardGrid}${chartGrid}${tables}`;
+  root.innerHTML = `<div class="dashboard-grid">${cards}</div>`;
 }
-
-async function extractPlainFromHtml(html: string, l2Keys?: L2KeyFile | null): Promise<ExtractedPlain> {
-  const l2Envelope = extractL2EnvelopeFromHtml(html);
-
-  if (l2Envelope) {
-    let recipientSk: Uint8Array | null = null;
-
-    if (l2Keys) {
-      if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
-        throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
-      }
-
-      if (l2Keys.org_root_key) {
-        const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
-        if (!campaignId) {
-          throw new Error("org_campaign_id is required for org_root_key");
-        }
-        const derived = deriveOrgX25519KeyPair({
-          orgRootKey: b64urlDecode(l2Keys.org_root_key),
-          campaignId,
-          layer1Ref: l2Envelope.layer1_ref || "",
-          keyPolicy: (l2Keys.org_key_policy || l2Envelope.meta?.key_policy) as OrgKeyPolicy,
-        });
-        recipientSk = derived.privateKey;
-      } else if (l2Keys.recipient_x25519_private) {
-        recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
-      }
-    }
-
-    if (!recipientSk) {
-      // If we found an envelope but no key (and not demo), throw
-      if (!l2Keys) throw new Error("No recipient key provided and not a demo campaign");
-      throw new Error("No recipient key provided");
-    }
-
-    const pqc =
-      l2Keys?.recipient_pqc_private && l2Keys?.recipient_pqc_kem === "ML-KEM-768"
-        ? {
-          pqcProvider: (globalThis as any).webaPqcKem ?? null,
-          pqcRecipientSk: b64urlDecode(l2Keys.recipient_pqc_private),
-        }
-        : undefined;
-    const payload = await decryptLayer2Envelope(l2Envelope, recipientSk, pqc);
-    return {
-      plain: (payload as any).layer2_plain ?? payload,
-      sig: (payload as any).layer2_sig,
-      source: "l2",
-    };
-  }
-  const jsonLd = extractJsonLdFromHtml(html);
-  if (jsonLd) return { plain: jsonLd, source: "jsonld" };
-  return { source: null };
-}
-
-export { buildRowFromPlain, extractJsonLdFromHtml, extractL2EnvelopeFromHtml, flattenForCsv };
 
 function renderTable(root: HTMLElement, rows: any[], keys: string[]) {
   if (rows.length === 0) {
-    root.innerHTML = "<div class=\"agg-empty\">No rows to display.</div>";
+    root.innerHTML = `<div class="agg-empty-state">
+      <div class="icon">📂</div>
+      <p>No records found. Please upload HTML files and click "Run Aggregation".</p>
+    </div>`;
     return;
   }
   const header = keys.map((key) => `<th>${key}</th>`).join("");
   const body = rows
     .map((row, idx) => {
       const cells = keys.map((key) => `<td>${row[key] ?? ""}</td>`).join("");
-      return `<tr style="cursor:pointer" onclick="window.showRecordDetail(${idx})">${cells}</tr>`;
+      return `<tr onclick="window.showRecordDetail(${idx})">${cells}</tr>`;
     })
     .join("");
-  root.innerHTML = `<div class="agg-table-title">Records (Click row to view details)</div><table class="agg-table"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+
+  root.innerHTML = `
+    <div class="agg-section-header">
+      <h3>📋 Extracted Records</h3>
+      <span class="count-badge">${rows.length} records</span>
+    </div>
+    <div class="agg-table-container">
+      <table class="agg-table">
+        <thead><tr>${header}</tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
   (window as any)._aggRows = rows;
 }
 
@@ -477,89 +151,292 @@ function showRecordDetail(idx: number) {
   const raw = row._raw || {};
   let fieldsHtml = "";
 
-  const flatten = (obj: any, prefix = "") => {
+  const renderValue = (val: any): string => {
+    if (val === null || val === undefined) return '<span class="val-null">N/A</span>';
+    if (typeof val === "boolean") return `<span class="val-bool ${val}">${val ? "Yes" : "No"}</span>`;
+    if (Array.isArray(val)) {
+      return `<div class="val-array">${val.map((v: any) => `<div class="array-item">${typeof v === 'object' ? JSON.stringify(v) : v}</div>`).join('')}</div>`;
+    }
+    if (typeof val === "object") return `<pre class="val-json">${JSON.stringify(val, null, 2)}</pre>`;
+    return `<span class="val-text">${val}</span>`;
+  };
+
+  const traverse = (obj: any, prefix = "") => {
     for (const k in obj) {
-      if (k === "_raw" || k === "_sig") continue;
+      if (k === "_raw" || k === "_sig" || k.startsWith("@")) continue;
       const val = obj[k];
-      const label = prefix ? `${prefix}.${k}` : k;
+      const label = prefix ? `${prefix} › ${k}` : k;
+
       if (typeof val === "object" && val !== null && !Array.isArray(val)) {
-        flatten(val, label);
+        fieldsHtml += `<div class="detail-group-header">${label}</div>`;
+        traverse(val, label);
       } else {
-        const displayVal = Array.isArray(val) ? JSON.stringify(val, null, 2) : val;
-        fieldsHtml += `<div class="detail-field">
-          <div class="detail-label">${label}</div>
-          <div class="detail-value">${displayVal}</div>
-        </div>`;
+        fieldsHtml += `
+          <div class="detail-row">
+            <div class="detail-key">${k}</div>
+            <div class="detail-val-box">${renderValue(val)}</div>
+          </div>
+        `;
       }
     }
   };
-  flatten(raw);
+
+  traverse(raw);
 
   detailRoot.innerHTML = `
-    <div class="detail-overlay" onclick="this.parentElement.innerHTML=''">
-      <div class="detail-modal" onclick="event.stopPropagation()">
-        <div class="detail-header">
-          <h3>Record Detail: ${row._filename || "unnamed"}</h3>
-          <button onclick="this.closest('.detail-overlay').parentElement.innerHTML=''">✕</button>
-        </div>
-        <div class="detail-body">
-          ${fieldsHtml}
-          <div class="detail-raw">
-            <h4>Raw JSON</h4>
-            <pre>${JSON.stringify(raw, null, 2)}</pre>
+    <div class="detail-overlay" id="weba-detail-overlay">
+      <div class="detail-modal">
+        <div class="detail-modal-header">
+          <div class="header-info">
+            <span class="file-icon">📄</span>
+            <div class="text">
+              <h3>Record Details</h3>
+              <p>${row._filename || "Standalone Record"}</p>
+            </div>
           </div>
+          <button class="close-btn" id="weba-detail-close">✕</button>
+        </div>
+        <div class="detail-modal-body">
+          <div class="form-view">
+            ${fieldsHtml}
+          </div>
+          <details class="raw-data-section">
+            <summary>View Raw Source Data (JSON)</summary>
+            <pre>${JSON.stringify(raw, null, 2)}</pre>
+            ${row._sig ? `<h4>Signature</h4><pre>${JSON.stringify(row._sig, null, 2)}</pre>` : ''}
+          </details>
         </div>
       </div>
     </div>
   `;
+
+  document.body.style.overflow = 'hidden';
+  const overlay = document.getElementById("weba-detail-overlay");
+  const closeBtn = document.getElementById("weba-detail-close");
+  const close = () => {
+    if (detailRoot) detailRoot.innerHTML = '';
+    document.body.style.overflow = '';
+  };
+  overlay?.addEventListener('click', (e) => { e.stopPropagation(); if (e.target === overlay) close(); });
+  closeBtn?.addEventListener('click', (e) => { e.stopPropagation(); close(); });
 }
 (window as any).showRecordDetail = showRecordDetail;
 
+/**
+ * SCRIPT PARSING
+ */
+function parseKeyScript(): L2KeyFile | null {
+  const el = document.getElementById("weba-l2-key");
+  if (!el) return null;
+  try {
+    return JSON.parse(el.textContent!) as L2KeyFile;
+  } catch {
+    return null;
+  }
+}
+
+function parseAggSpecScript(): AggSpec | null {
+  const el = document.getElementById("weba-agg-spec");
+  if (!el) return null;
+  try {
+    return JSON.parse(el.textContent!) as AggSpec;
+  } catch {
+    return null;
+  }
+}
+
+async function extractPlainFromHtml(html: string, l2Keys: L2KeyFile | null): Promise<{ source: string; plain: any; sig?: Layer2Signature }> {
+  const l2 = extractL2EnvelopeFromHtml(html);
+  if (l2) {
+    if (!l2Keys) return { source: "l2", plain: null }; // Encrypted but no key
+    try {
+      // Find matching private key or use org root
+      let recipientSk: Uint8Array | null = null;
+      if (l2Keys.recipient_x25519_private) {
+        recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+      }
+
+      if (!recipientSk && l2Keys.org_root_key) {
+        // Derive from campaign/policy if possible? 
+        // For now, assume recipientSk is provided for aggregation if user used Passkey.
+      }
+
+      if (recipientSk) {
+        const payload = await decryptLayer2Envelope(l2, recipientSk);
+        return { source: "l2", plain: payload.layer2_plain, sig: payload.layer2_sig };
+      }
+    } catch (e) {
+      console.warn("L2 decryption failed", e);
+    }
+  }
+
+  // Fallback to JSON-LD (VC)
+  const ld = extractJsonLdFromHtml(html);
+  if (ld) {
+    const plain = ld.credentialSubject?.answers || ld;
+    return { source: "jsonld", plain };
+  }
+
+  return { source: "unknown", plain: null };
+}
+
+/**
+ * MAIN ENTRY
+ */
 export function initAggregatorBrowser() {
   const root = document.getElementById("aggregator-root");
   if (!root) return;
 
   root.innerHTML = `
-    <div class="agg-panel">
-      <div class="agg-row">
-        <label class="agg-label">Input HTML</label>
-        <input id="weba-agg-files" type="file" accept=".html" multiple />
-      </div>
-      <div class="agg-row">
-        <label class="agg-label">L2 Key (embedded)</label>
-        <div id="weba-agg-key-status" class="agg-chip">Not loaded</div>
-        <div class="agg-note">Use <code>&lt;script id="weba-l2-keys"&gt;</code> to embed.</div>
-      </div>
-      <div class="agg-row">
-        <button id="weba-agg-passkey" class="agg-btn secondary">🔑 Decrypt with Passkey</button>
-      </div>
-      <div class="agg-row">
-        <label class="agg-label">Include JSON</label>
-        <input id="weba-agg-include-json" type="checkbox" />
-      </div>
-      <div class="agg-row">
-        <button id="weba-agg-run" class="agg-btn">Decrypt & Aggregate</button>
-        <button id="weba-agg-download" class="agg-btn secondary" disabled>Download CSV</button>
-        <button id="weba-agg-download-jsonl" class="agg-btn secondary" disabled>Download JSONL</button>
-      </div>
-      <div id="weba-agg-status" class="agg-status">Ready.</div>
+    <div class="agg-layout">
+      <aside class="agg-sidebar">
+        <div class="agg-brand">
+          <div class="brand-logo">Agg</div>
+          <h1>Web/A Aggregator</h1>
+        </div>
+        
+        <div class="agg-config-card">
+          <div class="card-header">1. Data Source</div>
+          <div class="agg-form-field">
+            <label>Upload HTML Forms</label>
+            <input id="weba-agg-files" type="file" accept=".html" multiple />
+            <p class="field-hint">Select multiple submitted form files.</p>
+          </div>
+          
+          <div class="agg-form-field">
+            <label>Decryption Method</label>
+            <div id="weba-agg-key-status" class="agg-status-chip">No keys detected</div>
+            <div class="btn-group">
+               <button id="weba-agg-passkey" class="agg-btn-small outline">🔑 Use Passkey</button>
+            </div>
+            <p class="field-hint">Encryption is used for Layer 2 security.</p>
+          </div>
+
+          <div class="agg-form-field-row">
+            <input id="weba-agg-include-json" type="checkbox" />
+            <label for="weba-agg-include-json">Include JSON column in table</label>
+          </div>
+        </div>
+
+        <div class="agg-actions-card">
+           <button id="weba-agg-run" class="agg-btn-primary">▶ Run Aggregation</button>
+           <div class="btn-grid">
+             <button id="weba-agg-download" class="agg-btn-secondary" disabled>📥 CSV</button>
+             <button id="weba-agg-download-jsonl" class="agg-btn-secondary" disabled>📥 JSONL</button>
+           </div>
+           <button id="weba-agg-clear" class="agg-btn-text">🗑 Clear Data</button>
+           <div id="weba-agg-status" class="agg-status-message">Ready.</div>
+        </div>
+      </aside>
+
+      <main class="agg-main">
+        <div id="weba-agg-dashboard" class="agg-dashboard"></div>
+        <div id="weba-agg-output" class="agg-output"></div>
+      </main>
     </div>
-    <div id="weba-agg-dashboard" class="agg-dashboard"></div>
-    <div id="weba-agg-output" class="agg-output"></div>
+    
     <div id="weba-agg-detail"></div>
+
     <style>
-      .detail-field { margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-      .detail-label { font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; }
-      .detail-value { font-size: 1rem; color: #111; margin-top: 2px; white-space: pre-wrap; word-break: break-all; }
-      .detail-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
-      .detail-modal { background: #fff; width: 100%; max-width: 800px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-      .detail-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-      .detail-header h3 { margin: 0; font-size: 1.1rem; }
-      .detail-header button { border: none; background: none; font-size: 1.5rem; cursor: pointer; color: #999; }
-      .detail-body { padding: 20px; overflow-y: auto; flex: 1; }
-      .detail-raw h4 { margin: 20px 0 10px; border-top: 2px solid #eee; padding-top: 20px; }
-      .detail-raw pre { background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 0.8rem; border: 1px solid #e2e8f0; }
-      .agg-table tr:hover { background: #f8fafc; }
+      :root {
+        --agg-primary: #2563eb;
+        --agg-bg: #f8fafc;
+        --agg-card-bg: #ffffff;
+        --agg-text: #1e293b;
+        --agg-text-dim: #64748b;
+        --agg-border: #e2e8f0;
+      }
+
+      .agg-layout { display: flex; min-height: 80vh; gap: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--agg-text); }
+      .agg-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
+      .agg-main { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+
+      .agg-brand { padding: 12px 0; display: flex; align-items: center; gap: 12px; }
+      .brand-logo { background: var(--agg-primary); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
+      .agg-brand h1 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+
+      .agg-config-card, .agg-actions-card { background: var(--agg-card-bg); border: 1px solid var(--agg-border); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+      .card-header { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: var(--agg-text-dim); margin-bottom: 16px; border-bottom: 1px solid var(--agg-border); padding-bottom: 8px; }
+
+      .agg-form-field { margin-bottom: 16px; }
+      .agg-form-field label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+      .agg-form-field input[type="file"] { width: 100%; font-size: 0.85rem; }
+      .field-hint { font-size: 0.75rem; color: var(--agg-text-dim); margin: 4px 0 0; }
+
+      .agg-form-field-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+      .agg-form-field-row label { font-size: 0.85rem; cursor: pointer; }
+
+      .agg-status-chip { background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: var(--agg-text-dim); display: inline-block; margin-bottom: 8px; }
+      .agg-status-chip.ready { background: #dcfce7; color: #166534; }
+
+      .btn-group { display: flex; gap: 8px; }
+      .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      
+      .agg-btn-primary { background: var(--agg-primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px; transition: opacity 0.2s; }
+      .agg-btn-primary:active { opacity: 0.8; }
+      
+      .agg-btn-secondary { background: white; border: 1px solid var(--agg-border); color: var(--agg-text); padding: 8px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+      .agg-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+      
+      .agg-btn-small { padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+      .agg-btn-small.outline { background: white; border: 1px solid var(--agg-primary); color: var(--agg-primary); }
+
+      .agg-btn-text { background: none; border: none; color: #ef4444; font-size: 0.85rem; padding: 8px; cursor: pointer; width: 100%; margin-top: 12px; }
+
+      .agg-status-message { font-size: 0.85rem; color: var(--agg-text-dim); text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--agg-border); }
+
+      /* Dashboard */
+      .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+      .metric-card { background: white; border: 1px solid var(--agg-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px; border-left: 4px solid var(--agg-primary); }
+      .metric-card label { font-size: 0.75rem; color: var(--agg-text-dim); font-weight: 600; text-transform: uppercase; }
+      .metric-card .value { font-size: 1.5rem; font-weight: 700; color: var(--agg-text); }
+
+      /* Results Styling */
+      .agg-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+      .count-badge { background: var(--agg-primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+
+      .agg-table-container { background: white; border: 1px solid var(--agg-border); border-radius: 12px; overflow: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); max-height: 500px; }
+      .agg-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; }
+      .agg-table th { background: #f8fafc; padding: 12px; border-bottom: 1px solid var(--agg-border); font-weight: 600; color: var(--agg-text-dim); position: sticky; top: 0; }
+      .agg-table td { padding: 12px; border-bottom: 1px solid var(--agg-border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+      .agg-table tr:hover { background: #f1f5f9; cursor: pointer; }
+
+      .agg-empty-state { text-align: center; padding: 48px; color: var(--agg-text-dim); background: white; border: 2px dashed var(--agg-border); border-radius: 12px; }
+      .agg-empty-state .icon { font-size: 2rem; margin-bottom: 12px; }
+
+      /* Detail Modal Overhaul */
+      .detail-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; z-index: 10000; }
+      @media (min-width: 768px) { .detail-overlay { align-items: center; } }
+
+      .detail-modal { background: white; width: 100%; max-width: 720px; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; max-height: 94vh; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: slideUp 0.3s ease-out; }
+      @media (min-width: 768px) { .detail-modal { border-radius: 16px; max-height: 85vh; } }
+      
+      @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+      .detail-modal-header { padding: 16px 24px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+      .header-info { display: flex; gap: 12px; align-items: center; }
+      .file-icon { font-size: 1.5rem; }
+      .header-info h3 { margin: 0; font-size: 1.1rem; }
+      .header-info p { margin: 0; font-size: 0.8rem; color: var(--agg-text-dim); }
+      .close-btn { border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; cursor: pointer; color: #64748b; }
+
+      .detail-modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+      
+      .form-view { display: flex; flex-direction: column; gap: 16px; }
+      .detail-group-header { font-size: 0.8rem; font-weight: 700; color: var(--agg-primary); text-transform: uppercase; background: #eff6ff; padding: 4px 12px; border-radius: 4px; margin-top: 12px; }
+      
+      .detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; align-items: flex-start; }
+      .detail-key { font-size: 0.85rem; font-weight: 600; color: #64748b; padding-top: 2px; }
+      
+      .val-null { color: #cbd5e1; font-family: monospace; }
+      .val-bool.true { color: #16a34a; font-weight: bold; }
+      .val-bool.false { color: #dc2626; font-weight: bold; }
+      .val-text { line-height: 1.5; color: #0f172a; }
+      .val-json { font-size: 0.8rem; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; margin: 0; }
+      
+      .raw-data-section { margin-top: 32px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+      .raw-data-section summary { font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--agg-text-dim); }
+      .raw-data-section pre { margin-top: 12px; font-size: 0.75rem; background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; }
     </style>
   `;
 
@@ -573,6 +450,7 @@ export function initAggregatorBrowser() {
   const dlJsonBtn = root.querySelector<HTMLButtonElement>("#weba-agg-download-jsonl");
   const keyStatus = root.querySelector<HTMLDivElement>("#weba-agg-key-status");
   const passkeyBtn = root.querySelector<HTMLButtonElement>("#weba-agg-passkey");
+  const clearBtn = root.querySelector<HTMLButtonElement>("#weba-agg-clear");
 
   let cachedCsv = "";
   let cachedJsonl = "";
@@ -587,8 +465,9 @@ export function initAggregatorBrowser() {
       plain,
     }))
     : [];
+
   if (keyStatus) {
-    keyStatus.textContent = embeddedKey?.recipient_kid ? `Loaded (${embeddedKey.recipient_kid})` : embeddedKey ? "Loaded" : "Not loaded";
+    keyStatus.textContent = embeddedKey?.recipient_kid ? `Loaded (${embeddedKey.recipient_kid})` : embeddedKey ? "Loaded" : "No keys detected";
     keyStatus.classList.toggle("ready", !!embeddedKey);
   }
   if (aggSpec?.export?.jsonl === false && dlJsonBtn) {
@@ -600,37 +479,14 @@ export function initAggregatorBrowser() {
       const username = prompt("User Name for Passkey:", "demo-user");
       if (!username) return;
 
-      // Passkey Authentication for PRF
-      // For decryption, we need 'get' (authentication) with the SAME credential used during encryption.
-      // We assume 'demo-user' maps to a credential resident on this device.
-      // derivePasskeyPrf needs credential ID. 
-      // In "Personal Mode", user registers and immediately gets ID.
-      // Here, we may not know the ID.
-      // Option: Ask for an Assertion with 'residentKey: required' (discoverable credential) 
-      // AND use PRF extension.
-      // derivePasskeyPrf implementation currently takes credentialId.
-      // Let's modify logic: TRY to get silent discovery or just ask user to pick account.
-      // The simple `derivePasskeyPrf` helper might need adjustment or we loop through available creds?
-      // Actually, if we use an empty allowCredentials list, we can discover resident keys.
-      // But `derivePasskeyPrf` implementation in `webauthn.ts` takes `credentialId` and puts it in allowCredentials.
-      // HACK for Demo: We don't have the creditor ID here. 
-      // We will assume the User just registered in the SAME session or has the logic to retrieve it.
-      // Or simpler: We just call `navigator.credentials.get` with empty allowCredentials?
-      // Let's rely on `derivePasskeyPrf` but pass an empty ID to signify "use any resident key"?
-      // `derivePasskeyPrf` uses strict type for ID.
-      // Let's implement inline PRF logic here for simplicity of discovery.
-
       alert("Please authenticate with your Passkey to decrypt.");
-      // Simplified PRF flow for discovery
-      const challenge = new Uint8Array(32); // random
-      const salt = new Uint8Array(32); // zero salt must match sender
+      const challenge = new Uint8Array(32);
+      const salt = new Uint8Array(32);
       const assertion = await navigator.credentials.get({
         publicKey: {
           challenge,
           userVerification: "required",
-          extensions: {
-            prf: { eval: { first: salt } }
-          }
+          extensions: { prf: { eval: { first: salt } } } as any
         }
       }) as PublicKeyCredential;
 
@@ -645,13 +501,14 @@ export function initAggregatorBrowser() {
 
       passkeyDerivedKeys = {
         recipient_x25519_private: b64urlEncode(derived.privateKey),
-        // We use the Kid from the credential ID or just a placeholder?
-        // The envelope might contain a Kid like "demo-user-key".
-        // We don't strictly enforce Kid check if we can successfully decrypt.
       };
 
-      passkeyBtn.textContent = "✅ Passkey Loaded";
+      passkeyBtn.textContent = "✅ Passkey Active";
       passkeyBtn.disabled = true;
+      if (keyStatus) {
+        keyStatus.textContent = "Passkey Enabled";
+        keyStatus.classList.add("ready");
+      }
 
     } catch (e: any) {
       console.error(e);
@@ -660,7 +517,8 @@ export function initAggregatorBrowser() {
   });
 
   const runAggregation = async () => {
-    if ((!fileInput?.files || fileInput.files.length === 0) && samplePayloads.length === 0) {
+    const hasFiles = !!(fileInput?.files && fileInput.files.length > 0);
+    if (!hasFiles && samplePayloads.length === 0) {
       if (status) status.textContent = "Select HTML files first.";
       return;
     }
@@ -668,60 +526,52 @@ export function initAggregatorBrowser() {
     if (dlBtn) dlBtn.disabled = true;
     if (dlJsonBtn) dlJsonBtn.disabled = true;
 
+    rawPayloads = [];
     const rows: any[] = [];
     const keys = new Set<string>(["_filename"]);
     let processed = 0;
     let errors = 0;
-    // Priority: Files > Samples
-    // If files are selected, we ignore samples.
-    if (fileInput?.files && fileInput.files.length > 0) {
-      rawPayloads = [];
-    } else {
-      rawPayloads = [...samplePayloads];
-    }
 
-    // Priority: Passkey > Embedded > Demo
     const l2Keys = passkeyDerivedKeys || embeddedKey;
 
-    if (fileInput?.files) {
-      for (const file of Array.from(fileInput.files)) {
+    if (hasFiles) {
+      for (const file of Array.from(fileInput!.files!)) {
         try {
           const html = await file.text();
           const extracted = await extractPlainFromHtml(html, l2Keys);
-          if (extracted.source === "l2" && extracted.plain) {
+          if (extracted.source !== "unknown" && extracted.plain) {
             rawPayloads.push({ filename: file.name, plain: extracted.plain, sig: extracted.sig });
             const built = buildRowFromPlain({
               plain: extracted.plain,
               filename: file.name,
               includeJson: !!includeJson?.checked,
               sig: extracted.sig,
-            });
-            built.keys.forEach((key) => keys.add(key));
-            rows.push({ ...built.row, _raw: extracted.plain, _sig: extracted.sig }); // Store raw for detail view
-            processed += 1;
-            continue;
-          }
-
-          if (extracted.source === "jsonld" && extracted.plain) {
-            rawPayloads.push({ filename: file.name, plain: extracted.plain });
-            const built = buildRowFromPlain({
-              plain: extracted.plain,
-              filename: file.name,
-              includeJson: !!includeJson?.checked,
               omitKey: (key) => key.startsWith("@"),
             });
             built.keys.forEach((key) => keys.add(key));
-            rows.push({ ...built.row, _raw: extracted.plain });
+            rows.push({ ...built.row, _raw: extracted.plain, _sig: extracted.sig });
             processed += 1;
-            continue;
+          } else {
+            console.warn(`Could not extract from ${file.name}`);
+            errors += 1;
           }
-
-          errors += 1;
         } catch (e) {
-          console.error(e);
+          console.error(`Error processing ${file.name}`, e);
           errors += 1;
         }
       }
+    } else {
+      samplePayloads.forEach((payload) => {
+        rawPayloads.push(payload);
+        const built = buildRowFromPlain({
+          plain: payload.plain,
+          filename: payload.filename,
+          includeJson: !!includeJson?.checked,
+        });
+        built.keys.forEach((key) => keys.add(key));
+        rows.push({ ...built.row, _raw: payload.plain });
+        processed += 1;
+      });
     }
 
     const sortedKeys = Array.from(keys).sort((a, b) => {
@@ -732,6 +582,7 @@ export function initAggregatorBrowser() {
 
     cachedCsv = buildCsv(rows, sortedKeys);
     if (dlBtn) dlBtn.disabled = rows.length === 0;
+
     const jsonlEnabled = aggSpec?.export?.jsonl !== false;
     cachedJsonl = rawPayloads
       .map((payload) =>
@@ -743,26 +594,28 @@ export function initAggregatorBrowser() {
       )
       .join("\n");
     if (dlJsonBtn) dlJsonBtn.disabled = rawPayloads.length === 0 || !jsonlEnabled;
-    if (status) status.textContent = `Processed ${processed} files. Errors: ${errors}.`;
+
+    if (status) status.textContent = `Completed. Processed ${processed} entries. Errors: ${errors}.`;
     if (dashboard) renderDashboard(dashboard, aggSpec, rawPayloads);
     if (output) renderTable(output, rows, sortedKeys);
   };
 
-  if (samplePayloads.length > 0) {
-    rawPayloads = [...samplePayloads];
-    cachedJsonl = rawPayloads
-      .map((payload) =>
-        JSON.stringify({
-          _filename: payload.filename,
-          _l2_sig: payload.sig ?? null,
-          ...payload.plain,
-        }),
-      )
-      .join("\n");
-    if (dashboard) renderDashboard(dashboard, aggSpec, rawPayloads);
-    if (dlJsonBtn) dlJsonBtn.disabled = cachedJsonl.length === 0 || aggSpec?.export?.jsonl === false;
-    if (status) status.textContent = `Loaded ${samplePayloads.length} sample records.`;
+  if (samplePayloads.length > 0 && (!fileInput?.files || fileInput.files.length === 0)) {
+    runAggregation();
   }
+
+  clearBtn?.addEventListener("click", () => {
+    rawPayloads = [];
+    cachedCsv = "";
+    cachedJsonl = "";
+    if (fileInput) fileInput.value = "";
+    if (status) status.textContent = "Data cleared.";
+    if (dlBtn) dlBtn.disabled = true;
+    if (dlJsonBtn) dlJsonBtn.disabled = true;
+    if (dashboard) dashboard.innerHTML = "";
+    if (output) output.innerHTML = "";
+    (window as any)._aggRows = [];
+  });
 
   runBtn?.addEventListener("click", () => {
     runAggregation().catch((e) => {
@@ -773,7 +626,7 @@ export function initAggregatorBrowser() {
 
   dlBtn?.addEventListener("click", () => {
     if (!cachedCsv) return;
-    const blob = new Blob([cachedCsv], { type: "text/csv" });
+    const blob = new Blob([cachedCsv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -784,7 +637,7 @@ export function initAggregatorBrowser() {
 
   dlJsonBtn?.addEventListener("click", () => {
     if (!cachedJsonl) return;
-    const blob = new Blob([cachedJsonl], { type: "application/json" });
+    const blob = new Blob([cachedJsonl], { type: "application/x-jsonlines;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

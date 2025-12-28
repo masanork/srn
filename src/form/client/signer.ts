@@ -63,24 +63,24 @@ export class Signer {
 
     public async register() {
         try {
-            console.log("Registering Passkey...");
-            const result = await registerPasskey("User");
+            const username = prompt("Enter a name for this Passkey:", "demo-user") || "User";
+            console.log(`Registering Passkey for ${username}...`);
+            const result = await registerPasskey(username);
+
+            // Extract Public Key from Attestation
             const attestationObj = new Uint8Array((result.response as AuthenticatorAttestationResponse).attestationObject);
             const attStmt = decode(attestationObj);
             const authData = attStmt.authData;
 
-            // Parse AuthData to extract COSE Key
             const dataView = new DataView(authData.buffer, authData.byteOffset, authData.byteLength);
             let offset = 32 + 1 + 4 + 16; // rpIdHash + flags + signCount + aaguid
             const credIdLen = dataView.getUint16(offset);
             offset += 2;
-            // const credId = authData.slice(offset, offset + credIdLen);
             offset += credIdLen;
 
             const coseKeyBuffer = authData.slice(offset);
             const coseKey = decode(coseKeyBuffer);
 
-            // COSE Key to Raw P-256 (kty=2, crv=1, x=-2, y=-3)
             const x = coseKey.get(-2);
             const y = coseKey.get(-3);
 
@@ -127,7 +127,7 @@ export class Signer {
     }
 
     public getPublicKey(): string {
-         return this.publicKey ? bytesToHex(this.publicKey) : '';
+        return this.publicKey ? bytesToHex(this.publicKey) : '';
     }
 
     public async sign(payload: any, purpose: string = "authentication"): Promise<any> {
@@ -141,7 +141,7 @@ export class Signer {
         if (this.usePasskey && this.credentialId) {
             // SHA-256 for Challenge
             const hashBuffer = await crypto.subtle.digest('SHA-256', dataBytes);
-            
+
             const sigRes = await signWithPasskey(this.credentialId, hashBuffer);
 
             return {
