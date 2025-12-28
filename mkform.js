@@ -3161,11 +3161,13 @@ function parseMarkdown(text) {
         if (currentTabId) {
           appendHtml("</div>");
         }
+        const isSystem = content.includes("(Config)") || content.includes("(Hidden)") || content.includes("(System)");
         const tabId = "tab-" + (tabs.length + 1);
-        tabs.push({ id: tabId, title: content });
+        tabs.push({ id: tabId, title: content, isSystem });
         currentTabId = tabId;
-        const activeClass = tabs.length === 1 ? " active" : "";
-        appendHtml(`<div id="${tabId}" class="tab-content${activeClass}" data-tab-title="${Renderers.escapeHtml(content)}">`);
+        const activeClass = !isSystem && tabs.filter((t) => !t.isSystem).length === 1 ? " active" : "";
+        const styleAttr = isSystem ? ' style="display:none !important;"' : "";
+        appendHtml(`<div id="${tabId}" class="tab-content${activeClass}" data-tab-title="${Renderers.escapeHtml(content)}"${styleAttr}>`);
       } else {
         appendHtml(`<h${level}>${Renderers.escapeHtml(content)}</h${level}>`);
       }
@@ -3258,9 +3260,13 @@ function parseMarkdown(text) {
         </div>`;
   if (tabs.length > 0) {
     let navHtml = '<div class="tabs-nav">';
+    let visibleTabCount = 0;
     tabs.forEach((tab, idx) => {
-      const activeClass = idx === 0 ? " active" : "";
+      if (tab.isSystem)
+        return;
+      const activeClass = visibleTabCount === 0 ? " active" : "";
       navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
+      visibleTabCount++;
     });
     navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1;">
             ${toolbarButtons}
@@ -10178,7 +10184,7 @@ ${AGG_BLOCK_EN}
 
 ---
 
-## 5. Encryption Settings (Layer 2 Encryption Demo)
+## 5. Encryption Settings (Config)
 
 This form includes demo settings for client-side encryption (E2EE).
 Change \`enabled: false\` to \`true\` below to automatically encrypt saved data.
@@ -10249,7 +10255,7 @@ ${AGG_BLOCK_JA}
 
 ---
 
-## 5. 暗号化設定 (Layer 2 Encryption Demo)
+## 5. 暗号化設定 (Config)
 
 このフォームはクライアントサイド暗号化 (E2EE) のデモ設定を含んでいます。
 以下の設定の \`enabled: false\` を \`true\` に書き換えると、保存データが自動的に暗号化されます。
@@ -10307,7 +10313,10 @@ async function registerPasskey(username) {
         residentKey: "preferred"
       },
       timeout: 60000,
-      attestation: "none"
+      attestation: "none",
+      extensions: {
+        prf: {}
+      }
     }
   });
   if (!credential)
@@ -11543,7 +11552,13 @@ function updatePreview() {
 function downloadCurrent() {
   const mode = window.previewMode || "form";
   const markdown = getMarkdown();
-  const htmlContent = mode === "aggregator" ? generateAggregatorHtml(markdown) : generateHtml(markdown);
+  let htmlContent = mode === "aggregator" ? generateAggregatorHtml(markdown) : generateHtml(markdown);
+  if (mode === "aggregator" && lastGeneratedKeys) {
+    const keysJson = JSON.stringify(lastGeneratedKeys, null, 2);
+    htmlContent = htmlContent.replace('<script id="weba-l2-keys" type="application/json"></script>', `<script id="weba-l2-keys" type="application/json">
+${keysJson}
+</script>`);
+  }
   const blob = new Blob([htmlContent], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -11622,6 +11637,7 @@ window.addEventListener("DOMContentLoaded", () => {
   window.setPreviewMode("form");
   updatePreview();
 });
+var lastGeneratedKeys = null;
 async function setupEncryption(usePqc = false) {
   try {
     const username = prompt("User Name for Passkey:", "demo-user");
@@ -11633,6 +11649,14 @@ async function setupEncryption(usePqc = false) {
     const prfKey = await derivePasskeyPrf(cred.id, salt);
     const keyPair = deriveKeyPairFromPrf(prfKey);
     const pubKey = b64urlEncode(keyPair.publicKey);
+    lastGeneratedKeys = {
+      recipient_kid: `${username}-key`,
+      recipient_x25519_private: b64urlEncode(keyPair.privateKey)
+    };
+    if (usePqc) {
+      lastGeneratedKeys.recipient_pqc_private = "mock-pqc-private-key";
+      lastGeneratedKeys.recipient_pqc_kem = "ML-KEM-768";
+    }
     console.log("Derived Public Key:", pubKey);
     const editor = getEditor();
     if (!editor)
@@ -11671,7 +11695,10 @@ ${newBlock}`;
     alert(`Encryption configured!
 User: ${username}
 ${usePqc ? `Mode: Hybrid PQC (ML-KEM-768)
-` : ""}Public Key: ${pubKey}`);
+` : ""}Public Key: ${pubKey}
+
+NOTE: The Private Key is now temporarily stored in memory.
+Downloading the 'Aggregator' will cleanly embed this key.`);
   } catch (e) {
     console.error(e);
     alert("Setup failed: " + e.message);
