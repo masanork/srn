@@ -121,7 +121,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             return;
         }
 
-        const dynTableMatch = trimmed.match(/^\[dynamic-table:([^\]]+)\]$/);
+        const dynTableMatch = trimmed.match(/^\[dynamic\s*-?\s*table:([^\]]+)\]$/);
         if (dynTableMatch) {
             currentDynamicTableKey = dynTableMatch[1] || '';
             jsonStructure.tables[currentDynamicTableKey] = [];
