@@ -3306,7 +3306,19 @@ function initRuntime() {
 }
 function generateHtml(markdown) {
   const { html, jsonStructure } = parseMarkdown(markdown);
-  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${jsonStructure.name || "Web/A Form"}</title><style>body{font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;}.form-row{margin-bottom:1rem;}.form-label{font-weight:bold;display:block;margin-bottom:0.5rem;}.form-input{width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;}</style></head><body><div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${jsonStructure.name || "Web/A Form"}</title><style>
+    body{font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;}
+    .form-row{margin-bottom:1rem;}
+    .form-label{font-weight:bold;display:block;margin-bottom:0.5rem;}
+    .form-input{width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;}
+    .tabs-nav{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid #e5e7eb;flex-wrap:wrap;}
+    .tab-btn{background:#f1f5f9;border:1px solid #e5e7eb;border-bottom:none;padding:10px 16px;cursor:pointer;border-radius:6px 6px 0 0;font-size:14px;font-weight:600;color:#64748b;}
+    .tab-btn:hover{background:#e2e8f0;}
+    .tab-btn.active{background:#fff;color:#111827;border-bottom:1px solid #fff;position:relative;top:1px;}
+    .tab-content{display:none;animation:fadeIn 0.2s ease-in-out;}
+    .tab-content.active{display:block;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+    </style></head><body><div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
 function generateAggregatorHtml(markdown) {
   const { jsonStructure } = parseMarkdown(markdown);

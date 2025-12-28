@@ -4,16 +4,17 @@ layout: article
 description: "Release history and major updates for the Sorane project."
 ---
 
-## v1.8.0 - Web/A L2 Encryption & Maker Enhancements
+## v1.8.0 - Web/A L2 Encryption & PQC Default
 
 **Date:** 2025-12-28
 
-Major updates including the new Layer 2 Encryption specification, enhancements to the Form Maker, and visual refinements.
+Major updates including the new Layer 2 Encryption specification, Post-Quantum Cryptography (PQC) integration, and enhancements to the Form Maker.
 
 * **Web/A L2 Encryption**:
+  * **PQC by Default**: PQC (ML-KEM-768) is now enabled by default for all encrypted forms. This "Hybrid (X25519 + ML-KEM-768)" approach ensures quantum resilience without requiring user configuration.
+  * **Passkey Integration**: Seamless end-to-end encryption flow using Personal Mode (Passkey-derived keys).
   * **New Specification**: Published [Web/A L2 Encryption](./papers/web-a-l2-encryption.html) discussion paper.
-  * **Implementation**: Added support for confidental, recipient-only submission envelopes using PQC-ready hybrid encryption.
-  * **Demo Modes**: Introduced **Personal Mode** (Passkey-based E2EE) and **Escrow Mode** (Shared Key) for immediate browser-based capability testing.
+  * **Escrow Mode**: Added Shared Key mode for immediate browser-based capability testing.
   * **Tooling**: Added `emit-frontmatter` command and CSV export utilities for encrypted datasets.
 * **Web/A Form Maker**:
   * **Aggregator View**: Added preview mode for "Aggregator" dashboard visualization.
