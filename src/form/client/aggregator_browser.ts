@@ -362,7 +362,7 @@ export function initAggregatorBrowser() {
     dlJsonBtn.disabled = true;
   }
   const parquetProvider = (globalThis as any).webaParquet;
-  const parquetReady = aggSpec?.export?.parquet && parquetProvider?.export;
+  const parquetReady = aggSpec?.export?.parquet && parquetProvider?.export && (parquetProvider.isReady ? parquetProvider.isReady() : true);
   if (dlParquetBtn) {
     dlParquetBtn.disabled = !parquetReady;
     dlParquetBtn.title = parquetReady ? "" : "Parquet export provider not available";
