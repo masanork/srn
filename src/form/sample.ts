@@ -1,347 +1,319 @@
-export const DEFAULT_MARKDOWN_EN = `# Community Grant Application (Sample)
+const AGG_BLOCK_EN = [
+  "```agg",
+  "version: 0.1",
+  "samples:",
+  "  - responder_name: Akira",
+  "    team_name: Platform",
+  "    cuisine: Japanese",
+  "    budget: 5000",
+  "    availability:",
+  "      - date: 2026-01-05",
+  "        available: true",
+  "      - date: 2026-01-07",
+  "        available: true",
+  "      - date: 2026-01-12",
+  "        available: true",
+  "  - responder_name: Mei",
+  "    team_name: Design",
+  "    cuisine: Italian",
+  "    budget: 7000",
+  "    availability:",
+  "      - date: 2026-01-06",
+  "        available: true",
+  "      - date: 2026-01-08",
+  "        available: true",
+  "      - date: 2026-01-14",
+  "        available: true",
+  "  - responder_name: Ken",
+  "    team_name: Sales",
+  "    cuisine: BBQ",
+  "    budget: 11000",
+  "    availability:",
+  "      - date: 2026-01-05",
+  "        available: true",
+  "      - date: 2026-01-09",
+  "        available: true",
+  "      - date: 2026-01-16",
+  "        available: true",
+  "  - responder_name: Yui",
+  "    team_name: Ops",
+  "    cuisine: Sushi",
+  "    budget: 9000",
+  "    availability:",
+  "      - date: 2026-01-07",
+  "        available: true",
+  "      - date: 2026-01-13",
+  "        available: true",
+  "      - date: 2026-01-15",
+  "        available: true",
+  "  - responder_name: Sora",
+  "    team_name: Data",
+  "    cuisine: Korean",
+  "    budget: 13000",
+  "    availability:",
+  "      - date: 2026-01-08",
+  "        available: true",
+  "      - date: 2026-01-12",
+  "        available: true",
+  "      - date: 2026-01-14",
+  "        available: true",
+  "  - responder_name: Rin",
+  "    team_name: HR",
+  "    cuisine: Chinese",
+  "    budget: 3000",
+  "    availability:",
+  "      - date: 2026-01-06",
+  "        available: true",
+  "      - date: 2026-01-09",
+  "        available: true",
+  "      - date: 2026-01-15",
+  "        available: true",
+  "dashboard:",
+  "  title: Dinner Poll Dashboard",
+  "  cards:",
+  "    - id: total_responses",
+  "      label: Responses",
+  "      op: count",
+  "    - id: avg_budget",
+  "      label: Avg Budget",
+  "      op: avg",
+  "      path: budget",
+  "      format: currency",
+  "  charts:",
+  "    - id: availability_by_date",
+  "      type: bar",
+  "      title: Availability by Date",
+  "      source: availability",
+  "      x: date",
+  "      filter:",
+  "        path: available",
+  "        op: eq",
+  "        value: true",
+  "    - id: budget_hist",
+  "      type: hist",
+  "      title: Budget Distribution (JPY)",
+  "      value: budget",
+  "      bin: 1000",
+  "      max: 15000",
+  "      format: currency",
+  "export:",
+  "  jsonl: true",
+  "  parquet: true",
+  "```",
+].join("\n");
+
+const AGG_BLOCK_JA = [
+  "```agg",
+  "version: 0.1",
+  "samples:",
+  "  - responder_name: 明",
+  "    team_name: プラットフォーム",
+  "    cuisine: 和食",
+  "    budget: 5000",
+  "    availability:",
+  "      - date: 2026-01-05",
+  "        available: true",
+  "      - date: 2026-01-07",
+  "        available: true",
+  "      - date: 2026-01-12",
+  "        available: true",
+  "  - responder_name: 芽衣",
+  "    team_name: デザイン",
+  "    cuisine: イタリアン",
+  "    budget: 7000",
+  "    availability:",
+  "      - date: 2026-01-06",
+  "        available: true",
+  "      - date: 2026-01-08",
+  "        available: true",
+  "      - date: 2026-01-14",
+  "        available: true",
+  "  - responder_name: 健",
+  "    team_name: セールス",
+  "    cuisine: 焼肉",
+  "    budget: 11000",
+  "    availability:",
+  "      - date: 2026-01-05",
+  "        available: true",
+  "      - date: 2026-01-09",
+  "        available: true",
+  "      - date: 2026-01-16",
+  "        available: true",
+  "  - responder_name: 結衣",
+  "    team_name: オペレーション",
+  "    cuisine: 寿司",
+  "    budget: 9000",
+  "    availability:",
+  "      - date: 2026-01-07",
+  "        available: true",
+  "      - date: 2026-01-13",
+  "        available: true",
+  "      - date: 2026-01-15",
+  "        available: true",
+  "  - responder_name: 空",
+  "    team_name: データ",
+  "    cuisine: 韓国料理",
+  "    budget: 13000",
+  "    availability:",
+  "      - date: 2026-01-08",
+  "        available: true",
+  "      - date: 2026-01-12",
+  "        available: true",
+  "      - date: 2026-01-14",
+  "        available: true",
+  "  - responder_name: 凛",
+  "    team_name: 人事",
+  "    cuisine: 中華",
+  "    budget: 3000",
+  "    availability:",
+  "      - date: 2026-01-06",
+  "        available: true",
+  "      - date: 2026-01-09",
+  "        available: true",
+  "      - date: 2026-01-15",
+  "        available: true",
+  "dashboard:",
+  "  title: 飲み会ダッシュボード",
+  "  cards:",
+  "    - id: total_responses",
+  "      label: 回答数",
+  "      op: count",
+  "    - id: avg_budget",
+  "      label: 平均予算",
+  "      op: avg",
+  "      path: budget",
+  "      format: currency",
+  "  charts:",
+  "    - id: availability_by_date",
+  "      type: bar",
+  "      title: 日別の出席可能人数",
+  "      source: availability",
+  "      x: date",
+  "      filter:",
+  "        path: available",
+  "        op: eq",
+  "        value: true",
+  "    - id: budget_hist",
+  "      type: hist",
+  "      title: 予算の分布 (JPY)",
+  "      value: budget",
+  "      bin: 1000",
+  "      max: 15000",
+  "      format: currency",
+  "export:",
+  "  jsonl: true",
+  "  parquet: true",
+  "```",
+].join("\n");
+
+export const DEFAULT_MARKDOWN_EN = `# Team Dinner Poll (Sample)
 ---
 
-## 1. Applicant
+## 1. Participant
 
-- [text:application_id (placeholder="GRANT-2025-017")] Application ID
-- [date:submitted_at] Submitted At
-- [text:applicant.name (placeholder="Seaside Youth Lab")] Organization
-- [text:applicant.contact (placeholder="Program Lead")] Contact
-- [text:applicant.region (placeholder="Kansai")] Region
-- [search:applicant.type (src:org_types label:1 value:1 placeholder="Select type")] Org Type
+- [text:responder_name (placeholder="Akira")] Name
+- [text:team_name (placeholder="Platform Team")] Team
+- [text:contact (placeholder="akira@example.com")] Contact
 
 ---
 
-## 2. Project Details
+## 2. Availability (Jan 2026 weekdays)
 
-- [text:project.title (placeholder="Neighborhood STEM Lab")] Project Title
-- [textarea:project.summary (placeholder="Describe impact and beneficiaries")] Summary
-- [number:project.budget_total (placeholder="0")] Total Budget (JPY)
-- [number:project.request_amount (placeholder="0")] Requested Amount (JPY)
-- [number:project.impact_score (placeholder="1-100")] Impact Score
-- [number:project.readiness_score (placeholder="1-100")] Readiness Score
-
----
-
-## 3. Budget Breakdown
-
-[dynamic-table:budget_items]
-| Category | Amount | Notes |
+[dynamic-table:availability]
+| Date | Available | Note |
 |---|---|---|
-| [text:category (placeholder="Equipment")] | [number:amount (placeholder="0")] | [text:notes (placeholder="Optional")] |
+| [date:date (val="2026-01-05")] | [checkbox:available] | [text:note (placeholder="After 19:00 ok")] |
+| [date:date (val="2026-01-06")] | [checkbox:available] | [text:note (placeholder="Remote only")] |
+| [date:date (val="2026-01-07")] | [checkbox:available] | [text:note (placeholder="Leaving early")] |
+| [date:date (val="2026-01-08")] | [checkbox:available] | [text:note (placeholder="Any time")] |
+| [date:date (val="2026-01-09")] | [checkbox:available] | [text:note (placeholder="After 20:00")] |
+| [date:date (val="2026-01-12")] | [checkbox:available] | [text:note (placeholder="Any time")] |
+| [date:date (val="2026-01-13")] | [checkbox:available] | [text:note (placeholder="After 19:00")] |
+| [date:date (val="2026-01-14")] | [checkbox:available] | [text:note (placeholder="Maybe")] |
+| [date:date (val="2026-01-15")] | [checkbox:available] | [text:note (placeholder="Any time")] |
+| [date:date (val="2026-01-16")] | [checkbox:available] | [text:note (placeholder="After 19:30")] |
 
 ---
 
-## 4. Master Data (Organization Types)
+## 3. Preferences
 
-[master:org_types]
+- [search:cuisine (src:cuisines label:2 value:2 placeholder="Type or pick a cuisine")] Preferred cuisine
+- [number:budget (placeholder="0")] Preferred budget (JPY)
+- [textarea:comment (placeholder="Allergies or constraints")] Notes
+
+---
+
+## 4. Master Data (Cuisines)
+
+[master:cuisines]
 | code | label |
 |---|---|
-| NPO | NPO |
-| Company | Company |
-| School | School |
-| Individual | Individual |
+| Japanese | Japanese |
+| Italian | Italian |
+| Chinese | Chinese |
+| Korean | Korean |
+| BBQ | BBQ |
+| Sushi | Sushi |
+| Seafood | Seafood |
+| Vegetarian | Vegetarian |
+| Cafe | Cafe |
+| Other | Other |
 
----
-
-## 5. Review
-
-- [radio:review.recommendation] Recommendation
-  - Approve
-  - Approve with Changes
-  - Hold
-  - Reject
-- [textarea:review.notes (placeholder="Reviewer notes")] Notes
-
----
-
-## 6. Aggregator Preview (Sample)
-
-<div data-preview-only="aggregator" style="display:grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr));">
-  <div style="grid-column: 1 / -1; font-size: 12px; color: #6b7280;">
-    This section is intended for the Aggregator preview. The normal form ignores it.
-  </div>
-  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
-    <b>Applications</b><br>
-    <span style="font-size:24px;">24</span>
-  </div>
-  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
-    <b>Requested Total</b><br>
-    <span style="font-size:24px;">¥21,400,000</span>
-  </div>
-  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
-    <b>Avg Impact</b><br>
-    <span style="font-size:24px;">82.4</span>
-  </div>
-</div>
-
-\`\`\`agg
-version: 0.1
-samples:
-  - application_id: GRANT-2025-017
-    applicant:
-      name: Seaside Youth Lab
-      type: NPO
-      region: Kansai
-    project:
-      title: Neighborhood STEM Lab
-      budget_total: 3200000
-      request_amount: 1200000
-      impact_score: 86
-      readiness_score: 72
-    review:
-      recommendation: Approve with Changes
-  - application_id: GRANT-2025-018
-    applicant:
-      name: Urban Food Circle
-      type: Company
-      region: Kanto
-    project:
-      title: Food Loss Reduction Pilot
-      budget_total: 5400000
-      request_amount: 2000000
-      impact_score: 91
-      readiness_score: 80
-    review:
-      recommendation: Approve
-  - application_id: GRANT-2025-019
-    applicant:
-      name: North Hills High
-      type: School
-      region: Tohoku
-    project:
-      title: Remote Science Kits
-      budget_total: 2100000
-      request_amount: 1500000
-      impact_score: 78
-      readiness_score: 64
-    review:
-      recommendation: Hold
-  - application_id: GRANT-2025-020
-    applicant:
-      name: Harbor Climate Studio
-      type: NPO
-      region: Kyushu
-    project:
-      title: Climate Storytelling Lab
-      budget_total: 4100000
-      request_amount: 2300000
-      impact_score: 88
-      readiness_score: 75
-    review:
-      recommendation: Approve
-dashboard:
-  title: Grant Intake Dashboard
-  cards:
-    - id: total_requests
-      label: Applications
-      op: count
-    - id: total_requested
-      label: Requested Total
-      op: sum
-      path: project.request_amount
-      format: currency
-    - id: avg_impact
-      label: Avg Impact
-      op: avg
-      path: project.impact_score
-  tables:
-    - id: by_region
-      label: By Region
-      group_by: applicant.region
-      metrics:
-        - id: count
-          op: count
-        - id: requested
-          op: sum
-          path: project.request_amount
-          format: currency
-      sort:
-        by: requested
-        order: desc
-      limit: 10
-    - id: by_recommendation
-      label: By Recommendation
-      group_by: review.recommendation
-      metrics:
-        - id: count
-          op: count
-export:
-  jsonl: true
-  parquet: true
-\`\`\`
+${AGG_BLOCK_EN}
 `;
 
-export const DEFAULT_MARKDOWN_JA = `# 地域助成申請（サンプル）
+export const DEFAULT_MARKDOWN_JA = `# 飲み会日程調整（サンプル）
 ---
 
-## 1. 申請者情報
+## 1. 参加者
 
-- [text:application_id (placeholder="GRANT-2025-017")] 申請ID
-- [date:submitted_at] 受付日
-- [text:applicant.name (placeholder="港町ユースラボ")] 団体名
-- [text:applicant.contact (placeholder="担当者")] 連絡先
-- [text:applicant.region (placeholder="関西")] 地域
-- [search:applicant.type (src:org_types label:1 value:1 placeholder="団体種別を選択")] 団体種別
+- [text:responder_name (placeholder="明")] 名前
+- [text:team_name (placeholder="プラットフォーム")] チーム
+- [text:contact (placeholder="akira@example.com")] 連絡先
 
 ---
 
-## 2. プロジェクト内容
+## 2. 出席可否（2026年1月の平日）
 
-- [text:project.title (placeholder="地域STEMラボ")] 事業名
-- [textarea:project.summary (placeholder="効果・対象者を記入")] 概要
-- [number:project.budget_total (placeholder="0")] 総予算 (JPY)
-- [number:project.request_amount (placeholder="0")] 希望助成額 (JPY)
-- [number:project.impact_score (placeholder="1-100")] インパクトスコア
-- [number:project.readiness_score (placeholder="1-100")] 実行準備スコア
-
----
-
-## 3. 予算内訳
-
-[dynamic-table:budget_items]
-| 項目 | 金額 | 備考 |
+[dynamic-table:availability]
+| 日付 | 出席可 | メモ |
 |---|---|---|
-| [text:category (placeholder="設備")] | [number:amount (placeholder="0")] | [text:notes (placeholder="任意")] |
+| [date:date (val="2026-01-05")] | [checkbox:available] | [text:note (placeholder="19時以降OK")] |
+| [date:date (val="2026-01-06")] | [checkbox:available] | [text:note (placeholder="オンラインのみ")] |
+| [date:date (val="2026-01-07")] | [checkbox:available] | [text:note (placeholder="早めに退出")] |
+| [date:date (val="2026-01-08")] | [checkbox:available] | [text:note (placeholder="終日OK")] |
+| [date:date (val="2026-01-09")] | [checkbox:available] | [text:note (placeholder="20時以降")] |
+| [date:date (val="2026-01-12")] | [checkbox:available] | [text:note (placeholder="終日OK")] |
+| [date:date (val="2026-01-13")] | [checkbox:available] | [text:note (placeholder="19時以降")] |
+| [date:date (val="2026-01-14")] | [checkbox:available] | [text:note (placeholder="要確認")] |
+| [date:date (val="2026-01-15")] | [checkbox:available] | [text:note (placeholder="終日OK")] |
+| [date:date (val="2026-01-16")] | [checkbox:available] | [text:note (placeholder="19時半以降")] |
 
 ---
 
-## 4. 団体種別マスタ
+## 3. 希望
 
-[master:org_types]
+- [search:cuisine (src:cuisines label:2 value:2 placeholder="料理ジャンルを入力")] 料理の希望
+- [number:budget (placeholder="0")] 希望予算 (JPY)
+- [textarea:comment (placeholder="アレルギーや条件")] 備考
+
+---
+
+## 4. マスタ（料理ジャンル）
+
+[master:cuisines]
 | code | label |
 |---|---|
-| NPO | NPO |
-| Company | 企業 |
-| School | 学校 |
-| Individual | 個人 |
+| Japanese | 和食 |
+| Italian | イタリアン |
+| Chinese | 中華 |
+| Korean | 韓国料理 |
+| BBQ | 焼肉 |
+| Sushi | 寿司 |
+| Seafood | 海鮮 |
+| Vegetarian | ベジタリアン |
+| Cafe | カフェ |
+| Other | その他 |
 
----
-
-## 5. 審査
-
-- [radio:review.recommendation] 推奨
-  - 採択
-  - 条件付き採択
-  - 保留
-  - 不採択
-- [textarea:review.notes (placeholder="審査メモ")] メモ
-
----
-
-## 6. 集計プレビュー（サンプル）
-
-<div data-preview-only="aggregator" style="display:grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr));">
-  <div style="grid-column: 1 / -1; font-size: 12px; color: #6b7280;">
-    このセクションは集計プレビュー用の表示例です。
-  </div>
-  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
-    <b>申請件数</b><br>
-    <span style="font-size:24px;">24</span>
-  </div>
-  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
-    <b>希望助成合計</b><br>
-    <span style="font-size:24px;">¥21,400,000</span>
-  </div>
-  <div style="padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
-    <b>平均インパクト</b><br>
-    <span style="font-size:24px;">82.4</span>
-  </div>
-</div>
-
-\`\`\`agg
-version: 0.1
-samples:
-  - application_id: GRANT-2025-017
-    applicant:
-      name: 港町ユースラボ
-      type: NPO
-      region: 関西
-    project:
-      title: 地域STEMラボ
-      budget_total: 3200000
-      request_amount: 1200000
-      impact_score: 86
-      readiness_score: 72
-    review:
-      recommendation: 条件付き採択
-  - application_id: GRANT-2025-018
-    applicant:
-      name: 都市フードサークル
-      type: 企業
-      region: 関東
-    project:
-      title: 食品ロス削減パイロット
-      budget_total: 5400000
-      request_amount: 2000000
-      impact_score: 91
-      readiness_score: 80
-    review:
-      recommendation: 採択
-  - application_id: GRANT-2025-019
-    applicant:
-      name: 北丘高校
-      type: 学校
-      region: 東北
-    project:
-      title: 遠隔実験キット
-      budget_total: 2100000
-      request_amount: 1500000
-      impact_score: 78
-      readiness_score: 64
-    review:
-      recommendation: 保留
-  - application_id: GRANT-2025-020
-    applicant:
-      name: 港湾クライメイトスタジオ
-      type: NPO
-      region: 九州
-    project:
-      title: 気候ストーリーテリングラボ
-      budget_total: 4100000
-      request_amount: 2300000
-      impact_score: 88
-      readiness_score: 75
-    review:
-      recommendation: 採択
-dashboard:
-  title: 助成申請ダッシュボード
-  cards:
-    - id: total_requests
-      label: 申請件数
-      op: count
-    - id: total_requested
-      label: 希望助成合計
-      op: sum
-      path: project.request_amount
-      format: currency
-    - id: avg_impact
-      label: 平均インパクト
-      op: avg
-      path: project.impact_score
-  tables:
-    - id: by_region
-      label: 地域別
-      group_by: applicant.region
-      metrics:
-        - id: count
-          op: count
-        - id: requested
-          op: sum
-          path: project.request_amount
-          format: currency
-      sort:
-        by: requested
-        order: desc
-      limit: 10
-    - id: by_recommendation
-      label: 推奨別
-      group_by: review.recommendation
-      metrics:
-        - id: count
-          op: count
-export:
-  jsonl: true
-  parquet: true
-\`\`\`
+${AGG_BLOCK_JA}
 `;

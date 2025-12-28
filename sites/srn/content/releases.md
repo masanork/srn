@@ -23,16 +23,15 @@ Major updates including the new Layer 2 Encryption specification, enhancements t
   * **Blog**: Fixed font subsetting for blog list views (titles/excerpts).
   * **Search**: Improved suggestion UI.
 
-## v1.7.0 - Juminhyo Layout & Form Tooling
+## v1.7.0 - Form Tooling & Documentation
 
 **Date:** 2025-12-27
 
-Incremental improvements to resident record layouts, local form tooling, and documentation.
+Incremental improvements to local form tooling, layout binding, and documentation.
 
-* **Juminhyo VC & Layout**:
-  * **Template/Instance Split**: Added dedicated template and instance VCs with content digests.
-  * **JSON-LD Binding**: Added explicit `data-weba-field` bindings for structured extraction.
-  * **Layout Polish**: Restored watermark/header notice and refined seal/cert text placement.
+* **Core & Layout**:
+  * **Template/Instance Split**: Added dedicated template and instance VCs with content digests for clear separation of "Form" and "Response".
+  * **JSON-LD Binding**: Added explicit `data-weba-field` bindings for structured data extraction from HTML.
 * **Form Tooling**:
   * **Local Aggregation Report**: Added in-browser aggregation UI with scatter plot support.
   * **Headless Wallet CLI**: Prototype tool to extract JSON-LD and auto-fill Web/A forms.
@@ -123,11 +122,11 @@ Finalizing the technical memorandum for public institutions and aligning the pro
   * Removed the massive "Additional Administrative Characters List" from the main navigation to focus on core documentation and demos.
   * Improved dashboard layout for better information hierarchy.
 
-## v1.2.0 - Selective Disclosure & MIC Compliance
+## v1.2.0 - Selective Disclosure & Administrative Compliance
 
 **Date:** 2025-12-22
 
-Enhancing privacy and administrative compliance for digital resident records.
+Enhancing privacy and administrative compliance for digital official records.
 
 * **Selective Disclosure (SD-CWT)**:
   * Implemented binary SD-CWT (CBOR/COSE) using salted disclosure hashes.
@@ -144,16 +143,16 @@ Enhancing privacy and administrative compliance for digital resident records.
   * Upgraded top page typography to Noto Sans JP for a professional, professional aesthetic.
   * Fixed `ReferenceError` in error handling during font subsetting.
 
-## v1.1.0 - Data-Driven Juminhyo & Core Refinement
+## v1.1.0 - Data-Driven Layouts & Core Refinement
 
 **Date:** 2025-12-21
 
-Refinements to the resident record generation system and core font processing.
+Refinements to the document generation system and core font processing.
 
-* **Juminhyo System**: Refactored `juminhyo.md` to a fully data-driven Frontmatter architecture.
-  * **Advanced Layout**: Implemented official MIC (Page 7) specifications with dynamic layout handling.
-  * **Detailed Fields**: Added support for individual MyNumber, Resident Code, and precise movement dates.
-  * **Layout Engine**: Fixed complex table structures (dynamic rowspans for history and domiciles).
+* **Layout Engine**: Refactored complex table layouts to a fully data-driven Frontmatter architecture.
+  * **Advanced Layout**: Implemented complex official specifications with dynamic layout handling.
+  * **Detailed Fields**: Added support for granular field definitions and precise dates.
+  * **Layout Engine**: Fixed complex table structures (dynamic rowspans).
 * **Typography Core**:
   * **Data Subsetting**: Font subsetting now fully indexes YAML Frontmatter content, ensuring proper rendering of data-only views.
   * **Simplified DB**: Removed MJDB dependency in favor of a unified, file-based Glyph DB system.

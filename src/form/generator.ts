@@ -63,6 +63,15 @@ export function generateAggregatorHtml(markdown: string): string {
     .agg-card{border:1px solid #eee;border-radius:10px;padding:0.75rem;background:#fff;}
     .agg-card-label{font-size:0.8rem;color:#666;margin-bottom:0.25rem;}
     .agg-card-value{font-size:1.25rem;font-weight:700;}
+    .agg-chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-bottom:1.5rem;}
+    .agg-chart{border:1px solid #eee;border-radius:10px;padding:0.75rem;background:#fff;}
+    .agg-chart-title{font-weight:600;margin-bottom:0.5rem;}
+    .agg-bar-list{display:flex;flex-direction:column;gap:0.5rem;}
+    .agg-bar{display:grid;grid-template-columns:minmax(120px,1fr) 3fr auto;gap:0.6rem;align-items:center;font-size:0.85rem;}
+    .agg-bar-label{color:#374151;}
+    .agg-bar-track{background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden;}
+    .agg-bar-fill{background:#111;height:100%;border-radius:999px;}
+    .agg-bar-value{font-weight:600;white-space:nowrap;}
     .agg-dashboard-table{margin-bottom:1rem;}
     .agg-table-title{font-weight:600;margin-bottom:0.35rem;}
     </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-l2-keys" type="application/json"></script>${parquetScript}<script>${RUNTIME_SCRIPT}</script></body></html>`;
