@@ -10189,15 +10189,13 @@ Change \`enabled: false\` to \`true\` below to automatically encrypt saved data.
 > **Try Personal Mode (Passkey Encryption)**
 > Click the **"\uD83D\uDD11 Setup Encryption (Passkey)"** button in the top toolbar to automatically securely configure this form with your own Passkey. This will overwrite the settings below.
 
-*For demo purposes, decryption is automatically handled when using the campaign ID below (Escrow Mode).*
+*To decrypt this data later, you MUST use the Personal Mode setup.*
 
 <script id="weba-l2-config" type="application/json">
 {
   "enabled": false,
-  "campaign_id": "demo-dinner-2026",
-  "recipient_kid": "demo-key-01",
-  "recipient_x25519": "aMk6CMXJ_gyo2shSFE8sGNseEHqoYuSA-TPTF8fsWxE",
-  "layer1_ref": "demo-form-v1"
+  "recipient_kid": "user-key-01",
+  "recipient_x25519": ""
 }
 </script>
 `;
@@ -10262,15 +10260,13 @@ ${AGG_BLOCK_JA}
 > **パーソナルモード (Passkey暗号化) を試す**
 > 上部ツールバーにある **「\uD83D\uDD11 暗号化設定 (Passkey)」** ボタンをクリックすると、あなたのPasskeyを使ってこのフォームを安全に再設定できます（以下の設定が上書きされます）。
 
-※ デモ用のため、以下のキャンペーンIDが設定されている場合、復号は自動的に行われます（Escrow Mode）。
+※ これらのデータを後で復号するには、パーソナルモードでの設定が必須です（自動復号は行われません）。
 
 <script id="weba-l2-config" type="application/json">
 {
   "enabled": false,
-  "campaign_id": "demo-dinner-2026",
-  "recipient_kid": "demo-key-01",
-  "recipient_x25519": "aMk6CMXJ_gyo2shSFE8sGNseEHqoYuSA-TPTF8fsWxE",
-  "layer1_ref": "demo-form-v1"
+  "recipient_kid": "user-key-01",
+  "recipient_x25519": ""
 }
 </script>
 `;
