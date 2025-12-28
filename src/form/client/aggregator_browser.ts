@@ -490,7 +490,7 @@ function showRecordDetail(idx: number) {
  * SCRIPT PARSING
  */
 function parseKeyScript(): L2KeyFile | null {
-  const el = document.getElementById("weba-l2-key");
+  const el = document.getElementById("weba-l2-keys");
   if (!el) return null;
   try {
     return JSON.parse(el.textContent!) as L2KeyFile;

@@ -17,6 +17,7 @@ export type Layer2Plain = any;
 export type Layer2Payload = {
   layer2_plain: Layer2Plain;
   layer2_sig: Layer2Signature;
+  _padding?: string;
 };
 
 export type Layer2Encrypted = {
@@ -216,7 +217,12 @@ export async function encryptLayer2(
   const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
 
   // 4. AEAD: AES-256-GCM
-  const plaintext = Buffer.from(canonicalJson(payload), "utf-8");
+  // Add random padding to mitigate traffic analysis
+  const paddingLen = Math.floor(Math.random() * 256); // 0-255 bytes
+  const padding = randomBytes(paddingLen).toString("hex");
+  const payloadWithPadding = { ...payload, _padding: padding };
+
+  const plaintext = Buffer.from(canonicalJson(payloadWithPadding), "utf-8");
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   cipher.setAAD(aadBytes);
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
