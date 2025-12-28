@@ -8,11 +8,9 @@ declare global {
         parseAndRender: () => void;
         downloadCurrent: () => void;
         setPreviewMode: (mode: 'form' | 'aggregator') => void;
-        setEditorMode: (mode: 'form' | 'aggregator') => void;
         generatedJsonStructure: any;
         isRuntimeLoaded: boolean;
         previewMode?: 'form' | 'aggregator';
-        editorMode?: 'form' | 'aggregator';
         recalculate: (() => void) | undefined;
         initSearch: (() => void) | undefined;
         addTableRow: ((btn: HTMLButtonElement, tableKey: string) => void) | undefined;
@@ -21,12 +19,12 @@ declare global {
 
 import { DEFAULT_MARKDOWN_EN, DEFAULT_MARKDOWN_JA } from './sample';
 
-function getEditor(mode: 'form' | 'aggregator'): HTMLTextAreaElement | null {
-    return document.getElementById(mode === 'form' ? 'editor-form' : 'editor-aggregator') as HTMLTextAreaElement | null;
+function getEditor(): HTMLTextAreaElement | null {
+    return document.getElementById('editor-form') as HTMLTextAreaElement | null;
 }
 
-function getMarkdown(mode: 'form' | 'aggregator'): string {
-    const editor = getEditor(mode);
+function getMarkdown(): string {
+    const editor = getEditor();
     return editor ? editor.value : '';
 }
 
@@ -43,7 +41,7 @@ function updatePreview() {
     if (!preview) return;
 
     const mode = (window as any).previewMode || 'form';
-    const markdown = getMarkdown(mode);
+    const markdown = getMarkdown();
     const { html, jsonStructure } = parseMarkdown(markdown);
 
     // @ts-ignore
@@ -53,7 +51,12 @@ function updatePreview() {
         const aggHtml = generateAggregatorHtml(markdown);
         preview.innerHTML = `<iframe id="preview-frame" style="width:100%; height:100%; border:0;"></iframe>`;
         const frame = document.getElementById('preview-frame') as HTMLIFrameElement | null;
-        if (frame) frame.srcdoc = aggHtml;
+        if (frame) {
+            const blob = new Blob([aggHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            frame.src = url;
+            frame.onload = () => URL.revokeObjectURL(url);
+        }
         return;
     }
 
@@ -76,7 +79,7 @@ function updatePreview() {
 
 function downloadCurrent() {
     const mode = (window as any).previewMode || 'form';
-    const markdown = getMarkdown(mode);
+    const markdown = getMarkdown();
     const htmlContent = mode === 'aggregator' ? generateAggregatorHtml(markdown) : generateHtml(markdown);
 
     const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -98,20 +101,7 @@ window.setPreviewMode = (mode: 'form' | 'aggregator') => {
     document.querySelectorAll<HTMLButtonElement>('.preview-btn').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.preview === mode);
     });
-    if ((window as any).editorMode !== mode) {
-        window.setEditorMode(mode);
-    }
     updatePreview();
-};
-window.setEditorMode = (mode: 'form' | 'aggregator') => {
-    (window as any).editorMode = mode;
-    document.querySelectorAll<HTMLButtonElement>('.editor-btn').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.editor === mode);
-    });
-    const formEditor = getEditor('form');
-    const aggEditor = getEditor('aggregator');
-    if (formEditor) formEditor.style.display = mode === 'form' ? 'block' : 'none';
-    if (aggEditor) aggEditor.style.display = mode === 'aggregator' ? 'block' : 'none';
 };
 
 function applyI18n() {
@@ -121,18 +111,14 @@ function applyI18n() {
             "btn_download": "Download",
             "preview": "Preview",
             "btn_preview_form": "Form",
-            "btn_preview_agg": "Aggregator",
-            "btn_editor_form": "Form",
-            "btn_editor_agg": "Aggregator"
+            "btn_preview_agg": "Aggregator"
         },
         "ja": {
             "md_def": "定義 (Markdown)",
             "btn_download": "ダウンロード",
             "preview": "プレビュー",
             "btn_preview_form": "入力画面",
-            "btn_preview_agg": "集計プレビュー",
-            "btn_editor_form": "入力画面",
-            "btn_editor_agg": "集計定義"
+            "btn_preview_agg": "集計画面"
         }
     };
     const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';
@@ -147,27 +133,21 @@ function applyI18n() {
 // Init
 window.addEventListener('DOMContentLoaded', () => {
     applyI18n();
-    const editorForm = getEditor('form');
-    const editorAgg = getEditor('aggregator');
-    if (!editorForm || !editorAgg) return;
+    const editorForm = getEditor();
+    if (!editorForm) return;
 
     const navLang = navigator.language || 'en';
     const lang = navLang.startsWith('ja') ? 'ja' : 'en';
     console.log(`Language detection: navigator.language='${navLang}' -> using '${lang}' sample.`);
 
     const formVal = editorForm.value.trim();
-    const aggVal = editorAgg.value.trim();
     const isDefaultEn = formVal === DEFAULT_MARKDOWN_EN.trim();
     const isDefaultJa = formVal === DEFAULT_MARKDOWN_JA.trim();
 
     if (!formVal || (lang === 'ja' && isDefaultEn) || (lang === 'en' && isDefaultJa)) {
         editorForm.value = lang === 'ja' ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
     }
-    if (!aggVal || aggVal === DEFAULT_MARKDOWN_EN.trim() || aggVal === DEFAULT_MARKDOWN_JA.trim()) {
-        editorAgg.value = editorForm.value;
-    }
 
-    window.setEditorMode('form');
     window.setPreviewMode('form');
     updatePreview();
 });
