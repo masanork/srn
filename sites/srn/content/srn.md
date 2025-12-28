@@ -66,7 +66,7 @@ font:
 </div>
 </div>
 <div class="footer-status">
-    Runtime: Bun v1.x | Engine: opentype.js | Database: SQLite (WAL)
+    Runtime: Bun v1.x | Engine: opentype.js | Database: JSON/Memory
 </div>
 
 <style>

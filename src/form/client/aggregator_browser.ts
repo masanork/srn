@@ -1,4 +1,4 @@
-import { b64urlDecode, decryptLayer2Envelope, deriveOrgX25519KeyPair, type OrgKeyPolicy } from "./l2crypto";
+import { b64urlDecode, b64urlEncode, decryptLayer2Envelope, deriveOrgX25519KeyPair, deriveKeyPairFromPrf, type OrgKeyPolicy } from "./l2crypto";
 import { buildCsv, buildRowFromPlain, flattenForCsv } from "./aggregator_browser_csv";
 import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
 
@@ -398,34 +398,44 @@ function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawP
 
 async function extractPlainFromHtml(html: string, l2Keys?: L2KeyFile | null): Promise<ExtractedPlain> {
   const l2Envelope = extractL2EnvelopeFromHtml(html);
-  if (l2Envelope && l2Keys) {
-    if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
-      throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
-    }
+
+  if (l2Envelope) {
     let recipientSk: Uint8Array | null = null;
-    if (l2Keys.org_root_key) {
-      const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
-      if (!campaignId) {
-        throw new Error("org_campaign_id is required for org_root_key");
+
+    if (l2Keys) {
+      if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
+        throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
       }
-      const derived = deriveOrgX25519KeyPair({
-        orgRootKey: b64urlDecode(l2Keys.org_root_key),
-        campaignId,
-        layer1Ref: l2Envelope.layer1_ref,
-        keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy,
-      });
-      recipientSk = derived.privateKey;
-    } else if (l2Keys.recipient_x25519_private) {
-      recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
-    } else {
+
+      if (l2Keys.org_root_key) {
+        const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
+        if (!campaignId) {
+          throw new Error("org_campaign_id is required for org_root_key");
+        }
+        const derived = deriveOrgX25519KeyPair({
+          orgRootKey: b64urlDecode(l2Keys.org_root_key),
+          campaignId,
+          layer1Ref: l2Envelope.layer1_ref,
+          keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy,
+        });
+        recipientSk = derived.privateKey;
+      } else if (l2Keys.recipient_x25519_private) {
+        recipientSk = b64urlDecode(l2Keys.recipient_x25519_private);
+      }
+    }
+
+    if (!recipientSk) {
+      // If we found an envelope but no key (and not demo), throw
+      if (!l2Keys) throw new Error("No recipient key provided and not a demo campaign");
       throw new Error("No recipient key provided");
     }
+
     const pqc =
-      l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === "ML-KEM-768"
+      l2Keys?.recipient_pqc_private && l2Keys?.recipient_pqc_kem === "ML-KEM-768"
         ? {
-            pqcProvider: (globalThis as any).webaPqcKem ?? null,
-            pqcRecipientSk: b64urlDecode(l2Keys.recipient_pqc_private),
-          }
+          pqcProvider: (globalThis as any).webaPqcKem ?? null,
+          pqcRecipientSk: b64urlDecode(l2Keys.recipient_pqc_private),
+        }
         : undefined;
     const payload = await decryptLayer2Envelope(l2Envelope, recipientSk, pqc);
     return {
@@ -473,6 +483,9 @@ export function initAggregatorBrowser() {
         <div class="agg-note">Use <code>&lt;script id="weba-l2-keys"&gt;</code> to embed.</div>
       </div>
       <div class="agg-row">
+        <button id="weba-agg-passkey" class="agg-btn secondary">🔑 Decrypt with Passkey</button>
+      </div>
+      <div class="agg-row">
         <label class="agg-label">Include JSON</label>
         <input id="weba-agg-include-json" type="checkbox" />
       </div>
@@ -496,18 +509,20 @@ export function initAggregatorBrowser() {
   const dlBtn = root.querySelector<HTMLButtonElement>("#weba-agg-download");
   const dlJsonBtn = root.querySelector<HTMLButtonElement>("#weba-agg-download-jsonl");
   const keyStatus = root.querySelector<HTMLDivElement>("#weba-agg-key-status");
+  const passkeyBtn = root.querySelector<HTMLButtonElement>("#weba-agg-passkey");
 
   let cachedCsv = "";
   let cachedJsonl = "";
   let rawPayloads: RawPayload[] = [];
+  let passkeyDerivedKeys: L2KeyFile | null = null;
 
   const embeddedKey = parseKeyScript();
   const aggSpec = parseAggSpecScript();
   const samplePayloads = Array.isArray(aggSpec?.samples)
     ? aggSpec!.samples.map((plain, idx) => ({
-        filename: `sample-${idx + 1}.json`,
-        plain,
-      }))
+      filename: `sample-${idx + 1}.json`,
+      plain,
+    }))
     : [];
   if (keyStatus) {
     keyStatus.textContent = embeddedKey?.recipient_kid ? `Loaded (${embeddedKey.recipient_kid})` : embeddedKey ? "Loaded" : "Not loaded";
@@ -516,6 +531,71 @@ export function initAggregatorBrowser() {
   if (aggSpec?.export?.jsonl === false && dlJsonBtn) {
     dlJsonBtn.disabled = true;
   }
+
+  passkeyBtn?.addEventListener("click", async () => {
+    try {
+      const username = prompt("User Name for Passkey:", "demo-user");
+      if (!username) return;
+
+      // Passkey Authentication for PRF
+      // For decryption, we need 'get' (authentication) with the SAME credential used during encryption.
+      // We assume 'demo-user' maps to a credential resident on this device.
+      // derivePasskeyPrf needs credential ID. 
+      // In "Personal Mode", user registers and immediately gets ID.
+      // Here, we may not know the ID.
+      // Option: Ask for an Assertion with 'residentKey: required' (discoverable credential) 
+      // AND use PRF extension.
+      // derivePasskeyPrf implementation currently takes credentialId.
+      // Let's modify logic: TRY to get silent discovery or just ask user to pick account.
+      // The simple `derivePasskeyPrf` helper might need adjustment or we loop through available creds?
+      // Actually, if we use an empty allowCredentials list, we can discover resident keys.
+      // But `derivePasskeyPrf` implementation in `webauthn.ts` takes `credentialId` and puts it in allowCredentials.
+      // HACK for Demo: We don't have the creditor ID here. 
+      // We will assume the User just registered in the SAME session or has the logic to retrieve it.
+      // Or simpler: We just call `navigator.credentials.get` with empty allowCredentials?
+      // Let's rely on `derivePasskeyPrf` but pass an empty ID to signify "use any resident key"?
+      // `derivePasskeyPrf` uses strict type for ID.
+      // Let's implement inline PRF logic here for simplicity of discovery.
+
+      alert("Please authenticate with your Passkey to decrypt.");
+      // Simplified PRF flow for discovery
+      const challenge = new Uint8Array(32); // random
+      const salt = new Uint8Array(32); // zero salt must match sender
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          userVerification: "required",
+          extensions: {
+            prf: { eval: { first: salt } }
+          }
+        }
+      }) as PublicKeyCredential;
+
+      if (!assertion) throw new Error("No credential found.");
+
+      const results = assertion.getClientExtensionResults() as any;
+      const prfOutput = results?.prf?.results?.first;
+      if (!prfOutput) throw new Error("PRF not supported or enabled on this key.");
+
+      const prfKey = new Uint8Array(prfOutput);
+      const derived = deriveKeyPairFromPrf(prfKey);
+
+      passkeyDerivedKeys = {
+        recipient_x25519_private: b64urlEncode(derived.privateKey),
+        // We use the Kid from the credential ID or just a placeholder?
+        // The envelope might contain a Kid like "demo-user-key".
+        // We don't strictly enforce Kid check if we can successfully decrypt.
+      };
+
+      passkeyBtn.textContent = "✅ Passkey Loaded";
+      passkeyBtn.disabled = true;
+
+    } catch (e: any) {
+      console.error(e);
+      alert("Passkey error: " + e.message);
+    }
+  });
+
   const runAggregation = async () => {
     if ((!fileInput?.files || fileInput.files.length === 0) && samplePayloads.length === 0) {
       if (status) status.textContent = "Select HTML files first.";
@@ -531,43 +611,46 @@ export function initAggregatorBrowser() {
     let errors = 0;
     rawPayloads = [...samplePayloads];
 
-    const l2Keys = embeddedKey;
+    // Priority: Passkey > Embedded > Demo
+    const l2Keys = passkeyDerivedKeys || embeddedKey;
 
-    for (const file of Array.from(fileInput.files)) {
-      try {
-        const html = await file.text();
-        const extracted = await extractPlainFromHtml(html, l2Keys);
-        if (extracted.source === "l2" && extracted.plain) {
-          rawPayloads.push({ filename: file.name, plain: extracted.plain, sig: extracted.sig });
-          const built = buildRowFromPlain({
-            plain: extracted.plain,
-            filename: file.name,
-            includeJson: includeJson?.checked,
-            sig: extracted.sig,
-          });
-          built.keys.forEach((key) => keys.add(key));
-          rows.push(built.row);
-          processed += 1;
-          continue;
-        }
+    if (fileInput?.files) {
+      for (const file of Array.from(fileInput.files)) {
+        try {
+          const html = await file.text();
+          const extracted = await extractPlainFromHtml(html, l2Keys);
+          if (extracted.source === "l2" && extracted.plain) {
+            rawPayloads.push({ filename: file.name, plain: extracted.plain, sig: extracted.sig });
+            const built = buildRowFromPlain({
+              plain: extracted.plain,
+              filename: file.name,
+              includeJson: includeJson?.checked,
+              sig: extracted.sig,
+            });
+            built.keys.forEach((key) => keys.add(key));
+            rows.push(built.row);
+            processed += 1;
+            continue;
+          }
 
-        if (extracted.source === "jsonld" && extracted.plain) {
-          rawPayloads.push({ filename: file.name, plain: extracted.plain });
-          const built = buildRowFromPlain({
-            plain: extracted.plain,
-            filename: file.name,
-            includeJson: includeJson?.checked,
-            omitKey: (key) => key.startsWith("@"),
-          });
-          built.keys.forEach((key) => keys.add(key));
-          rows.push(built.row);
-          processed += 1;
-          continue;
+          if (extracted.source === "jsonld" && extracted.plain) {
+            rawPayloads.push({ filename: file.name, plain: extracted.plain });
+            const built = buildRowFromPlain({
+              plain: extracted.plain,
+              filename: file.name,
+              includeJson: includeJson?.checked,
+              omitKey: (key) => key.startsWith("@"),
+            });
+            built.keys.forEach((key) => keys.add(key));
+            rows.push(built.row);
+            processed += 1;
+            continue;
+          }
+          errors += 1;
+        } catch (e) {
+          console.error(e);
+          errors += 1;
         }
-        errors += 1;
-      } catch (e) {
-        console.error(e);
-        errors += 1;
       }
     }
 

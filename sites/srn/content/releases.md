@@ -13,6 +13,7 @@ Major updates including the new Layer 2 Encryption specification, enhancements t
 * **Web/A L2 Encryption**:
   * **New Specification**: Published [Web/A L2 Encryption](./papers/web-a-l2-encryption.html) discussion paper.
   * **Implementation**: Added support for confidental, recipient-only submission envelopes using PQC-ready hybrid encryption.
+  * **Demo Modes**: Introduced **Personal Mode** (Passkey-based E2EE) and **Escrow Mode** (Shared Key) for immediate browser-based capability testing.
   * **Tooling**: Added `emit-frontmatter` command and CSV export utilities for encrypted datasets.
 * **Web/A Form Maker**:
   * **Aggregator View**: Added preview mode for "Aggregator" dashboard visualization.

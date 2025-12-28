@@ -204,6 +204,47 @@
             color: #fff;
             border-color: #111827;
         }
+
+        /* Generated Form Tabs */
+        .tabs-nav {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: #f1f5f9;
+            border: 1px solid #e5e7eb;
+            border-bottom: none;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .tab-btn:hover {
+            background: #e2e8f0;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: #111827;
+            border-bottom: 1px solid #fff;
+            position: relative;
+            top: 1px;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 

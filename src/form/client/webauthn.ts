@@ -43,7 +43,10 @@ export async function registerPasskey(username: string) {
                 residentKey: "preferred"
             },
             timeout: 60000,
-            attestation: "none"
+            attestation: "none",
+            extensions: {
+                prf: {}
+            }
         }
     }) as PublicKeyCredential;
 
@@ -55,7 +58,7 @@ export async function registerPasskey(username: string) {
     // often requires the public key to be stored on the server (or in the DID Doc).
     // Web/A context: The public key SHOULD be in the VP or DID.
     // Retrieving the public key from the attestationObject is complex (CBOR parsing).
-    
+
     // For this implementation, we focus on the signing flow.
     // We return the minimal needed to sign later.
     return {

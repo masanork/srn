@@ -71,7 +71,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     jsonStructure.masterData = masterData;
 
     // Tab Logic
-    let tabs: { id: string, title: string }[] = [];
+    let tabs: { id: string, title: string, isSystem?: boolean }[] = [];
     let currentTabId: string | null = null;
     let mainContentHtml = '';
     let inAggBlock = false;
@@ -240,15 +240,19 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 if (currentTabId) {
                     appendHtml('</div>'); // Close previous tab
                 }
+                const isSystem = content.includes('(Config)') || content.includes('(Hidden)') || content.includes('(System)');
                 const tabId = 'tab-' + (tabs.length + 1);
-                tabs.push({ id: tabId, title: content });
+
+                // Only add to tabs list if NOT system (or handle in loop)
+                // Actually we want tabs in list to map IDs, but mark them hidden from nav.
+                // Or simply: content still rendered, but style is hidden.
+                tabs.push({ id: tabId, title: content, isSystem });
                 currentTabId = tabId;
-                // Start new tab div, hidden by default (class logic handles active)
-                // data-tab-title for Print CSS
-                const activeClass = tabs.length === 1 ? ' active' : '';
-                appendHtml(`<div id="${tabId}" class="tab-content${activeClass}" data-tab-title="${Renderers.escapeHtml(content)}">`);
-                // Note: We do NOT render H2 inside the tab content as a heading, 
-                // the tab button acts as the heading.
+
+                const activeClass = (!isSystem && tabs.filter(t => !t.isSystem).length === 1) ? ' active' : '';
+                // If system, force hidden style
+                const styleAttr = isSystem ? ' style="display:none !important;"' : '';
+                appendHtml(`<div id="${tabId}" class="tab-content${activeClass}" data-tab-title="${Renderers.escapeHtml(content)}"${styleAttr}>`);
             } else {
                 // H3-H6
                 appendHtml(`<h${level}>${Renderers.escapeHtml(content)}</h${level}>`);
@@ -343,10 +347,16 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
     if (tabs.length > 0) {
         let navHtml = '<div class="tabs-nav">';
+        let visibleTabCount = 0;
+
         tabs.forEach((tab, idx) => {
-            const activeClass = idx === 0 ? ' active' : '';
+            // @ts-ignore
+            if (tab.isSystem) return;
+            const activeClass = visibleTabCount === 0 ? ' active' : '';
             navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
+            visibleTabCount++;
         });
+
         // Add spacer and Save button
         navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1;">
             ${toolbarButtons}
