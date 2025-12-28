@@ -53,6 +53,7 @@ type AggSpec = {
     cards?: AggCard[];
     tables?: AggTable[];
   };
+  samples?: any[];
   export?: {
     jsonl?: boolean;
     parquet?: boolean;
@@ -354,6 +355,12 @@ export function initAggregatorBrowser() {
 
   const embeddedKey = parseKeyScript();
   const aggSpec = parseAggSpecScript();
+  const samplePayloads = Array.isArray(aggSpec?.samples)
+    ? aggSpec!.samples.map((plain, idx) => ({
+        filename: `sample-${idx + 1}.json`,
+        plain,
+      }))
+    : [];
   if (keyStatus) {
     keyStatus.textContent = embeddedKey?.recipient_kid ? `Loaded (${embeddedKey.recipient_kid})` : embeddedKey ? "Loaded" : "Not loaded";
     keyStatus.classList.toggle("ready", !!embeddedKey);
@@ -384,7 +391,7 @@ export function initAggregatorBrowser() {
   }
 
   const runAggregation = async () => {
-    if (!fileInput?.files || fileInput.files.length === 0) {
+    if ((!fileInput?.files || fileInput.files.length === 0) && samplePayloads.length === 0) {
       if (status) status.textContent = "Select HTML files first.";
       return;
     }
@@ -397,7 +404,7 @@ export function initAggregatorBrowser() {
     const keys = new Set<string>(["_filename"]);
     let processed = 0;
     let errors = 0;
-    rawPayloads = [];
+    rawPayloads = [...samplePayloads];
 
     const l2Keys = embeddedKey;
 
@@ -462,6 +469,22 @@ export function initAggregatorBrowser() {
     if (dashboard) renderDashboard(dashboard, aggSpec, rawPayloads);
     if (output) renderTable(output, rows, sortedKeys);
   };
+
+  if (samplePayloads.length > 0) {
+    rawPayloads = [...samplePayloads];
+    cachedJsonl = rawPayloads
+      .map((payload) =>
+        JSON.stringify({
+          _filename: payload.filename,
+          _l2_sig: payload.sig ?? null,
+          ...payload.plain,
+        }),
+      )
+      .join("\n");
+    if (dashboard) renderDashboard(dashboard, aggSpec, rawPayloads);
+    if (dlJsonBtn) dlJsonBtn.disabled = cachedJsonl.length === 0 || aggSpec?.export?.jsonl === false;
+    if (status) status.textContent = `Loaded ${samplePayloads.length} sample records.`;
+  }
 
   runBtn?.addEventListener("click", () => {
     runAggregation().catch((e) => {
