@@ -3306,6 +3306,7 @@ function initRuntime() {
 }
 function generateHtml(markdown) {
   const { html, jsonStructure } = parseMarkdown(markdown);
+  const sourceMd = markdown.replace(/<\/script>/g, "<\\/script>");
   return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${jsonStructure.name || "Web/A Form"}</title><style>
     body{font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;}
     .form-row{margin-bottom:1rem;}
@@ -3318,11 +3319,12 @@ function generateHtml(markdown) {
     .tab-content{display:none;animation:fadeIn 0.2s ease-in-out;}
     .tab-content.active{display:block;}
     @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
-    </style></head><body><div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    </style></head><body><div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
 function generateAggregatorHtml(markdown) {
   const { jsonStructure } = parseMarkdown(markdown);
   const aggSpec = jsonStructure.aggSpec ? JSON.stringify(jsonStructure.aggSpec) : "";
+  const sourceMd = markdown.replace(/<\/script>/g, "<\\/script>");
   return `<!DOCTYPE html><html><head><title>Aggregator</title><style>
     body{font-family:sans-serif;max-width:1100px;margin:0 auto;padding:2rem;}
     h1{margin-bottom:1.5rem;}
@@ -3358,7 +3360,7 @@ function generateAggregatorHtml(markdown) {
     .agg-bar-value{font-weight:600;white-space:nowrap;}
     .agg-dashboard-table{margin-bottom:1rem;}
     .agg-table-title{font-weight:600;margin-bottom:0.35rem;}
-    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    </style></head><body><h1>${jsonStructure.name} Aggregator</h1><div id="aggregator-root"></div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-agg-spec" type="application/json">${aggSpec}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script id="weba-l2-keys" type="application/json"></script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
 
 // src/form/sample.ts
@@ -5907,6 +5909,13 @@ async function loadToolFile(input) {
   try {
     const text = await file.text();
     const doc = new DOMParser().parseFromString(text, "text/html");
+    const sourceEl = doc.getElementById("weba-source-markdown");
+    if (sourceEl) {
+      const editor = getEditor();
+      if (editor) {
+        editor.value = sourceEl.textContent || "";
+      }
+    }
     const specEl = doc.getElementById("weba-agg-spec");
     if (specEl) {
       try {
