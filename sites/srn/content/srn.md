@@ -50,6 +50,9 @@ font:
 <a href="./maker.html" class="nav-item primary">
 <span class="icon">📝</span><span class="label">Web/A Form Maker</span><span class="desc">Create verifiable forms visually. (Beta)</span>
 </a>
+<a href="./web-a-presentation.html" class="nav-item">
+<span class="icon">🎞️</span><span class="label">Web/A Presentation</span><span class="desc">Read as article, switch to full-screen slides.</span>
+</a>
 <a href="./guide.html" class="nav-item">
 <span class="icon">📖</span><span class="label">Developer Guide</span><span class="desc">System architecture & Usage manual.</span>
 </a>

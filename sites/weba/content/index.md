@@ -51,6 +51,12 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+    <h3>🎞️ Web/A Presentation</h3>
+    <p>記事として読めて、そのまま全画面スライドになるプレゼン資料です。</p>
+    <a href="./web-a-presentation.ja.html">デモを見る →</a>
+  </div>
+
+  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🏥 Demo: 医療費集計</h3>
     <p>医療費控除の明細書をイメージした、計算式と動的テーブルを含む実用的なフォーム例です。</p>
     <a href="./iryouhi.html">デモを開く →</a>
