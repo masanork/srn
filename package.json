@@ -9,8 +9,8 @@
   "scripts": {
     "build": "bun run build:blog && bun run build:srn && bun run build:weba",
     "build:blog": "bun run src/ssg/index.ts --site my-blog",
-    "build:srn": "bun build src/form/browser_maker.ts --outfile sites/srn/static/mkform.js && cp src/form/index.html sites/srn/static/maker.html && bun run src/ssg/index.ts --site srn",
-    "build:weba": "bun build src/form/browser_maker.ts --outfile sites/weba/static/mkform.js && cp src/form/index.html sites/weba/static/maker.html && bun run src/ssg/index.ts --site weba",
+    "build:srn": "bun run scripts/embed_parquet_wasm.ts && bun build src/form/browser_maker.ts --outfile sites/srn/static/mkform.js && cp src/form/index.html sites/srn/static/maker.html && bun run src/ssg/index.ts --site srn",
+    "build:weba": "bun run scripts/embed_parquet_wasm.ts && bun build src/form/browser_maker.ts --outfile sites/weba/static/mkform.js && cp src/form/index.html sites/weba/static/maker.html && bun run src/ssg/index.ts --site weba",
     "build:full": "bun run src/ssg/index.ts --site my-blog --clean && bun run src/ssg/index.ts --site srn --clean && bun run src/ssg/index.ts --site weba --clean",
     "dev": "bun --watch src/ssg/index.ts",
     "deploy": "bun run deploy:blog && bun run deploy:srn && bun run deploy:weba",
@@ -43,6 +43,7 @@
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "@noble/post-quantum": "^0.5.2",
+    "apache-arrow": "^21.1.0",
     "canonicalize": "^2.1.0",
     "cbor-x": "^1.6.0",
     "cheerio": "^1.1.2",
@@ -54,6 +55,7 @@
     "js-yaml": "^4.1.1",
     "marked": "^17.0.1",
     "opentype.js": "^1.3.4",
+    "parquet-wasm": "^0.7.1",
     "wawoff2": "^2.0.1"
   },
   "devDependencies": {

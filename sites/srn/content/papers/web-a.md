@@ -191,6 +191,12 @@ A signature from the issuer proves *who* issued the document, but it doesn't obj
 - **RFC 3161 Compliance**: Web/A encourages including a time-stamp token from a trusted Time Stamping Authority (TSA) within the provenance manifest.
 - **Long-Term Validation (LTV)**: By tying the document to a public TSA, verifiers can confirm that the signature was valid at the time of issuance, even if the issuer's signing key is later revoked or the algorithm becomes weak.
 
+### 6.5. Confidentiality: Layer 2 Encryption (L2E)
+While Layer 2 handles user authenticity, **Layer 2 Encryption (L2E)** ensures confidentiality for sensitive submissions.
+- **Recipient-Only Envelope**: The data payload (answers) is encrypted using a **PQC-ready hybrid scheme** (X25519 + Kyber/ML-KEM) targeted at the recipient's public key.
+- **Verification without Decryption**: The envelope itself carries a signature (authenticity) and a plain-text hash of the template (context binding). This allows intermediate nodes or archivists to verify the *existence and integrity* of the record without being able to read its private contents.
+- **Selective Decryption**: Compatible with organizational key management, allowing decryption only by authorized personnel (e.g., via a designated YubiKey or HSM).
+
 ## 7. Implementation Flexibility: The "Lightweight Trust" Model
 A major barrier to archival signing is the complexity of key management. Web/A does not negate the use of high-assurance methods like HSMs; rather, it complements them with a "Lightweight Trust" model designed to lower the entry barrier and encourage widespread adoption.
 
