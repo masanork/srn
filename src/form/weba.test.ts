@@ -36,6 +36,15 @@ describe("Web/A Parser", () => {
         expect(result.html).toContain('class="template-row"'); // Note: implementation details might vary depending on how first row is handled
     });
 
+    test("parses dynamic table with spaced marker", () => {
+        const md = `[dynamic - table:items]
+| Item | Cost |
+|---|---|
+| [text:item] | [number:cost] |`;
+        const result = parseMarkdown(md);
+        expect(result.html).toContain('<table class="data-table dynamic" id="tbl_items" data-table-key="items">');
+    });
+
     test("parses calc formulas containing parentheses", () => {
         const md = `- [calc:tax (formula="Math.floor(SUM(amount) * 0.1)" align:R)] Tax
 [dynamic-table:items]
