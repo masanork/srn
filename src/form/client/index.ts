@@ -2,6 +2,10 @@
 // Client-side execution entry point
 import { initRuntime } from './runtime';
 import { SearchEngine } from './search';
+import { createMlKem768Provider, installBrowserPqcProvider } from './pqc';
+
+// Initialize PQC provider immediately
+installBrowserPqcProvider(createMlKem768Provider());
 
 const search = new SearchEngine();
 (window as any).GlobalSearch = search;

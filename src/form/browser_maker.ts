@@ -156,26 +156,26 @@ window.addEventListener('DOMContentLoaded', () => {
         editorForm.value = lang === 'ja' ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
     }
 
-    const pqcBtn = document.createElement('button');
-    pqcBtn.className = 'preview-btn';
-    pqcBtn.textContent = lang === 'ja' ? '🛡️ PQC設定' : '🛡️ Setup PQC';
-    pqcBtn.style.border = '1px solid #7c3aed';
-    pqcBtn.style.color = '#7c3aed';
-    pqcBtn.style.marginLeft = '8px';
-    pqcBtn.onclick = () => setupEncryption(true);
-
     const encBtn = document.createElement('button');
     encBtn.className = 'preview-btn'; // Use consistent style
-    encBtn.textContent = lang === 'ja' ? '🔑 暗号化設定' : '🔑 Setup Encryption';
+    encBtn.textContent = lang === 'ja' ? '🔑 暗号化設定 (Passkey)' : '🔑 Setup Encryption (Passkey)';
     encBtn.style.border = '1px solid #10b981';
     encBtn.style.color = '#059669';
-    encBtn.onclick = () => setupEncryption(false);
+    encBtn.onclick = () => setupEncryption();
 
     // Target the header in the left pane
     const headerLeft = document.querySelector('.pane-header .header-left');
     if (headerLeft) {
         headerLeft.appendChild(encBtn);
-        headerLeft.appendChild(pqcBtn);
+    }
+
+    // Install PQC provider for the Maker UI context
+    try {
+        const provider = createMlKem768Provider();
+        installBrowserPqcProvider(provider);
+        console.log("PQC Provider installed in Maker UI");
+    } catch (e) {
+        console.error("Failed to install PQC provider:", e);
     }
 
     // Also add to window for debug
@@ -187,15 +187,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
 import { derivePasskeyPrf, registerPasskey } from './client/webauthn';
 import { deriveKeyPairFromPrf, b64urlEncode } from './client/l2crypto';
+import { ml_kem768 } from "@noble/post-quantum/ml-kem.js";
+import { createMlKem768Provider, installBrowserPqcProvider } from './client/pqc';
 
 
 // State for generated keys
 let lastGeneratedKeys: any = null;
 
-async function setupEncryption(usePqc: boolean = false) {
+async function setupEncryption() {
     try {
         const username = prompt("User Name for Passkey:", "demo-user");
         if (!username) return;
+
+        // Force Enable PQC
+        const usePqc = true;
 
         alert("Please register a new Passkey for this demo (or select existing if supported).");
         const cred = await registerPasskey(username);
@@ -210,22 +215,17 @@ async function setupEncryption(usePqc: boolean = false) {
         lastGeneratedKeys = {
             recipient_kid: `${username}-key`,
             recipient_x25519_private: b64urlEncode(keyPair.privateKey),
-            // We could also store credential ID for passkey flows but 
-            // for "embedded" keys in aggregator we usually put the raw private key 
-            // OR we can put the PQC key if we had one.
         };
 
-        if (usePqc) {
-            // Mock PQC Key for demo
-            // In real app, we would derive or generate ML-KEM key
-            // For now we just flag it? Or should we put something?
-            // aggregator_browser.ts checks l2Keys.recipient_pqc_private
-            // Let's just note it.
-            lastGeneratedKeys.recipient_pqc_private = "mock-pqc-private-key";
-            lastGeneratedKeys.recipient_pqc_kem = "ML-KEM-768";
-        }
+        // Always generate real ML-KEM-768 key pair for Hybrid encryption
+        const pqcKeys = ml_kem768.keygen();
+        lastGeneratedKeys.recipient_pqc_private = b64urlEncode(pqcKeys.secretKey);
+        lastGeneratedKeys.recipient_pqc_kem = "ML-KEM-768";
+        // We temporarily store the public key to put in newConfig
+        (lastGeneratedKeys as any)._temp_pqc_public = b64urlEncode(pqcKeys.publicKey);
 
         console.log("Derived Public Key:", pubKey);
+        console.log("Generated PQC Key:", (lastGeneratedKeys as any)._temp_pqc_public);
 
         // 3. Update Editor
         const editor = getEditor();
@@ -239,15 +239,12 @@ async function setupEncryption(usePqc: boolean = false) {
             enabled: true,
             recipient_kid: `${username}-key`,
             recipient_x25519: pubKey,
+            // Always include PQC public key
+            recipient_pqc: (lastGeneratedKeys as any)._temp_pqc_public,
             layer1_ref: "demo-personal",
         };
 
-        let explanation = "Encryption Enabled via Passkey (X25519).";
-        if (usePqc) {
-            newConfig.recipient_pqc = "ML-KEM-768";
-            explanation = "Encryption Enabled: Hybrid (X25519 + ML-KEM-768).";
-        }
-
+        const explanation = "Encryption Enabled: Hybrid (X25519 + ML-KEM-768).";
         const newBlock = `<script id="weba-l2-config" type="application/json">\n// ${explanation}\n${JSON.stringify(newConfig, null, 2)}\n</script>`;
 
         if (val.match(configRegex)) {
