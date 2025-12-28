@@ -2,6 +2,7 @@ import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_b
 import { buildCsv, buildRowFromPlain } from "./aggregator_browser_csv";
 import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf } from "./l2crypto";
 import type { L2KeyFile, Layer2Signature } from "./l2crypto";
+import { globalSigner } from "./signer";
 
 /**
  * Aggregator Configuration / Specification
@@ -16,7 +17,12 @@ export interface MetricSpec {
 
 export interface AggSpec {
   title?: string;
-  metrics?: MetricSpec[];
+  metrics?: MetricSpec[]; // Legacy
+  dashboard?: {
+    title?: string;
+    cards?: Array<{ id: string; label: string; op: string; path?: string; format?: string }>;
+    charts?: Array<{ id: string; type: string; title: string; source: string; x: string; value?: string; filter?: any }>;
+  };
   samples?: any[];
   export?: { csv?: boolean; jsonl?: boolean };
 }
@@ -24,7 +30,7 @@ export interface AggSpec {
 export interface RawPayload {
   filename: string;
   plain: any;
-  sig?: Layer2Signature;
+  sig?: Layer2Signature | undefined;
 }
 
 /**
@@ -91,23 +97,86 @@ function computeMetric(metric: MetricSpec, payloads: RawPayload[]): number | str
  * UI Components
  */
 function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawPayload[]) {
-  if (!spec?.metrics || spec.metrics.length === 0) {
+  if (!spec) {
     root.innerHTML = "";
     return;
   }
-  const cards = spec.metrics
-    .map((m) => {
-      const val = computeMetric(m, payloads);
-      return `
-      <div class="metric-card">
-        <label>${m.name}</label>
-        <div class="value">${val}</div>
-      </div>
-    `;
-    })
-    .join("");
 
-  root.innerHTML = `<div class="dashboard-grid">${cards}</div>`;
+  let html = "";
+
+  // 1. Cards (Metrics)
+  const cards: any[] = spec.dashboard?.cards || spec.metrics?.map(m => ({ id: m.id, label: m.name, op: m.type, path: m.path })) || [];
+  if (cards.length > 0) {
+    const cardHtml = cards.map(c => {
+      let val: any = 0;
+      const values: any[] = [];
+      payloads.forEach(p => {
+        if (c.path) values.push(...selectValues(p.plain, c.path));
+      });
+
+      if (c.op === 'count') val = payloads.length;
+      else if (c.op === 'sum') val = values.reduce((a, b) => a + (Number(b) || 0), 0);
+      else if (c.op === 'avg') val = values.length ? values.reduce((a, b) => a + (Number(b) || 0), 0) / values.length : 0;
+      else if (c.op === 'boolean_count') val = values.filter(v => !!v).length;
+
+      if (typeof val === 'number' && c.format === 'currency') {
+        val = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(val);
+      } else if (typeof val === 'number') {
+        val = val.toLocaleString();
+      }
+
+      return `
+        <div class="metric-card">
+          <label>${c.label}</label>
+          <div class="value">${val}</div>
+        </div>
+      `;
+    }).join("");
+    html += `<div class="dashboard-grid">${cardHtml}</div>`;
+  }
+
+  // 2. Charts
+  const charts = spec.dashboard?.charts || [];
+  if (charts.length > 0) {
+    const chartHtml = charts.map(chart => {
+      if (chart.type === 'bar') {
+        // Frequency of values in source path
+        const counts: Record<string, number> = {};
+        payloads.forEach(p => {
+          const items = selectValues(p.plain, chart.source);
+          items.forEach(item => {
+            if (chart.filter) {
+              if (item[chart.filter.path] !== chart.filter.value) return;
+            }
+            const val = item[chart.x];
+            if (val) counts[val] = (counts[val] || 0) + 1;
+          });
+        });
+
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const max = Math.max(...Object.values(counts), 1);
+
+        const bars = sorted.map(([label, count]) => `
+          <div class="chart-bar-row">
+            <div class="chart-bar-label">${label}</div>
+            <div class="chart-bar-track"><div class="chart-bar-fill" style="width: ${(count / max) * 100}%"></div></div>
+            <div class="chart-bar-value">${count}</div>
+          </div>
+        `).join("");
+
+        return `
+          <div class="chart-card">
+            <h4>${chart.title}</h4>
+            <div class="chart-bars">${bars}</div>
+          </div>
+        `;
+      }
+      return "";
+    }).join("");
+    html += `<div class="chart-grid">${chartHtml}</div>`;
+  }
+
+  root.innerHTML = html;
 }
 
 function renderTable(root: HTMLElement, rows: any[], keys: string[]) {
@@ -151,6 +220,16 @@ function showRecordDetail(idx: number) {
   const raw = row._raw || {};
   let fieldsHtml = "";
 
+  // Try to use form structure if available for better UI
+  const webaStructureEl = document.getElementById('weba-structure');
+  let formFields: any[] = [];
+  if (webaStructureEl) {
+    try {
+      const struct = JSON.parse(webaStructureEl.textContent!);
+      formFields = struct.fields || [];
+    } catch { }
+  }
+
   const renderValue = (val: any): string => {
     if (val === null || val === undefined) return '<span class="val-null">N/A</span>';
     if (typeof val === "boolean") return `<span class="val-bool ${val}">${val ? "Yes" : "No"}</span>`;
@@ -161,27 +240,48 @@ function showRecordDetail(idx: number) {
     return `<span class="val-text">${val}</span>`;
   };
 
-  const traverse = (obj: any, prefix = "") => {
-    for (const k in obj) {
-      if (k === "_raw" || k === "_sig" || k.startsWith("@")) continue;
-      const val = obj[k];
-      const label = prefix ? `${prefix} › ${k}` : k;
-
-      if (typeof val === "object" && val !== null && !Array.isArray(val)) {
-        fieldsHtml += `<div class="detail-group-header">${label}</div>`;
-        traverse(val, label);
-      } else {
+  if (formFields.length > 0) {
+    formFields.forEach(f => {
+      if (f.type === 'calc') return; // Skip calculated fields
+      const val = raw[f.key];
+      if (val !== undefined) {
         fieldsHtml += `
           <div class="detail-row">
-            <div class="detail-key">${k}</div>
+            <div class="detail-key">${f.label || f.key}</div>
             <div class="detail-val-box">${renderValue(val)}</div>
           </div>
         `;
       }
-    }
-  };
+    });
 
-  traverse(raw);
+    // Check for any extra data not in fields
+    const usedKeys = new Set(formFields.map(f => f.key));
+    let extraHeaderAdded = false;
+    for (const k in raw) {
+      if (k.startsWith('@') || k.startsWith('_') || usedKeys.has(k)) continue;
+      if (!extraHeaderAdded) {
+        fieldsHtml += '<div class="detail-group-header">Extra Information</div>';
+        extraHeaderAdded = true;
+      }
+      fieldsHtml += `
+        <div class="detail-row">
+          <div class="detail-key">${k}</div>
+          <div class="detail-val-box">${renderValue(raw[k])}</div>
+        </div>
+      `;
+    }
+  } else {
+    // Fallback: simple vertical list
+    for (const k in raw) {
+      if (k.startsWith('@') || k.startsWith('_')) continue;
+      fieldsHtml += `
+        <div class="detail-row">
+          <div class="detail-key">${k}</div>
+          <div class="detail-val-box">${renderValue(raw[k])}</div>
+        </div>
+      `;
+    }
+  }
 
   detailRoot.innerHTML = `
     <div class="detail-overlay" id="weba-detail-overlay">
@@ -294,20 +394,25 @@ export function initAggregatorBrowser() {
           <div class="brand-logo">Agg</div>
           <h1>Web/A Aggregator</h1>
         </div>
-        
+
         <div class="agg-config-card">
           <div class="card-header">1. Data Source</div>
           <div class="agg-form-field">
-            <label>Upload HTML Forms</label>
-            <input id="weba-agg-files" type="file" accept=".html" multiple />
-            <p class="field-hint">Select multiple submitted form files.</p>
+            <label>Upload Submitted Forms</label>
+            <div class="btn-grid">
+              <button id="weba-agg-file-trigger" class="agg-btn-secondary">📄 Select Files</button>
+              <button id="weba-agg-dir-trigger" class="agg-btn-secondary">📁 Select Folder</button>
+            </div>
+            <input id="weba-agg-files" type="file" accept=".html" multiple style="display:none;" />
+            <input id="weba-agg-dirs" type="file" webkitdirectory directory style="display:none;" />
+            <p class="field-hint">Select files or an entire folder of HTML forms.</p>
           </div>
-          
+
           <div class="agg-form-field">
             <label>Decryption Method</label>
             <div id="weba-agg-key-status" class="agg-status-chip">No keys detected</div>
             <div class="btn-group">
-               <button id="weba-agg-passkey" class="agg-btn-small outline">🔑 Use Passkey</button>
+              <button id="weba-agg-passkey" class="agg-btn-small outline">🔑 Use Passkey</button>
             </div>
             <p class="field-hint">Encryption is used for Layer 2 security.</p>
           </div>
@@ -319,13 +424,13 @@ export function initAggregatorBrowser() {
         </div>
 
         <div class="agg-actions-card">
-           <button id="weba-agg-run" class="agg-btn-primary">▶ Run Aggregation</button>
-           <div class="btn-grid">
-             <button id="weba-agg-download" class="agg-btn-secondary" disabled>📥 CSV</button>
-             <button id="weba-agg-download-jsonl" class="agg-btn-secondary" disabled>📥 JSONL</button>
-           </div>
-           <button id="weba-agg-clear" class="agg-btn-text">🗑 Clear Data</button>
-           <div id="weba-agg-status" class="agg-status-message">Ready.</div>
+          <button id="weba-agg-run" class="agg-btn-primary">▶ Run Aggregation</button>
+          <div class="btn-grid">
+            <button id="weba-agg-download" class="agg-btn-secondary" disabled>📥 CSV</button>
+            <button id="weba-agg-download-jsonl" class="agg-btn-secondary" disabled>📥 JSONL</button>
+          </div>
+          <button id="weba-agg-clear" class="agg-btn-text">🗑 Clear Data</button>
+          <div id="weba-agg-status" class="agg-status-message">Ready.</div>
         </div>
       </aside>
 
@@ -334,7 +439,7 @@ export function initAggregatorBrowser() {
         <div id="weba-agg-output" class="agg-output"></div>
       </main>
     </div>
-    
+
     <div id="weba-agg-detail"></div>
 
     <style>
@@ -391,6 +496,17 @@ export function initAggregatorBrowser() {
       .metric-card label { font-size: 0.75rem; color: var(--agg-text-dim); font-weight: 600; text-transform: uppercase; }
       .metric-card .value { font-size: 1.5rem; font-weight: 700; color: var(--agg-text); }
 
+      /* Charts */
+      .chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; margin-top: 24px; }
+      .chart-card { background: white; border: 1px solid var(--agg-border); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+      .chart-card h4 { margin: 0 0 16px 0; font-size: 0.95rem; font-weight: 700; color: var(--agg-text); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+      .chart-bars { display: flex; flex-direction: column; gap: 12px; }
+      .chart-bar-row { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; }
+      .chart-bar-label { width: 120px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; font-weight: 500; }
+      .chart-bar-track { flex: 1; height: 12px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+      .chart-bar-fill { height: 100%; background: var(--agg-primary); border-radius: 6px; }
+      .chart-bar-value { width: 30px; text-align: right; font-weight: 700; color: var(--agg-text-dim); }
+
       /* Results Styling */
       .agg-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
       .count-badge { background: var(--agg-primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
@@ -408,9 +524,9 @@ export function initAggregatorBrowser() {
       .detail-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; z-index: 10000; }
       @media (min-width: 768px) { .detail-overlay { align-items: center; } }
 
-      .detail-modal { background: white; width: 100%; max-width: 720px; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; max-height: 94vh; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: slideUp 0.3s ease-out; }
+      .detail-modal { background: white; width: 100%; max-width: 720px; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; max-height: 94vh; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: slideUp 0.3s ease-out; }
       @media (min-width: 768px) { .detail-modal { border-radius: 16px; max-height: 85vh; } }
-      
+
       @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
       .detail-modal-header { padding: 16px 24px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
@@ -441,6 +557,9 @@ export function initAggregatorBrowser() {
   `;
 
   const fileInput = root.querySelector<HTMLInputElement>("#weba-agg-files");
+  const dirInput = root.querySelector<HTMLInputElement>("#weba-agg-dirs");
+  const fileTrigger = root.querySelector<HTMLButtonElement>("#weba-agg-file-trigger");
+  const dirTrigger = root.querySelector<HTMLButtonElement>("#weba-agg-dir-trigger");
   const status = root.querySelector<HTMLDivElement>("#weba-agg-status");
   const output = root.querySelector<HTMLDivElement>("#weba-agg-output");
   const dashboard = root.querySelector<HTMLDivElement>("#weba-agg-dashboard");
@@ -476,31 +595,21 @@ export function initAggregatorBrowser() {
 
   passkeyBtn?.addEventListener("click", async () => {
     try {
-      const username = prompt("User Name for Passkey:", "demo-user");
-      if (!username) return;
+      if (!globalSigner.getPublicKey()) {
+        const success = await globalSigner.register();
+        if (!success) return;
+      }
 
       alert("Please authenticate with your Passkey to decrypt.");
-      const challenge = new Uint8Array(32);
       const salt = new Uint8Array(32);
-      const assertion = await navigator.credentials.get({
-        publicKey: {
-          challenge,
-          userVerification: "required",
-          extensions: { prf: { eval: { first: salt } } } as any
-        }
-      }) as PublicKeyCredential;
+      const prfOutput = await globalSigner.derivePrf(salt);
 
-      if (!assertion) throw new Error("No credential found.");
-
-      const results = assertion.getClientExtensionResults() as any;
-      const prfOutput = results?.prf?.results?.first;
-      if (!prfOutput) throw new Error("PRF not supported or enabled on this key.");
-
-      const prfKey = new Uint8Array(prfOutput);
-      const derived = deriveKeyPairFromPrf(prfKey);
+      if (!prfOutput) {
+        throw new Error("PRF not supported or enabled on this key, or authentication failed.");
+      }
 
       passkeyDerivedKeys = {
-        recipient_x25519_private: b64urlEncode(derived.privateKey),
+        recipient_x25519_private: b64urlEncode(deriveKeyPairFromPrf(prfOutput).privateKey),
       };
 
       passkeyBtn.textContent = "✅ Passkey Active";
@@ -510,14 +619,30 @@ export function initAggregatorBrowser() {
         keyStatus.classList.add("ready");
       }
 
+      if ((fileInput?.files && fileInput.files.length > 0) || (dirInput?.files && dirInput.files.length > 0)) {
+        runAggregation();
+      }
+
     } catch (e: any) {
       console.error(e);
       alert("Passkey error: " + e.message);
     }
   });
 
+  // Triggers
+  fileTrigger?.addEventListener("click", () => fileInput?.click());
+  dirTrigger?.addEventListener("click", () => dirInput?.click());
+
+  // Auto-run on file selection
+  fileInput?.addEventListener("change", () => runAggregation());
+  dirInput?.addEventListener("change", () => runAggregation());
+
   const runAggregation = async () => {
-    const hasFiles = !!(fileInput?.files && fileInput.files.length > 0);
+    const files1 = fileInput?.files ? Array.from(fileInput.files) : [];
+    const files2 = dirInput?.files ? Array.from(dirInput.files) : [];
+    const allFiles = [...files1, ...files2].filter(f => f.name.toLowerCase().endsWith(".html") && !f.name.startsWith("."));
+
+    const hasFiles = allFiles.length > 0;
     if (!hasFiles && samplePayloads.length === 0) {
       if (status) status.textContent = "Select HTML files first.";
       return;
@@ -526,6 +651,7 @@ export function initAggregatorBrowser() {
     if (dlBtn) dlBtn.disabled = true;
     if (dlJsonBtn) dlJsonBtn.disabled = true;
 
+    const aggHeader = root.querySelector<HTMLDivElement>(".agg-brand h1");
     rawPayloads = [];
     const rows: any[] = [];
     const keys = new Set<string>(["_filename"]);
@@ -535,7 +661,9 @@ export function initAggregatorBrowser() {
     const l2Keys = passkeyDerivedKeys || embeddedKey;
 
     if (hasFiles) {
-      for (const file of Array.from(fileInput!.files!)) {
+      if (aggHeader) aggHeader.innerHTML = 'Web/A Aggregator <span style="font-size:0.75rem; background:#10b981; color:white; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle;">REAL DATA</span>';
+      console.log(`Running aggregation on ${allFiles.length} files...`);
+      for (const file of allFiles) {
         try {
           const html = await file.text();
           const extracted = await extractPlainFromHtml(html, l2Keys);
@@ -561,6 +689,8 @@ export function initAggregatorBrowser() {
         }
       }
     } else {
+      if (aggHeader) aggHeader.innerHTML = 'Web/A Aggregator <span style="font-size:0.75rem; background:#64748b; color:white; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle;">SAMPLES</span>';
+      console.log("Running aggregation on sample data...");
       samplePayloads.forEach((payload) => {
         rawPayloads.push(payload);
         const built = buildRowFromPlain({
@@ -609,6 +739,7 @@ export function initAggregatorBrowser() {
     cachedCsv = "";
     cachedJsonl = "";
     if (fileInput) fileInput.value = "";
+    if (dirInput) dirInput.value = "";
     if (status) status.textContent = "Data cleared.";
     if (dlBtn) dlBtn.disabled = true;
     if (dlJsonBtn) dlJsonBtn.disabled = true;
