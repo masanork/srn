@@ -82,7 +82,6 @@ type AggSpec = {
   samples?: any[];
   export?: {
     jsonl?: boolean;
-    parquet?: boolean;
   };
 };
 
@@ -481,7 +480,6 @@ export function initAggregatorBrowser() {
         <button id="weba-agg-run" class="agg-btn">Decrypt & Aggregate</button>
         <button id="weba-agg-download" class="agg-btn secondary" disabled>Download CSV</button>
         <button id="weba-agg-download-jsonl" class="agg-btn secondary" disabled>Download JSONL</button>
-        <button id="weba-agg-download-parquet" class="agg-btn secondary" disabled>Download Parquet</button>
       </div>
       <div id="weba-agg-status" class="agg-status">Ready.</div>
     </div>
@@ -497,7 +495,6 @@ export function initAggregatorBrowser() {
   const runBtn = root.querySelector<HTMLButtonElement>("#weba-agg-run");
   const dlBtn = root.querySelector<HTMLButtonElement>("#weba-agg-download");
   const dlJsonBtn = root.querySelector<HTMLButtonElement>("#weba-agg-download-jsonl");
-  const dlParquetBtn = root.querySelector<HTMLButtonElement>("#weba-agg-download-parquet");
   const keyStatus = root.querySelector<HTMLDivElement>("#weba-agg-key-status");
 
   let cachedCsv = "";
@@ -519,28 +516,6 @@ export function initAggregatorBrowser() {
   if (aggSpec?.export?.jsonl === false && dlJsonBtn) {
     dlJsonBtn.disabled = true;
   }
-  const isParquetReady = () => {
-    const provider = (globalThis as any).webaParquet;
-    return !!(aggSpec?.export?.parquet && provider?.export);
-  };
-  let parquetReady = isParquetReady();
-  if (dlParquetBtn) {
-    dlParquetBtn.disabled = !parquetReady;
-    dlParquetBtn.title = parquetReady ? "" : "Parquet export is loading";
-  }
-  if (!parquetReady && aggSpec?.export?.parquet) {
-    const waitForProvider = window.setInterval(() => {
-      parquetReady = isParquetReady();
-      if (parquetReady) {
-        if (dlParquetBtn) {
-          dlParquetBtn.disabled = false;
-          dlParquetBtn.title = "";
-        }
-        window.clearInterval(waitForProvider);
-      }
-    }, 300);
-  }
-
   const runAggregation = async () => {
     if ((!fileInput?.files || fileInput.files.length === 0) && samplePayloads.length === 0) {
       if (status) status.textContent = "Select HTML files first.";
@@ -549,7 +524,6 @@ export function initAggregatorBrowser() {
     if (status) status.textContent = "Processing...";
     if (dlBtn) dlBtn.disabled = true;
     if (dlJsonBtn) dlJsonBtn.disabled = true;
-    if (dlParquetBtn) dlParquetBtn.disabled = !parquetReady;
 
     const rows: any[] = [];
     const keys = new Set<string>(["_filename"]);
@@ -664,29 +638,5 @@ export function initAggregatorBrowser() {
     a.download = "weba-aggregated.jsonl";
     a.click();
     URL.revokeObjectURL(url);
-  });
-
-  dlParquetBtn?.addEventListener("click", async () => {
-    if (!parquetReady || !rawPayloads.length) {
-      if (status) status.textContent = "Parquet export is not ready yet.";
-      return;
-    }
-    try {
-      const bytes = await parquetProvider.export(rawPayloads.map((p) => ({
-        _filename: p.filename,
-        _l2_sig: p.sig ?? null,
-        ...p.plain,
-      })));
-      const blob = new Blob([bytes], { type: "application/octet-stream" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "weba-aggregated.parquet";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      if (status) status.textContent = "Parquet export failed.";
-      console.error(e);
-    }
   });
 }

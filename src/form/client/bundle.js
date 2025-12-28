@@ -5870,6 +5870,116 @@ function formatMetricValue(value, format) {
   }
   return new Intl.NumberFormat().format(value);
 }
+function formatChartNumber(value, format) {
+  return formatMetricValue(value, format);
+}
+function expandSources(records, source) {
+  if (!source)
+    return records;
+  const expanded = [];
+  for (const record of records) {
+    const values = selectValues(record, source);
+    for (const value of values) {
+      if (Array.isArray(value)) {
+        expanded.push(...value);
+      } else if (value !== undefined && value !== null) {
+        expanded.push(value);
+      }
+    }
+  }
+  return expanded;
+}
+function computeBarChart(records, chart) {
+  const items = expandSources(records, chart.source);
+  const filtered = applyFilters(items, chart.filter);
+  const counts = new Map;
+  for (const item of filtered) {
+    const values = selectValues(item, chart.x);
+    if (values.length === 0)
+      continue;
+    for (const value of values) {
+      const key = value === undefined || value === null || value === "" ? "Unknown" : String(value);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+  let rows = Array.from(counts.entries()).map(([label, value]) => ({ label, value }));
+  if (chart.sort) {
+    const order = chart.sort.order === "asc" ? 1 : -1;
+    rows.sort((a, b) => {
+      if (chart.sort?.by === "label") {
+        return a.label.localeCompare(b.label) * order;
+      }
+      return (a.value - b.value) * order;
+    });
+  }
+  if (chart.limit)
+    rows = rows.slice(0, chart.limit);
+  return rows;
+}
+function computeHistogram(records, chart) {
+  const items = expandSources(records, chart.source);
+  const filtered = applyFilters(items, chart.filter);
+  const values = [];
+  for (const item of filtered) {
+    const raw = selectValues(item, chart.value);
+    for (const v of raw) {
+      const num = coerceNumber(v);
+      if (num !== null)
+        values.push(num);
+    }
+  }
+  if (values.length === 0 || chart.bin <= 0)
+    return [];
+  const min = chart.min ?? 0;
+  const maxValue = chart.max ?? Math.max(...values);
+  const bins = new Map;
+  let overflow = 0;
+  for (const value of values) {
+    if (chart.max !== undefined && value > chart.max) {
+      overflow += 1;
+      continue;
+    }
+    const idx = Math.max(0, Math.floor((value - min) / chart.bin));
+    const start = min + idx * chart.bin;
+    bins.set(start, (bins.get(start) || 0) + 1);
+  }
+  const rows = [];
+  const totalBins = Math.max(1, Math.ceil((maxValue - min + 1) / chart.bin));
+  for (let i = 0;i < totalBins; i += 1) {
+    const start = min + i * chart.bin;
+    const end = start + chart.bin - 1;
+    const label = `${formatChartNumber(start, chart.format)} - ${formatChartNumber(end, chart.format)}`;
+    rows.push({ label, value: bins.get(start) || 0 });
+  }
+  if (overflow > 0 && chart.max !== undefined) {
+    rows.push({ label: `${formatChartNumber(chart.max, chart.format)}+`, value: overflow });
+  }
+  return rows;
+}
+function renderBarChart(chart, data) {
+  if (data.length === 0)
+    return "";
+  const max = Math.max(...data.map((d) => d.value));
+  const title = chart.title ? `<div class="agg-chart-title">${chart.title}</div>` : "";
+  const bars = data.map((row) => {
+    const pct = max > 0 ? row.value / max * 100 : 0;
+    const value = formatChartNumber(row.value, chart.format);
+    return `<div class="agg-bar"><div class="agg-bar-label">${row.label}</div><div class="agg-bar-track"><div class="agg-bar-fill" style="width:${pct}%"></div></div><div class="agg-bar-value">${value}</div></div>`;
+  }).join("");
+  return `<div class="agg-chart">${title}<div class="agg-bar-list">${bars}</div></div>`;
+}
+function renderHistChart(chart, data) {
+  if (data.length === 0)
+    return "";
+  const max = Math.max(...data.map((d) => d.value));
+  const title = chart.title ? `<div class="agg-chart-title">${chart.title}</div>` : "";
+  const bars = data.map((row) => {
+    const pct = max > 0 ? row.value / max * 100 : 0;
+    const value = formatChartNumber(row.value, chart.format);
+    return `<div class="agg-bar"><div class="agg-bar-label">${row.label}</div><div class="agg-bar-track"><div class="agg-bar-fill" style="width:${pct}%"></div></div><div class="agg-bar-value">${value}</div></div>`;
+  }).join("");
+  return `<div class="agg-chart">${title}<div class="agg-bar-list">${bars}</div></div>`;
+}
 function renderDashboard(root, spec, payloads) {
   if (!spec?.dashboard || payloads.length === 0) {
     root.innerHTML = "";
@@ -5883,6 +5993,18 @@ function renderDashboard(root, spec, payloads) {
     return `<div class="agg-card"><div class="agg-card-label">${card.label}</div><div class="agg-card-value">${formatted}</div></div>`;
   }).join("");
   const cardGrid = cards ? `<div class="agg-card-grid">${cards}</div>` : "";
+  const charts = (spec.dashboard.charts || []).map((chart) => {
+    if (chart.type === "bar") {
+      const data = computeBarChart(records, chart);
+      return renderBarChart(chart, data);
+    }
+    if (chart.type === "hist") {
+      const data = computeHistogram(records, chart);
+      return renderHistChart(chart, data);
+    }
+    return "";
+  }).filter(Boolean).join("");
+  const chartGrid = charts ? `<div class="agg-chart-grid">${charts}</div>` : "";
   const tables = (spec.dashboard.tables || []).map((table) => {
     const groups = new Map;
     for (const record of records) {
@@ -5923,7 +6045,7 @@ function renderDashboard(root, spec, payloads) {
     const tableLabel = table.label ? `<div class="agg-table-title">${table.label}</div>` : "";
     return `<div class="agg-dashboard-table">${tableLabel}<table class="agg-table"><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
   }).join("");
-  root.innerHTML = `${title}${cardGrid}${tables}`;
+  root.innerHTML = `${title}${cardGrid}${chartGrid}${tables}`;
 }
 async function extractPlainFromHtml(html, l2Keys) {
   const l2Envelope = extractL2EnvelopeFromHtml(html);
@@ -6000,7 +6122,6 @@ function initAggregatorBrowser() {
         <button id="weba-agg-run" class="agg-btn">Decrypt & Aggregate</button>
         <button id="weba-agg-download" class="agg-btn secondary" disabled>Download CSV</button>
         <button id="weba-agg-download-jsonl" class="agg-btn secondary" disabled>Download JSONL</button>
-        <button id="weba-agg-download-parquet" class="agg-btn secondary" disabled>Download Parquet</button>
       </div>
       <div id="weba-agg-status" class="agg-status">Ready.</div>
     </div>
@@ -6015,13 +6136,16 @@ function initAggregatorBrowser() {
   const runBtn = root.querySelector("#weba-agg-run");
   const dlBtn = root.querySelector("#weba-agg-download");
   const dlJsonBtn = root.querySelector("#weba-agg-download-jsonl");
-  const dlParquetBtn = root.querySelector("#weba-agg-download-parquet");
   const keyStatus = root.querySelector("#weba-agg-key-status");
   let cachedCsv = "";
   let cachedJsonl = "";
   let rawPayloads = [];
   const embeddedKey = parseKeyScript();
   const aggSpec = parseAggSpecScript();
+  const samplePayloads = Array.isArray(aggSpec?.samples) ? aggSpec.samples.map((plain, idx) => ({
+    filename: `sample-${idx + 1}.json`,
+    plain
+  })) : [];
   if (keyStatus) {
     keyStatus.textContent = embeddedKey?.recipient_kid ? `Loaded (${embeddedKey.recipient_kid})` : embeddedKey ? "Loaded" : "Not loaded";
     keyStatus.classList.toggle("ready", !!embeddedKey);
@@ -6029,29 +6153,8 @@ function initAggregatorBrowser() {
   if (aggSpec?.export?.jsonl === false && dlJsonBtn) {
     dlJsonBtn.disabled = true;
   }
-  const isParquetReady = () => {
-    const provider = globalThis.webaParquet;
-    return !!(aggSpec?.export?.parquet && provider?.export);
-  };
-  let parquetReady = isParquetReady();
-  if (dlParquetBtn) {
-    dlParquetBtn.disabled = !parquetReady;
-    dlParquetBtn.title = parquetReady ? "" : "Parquet export is loading";
-  }
-  if (!parquetReady && aggSpec?.export?.parquet) {
-    const waitForProvider = window.setInterval(() => {
-      parquetReady = isParquetReady();
-      if (parquetReady) {
-        if (dlParquetBtn) {
-          dlParquetBtn.disabled = false;
-          dlParquetBtn.title = "";
-        }
-        window.clearInterval(waitForProvider);
-      }
-    }, 300);
-  }
   const runAggregation = async () => {
-    if (!fileInput?.files || fileInput.files.length === 0) {
+    if ((!fileInput?.files || fileInput.files.length === 0) && samplePayloads.length === 0) {
       if (status)
         status.textContent = "Select HTML files first.";
       return;
@@ -6062,13 +6165,11 @@ function initAggregatorBrowser() {
       dlBtn.disabled = true;
     if (dlJsonBtn)
       dlJsonBtn.disabled = true;
-    if (dlParquetBtn)
-      dlParquetBtn.disabled = !parquetReady;
     const rows = [];
     const keys = new Set(["_filename"]);
     let processed = 0;
     let errors = 0;
-    rawPayloads = [];
+    rawPayloads = [...samplePayloads];
     const l2Keys = embeddedKey;
     for (const file of Array.from(fileInput.files)) {
       try {
@@ -6132,6 +6233,21 @@ function initAggregatorBrowser() {
     if (output)
       renderTable(output, rows, sortedKeys);
   };
+  if (samplePayloads.length > 0) {
+    rawPayloads = [...samplePayloads];
+    cachedJsonl = rawPayloads.map((payload) => JSON.stringify({
+      _filename: payload.filename,
+      _l2_sig: payload.sig ?? null,
+      ...payload.plain
+    })).join(`
+`);
+    if (dashboard)
+      renderDashboard(dashboard, aggSpec, rawPayloads);
+    if (dlJsonBtn)
+      dlJsonBtn.disabled = cachedJsonl.length === 0 || aggSpec?.export?.jsonl === false;
+    if (status)
+      status.textContent = `Loaded ${samplePayloads.length} sample records.`;
+  }
   runBtn?.addEventListener("click", () => {
     runAggregation().catch((e) => {
       if (status)
@@ -6160,31 +6276,6 @@ function initAggregatorBrowser() {
     a.download = "weba-aggregated.jsonl";
     a.click();
     URL.revokeObjectURL(url);
-  });
-  dlParquetBtn?.addEventListener("click", async () => {
-    if (!parquetReady || !rawPayloads.length) {
-      if (status)
-        status.textContent = "Parquet export is not ready yet.";
-      return;
-    }
-    try {
-      const bytes = await parquetProvider.export(rawPayloads.map((p) => ({
-        _filename: p.filename,
-        _l2_sig: p.sig ?? null,
-        ...p.plain
-      })));
-      const blob = new Blob([bytes], { type: "application/octet-stream" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "weba-aggregated.parquet";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      if (status)
-        status.textContent = "Parquet export failed.";
-      console.error(e);
-    }
   });
 }
 
