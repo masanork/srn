@@ -115,6 +115,7 @@ type Layer2Payload = {
     sig: string;     // base64url encoded signature
     created_at: string;
   };
+  _padding?: string; // Random hex string (0-255 bytes) to mitigate traffic analysis
 };
 ```
 
@@ -208,7 +209,15 @@ A critical threat is an attacker taking an encrypted answer from Form A (e.g., "
 *   **Mitigation**: The `layer1_ref` (hash of the Form) is included in the **AAD**.
 *   **Effect**: If the envelope is moved to a form with a different `layer1_ref`, the AEAD decryption will fail (Auth Tag mismatch) because the AAD verification fails.
 
-### 7.2. Forward Secrecy
+### 7.2. Replay Attacks
+Since the protocol is stateless, an attacker could resubmit a valid encrypted envelope multiple times.
+*   **Mitigation**: Aggregators **MUST** implement nonce verification. The `meta.nonce` field (or the signature itself) should be tracked to reject duplicates.
+
+### 7.3. Traffic Analysis (Padding)
+The length of the ciphertext reveals the approximate size of the plaintext, which might leak information (e.g., "Yes" vs "No" answers).
+*   **Mitigation**: The `Layer2Payload` includes a `_padding` field containing 0-255 bytes of random data. This obscures the exact length of the user's input.
+
+### 7.4. Forward Secrecy
 *   **Current State**: The scheme uses static recipient public keys. If the recipient's private key is compromised, past messages can be decrypted.
 *   **Mitigation**: Use distinct keys per campaign (Key Derivation) and rotate keys frequently. The hierarchical derivation makes rotation cheap (no storage cost).
 

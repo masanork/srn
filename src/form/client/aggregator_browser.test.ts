@@ -1,12 +1,8 @@
 import { describe, expect, test, beforeEach } from "bun:test";
 import { Window } from "happy-dom";
-import {
-  buildRowFromPlain,
-  extractJsonLdFromHtml,
-  extractL2EnvelopeFromHtml,
-  flattenForCsv,
-  initAggregatorBrowser,
-} from "./aggregator_browser";
+import { initAggregatorBrowser } from "./aggregator_browser";
+import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
+import { buildRowFromPlain, flattenForCsv } from "./aggregator_browser_csv";
 
 describe("aggregator browser helpers", () => {
   test("extracts JSON-LD from data-layer", () => {
@@ -78,7 +74,7 @@ describe("aggregator browser UI", () => {
 
     const status = document.querySelector("#weba-agg-key-status") as HTMLElement;
     const fileInput = document.querySelector("#weba-agg-files") as HTMLInputElement;
-    expect(status.textContent).toBe("Not loaded");
+    expect(status.textContent).toBe("No keys detected");
     expect(fileInput).toBeTruthy();
   });
 

@@ -32,6 +32,7 @@ export type Layer2Signature = {
 export type Layer2Payload = {
   layer2_plain: unknown;
   layer2_sig: Layer2Signature;
+  _padding?: string;
 };
 
 export type Layer2Encrypted = {
@@ -182,11 +183,6 @@ export function deriveKeyPairFromPrf(prfKey: Uint8Array) {
   return { publicKey, privateKey: seed };
 }
 
-function getPqcProvider(): PqcKemProvider | null {
-  const w = globalThis as any;
-  return w.webaPqcKem || null;
-}
-
 async function aesGcmEncrypt(
   plaintext: Uint8Array,
   keyBytes: Uint8Array,
@@ -257,6 +253,16 @@ export async function buildLayer2Envelope(params: {
     layer2_sig: layer2Sig,
   };
 
+  // Add random padding to mitigate traffic analysis
+  const paddingLen = Math.floor(Math.random() * 256); // 0-255 bytes
+  const paddingBytes = randomBytes(paddingLen);
+  // hex encode padding for JSON safety
+  let paddingHex = "";
+  paddingBytes.forEach((b) => {
+    paddingHex += b.toString(16).padStart(2, "0");
+  });
+  payload._padding = paddingHex;
+
   const aadBytes = buildAad(layer1Ref, recipientKid, webaVersion);
   const payloadBytes = new TextEncoder().encode(canonicalJson(payload));
 
@@ -269,7 +275,7 @@ export async function buildLayer2Envelope(params: {
   let pqcEncapsulation: Uint8Array | undefined;
   let kemId = "X25519";
   if (params.config.recipient_pqc) {
-    const provider = params.pqcProvider ?? getPqcProvider();
+    const provider = params.pqcProvider;
     if (!provider) {
       throw new Error("PQC requested but no provider is available");
     }
@@ -343,7 +349,7 @@ export async function decryptLayer2Envelope(
   const ss1 = x25519.getSharedSecret(recipientSk, ephPub);
   let ikm = ss1;
   if (envelope.layer2.encapsulated.pqc) {
-    const provider = options?.pqcProvider ?? getPqcProvider();
+    const provider = options?.pqcProvider;
     const pqcSk = options?.pqcRecipientSk;
     if (!provider || !pqcSk) {
       throw new Error("Missing PQC KEM for envelope");

@@ -49,6 +49,7 @@ describe("Web/A L2 crypto", () => {
     const payload = await decryptLayer2Envelope(envelope, recipientSk);
     expect(payload.layer2_plain).toEqual({ answer: "yes", count: 2 });
     expect(payload.layer2_sig.alg).toBe("Ed25519");
+    expect(typeof payload._padding).toBe("string");
   });
 
   test("decrypt fails when layer1_ref changes", async () => {

@@ -67,11 +67,12 @@ describe("End-to-End PQC Hybrid Encryption Flow", () => {
         console.log("Encrypting with config:", JSON.stringify(config, null, 2));
 
         // 2. Encryption (Form Client)
+        const provider = (globalThis as any).webaPqcKem;
         const envelope = await buildLayer2Envelope({
             layer2_plain: payloadData,
             config: config,
-            user_kid: "test-user"
-            // pqcProvider is auto-detected from globalThis
+            user_kid: "test-user",
+            pqcProvider: provider
         });
 
         // Check structure
@@ -88,7 +89,10 @@ describe("End-to-End PQC Hybrid Encryption Flow", () => {
         const decrypted = await decryptLayer2Envelope(
             envelope,
             recipientSk,
-            { pqcRecipientSk: pqcSk }
+            { 
+                pqcRecipientSk: pqcSk,
+                pqcProvider: provider
+            }
         );
 
         console.log("Decrypted Payload:", decrypted);
@@ -100,9 +104,11 @@ describe("End-to-End PQC Hybrid Encryption Flow", () => {
 
     it("should fail if PQC key is missing in decryption", async () => {
         const payloadData = { msg: "fail" };
+        const provider = (globalThis as any).webaPqcKem;
         const envelope = await buildLayer2Envelope({
             layer2_plain: payloadData,
-            config: config // Uses PQC
+            config: config, // Uses PQC
+            pqcProvider: provider
         });
 
         // Test failure when pqcRecipientSk is missing
@@ -112,7 +118,7 @@ describe("End-to-End PQC Hybrid Encryption Flow", () => {
             await decryptLayer2Envelope(
                 envelope,
                 recipientSk,
-                {}
+                { pqcProvider: provider }
             );
             throw new Error("Should have failed");
         } catch (e: any) {
