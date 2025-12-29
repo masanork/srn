@@ -429,6 +429,40 @@ export async function fetchPreKey(url: string): Promise<{ recipient_x25519: stri
   }
 }
 
+export type EpochPublicKey = {
+  kid: string;
+  publicKey: string; // base64url
+  validFrom: string; // ISO
+  validUntil: string; // ISO
+};
+
+export type EpochRegistry = {
+  updated_at: string;
+  keys: EpochPublicKey[];
+};
+
+export async function fetchEpochRegistry(url: string): Promise<EpochRegistry | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.warn("Failed to fetch epoch registry:", e);
+    return null;
+  }
+}
+
+export function selectEpochKey(registry: EpochRegistry): EpochPublicKey | null {
+  const now = new Date();
+  // Find key where now is between validFrom and validUntil
+  const candidate = registry.keys.find(k => {
+    const start = new Date(k.validFrom);
+    const end = new Date(k.validUntil);
+    return now >= start && now <= end;
+  });
+  return candidate || null;
+}
+
 export async function unwrapRecipientPrivateKey(params: {
   keywrap: L2Keywrap;
   prfKey: Uint8Array;
