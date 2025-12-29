@@ -24,5 +24,6 @@ This page aggregates the security audit materials, remediation notes, and relate
 ## Reference Papers
 - [Graduated Forward Secrecy (Final Architecture)](./web-a-l2-graduated-pfs.html)
 - [Epoch-Based Forward Secrecy (Proposal)](./web-a-l2-epoch-pfs.html)
+- [Deployment & Operations Guide](./deployment-guide.html)
 - [Web/A L2 Encryption](./web-a-l2-encryption.html)
 - [Market Comparison](./web-a-l2-market-comparison.html)
