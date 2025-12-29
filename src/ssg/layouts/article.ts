@@ -213,6 +213,55 @@ export function articleLayout(
                     }
                 });
 
+                // Touch Swipe Navigation
+                let touchStartX = 0;
+                let touchStartY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    if (!active) return;
+                    touchStartX = e.changedTouches[0].screenX;
+                    touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    if (!active) return;
+                    const touchEndX = e.changedTouches[0].screenX;
+                    const touchEndY = e.changedTouches[0].screenY;
+                    const diffX = touchEndX - touchStartX;
+                    const diffY = touchEndY - touchStartY;
+
+                    // Ignore vertical scrolls
+                    if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+                    // Threshold 50px
+                    if (Math.abs(diffX) > 50) {
+                        if (diffX < 0) {
+                            showSlide(slideIndex + 1); // Swipe Left -> Next
+                        } else {
+                            showSlide(slideIndex - 1); // Swipe Right -> Prev
+                        }
+                    }
+                }, { passive: true });
+
+                // Tap Zone Navigation
+                document.addEventListener('click', (e) => {
+                    if (!active) return;
+                    // Ignore clicks on controls
+                    if (e.target.closest('.presentation-toolbar') || e.target.closest('button') || e.target.closest('a')) return;
+
+                    const width = window.innerWidth;
+                    const x = e.clientX;
+
+                    // Tap Right 30% -> Next
+                    if (x > width * 0.7) {
+                        showSlide(slideIndex + 1);
+                    }
+                    // Tap Left 30% -> Prev
+                    else if (x < width * 0.3) {
+                        showSlide(slideIndex - 1);
+                    }
+                });
+
                 document.addEventListener('fullscreenchange', () => {
                     if (active && !document.fullscreenElement) {
                         exitPresentation();

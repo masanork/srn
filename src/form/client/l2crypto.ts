@@ -74,7 +74,8 @@ export type L2Config = {
   user_kid?: string;
   campaign_id?: string;
   key_policy?: OrgKeyPolicy;
-  prekey_url?: string; // URL to fetch a one-time use public key for Forward Secrecy
+  epoch_registry_url?: string; // URL to fetch the epoch public key registry
+  prekey_url?: string; // Legacy/Reserved
 };
 
 export type L2KeyFile = {
