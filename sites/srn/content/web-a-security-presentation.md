@@ -94,6 +94,34 @@ date: 2025-12-29
 
 ---
 
+<div class="slide-section">
+<div class="slide-kicker">Revision History</div>
+<h2>Web/A Evolution (Summary)</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="320" viewBox="0 0 760 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="history-title history-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="history-title">Web/A Evolution Timeline</title>
+  <desc id="history-desc">A concise timeline showing key milestones in Web/A development.</desc>
+  <rect x="24" y="24" width="712" height="272" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <line x1="80" y1="170" x2="680" y2="170" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+
+  <circle cx="150" cy="170" r="8" fill="#6366F1"/>
+  <text x="120" y="130" font-family="system-ui" font-size="11" fill="#334155">3-Layer Trust</text>
+  <text x="120" y="146" font-family="system-ui" font-size="10" fill="#64748B">Forms supported</text>
+
+  <circle cx="360" cy="170" r="8" fill="#10B981"/>
+  <text x="320" y="130" font-family="system-ui" font-size="11" fill="#334155">Layer 2 Encryption</text>
+  <text x="320" y="146" font-family="system-ui" font-size="10" fill="#64748B">Confidential payloads</text>
+
+  <circle cx="570" cy="170" r="8" fill="#F59E0B"/>
+  <text x="520" y="130" font-family="system-ui" font-size="11" fill="#334155">Audit Loop</text>
+  <text x="520" y="146" font-family="system-ui" font-size="10" fill="#64748B">Remediation tracking</text>
+</svg>
+</div>
+</div>
+
+---
+
 <div class="slide-card">
 <h2>The Machine-Only Trap (XTX / Custom XML)</h2>
 <ul>
@@ -154,13 +182,97 @@ date: 2025-12-29
 
 ---
 
-<div class="slide-card">
+<div class="slide-section">
+<div class="slide-kicker">Use Cases</div>
+<h2>Primary Targets (Examples)</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="320" viewBox="0 0 760 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="usecases-title usecases-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="usecases-title">Primary Targets</title>
+  <desc id="usecases-desc">Representative Web/A use cases for public documents, forms, and business records.</desc>
+  <rect x="24" y="24" width="712" height="272" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="70" y="90" width="200" height="160" rx="12" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="92" y="125" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Public Certificates</text>
+  <text x="92" y="150" font-family="system-ui" font-size="11" fill="#334155">Birth, residency, permits</text>
+  <text x="92" y="170" font-family="system-ui" font-size="11" fill="#334155">Notices and statements</text>
+
+  <rect x="280" y="90" width="200" height="160" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="302" y="125" font-family="system-ui" font-size="12" font-weight="700" fill="#047857">Forms & Submissions</text>
+  <text x="302" y="150" font-family="system-ui" font-size="11" fill="#334155">Medical + admin forms</text>
+  <text x="302" y="170" font-family="system-ui" font-size="11" fill="#334155">Sensitive payloads</text>
+
+  <rect x="490" y="90" width="200" height="160" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="512" y="125" font-family="system-ui" font-size="12" font-weight="700" fill="#92400E">Business Records</text>
+  <text x="512" y="150" font-family="system-ui" font-size="11" fill="#334155">Audit-ready evidence</text>
+  <text x="512" y="170" font-family="system-ui" font-size="11" fill="#334155">Contracts, logs</text>
+</svg>
+</div>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Goals & Non-Goals</div>
+<h2>What Web/A Optimizes For</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="320" viewBox="0 0 760 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="goals-title goals-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="goals-title">Goals and Non-Goals</title>
+  <desc id="goals-desc">A side-by-side view of Web/A goals and explicit non-goals.</desc>
+  <rect x="24" y="24" width="712" height="272" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="70" y="80" width="300" height="200" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="92" y="115" font-family="system-ui" font-size="12" font-weight="700" fill="#047857">Goals</text>
+  <text x="92" y="145" font-family="system-ui" font-size="11" fill="#334155">Verifiable public documents</text>
+  <text x="92" y="165" font-family="system-ui" font-size="11" fill="#334155">Confidential form submissions</text>
+  <text x="92" y="185" font-family="system-ui" font-size="11" fill="#334155">Long-term readability</text>
+  <text x="92" y="205" font-family="system-ui" font-size="11" fill="#334155">Audit-ready evidence</text>
+
+  <rect x="390" y="80" width="300" height="200" rx="12" fill="#FEE2E2" stroke="#F87171"/>
+  <text x="412" y="115" font-family="system-ui" font-size="12" font-weight="700" fill="#B91C1C">Non-Goals</text>
+  <text x="412" y="145" font-family="system-ui" font-size="11" fill="#334155">Large-scale media archiving</text>
+  <text x="412" y="165" font-family="system-ui" font-size="11" fill="#334155">General-purpose containers</text>
+  <text x="412" y="185" font-family="system-ui" font-size="11" fill="#334155">Real-time messaging</text>
+  <text x="412" y="205" font-family="system-ui" font-size="11" fill="#334155">Full anonymity guarantees</text>
+</svg>
+</div>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Conformance</div>
 <h2>Web/A Conformance Levels</h2>
-<ul>
-  <li>Defines minimal and advanced requirements</li>
-  <li>Enables gradual adoption without breaking trust</li>
-  <li>Creates a shared bar for interoperability</li>
-</ul>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="conformance-title conformance-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="conformance-title">Web/A Conformance Levels</title>
+  <desc id="conformance-desc">Three conformance tiers: 1s semantic, 1u universal, 1p provenance.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="72" width="200" height="210" rx="12" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Web/A-1s</text>
+  <text x="80" y="130" font-family="system-ui" font-size="12" fill="#4338CA">Semantic</text>
+  <text x="80" y="156" font-family="system-ui" font-size="11" fill="#334155">HTML + CSS</text>
+  <text x="80" y="176" font-family="system-ui" font-size="11" fill="#334155">JSON-LD embedded</text>
+  <text x="80" y="196" font-family="system-ui" font-size="11" fill="#334155">Basic signature</text>
+
+  <rect x="280" y="72" width="200" height="210" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Web/A-1u</text>
+  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">Universal</text>
+  <text x="300" y="156" font-family="system-ui" font-size="11" fill="#334155">All assets embedded</text>
+  <text x="300" y="176" font-family="system-ui" font-size="11" fill="#334155">Subsetted fonts</text>
+  <text x="300" y="196" font-family="system-ui" font-size="11" fill="#334155">CLS 0 target</text>
+
+  <rect x="500" y="72" width="200" height="210" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Web/A-1p</text>
+  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">Provenance</text>
+  <text x="520" y="156" font-family="system-ui" font-size="11" fill="#334155">C2PA manifest</text>
+  <text x="520" y="176" font-family="system-ui" font-size="11" fill="#334155">HMP claim</text>
+  <text x="520" y="196" font-family="system-ui" font-size="11" fill="#334155">High-trust archive</text>
+</svg>
+</div>
 </div>
 
 ---
@@ -767,5 +879,18 @@ sequenceDiagram
   <li>Pre-Key server PoC + test harness</li>
   <li>Secure-by-default replay enforcement</li>
   <li>Publish CSP/SRI templates for deployments</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Final Thoughts</div>
+<h2>Why This Matters</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Web/A turns documents into verifiable artifacts, not just files</li>
+  <li>Trust is portable across time, devices, and institutions</li>
+  <li>The goal is interoperability with transparent security, not lock-in</li>
 </ul>
 </div>
