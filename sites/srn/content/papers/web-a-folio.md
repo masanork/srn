@@ -13,6 +13,22 @@ description: "A concept for separating data from intelligence, acting as a user-
 **Web/A Folio** is a concept for a "storage area for user data" within the Web/A Form ecosystem.
 Going beyond the financial and asset management connotations of a traditional "Digital Wallet," it acts as a user-sovereign data container that integrally manages personal activity history, created documents, and identity-proving keys.
 
+## Vision & Adoption Path
+
+The vision is to turn painful, error-prone document workflows into a single,
+verifiable handoff from a Folio. Two scenarios are especially compelling:
+
+1. **Onboarding paperwork**: Large bundles of employment forms, often requiring
+   family member IDs, multiple attachments, and repeated data entry.
+2. **Tax filing**: A future where tax offices and financial institutions
+   (banks, brokerage, insurance, credit cards) expose Web/A-based statements,
+   and a Folio can assemble a complete filing in one pass.
+
+These mission-critical domains require high assurance. The adoption path should
+start with low-risk use cases (e.g., casual event scheduling or simple forms),
+then scale toward professional workflows, and finally reach public and legal
+submission flows once reliability is proven.
+
 ## 1. Concept: Decoupling Data and Intelligence
 
 The core of Web/A Folio lies in the **complete separation of "Data (Folio)" and "Intelligence (Agent)"**.
