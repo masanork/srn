@@ -16,6 +16,14 @@ use serde::{Serialize, Deserialize};
 use serde_json::json;
 
 
+const HPKE_VERSION_LABEL: &str = "HPKE-v1";
+const HPKE_SUITE_ID_LABEL: &str = "HPKE";
+const HPKE_INFO_CONTEXT: &str = "weba-l2";
+const HPKE_KDF_ID_HKDF_SHA256: u16 = 0x0001;
+const HPKE_AEAD_ID_AES_256_GCM: u16 = 0x0002;
+const HPKE_KEM_ID_X25519: u16 = 0x0020;
+const HPKE_KEM_ID_X25519_ML_KEM_768: u16 = 0x0030;
+
 
 #[wasm_bindgen]
 pub fn constant_time_equal(a: &[u8], b: &[u8]) -> bool {
@@ -244,6 +252,93 @@ pub fn hkdf_sha256_derive(ikm: &[u8], salt: Option<Vec<u8>>, info: &[u8], length
     Ok(okm)
 }
 
+fn kem_id_for(kem: &str) -> Result<u16, JsValue> {
+    let normalized = kem.replace(' ', "");
+    match normalized.as_str() {
+        "X25519" => Ok(HPKE_KEM_ID_X25519),
+        "X25519+ML-KEM-768" | "X25519(+ML-KEM-768)" => Ok(HPKE_KEM_ID_X25519_ML_KEM_768),
+        _ => Err(JsValue::from_str("Unsupported HPKE KEM ID")),
+    }
+}
+
+fn hpke_suite_id(kem: &str, kdf: &str, aead: &str) -> Result<Vec<u8>, JsValue> {
+    if kdf != "HKDF-SHA256" || aead != "AES-256-GCM" {
+        return Err(JsValue::from_str("Unsupported HPKE KDF/AEAD"));
+    }
+    let kem_id = kem_id_for(kem)?;
+    let mut out = Vec::with_capacity(4 + 6);
+    out.extend_from_slice(HPKE_SUITE_ID_LABEL.as_bytes());
+    out.extend_from_slice(&kem_id.to_be_bytes());
+    out.extend_from_slice(&HPKE_KDF_ID_HKDF_SHA256.to_be_bytes());
+    out.extend_from_slice(&HPKE_AEAD_ID_AES_256_GCM.to_be_bytes());
+    Ok(out)
+}
+
+fn hpke_labeled_extract(salt: &[u8], suite_id: &[u8], label: &str, ikm: &[u8]) -> Hkdf<Sha256> {
+    let mut labeled_ikm = Vec::with_capacity(
+        HPKE_VERSION_LABEL.len() + suite_id.len() + label.len() + ikm.len()
+    );
+    labeled_ikm.extend_from_slice(HPKE_VERSION_LABEL.as_bytes());
+    labeled_ikm.extend_from_slice(suite_id);
+    labeled_ikm.extend_from_slice(label.as_bytes());
+    labeled_ikm.extend_from_slice(ikm);
+    Hkdf::<Sha256>::new(Some(salt), &labeled_ikm)
+}
+
+fn hpke_labeled_expand(
+    hkdf: &Hkdf<Sha256>,
+    suite_id: &[u8],
+    label: &str,
+    info: &[u8],
+    length: usize,
+) -> Result<Vec<u8>, JsValue> {
+    if length > u16::MAX as usize {
+        return Err(JsValue::from_str("HPKE labeled expand length too long"));
+    }
+    let mut labeled_info = Vec::with_capacity(
+        2 + HPKE_VERSION_LABEL.len() + suite_id.len() + label.len() + info.len()
+    );
+    labeled_info.extend_from_slice(&(length as u16).to_be_bytes());
+    labeled_info.extend_from_slice(HPKE_VERSION_LABEL.as_bytes());
+    labeled_info.extend_from_slice(suite_id);
+    labeled_info.extend_from_slice(label.as_bytes());
+    labeled_info.extend_from_slice(info);
+    let mut okm = vec![0u8; length];
+    hkdf.expand(&labeled_info, &mut okm)
+        .map_err(|_| JsValue::from_str("HKDF expansion failed"))?;
+    Ok(okm)
+}
+
+fn encode_hpke_info_field(value: &str) -> Result<Vec<u8>, JsValue> {
+    let bytes = value.as_bytes();
+    if bytes.len() > u16::MAX as usize {
+        return Err(JsValue::from_str("HPKE info field too long"));
+    }
+    let mut out = Vec::with_capacity(2 + bytes.len());
+    out.extend_from_slice(&(bytes.len() as u16).to_be_bytes());
+    out.extend_from_slice(bytes);
+    Ok(out)
+}
+
+fn build_hpke_info(
+    weba_version: &str,
+    enc: &str,
+    suite: &L2SuiteWasm,
+    layer1_ref: &str,
+    recipient: &str,
+) -> Result<Vec<u8>, JsValue> {
+    let mut out = Vec::new();
+    out.extend_from_slice(&encode_hpke_info_field(HPKE_INFO_CONTEXT)?);
+    out.extend_from_slice(&encode_hpke_info_field(weba_version)?);
+    out.extend_from_slice(&encode_hpke_info_field(enc)?);
+    out.extend_from_slice(&encode_hpke_info_field(&suite.kem)?);
+    out.extend_from_slice(&encode_hpke_info_field(&suite.kdf)?);
+    out.extend_from_slice(&encode_hpke_info_field(&suite.aead)?);
+    out.extend_from_slice(&encode_hpke_info_field(layer1_ref)?);
+    out.extend_from_slice(&encode_hpke_info_field(recipient)?);
+    Ok(out)
+}
+
 // Padding
 #[wasm_bindgen]
 pub fn get_padding_target_size(current_size: usize) -> usize {
@@ -422,9 +517,22 @@ pub fn build_l2_envelope_wasm(
     }
     
     // 5. KDF
-    let prk = hkdf_sha256_derive(&ikm, Some(aad_bytes.to_vec()), b"weba-l2/prk", 32)?;
-    let key = hkdf_sha256_derive(&prk, None, b"weba-l2/key", 32)?;
-    let iv = hkdf_sha256_derive(&prk, None, b"weba-l2/iv", 12)?;
+    let suite = L2SuiteWasm {
+        kem: kem_id,
+        kdf: "HKDF-SHA256".to_string(),
+        aead: "AES-256-GCM".to_string(),
+    };
+    let suite_id = hpke_suite_id(&suite.kem, &suite.kdf, &suite.aead)?;
+    let info = build_hpke_info(
+        &weba_version,
+        "HPKE-v1",
+        &suite,
+        &config.layer1_ref,
+        &config.recipient_kid,
+    )?;
+    let hk = hpke_labeled_extract(&[], &suite_id, "eae_prk", &ikm);
+    let key = hpke_labeled_expand(&hk, &suite_id, "key", &info, 32)?;
+    let iv = hpke_labeled_expand(&hk, &suite_id, "iv", &info, 12)?;
     
     // 6. AEAD
     let ct_with_tag = aes_gcm_encrypt(&key, &iv, &final_payload_bytes, aad_bytes)?;
@@ -442,11 +550,7 @@ pub fn build_l2_envelope_wasm(
         layer1_ref: config.layer1_ref,
         layer2: L2EnvelopeWasm {
             enc: "HPKE-v1".to_string(),
-            suite: L2SuiteWasm {
-                kem: kem_id,
-                kdf: "HKDF-SHA256".to_string(),
-                aead: "AES-256-GCM".to_string(),
-            },
+            suite,
             recipient: config.recipient_kid,
             encapsulated: L2EncapsulatedWasm {
                 classical: to_b64url(eph_pk.as_bytes()),
@@ -479,7 +583,10 @@ pub fn decrypt_l2_envelope_wasm(
     let aad_str = String::from_utf8(aad_bytes.clone()).map_err(|_| JsValue::from_str("Invalid AAD encoding"))?;
     let aad_val: serde_json::Value = serde_json::from_str(&aad_str).unwrap();
     
-    if aad_val["layer1_ref"] != env.layer1_ref || aad_val["recipient"] != env.layer2.recipient {
+    if aad_val["layer1_ref"] != env.layer1_ref
+        || aad_val["recipient"] != env.layer2.recipient
+        || aad_val["weba_version"] != env.weba_version
+    {
          return Err(JsValue::from_str("AAD mismatch"));
     }
     
@@ -501,9 +608,17 @@ pub fn decrypt_l2_envelope_wasm(
     }
     
     // 2. KDF
-    let prk = hkdf_sha256_derive(&ikm, Some(aad_bytes), b"weba-l2/prk", 32)?;
-    let key = hkdf_sha256_derive(&prk, None, b"weba-l2/key", 32)?;
-    let iv = hkdf_sha256_derive(&prk, None, b"weba-l2/iv", 12)?;
+    let suite_id = hpke_suite_id(&env.layer2.suite.kem, &env.layer2.suite.kdf, &env.layer2.suite.aead)?;
+    let info = build_hpke_info(
+        &env.weba_version,
+        &env.layer2.enc,
+        &env.layer2.suite,
+        &env.layer1_ref,
+        &env.layer2.recipient,
+    )?;
+    let hk = hpke_labeled_extract(&[], &suite_id, "eae_prk", &ikm);
+    let key = hpke_labeled_expand(&hk, &suite_id, "key", &info, 32)?;
+    let iv = hpke_labeled_expand(&hk, &suite_id, "iv", &info, 12)?;
     
     // 3. AEAD
     let ct = from_b64url(&env.layer2.ciphertext);
@@ -587,4 +702,3 @@ mod tests {
         assert!(valid);
     }
 }
-
