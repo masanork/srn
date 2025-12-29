@@ -1,7 +1,60 @@
-import { ed25519, x25519 } from "@noble/curves/ed25519.js";
-import { sha256 } from "@noble/hashes/sha2.js";
-import { hkdf } from "@noble/hashes/hkdf.js";
+import { ed25519, x25519 } from "../../vendor/curves/ed25519.js";
+import { sha256 } from "../../vendor/hashes/sha2.js";
+import { hkdf } from "../../vendor/hashes/hkdf.js";
 import canonicalize from "canonicalize";
+
+export interface ReplayStore {
+  has(nonce: string): Promise<boolean>;
+  add(nonce: string): Promise<void>;
+  reset(): Promise<void>;
+}
+
+export class LocalStorageReplayStore implements ReplayStore {
+  private key: string;
+  private nonces: Set<string>;
+
+  constructor(storageKey: string = "weba_l2_nonces") {
+    this.key = storageKey;
+    this.nonces = new Set();
+    this.load();
+  }
+
+  private load() {
+    const data = localStorage.getItem(this.key);
+    if (data) {
+      try {
+        const list = JSON.parse(data);
+        if (Array.isArray(list)) {
+          this.nonces = new Set(list);
+        }
+      } catch (e) {
+        console.error("Failed to load replay store from localStorage", e);
+      }
+    }
+  }
+
+  private save() {
+    try {
+      localStorage.setItem(this.key, JSON.stringify(Array.from(this.nonces)));
+    } catch (e) {
+      console.error("Failed to save replay store to localStorage", e);
+    }
+  }
+
+  async has(nonce: string): Promise<boolean> {
+    return this.nonces.has(nonce);
+  }
+
+  async add(nonce: string): Promise<void> {
+    this.nonces.add(nonce);
+    this.save();
+  }
+
+  async reset(): Promise<void> {
+    this.nonces.clear();
+    this.save();
+  }
+}
 
 export type L2Config = {
   enabled: boolean;
@@ -343,8 +396,21 @@ export function loadL2Config(): L2Config | null {
  */
 export class ReplayGuard {
   private seenNonces = new Set<string>();
+  private store: ReplayStore | undefined;
 
-  checkAndMark(nonce: string): boolean {
+  constructor(store?: ReplayStore) {
+    this.store = store;
+  }
+
+  async checkAndMark(nonce: string): Promise<boolean> {
+    if (this.store) {
+      if (await this.store.has(nonce)) {
+        return false;
+      }
+      await this.store.add(nonce);
+      return true;
+    }
+
     if (this.seenNonces.has(nonce)) {
       return false;
     }
@@ -352,7 +418,10 @@ export class ReplayGuard {
     return true;
   }
 
-  reset(): void {
+  async reset(): Promise<void> {
+    if (this.store) {
+      await this.store.reset();
+    }
     this.seenNonces.clear();
   }
 }

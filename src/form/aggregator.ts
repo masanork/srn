@@ -159,6 +159,7 @@ program
     .option('-o, --output <file>', 'Output CSV file path', 'output.csv')
     .option('--l2-keys <file>', 'Recipient key file for L2 decryption (JSON)')
     .option('--include-json', 'Include raw JSON payload column')
+    .option('--replay-store <file>', 'Path to replay store (JSON)')
     .action(async (directory, options) => {
         const dirPath = path.resolve(directory);
         if (!fs.existsSync(dirPath)) {
@@ -175,7 +176,13 @@ program
         const files = fs.readdirSync(dirPath).filter(f => f.toLowerCase().endsWith('.html'));
         console.log(`Found ${files.length} HTML files in ${dirPath}`);
 
-        const replayGuard = new ReplayGuard();
+        let replayStore;
+        if (options.replayStore) {
+            const { JsonFileReplayStore } = await import('../core/l2crypto');
+            replayStore = new JsonFileReplayStore(path.resolve(options.replayStore));
+        }
+
+        const replayGuard = new ReplayGuard(replayStore);
         const aggregatedData: any[] = [];
         const allKeys = new Set<string>(['_filename']);
 
@@ -190,7 +197,7 @@ program
                 // Replay protection check for L2
                 const l2EnvelopeForCheck = extractL2EnvelopeFromHtml(content);
                 if (l2EnvelopeForCheck?.meta?.nonce) {
-                    if (!replayGuard.checkAndMark(l2EnvelopeForCheck.meta.nonce)) {
+                    if (!(await replayGuard.checkAndMark(l2EnvelopeForCheck.meta.nonce))) {
                         console.warn(`Warning: Replay detected in ${file} (nonce: ${l2EnvelopeForCheck.meta.nonce}). Skipping.`);
                         continue;
                     }

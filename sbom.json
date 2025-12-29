@@ -1,0 +1,101 @@
+{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.5",
+    "serialNumber": "urn:uuid:68e82a47-f3c5-4424-8b1e-987654321098",
+    "version": 2,
+    "metadata": {
+        "timestamp": "2025-12-29T10:00:00Z",
+        "tools": [
+            {
+                "vendor": "Sorane Project",
+                "name": "Sorane SBOM Generator",
+                "version": "1.1.0"
+            }
+        ],
+        "component": {
+            "group": "masanork",
+            "name": "srn",
+            "version": "1.0.0",
+            "type": "application",
+            "description": "Short for Sorane, a Static Site Generator with PQC security (CBOM enabled)."
+        }
+    },
+    "components": [
+        {
+            "name": "Web/A L2 Encryption Layer",
+            "version": "1.1",
+            "type": "cryptographic-asset",
+            "description": "The core cryptographic protocol for Web/A Layer 2 Confidentiality.",
+            "properties": [
+                {
+                    "name": "crypto:algorithm:classical",
+                    "value": "X25519"
+                },
+                {
+                    "name": "crypto:algorithm:pqc",
+                    "value": "ML-KEM-768 (Kyber)"
+                },
+                {
+                    "name": "crypto:algorithm:aead",
+                    "value": "AES-256-GCM"
+                },
+                {
+                    "name": "crypto:algorithm:kdf",
+                    "value": "HKDF-SHA256"
+                },
+                {
+                    "name": "crypto:pqc_readiness",
+                    "value": "Hybrid (Classical + PQC)"
+                },
+                {
+                    "name": "crypto:crypto_agility",
+                    "value": "High (Algorithm IDs in JSON structure)"
+                }
+            ]
+        },
+        {
+            "name": "Web/A Signature Layer",
+            "version": "1.0",
+            "type": "cryptographic-asset",
+            "description": "The digital signature mechanism for Layer 2 authenticity.",
+            "properties": [
+                {
+                    "name": "crypto:algorithm:classical",
+                    "value": "Ed25519"
+                },
+                {
+                    "name": "crypto:algorithm:pqc",
+                    "value": "ML-DSA-44 (Dilithium)"
+                },
+                {
+                    "name": "crypto:pqc_readiness",
+                    "value": "Hybrid"
+                }
+            ]
+        },
+        {
+            "name": "noble-curves",
+            "version": "2.0.1",
+            "type": "library",
+            "description": "Vendored copy of @noble/curves. MIT License.",
+            "publisher": "Paul Miller",
+            "purl": "pkg:local/noble-curves@2.0.1"
+        },
+        {
+            "name": "noble-hashes",
+            "version": "2.0.1",
+            "type": "library",
+            "description": "Vendored copy of @noble/hashes. MIT License.",
+            "publisher": "Paul Miller",
+            "purl": "pkg:local/noble-hashes@2.0.1"
+        },
+        {
+            "name": "noble-post-quantum",
+            "version": "0.5.2",
+            "type": "library",
+            "description": "Vendored copy of @noble/post-quantum. MIT License.",
+            "publisher": "Paul Miller",
+            "purl": "pkg:local/noble-post-quantum@0.5.2"
+        }
+    ]
+}

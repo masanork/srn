@@ -1,6 +1,6 @@
 import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
 import { buildCsv, buildRowFromPlain } from "./aggregator_browser_csv";
-import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf, ReplayGuard } from "./l2crypto";
+import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf, ReplayGuard, LocalStorageReplayStore } from "./l2crypto";
 import type { L2KeyFile, Layer2Signature } from "./l2crypto";
 import { globalSigner } from "./signer";
 import { parseMarkdown } from "../parser";
@@ -852,7 +852,7 @@ export function initAggregatorBrowser() {
     let processed = 0;
     let errors = 0;
 
-    const replayGuard = new ReplayGuard();
+    const replayGuard = new ReplayGuard(new LocalStorageReplayStore());
     const l2Keys = passkeyDerivedKeys || embeddedKey;
 
     if (aggHeader) aggHeader.innerHTML = 'Web/A Aggregator <span style="font-size:0.75rem; background:#10b981; color:white; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle;">REAL DATA</span>';
@@ -864,7 +864,7 @@ export function initAggregatorBrowser() {
         // Replay protection
         const l2ForCheck = extractL2EnvelopeFromHtml(html);
         if (l2ForCheck?.meta?.nonce) {
-          if (!replayGuard.checkAndMark(l2ForCheck.meta.nonce)) {
+          if (!(await replayGuard.checkAndMark(l2ForCheck.meta.nonce))) {
             console.warn(`Replay detected in ${file.name} (nonce: ${l2ForCheck.meta.nonce}). Skipping.`);
             continue;
           }

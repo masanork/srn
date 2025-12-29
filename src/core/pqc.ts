@@ -1,4 +1,4 @@
-import { ml_kem768 } from "@noble/post-quantum/ml-kem.js";
+import { ml_kem768 } from "../vendor/post-quantum/ml-kem.js";
 import type { PqcKemProvider } from "./l2crypto";
 
 export function createMlKem768Provider(): PqcKemProvider {

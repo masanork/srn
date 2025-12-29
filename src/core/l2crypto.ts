@@ -1,9 +1,63 @@
-import { ed25519, x25519 } from "@noble/curves/ed25519.js";
-import { sha256 } from "@noble/hashes/sha2.js";
-import { hkdf } from "@noble/hashes/hkdf.js";
+import { ed25519, x25519 } from "../vendor/curves/ed25519.js";
+import { sha256 } from "../vendor/hashes/sha2.js";
+import { hkdf } from "../vendor/hashes/hkdf.js";
 import { randomBytes } from "node:crypto";
 import { createCipheriv, createDecipheriv } from "node:crypto";
 import canonicalize from "canonicalize";
+import * as fs from "node:fs";
+
+export interface ReplayStore {
+  has(nonce: string): Promise<boolean>;
+  add(nonce: string): Promise<void>;
+  reset(): Promise<void>;
+}
+
+export class JsonFileReplayStore implements ReplayStore {
+  private file: string;
+  private nonces: Set<string>;
+
+  constructor(filePath: string) {
+    this.file = filePath;
+    this.nonces = new Set();
+    this.load();
+  }
+
+  private load() {
+    if (fs.existsSync(this.file)) {
+      try {
+        const data = fs.readFileSync(this.file, "utf-8");
+        const list = JSON.parse(data);
+        if (Array.isArray(list)) {
+          this.nonces = new Set(list);
+        }
+      } catch (e) {
+        console.error("Failed to load replay store:", e);
+      }
+    }
+  }
+
+  private save() {
+    try {
+      fs.writeFileSync(this.file, JSON.stringify(Array.from(this.nonces)), "utf-8");
+    } catch (e) {
+      console.error("Failed to save replay store:", e);
+    }
+  }
+
+  async has(nonce: string): Promise<boolean> {
+    return this.nonces.has(nonce);
+  }
+
+  async add(nonce: string): Promise<void> {
+    this.nonces.add(nonce);
+    this.save();
+  }
+
+  async reset(): Promise<void> {
+    this.nonces.clear();
+    this.save();
+  }
+}
 
 export type Layer2Signature = {
   alg: "Ed25519";
@@ -269,13 +323,26 @@ export async function encryptLayer2(
  */
 export class ReplayGuard {
   private seenNonces = new Set<string>();
+  private store: ReplayStore | undefined;
+
+  constructor(store?: ReplayStore) {
+    this.store = store;
+  }
 
   /**
    * Check if a nonce has been seen before. If not, mark it as seen.
    * @param nonce The nonce to check (base64url)
    * @returns true if the nonce is new, false if it's a replay
    */
-  checkAndMark(nonce: string): boolean {
+  async checkAndMark(nonce: string): Promise<boolean> {
+    if (this.store) {
+      if (await this.store.has(nonce)) {
+        return false;
+      }
+      await this.store.add(nonce);
+      return true;
+    }
+
     if (this.seenNonces.has(nonce)) {
       return false;
     }
@@ -286,7 +353,10 @@ export class ReplayGuard {
   /**
    * Clear the seen nonces.
    */
-  reset(): void {
+  async reset(): Promise<void> {
+    if (this.store) {
+      await this.store.reset();
+    }
     this.seenNonces.clear();
   }
 }

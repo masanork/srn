@@ -200,7 +200,7 @@ Layer 2 が利用者の真正性を担保するのに対し、**L2E** は提出�
 - **組織的復号**: 特定の担当者のみが復号できるよう、組織鍵（YubiKeyやHSM）を用いた厳格なアクセス制御運用に対応する。
 
 > [!TIP]
-> **詳細資料**: L2Eの具体的な仕組みについては [Web/A L2 Encryption](./web-a-l2-encryption.ja.html) を、そのセキュリティ評価については [セキュリティ監査報告書 v2](./web-a-l2-security-audit-v2.ja.html) および [既存製品との比較分析](./web-a-l2-market-comparison.ja.html) を参照してください。
+> **詳細資料**: L2Eの具体的な仕組みについては [Web/A L2 Encryption](./web-a-l2-encryption.ja.html) を、そのセキュリティ評価については [Security Audit v2 (English)](./web-a-l2-security-audit-v2.html) および [既存製品との比較分析](./web-a-l2-market-comparison.ja.html) を参照してください。
 
 ## 7. 実装の柔軟性と鍵管理：軽量トラストモデル
 アーカイブ品質の署名において、鍵管理の複雑さは最大の導入障壁となっている。Web/A は、高い安全性を担保する HSM（ハードウェア・セキュリティ・モジュール）等による厳格な管理を否定するものではなく、それらを補完し、より広範な普及を促すための「軽量トラストモデル」を提案する。
