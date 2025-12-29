@@ -74,6 +74,8 @@ export class JsonFileReplayStore implements ReplayStore {
   }
 }
 
+const WEBA_VERSION = "0.1";
+
 export type Layer2Signature = {
   alg: "Ed25519";
   kid: string;
@@ -276,6 +278,7 @@ export async function encryptLayer2(
     recipient_x25519: toBase64Url(recipientPublicKey),
     recipient_pqc: options?.pqc ? toBase64Url(options.pqc.recipientPublicKey) : undefined,
     layer1_ref: layer1Ref,
+    weba_version: WEBA_VERSION,
     campaign_id: options?.meta?.campaign_id,
   };
 
