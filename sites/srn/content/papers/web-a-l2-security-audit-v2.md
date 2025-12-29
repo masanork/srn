@@ -3,6 +3,7 @@ title: "Critical Security Audit Report v2: Web/A Layer 2 Encryption"
 layout: article
 author: "Web/A Security Audit Team (Red Team)"
 date: 2025-12-29
+ai_generated: true
 ---
 
 **Assessment of Post-Remediation Implementation & Supply Chain Risks**

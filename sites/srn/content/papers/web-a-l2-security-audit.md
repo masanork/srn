@@ -3,6 +3,7 @@ title: "Security Audit Report: Web/A Layer 2 Encryption"
 layout: article
 author: "Web/A Security Audit Team"
 date: 2025-12-29
+ai_generated: true
 ---
 
 ## 1. Executive Summary

@@ -2,6 +2,7 @@
 title: "Technical & Institutional Issues for VC Implementation in Public Sectors"
 layout: article
 description: "A summary of key challenges identified through this PoC for public institutions to issue and manage Verifiable Credentials."
+ai_generated: true
 ---
 
 本検証プロジェクト（Sorane: 空音）は、高精度なタイポグラフィとポスト量子暗号（PQC）を組み合わせたデータ基盤について、実装レベルの課題を整理するための試行的な取り組みである。本稿は、公的な証明書等をVCとして発行する際の実務的な論点を、実際のコード（本PoC）を通じて洗い出したメモであり、今後の具体的なシステム要件を検討する上での「技術的な叩き台」として作成したものである。

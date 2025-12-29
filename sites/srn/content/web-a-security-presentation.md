@@ -6,6 +6,7 @@ lang: en
 presentation: true
 presentation_template: minimal
 date: 2025-12-29
+ai_generated: true
 ---
 
 <div class="slide-cover">

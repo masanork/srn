@@ -3,6 +3,7 @@ title: "比較分析：Web/A Layer 2 暗号化 vs 既存・モダンソリュー
 layout: article
 author: "Web/A 戦略チーム"
 date: 2025-12-29
+ai_generated: true
 ---
 
 **PPAP、Office 保護、IRM、およびエンタープライズ DLP との比較**

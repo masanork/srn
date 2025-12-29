@@ -2,6 +2,7 @@
 title: "PQC & Verification Specs"
 layout: article
 description: "Technical specifications for Post-Quantum Cryptography (PQC) hybrid signatures and Selective Disclosure."
+ai_generated: true
 ---
 
 ## Overview

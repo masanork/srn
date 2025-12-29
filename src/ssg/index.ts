@@ -17,6 +17,29 @@ import { blogLayout } from './layouts/blog.js';
 import { formLayout, formReportLayout } from './layouts/form.js';
 import { juminhyoLayout } from './layouts/juminhyo.js';
 
+function normalizeDate(value: unknown): string {
+    if (!value) return '';
+    if (value instanceof Date && !isNaN(value.getTime())) {
+        const year = value.getFullYear();
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const day = String(value.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    if (typeof value === 'string') {
+        const isoMatch = value.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (isoMatch) return isoMatch[1];
+        const parsed = new Date(value);
+        if (!isNaN(parsed.getTime())) {
+            const year = parsed.getFullYear();
+            const month = String(parsed.getMonth() + 1).padStart(2, '0');
+            const day = String(parsed.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        return value;
+    }
+    return String(value);
+}
+
 async function build() {
     const configOverridePath = process.argv.indexOf('--site-config') !== -1 ? process.argv[process.argv.indexOf('--site-config') + 1] : undefined;
     const config = await loadConfig(configOverridePath);
@@ -47,6 +70,9 @@ async function build() {
         const filePath = path.join(CONTENT_DIR, file);
         const source = await fs.readFile(filePath, 'utf-8');
         const { data, content } = matter(source);
+        if (data.date) {
+            data.date = normalizeDate(data.date);
+        }
 
         // Check for draft status
         if (data.status === 'draft') {
@@ -131,7 +157,7 @@ async function collectMetadata(files: string[], contentDir: string) {
             title: String(data.title || file),
             description: data.description ? String(data.description) : '',
             author: data.author ? String(data.author) : '',
-            date: data.date ? String(data.date) : '',
+            date: data.date ? normalizeDate(data.date) : '',
             path: file.replace('.md', '.html'),
             layout: String(data.layout || 'article'),
             isSystem: Boolean(data.isSystem),

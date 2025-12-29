@@ -4,6 +4,7 @@ layout: article
 author: "Sorane Project"
 date: 2025-12-27
 description: "A concept for separating data from intelligence, acting as a user-centric data container."
+ai_generated: true
 ---
 
 > **Not a Wallet, but a Folio.**

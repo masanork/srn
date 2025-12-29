@@ -3,6 +3,7 @@ title: "Web/A Security Audit Index"
 layout: article
 author: "Web/A Project Team"
 date: 2025-12-29
+ai_generated: true
 ---
 
 This page aggregates the security audit materials, remediation notes, and related papers for fast navigation.

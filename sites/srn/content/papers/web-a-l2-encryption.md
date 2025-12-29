@@ -3,6 +3,7 @@ title: "Technical Report: Web/A Layer 2 Encryption Architecture"
 layout: article
 author: "Web/A Project"
 date: 2025-12-29
+ai_generated: true
 ---
 
 **Confidentiality and Privacy for Distributed Form Data**

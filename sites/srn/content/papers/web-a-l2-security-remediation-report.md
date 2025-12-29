@@ -3,6 +3,7 @@ title: "Security Audit Remediation Report (Response to v2)"
 layout: article
 author: "Web/A Project Team"
 date: 2025-12-29
+ai_generated: true
 ---
 
 **Date:** 2025-12-29

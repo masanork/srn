@@ -3,6 +3,7 @@ title: "Discussion Paper: Web/A - Archival-Grade Web Documents"
 layout: article
 author: "Masanori Kusunoki"
 date: 2025-12-27
+ai_generated: true
 ---
 
 [日本語版 (Japanese version)](./web-a.ja.html)

@@ -3,6 +3,7 @@ title: "Critical Security Re-Assessment v3: Post-Remediation Review"
 layout: article
 author: "Web/A Security Audit Team (Red Team)"
 date: 2025-12-29
+ai_generated: true
 ---
 
 **Auditor:** Web/A Security Audit Team (Red Team)
