@@ -59,6 +59,34 @@ workflows. MCP is a higher-level bridge for agents and interactive tools.
 - **Small Outputs**: MCP returns summaries and paths; large artifacts remain on
   disk.
 
+## Reference Implementation & Compatibility
+
+The Folio CLI is both a **demonstration** and a **reference implementation**
+for interoperability. Its outputs define the baseline that other Folio
+implementations should match when claiming compatibility.
+
+- **Canonical Outputs**: File formats, JSON fields, and signature structures are
+  normative for compatibility.
+- **Deterministic Behavior**: Given the same inputs, outputs should be
+  reproducible (except timestamps and randomized nonces).
+- **Test Suite as Baseline**: The CLI test suite is the minimum conformance
+  target for derived implementations.
+
+## Conformance & Test Suite
+
+Derived Folio implementations should pass the same conformance checks as the
+reference CLI. The baseline test suite should verify:
+
+- **Parsing**: `folio parse` generates stable schemas from forms.
+- **Filling**: `folio fill` produces deterministic, valid artifacts.
+- **Signing**: `folio sign` outputs verifiable signatures with expected fields.
+- **Verification**: `folio verify` validates signatures and reports failures.
+- **Indexing**: `folio index` rebuilds derived caches deterministically.
+- **Packaging**: `folio export` produces a complete bundle with manifest.
+
+The CLI should also expose a `folio conformance` command to run these checks on
+an external implementation's outputs (planned).
+
 ## Command Surface
 
 ### 1. Form Operations
@@ -91,6 +119,10 @@ Used by users (humans) or setup agents.
 - `folio index`
   - Scan all Web/A files in the folio and refresh AI indexes (`.index/vectors.db`, etc.).
   - **Options**: `--path <dir>`, `--mode full|incremental`.
+  - **Exit**: `0` on success, `1` on failure.
+- `folio export`
+  - Create a submission-ready bundle (documents, attachments, manifest).
+  - **Options**: `--path <dir>`, `--out <file>`, `--redact <policy>`.
   - **Exit**: `0` on success, `1` on failure.
 
 ### 3. Identity & Signing
@@ -189,6 +221,29 @@ Each CLI action appends a JSON line entry.
 - **Deterministic Paths**: Paths are predictable and safe for automation.
 - **Rebuildable Indexes**: `.index/` can be deleted and regenerated.
 
+## Submission Package (Draft)
+
+A submission package is a portable bundle suitable for mission-critical
+workflows (e.g., onboarding or tax filing). It contains:
+
+- **Documents**: Filled Web/A files or rendered HTML.
+- **Attachments**: Supporting files referenced by the documents.
+- **Manifest**: A JSON index of contents, hashes, and relations.
+- **Verification Report**: A machine-readable signature check summary.
+
+The package is produced by `folio export` and is the standard handoff unit for
+external systems.
+
+## Attachment Lifecycle (Draft)
+
+Attachments need explicit handling for trust and portability:
+
+1. **Import**: Ingest and hash attachments, record metadata.
+2. **Normalize**: Convert to stable formats if needed (e.g., PDF/A).
+3. **Bind**: Link attachments to documents via manifest entries.
+4. **Redact**: Produce minimal, shareable copies for submission.
+5. **Export**: Bundle with documents and verification reports.
+
 ## Security & Threat Model (PoC)
 
 This PoC is designed to be **secure enough for local workflows**, while
@@ -222,6 +277,15 @@ a memo/roadmap for later review.
 - Full device hardening or secure enclave management.
 - Strong anonymity against traffic analysis.
 - Multi-tenant server isolation.
+
+## Non-Goals (Product Scope)
+
+The Folio CLI is not intended to:
+
+- Replace full-featured document editors or DMS products.
+- Provide real-time collaborative editing.
+- Act as a hosted SaaS platform for Folio storage.
+- Guarantee legal compliance in every jurisdiction out of the box.
 
 ### Key Handling (PoC vs Production)
 
