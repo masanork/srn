@@ -16,6 +16,7 @@ This page aggregates the security audit materials, remediation notes, and relate
 - [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
 
 ## Response & Remediation
+- [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
 - [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
 - [Offline Pre-Key Server Plan (Draft)](./web-a-l2-prekey-server-plan.html)
 
