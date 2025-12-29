@@ -64,6 +64,15 @@ options.
 
 This makes Folio a **decision-support workspace**, not just a filing cabinet.
 
+## Reference Implementation & Interoperability
+
+Web/A Folio should be backed by a **reference implementation** and a baseline
+test suite so independent implementations can remain interoperable.
+
+## Related Documents
+
+- [Folio CLI Design Doc](./web-a-folio-cli.html)
+
 ## 1. Concept: Decoupling Data and Intelligence
 
 The core of Web/A Folio lies in the **complete separation of "Data (Folio)" and "Intelligence (Agent)"**.
