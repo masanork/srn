@@ -45,6 +45,7 @@ async function build() {
     // Process Content
     const files = await glob('**/*.md', { cwd: CONTENT_DIR });
     const allPages = await collectMetadata(files, CONTENT_DIR);
+    let processedCount = 0;
 
     for (const file of files) {
         const filePath = path.join(CONTENT_DIR, file);
@@ -61,17 +62,23 @@ async function build() {
         }
 
 
-        // Incremental check
         if (!isClean && await isUpToDate(filePath, file, DIST_DIR, data.layout)) continue;
 
+        processedCount++;
         console.log(`Processing: ${file}`);
         const normalizedContent = stripLeadingTitleHeading(content, data.title);
         const htmlContent = await marked.parse(normalizedContent);
 
         // Process Fonts
-        const { fontCss, safeFontFamilies } = await fontProcessor.processPageFonts(
-            htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages
-        );
+        let fontCss = '';
+        let safeFontFamilies: string[] = [];
+        if (!data.noFontEmbedding) {
+            const fontResult = await fontProcessor.processPageFonts(
+                htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages
+            );
+            fontCss = fontResult.fontCss;
+            safeFontFamilies = fontResult.safeFontFamilies;
+        }
 
         // Render via Layout Manager
         const { html: finalHtml, vc } = await layoutManager.render({
@@ -102,7 +109,11 @@ async function build() {
 
     await bundleClientScripts(DIST_DIR);
     await generateSitemaps(allPages, config, DIST_DIR, files.includes('srn.md') && !files.includes('index.md'));
-    console.log('Build complete.');
+
+    const totalSize = await getDirSize(DIST_DIR);
+    console.log(`\nBuild complete.`);
+    console.log(`- Pages rebuilt: ${processedCount}`);
+    console.log(`- Total dist size: ${formatBytes(totalSize)}`);
 }
 
 // --- Helpers ---
@@ -248,6 +259,27 @@ async function generateSitemaps(pages: any[], config: any, distDir: string, hasF
     const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
         ${urls.map(u => `<url><loc>${u}</loc></url>`).join('')}</urlset>`;
     await fs.writeFile(path.join(distDir, 'sitemap.xml'), xml);
+}
+
+async function getDirSize(dirPath: string): Promise<number> {
+    const files = await fs.readdir(dirPath);
+    const stats = await Promise.all(
+        files.map(async (file) => {
+            const p = path.join(dirPath, file);
+            const stat = await fs.stat(p);
+            if (stat.isDirectory()) return getDirSize(p);
+            return stat.size;
+        })
+    );
+    return stats.reduce((acc, size) => acc + size, 0);
+}
+
+function formatBytes(bytes: number) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 export { build };

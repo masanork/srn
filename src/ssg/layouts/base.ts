@@ -51,7 +51,8 @@ export function baseLayout(props: BaseLayoutProps): string {
     // Mermaid Config
     const fontListJson = JSON.stringify(fontFamilies);
 
-    const mermaidDataUri = getMermaidDataUri();
+    const hasMermaid = content.includes('language-mermaid');
+    const mermaidDataUri = hasMermaid ? getMermaidDataUri() : null;
     const mermaidScript = mermaidDataUri ? `
     <script>
         (() => {
