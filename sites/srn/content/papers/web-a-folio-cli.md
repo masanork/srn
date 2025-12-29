@@ -247,6 +247,61 @@ Most frequently used by AI agents.
   - **Output**: JSON report (`valid`, `errors[]`).
   - **Exit**: `0` valid, `2` invalid, `1` error.
 
+## MVP Target Use Case (Draft)
+
+### Casual Scheduling (e.g., Dinner Coordination)
+
+**Goal:** Collect availability, confirm attendance, and finalize one date.
+
+**LoA:** All fields are LoA 1 (self-asserted).
+
+**Prefill-friendly fields:**
+
+- Allergies or dietary restrictions (self-asserted, reusable).
+- Preferred areas or venues (self-asserted, reusable).
+- Contact handle (optional).
+
+**Reference sample:**
+
+- Web/A Maker default sample (see `src/form/sample.ts`, dinner poll template).
+
+**Outputs:**
+
+- Availability tally per candidate date.
+- Participant list with notes.
+- Finalized schedule summary.
+
+**Core form fields (aligned with sample):**
+
+- `responder_name` (text)
+- `team_name` (text)
+- `contact` (text, optional)
+- `availability` (dynamic table: `date`, `available`, `note`)
+- `cuisine` (search)
+- `budget` (number)
+- `comment` (textarea, e.g., allergies/constraints)
+
+**Prefill targets (LoA1):**
+
+- `comment` (allergies or constraints)
+- `cuisine` (preference)
+- `budget` (typical budget range)
+
+**Aggregation needs:**
+
+- Count availability by `date` where `available = true`.
+- Budget distribution histogram.
+- Optional notes list per date.
+
+**Prefill data source (LoA1):**
+
+- Stored as human-readable text in the Folio (e.g., `profile.md` or `notes.md`).
+- Parsed into JSON for automation; JSON is derived and disposable.
+- Example fields:
+  - `prefill.cuisine`
+  - `prefill.budget`
+  - `prefill.allergies`
+
 ### 2. Folio Management
 
 Used by users (humans) or setup agents.
