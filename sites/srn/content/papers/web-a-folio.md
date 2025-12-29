@@ -29,6 +29,25 @@ start with low-risk use cases (e.g., casual event scheduling or simple forms),
 then scale toward professional workflows, and finally reach public and legal
 submission flows once reliability is proven.
 
+## Trust Levels & Canonical Formats (LoA)
+
+Web/A Folio should make the **origin and trust level** of data explicit. A
+useful rule is to map the canonical format to the Level of Assurance (LoA):
+
+- **LoA 1 (self-asserted)**: Canonical format is human-readable text. JSON and
+  indexes are derived artifacts for automation.
+- **LoA 2+ (verified)**: Canonical format is machine-readable (JD-JSON or
+  verifiable credentials). Human-readable text is a derived view.
+
+When a user edits LoA 2+ data, the verified status is **invalidated**. The
+system should guide the user to either:
+
+- Re-issue the data as **LoA 1** (self-asserted replacement), or
+- Re-acquire a new verified document and restore LoA 2+ status.
+
+This separation preserves trust for verified data while keeping user-driven
+maintenance practical for everyday records.
+
 ## 1. Concept: Decoupling Data and Intelligence
 
 The core of Web/A Folio lies in the **complete separation of "Data (Folio)" and "Intelligence (Agent)"**.
