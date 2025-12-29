@@ -27,11 +27,11 @@ Layer 2 Encryption acts as a wrapper around the standard signed Layer 2 payload.
 flowchart LR
     User[User Input] --> Plain[L2 Plaintext]
     Plain --> Sign[Signer (Ed25519)]
-    Sign --> Signed[L2 Payload\n(Signed)]
-    Signed --> Encrypt[Encrypter\n(HPKE/X25519)]
+    Sign --> Signed[L2 Payload (Signed)]
+    Signed --> Encrypt[Encrypter (HPKE X25519)]
     Encrypt --> Envelope[L2 Encrypted Envelope]
     
-    subgraph "Browser / Client"
+    subgraph "Browser Client"
         User
         Plain
         Sign
@@ -39,12 +39,12 @@ flowchart LR
         Encrypt
     end
     
-    Envelope --> Storage[Storage/Transport]
+    Envelope --> Storage[Storage Transport]
     Storage --> Decrypt[Decrypter]
     Decrypt --> Verify[Signature Verifier]
     Verify --> Data[Validated Data]
 
-    subgraph "Aggregator / Issuer"
+    subgraph "Aggregator Issuer"
         Decrypt
         Verify
         Data
@@ -161,7 +161,7 @@ graph TD
     Instance[SRN Instance Key] -->|HKDF org-root| Root[Org Root Key]
     Root -->|HKDF campaign+layer1| Campaign[Campaign/Form Key]
     
-    subgraph Per-Form
+    subgraph "Per Form"
     Campaign --> Pub[Public Key (embedded in Form)]
     Campaign --> Priv[Private Key (used by Aggregator)]
     end

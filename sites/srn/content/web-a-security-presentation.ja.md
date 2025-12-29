@@ -1,8 +1,8 @@
 ---
-title: "Web/A Security Improvements Deck"
-description: "A technical presentation on security hardening, red-teaming feedback loops, and related papers."
+title: "Web/A Security Improvements Deck (JA)"
+description: "セキュリティ改善の取り組み、レッドチームのフィードバック循環、関連資料をまとめた技術者向けプレゼン。"
 layout: article
-lang: en
+lang: ja
 presentation: true
 presentation_template: sorane
 date: 2025-12-29
@@ -12,19 +12,19 @@ date: 2025-12-29
 <div class="slide-logo">SORANE</div>
 <h1>Web/A Security Improvements</h1>
 <div class="slide-divider"></div>
-<p class="slide-subtitle">For engineers: countermeasures, iterative reviews, and a shared path forward.</p>
+<p class="slide-subtitle">技術者向け: 改善施策とレッドチームによる対話的な強化プロセス</p>
 </div>
 
 ---
 
 <div class="slide-section">
 <div class="slide-kicker">Scope</div>
-<h2>Goals for Today</h2>
+<h2>今日の目的</h2>
 <div class="slide-divider"></div>
 <ul>
-  <li>Explain <strong>design decisions</strong> and <strong>implementation track</strong> behind hardening</li>
-  <li>Show the <strong>dialog loop</strong> with the Red Team as a repeatable pattern</li>
-  <li>Offer a <strong>clear path</strong> into the relevant whitepapers</li>
+  <li>セキュリティ改善の<strong>設計判断</strong>と<strong>実装の軌跡</strong>を共有する</li>
+  <li>レッドチームとの<strong>往復型のレビュー</strong>を再現可能な形で示す</li>
+  <li>関連ホワイトペーパーを<strong>読みたくなる導線</strong>を用意する</li>
 </ul>
 </div>
 
@@ -33,9 +33,9 @@ date: 2025-12-29
 <div class="slide-card">
 <h2>Security Posture: From High Risk to Medium-High</h2>
 <ul>
-  <li>WASM migration reduces <strong>runtime variance</strong> and timing leakage</li>
-  <li>Replay protection is implemented; <strong>secure-by-default</strong> is the next step</li>
-  <li>Forward Secrecy is declared as a remaining gap, moving toward Pre-Key design</li>
+  <li>WASM移行により<strong>実行環境の揺らぎ</strong>を抑制</li>
+  <li>Replay防止は<strong>実装済み</strong>、運用設計で<strong>必須化</strong>を推進</li>
+  <li>Forward Secrecyは<strong>課題として明示</strong>し、Pre-Key構想へ</li>
 </ul>
 </div>
 
@@ -108,9 +108,9 @@ flowchart LR
 <h2>Dialog-Driven Hardening</h2>
 <div class="slide-divider"></div>
 <ul>
-  <li>Audit findings translated into <strong>spec + implementation</strong></li>
-  <li>Report → re-assess → request loop, repeated</li>
-  <li>"Secure by default" adopted as a design principle</li>
+  <li>Auditの指摘を<strong>仕様</strong>と<strong>実装</strong>に反映</li>
+  <li>改善報告 → 再評価 → 追加要求の<strong>反復</strong></li>
+  <li>「安全なデフォルト」を<strong>設計原則</strong>として定着</li>
 </ul>
 </div>
 
@@ -131,9 +131,9 @@ sequenceDiagram
 <div class="slide-card">
 <h2>WASM Migration (Core Crypto)</h2>
 <ul>
-  <li>Ed25519 / X25519 / ML-KEM / AES-GCM moved to Rust/WASM</li>
-  <li>Reduces timing variability in JS runtimes</li>
-  <li>Binding layer becomes the primary review surface</li>
+  <li>Ed25519 / X25519 / ML-KEM / AES-GCM をRust/WASMへ</li>
+  <li>JS JITのタイミング差異を<strong>低減</strong></li>
+  <li>TS側は<strong>バインディング層の安全性</strong>が焦点</li>
 </ul>
 </div>
 
@@ -142,7 +142,7 @@ sequenceDiagram
 <div class="slide-card">
 <h2>Replay Protection</h2>
 <ul>
-  <li>Nonce-based replay detection as a standard feature</li>
+  <li>Nonceによる再送検知を<strong>標準機能</strong>に</li>
   <li>CLI: JsonFileReplayStore</li>
   <li>Browser: LocalStorageReplayStore</li>
 </ul>
@@ -160,9 +160,9 @@ flowchart TB
 <div class="slide-card">
 <h2>Forward Secrecy: Design Track</h2>
 <ul>
-  <li>Static recipient keys are not enough for long-term secrecy</li>
-  <li>Pre-Key server distributes one-time public keys</li>
-  <li>Forms reference <strong>prekey_url</strong> in the L2 config</li>
+  <li>静的公開鍵のみでは<strong>後方秘匿性</strong>が不足</li>
+  <li>Pre-Keyサーバーで<strong>一回限りの公開鍵</strong>を配布</li>
+  <li>フォーム側は<strong>prekey_url</strong>を指定</li>
 </ul>
 </div>
 
@@ -173,9 +173,9 @@ flowchart TB
 <h2>Draft State Preservation</h2>
 <div class="slide-divider"></div>
 <ul>
-  <li>Draft HTML embeds the working state</li>
-  <li>Restorable after cache clears or on other devices</li>
-  <li>Draft files are <strong>sensitive artifacts</strong></li>
+  <li>ドラフトHTMLに<strong>作業状態</strong>を埋め込み</li>
+  <li>ローカルキャッシュ消去後でも復元可能</li>
+  <li>ファイルは<strong>機密扱い</strong>として運用</li>
 </ul>
 </div>
 
@@ -199,8 +199,8 @@ flowchart TB
 <div class="slide-card">
 <h2>Next Steps</h2>
 <ul>
-  <li>Pre-Key infrastructure design + minimal PoC</li>
-  <li>Mandatory replay verification with clear warnings</li>
-  <li>Third-party review of WASM bindings</li>
+  <li>Pre-Keyインフラの設計と最小PoC</li>
+  <li>Replay検証の<strong>必須化</strong>と警告強化</li>
+  <li>WASMバインディングの第三者レビュー</li>
 </ul>
 </div>
