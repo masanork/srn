@@ -7,11 +7,11 @@ ai_generated: true
 
 # Sorane (空音) Release Notes
 
-## v2.0.0 - Graduated Forward Secrecy & GovCloud Ready
+## v2.0.0 - Graduated Forward Secrecy & Firebase Support
 
 **Date:** 2025-12-29
 
-A major security milestone introducing adaptive Forward Secrecy, mandatory replay protection, and production-ready cloud integration for government and high-assurance use cases.
+A major security milestone introducing adaptive Forward Secrecy, mandatory replay protection, and production-ready cloud integration via Firebase.
 
 * **Security (Graduated Forward Secrecy)**:
   * **3-Tier Adaptive Security**: Implemented a "Graduated PFS" model that automatically selects the best available encryption tier based on connectivity:
@@ -24,7 +24,7 @@ A major security milestone introducing adaptive Forward Secrecy, mandatory repla
   * **Architecture Whitepapers**: Published detailed analysis on SEFS (Static-Epoch Forward Secrecy) and Graduated PFS to justify security trade-offs to auditors.
   * **Audit Index**: Integrated a full history of security re-assessments (v1–v5) and remediation reports.
 * **Cloud & Operations**:
-  * **Firebase Integration**: Established a full Firebase (ISMAP/GovCloud ready) deployment path, consolidating static hosting and PFS backends under a single security boundary.
+  * **Firebase Integration**: Established a full Firebase Support deployment path, consolidating static hosting and PFS backends under a single security boundary.
   * **Multi-Cloud Backends**: Released a "Pre-key Vending Machine" implementation for both Cloudflare Workers (D1) and Firebase (Functions/Firestore).
   * **Ops Automation**: Added a GitHub Actions workflow to monitor key registry inventory and alert administrators 30 days before expiry.
   * **Deployment Guide**: Published a comprehensive [Deployment & Operations Guide](./papers/deployment-guide.html).
