@@ -46,24 +46,18 @@ Options:
         process.exit(1);
     }
 
-    const trustedKeys: Record<string, string> = {};
+    let didDocument = null;
     if (didPath) {
         try {
             const didDoc = await fs.readJson(path.resolve(process.cwd(), didPath));
-            if (Array.isArray(didDoc.verificationMethod)) {
-                didDoc.verificationMethod.forEach((vm: any) => {
-                    if (vm.id && vm.publicKeyHex) {
-                        trustedKeys[vm.id] = vm.publicKeyHex;
-                    }
-                });
-            }
+            didDocument = didDoc;
         } catch (err: any) {
             console.error(`Error loading DID document: ${err.message}`);
             process.exit(1);
         }
     }
 
-    const result = await verifyWebA(htmlContent, { checkHmp, trustedKeys });
+    const result = await verifyWebA(htmlContent, { checkHmp, didDocument: didDocument || undefined });
 
     if (outputJson) {
         console.log(JSON.stringify(result, null, 2));

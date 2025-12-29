@@ -3,6 +3,8 @@ import * as cheerio from 'cheerio';
 import { verifyHybridVC } from './vc.ts';
 import type { VerificationResult } from './vc.ts';
 import crypto from 'node:crypto';
+import { resolveDidDocument } from './did.ts';
+import type { DidDocument } from './did.ts';
 
 export interface WebAVerificationResult extends VerificationResult {
     hmpResult?: {
@@ -21,44 +23,18 @@ export interface WebAVerificationResult extends VerificationResult {
     };
 }
 
-/**
- * Simple did:web resolver
- */
-async function resolveDid(did: string): Promise<Record<string, string>> {
-    const keys: Record<string, string> = {};
-    if (!did.startsWith('did:web:')) return keys;
-
-    const domain = did.split(':')[2];
-    if (!domain) return keys;
-
-    const pathParts = did.split(':').slice(3);
-    const didPath = pathParts.length > 0 ? pathParts.join('/') : '.well-known';
-    const url = `https://${domain}/${didPath}/did.json`;
-
-    try {
-        const resp = await fetch(url);
-        if (!resp.ok) return keys;
-        const doc = await resp.json();
-
-        if (Array.isArray(doc.verificationMethod)) {
-            doc.verificationMethod.forEach((vm: any) => {
-                if (vm.id && vm.publicKeyHex) {
-                    keys[vm.id] = vm.publicKeyHex;
-                }
-            });
-        }
-    } catch (e) {
-        console.warn(`Failed to resolve DID ${did}:`, e);
-    }
-    return keys;
-}
 
 /**
  * Core verification logic for Web/A documents.
  */
 export async function verifyWebA(
     htmlContent: string,
-    options: { checkHmp?: boolean; trustedKeys?: Record<string, string> } = {}
+    options: {
+        checkHmp?: boolean;
+        trustedKeys?: Record<string, string>;
+        didDocument?: DidDocument;
+        didResolver?: typeof resolveDidDocument;
+    } = {}
 ): Promise<WebAVerificationResult> {
     const $ = cheerio.load(htmlContent);
 
@@ -96,13 +72,13 @@ export async function verifyWebA(
     // 2. Verify Signatures
     const trustedKeys = { ...(options.trustedKeys || {}) };
 
-    // Auto-resolve did:web if needed
-    if (vc.issuer && vc.issuer.startsWith('did:web:')) {
-        const resolved = await resolveDid(vc.issuer);
-        Object.assign(trustedKeys, resolved);
-    }
-
-    const verifyOptions: { trustedKeys?: Record<string, string> } = { trustedKeys };
+    const didDocument = options.didDocument
+        ?? (vc.issuer ? await resolveDidDocument(vc.issuer) : null);
+    const verifyOptions = {
+        trustedKeys,
+        didDocument: didDocument || undefined,
+        didResolver: options.didResolver ?? resolveDidDocument
+    };
     const result = await verifyHybridVC(vc, verifyOptions);
     const webaResult: WebAVerificationResult = { ...result };
 
