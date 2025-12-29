@@ -16,6 +16,15 @@ ai_generated: true
 <p class="lead">SORANE (空音): The Reference Implementation for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>
 </div>
 
+<div class="vision-banner">
+    <h2>The Vision</h2>
+    <p>Breaking the "Integration Trap" through <strong>Loosely Coupled Trust</strong>. We aim for an AI-agent-ready future where verifiable files decouple the human interface from the backend system.</p>
+    <div class="vision-links">
+        <a href="./vision.html">Read the Vision Statement (EN)</a> | 
+        <a href="./vision.ja.html">ビジョン・ステートメントを読む (JA)</a>
+    </div>
+</div>
+
 <div class="dashboard-grid">
 <div class="panel">
 <div class="panel-header">CORE PHILOSOPHY</div>
@@ -98,7 +107,44 @@ ai_generated: true
         font-weight: 400;
         line-height: 1.6;
         color: var(--text-muted);
-        max-width: 850px;
+    }
+    .vision-banner {
+        background: var(--card-bg);
+        border: 1px solid var(--accent-color);
+        border-radius: 12px;
+        padding: 2.5rem;
+        margin: -4rem auto 6rem auto;
+        max-width: 800px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 10;
+    }
+    .vision-banner h2 {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+    .vision-banner p {
+        font-size: 1.15rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+        color: var(--text-color);
+    }
+    .vision-links {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+    .vision-links a {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .vision-links a:hover {
+        text-decoration: underline;
+    }    max-width: 850px;
         margin: 0 auto;
     }
     .lead strong {
