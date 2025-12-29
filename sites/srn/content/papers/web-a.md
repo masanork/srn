@@ -5,8 +5,6 @@ author: "Masanori Kusunoki"
 date: 2025-12-27
 ---
 
-# Web/A: A Portable, Machine-Readable, and Long-Term Archival Web Document Format
-
 [日本語版 (Japanese version)](./web-a.ja.html)
 
 **Date:** December 27, 2025

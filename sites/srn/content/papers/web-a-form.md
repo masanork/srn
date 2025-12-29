@@ -6,8 +6,6 @@ author: "Web/A Project"
 description: "A file-first, accountless form workflow for low-frequency, multi-organization processes that do not fit SaaS."
 ---
 
-# Web/A Form: A Sustainable, File-First Data Collection Workflow
-
 ## 1. The SaaS Gap
 
 SaaS is optimal for daily, fixed-member workflows, but it struggles in cases like annual submissions or surveys targeting many organizations. In those cases, the **cost of account provisioning and identity management** outweighs the value of digitization.
