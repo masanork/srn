@@ -4,6 +4,7 @@ import * as path from "node:path";
 import {
   generateRecipientKeyPair,
   generateUserKeyPair,
+  generateEpochKeys,
   deriveOrgX25519KeyPair,
   deriveOrgRootKey,
   signLayer2,
@@ -24,6 +25,57 @@ program
   .name("weba-l2-crypto")
   .description("Web/A Layer 2 Encryption & Signature PoC")
   .version("0.1.0");
+
+program
+  .command("gen-epoch-keys")
+  .description("Generate daily epoch keys for Forward Secrecy")
+  .requiredOption("--start <date>", "Start date (YYYY-MM-DD)")
+  .requiredOption("--days <number>", "Number of days to generate")
+  .option("--out <dir>", "Output directory", "./keys")
+  .action(async (options) => {
+    const outDir = path.resolve(options.out);
+    await fs.mkdir(outDir, { recursive: true });
+    
+    const days = parseInt(options.days, 10);
+    console.log(`Generating keys for ${days} days starting from ${options.start}...`);
+    
+    const keys = await generateEpochKeys(options.start, days);
+    
+    // Public Registry (to be deployed to static site)
+    const publicRegistry = {
+      updated_at: new Date().toISOString(),
+      keys: keys.map(k => ({
+        kid: k.kid,
+        publicKey: k.publicKey,
+        validFrom: k.start,
+        validUntil: k.end
+      }))
+    };
+    
+    // Private Keystore (to be kept offline/secure)
+    const privateKeystore = {
+      updated_at: new Date().toISOString(),
+      keys: keys.map(k => ({
+        kid: k.kid,
+        publicKey: k.publicKey,
+        privateKey: k.privateKey,
+        validFrom: k.start,
+        validUntil: k.end
+      }))
+    };
+    
+    await fs.writeFile(
+      path.join(outDir, "epoch-public.json"),
+      JSON.stringify(publicRegistry, null, 2)
+    );
+    await fs.writeFile(
+      path.join(outDir, "epoch-private.json"),
+      JSON.stringify(privateKeystore, null, 2)
+    );
+    
+    console.log(`Saved public registry to ${path.join(outDir, "epoch-public.json")}`);
+    console.log(`Saved private keystore to ${path.join(outDir, "epoch-private.json")}`);
+  });
 
 program
   .command("gen-keys")

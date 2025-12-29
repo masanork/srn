@@ -1,0 +1,30 @@
+name: Security - Check Epoch Key Expiry
+
+on:
+  schedule:
+    # Run every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  check-expiry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Check Key Expiry
+        run: |
+          # Check if the public key registry exists and has >30 days remaining
+          if [ -f "./demo/keys/epoch-public.json" ]; then
+            bun scripts/check_key_expiry.ts --file ./demo/keys/epoch-public.json --threshold 30
+          elif [ -f "./keys/epoch-public.json" ]; then
+             bun scripts/check_key_expiry.ts --file ./keys/epoch-public.json --threshold 30
+          else
+             echo "::error::No epoch key registry found! Please generate keys."
+             exit 1
+          fi

@@ -15,6 +15,16 @@ export type L2KeyFile = {
     org_root_key?: string; // base64url
     org_campaign_id?: string;
     org_key_policy?: OrgKeyPolicy;
+    epoch_keystore?: {
+        updated_at: string;
+        keys: Array<{
+            kid: string;
+            publicKey: string;
+            privateKey: string;
+            validFrom: string;
+            validUntil: string;
+        }>;
+    };
 };
 
 function fromBase64Url(str: string): Uint8Array {
@@ -53,11 +63,26 @@ export async function extractPlainFromHtml(
 ): Promise<{ plain?: any; sig?: any; source: 'l2' | 'jsonld' | null }> {
     const l2Envelope = extractL2EnvelopeFromHtml(html);
     if (l2Envelope && l2Keys) {
+        // Check kid match, allowing for epoch keys
         if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
-            throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
+            const isEpochMatch = l2Keys.epoch_keystore?.keys.some(k => k.kid === l2Envelope.layer2.recipient);
+            if (!isEpochMatch) {
+                throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
+            }
         }
+
         let recipientSk: Uint8Array | null = null;
-        if (l2Keys.org_root_key) {
+
+        // 1. Try Epoch Keystore
+        if (l2Keys.epoch_keystore && l2Envelope.layer2?.recipient) {
+            const found = l2Keys.epoch_keystore.keys.find(k => k.kid === l2Envelope.layer2.recipient);
+            if (found) {
+                recipientSk = fromBase64Url(found.privateKey);
+            }
+        }
+
+        // 2. Try Org Root Key (Derivation)
+        if (!recipientSk && l2Keys.org_root_key) {
             const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
             if (!campaignId) {
                 throw new Error('org_campaign_id is required for org_root_key');
@@ -69,11 +94,16 @@ export async function extractPlainFromHtml(
                 keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy,
             });
             recipientSk = derived.privateKey;
-        } else if (l2Keys.recipient_x25519_private) {
+        } 
+        // 3. Try Static Key
+        else if (!recipientSk && l2Keys.recipient_x25519_private) {
             recipientSk = fromBase64Url(l2Keys.recipient_x25519_private);
-        } else {
-            throw new Error('No recipient key provided');
         }
+
+        if (!recipientSk) {
+            throw new Error('No recipient key derived or found in keystore');
+        }
+
         const pqc =
             l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === 'ML-KEM-768'
                 ? {
@@ -81,9 +111,7 @@ export async function extractPlainFromHtml(
                     recipientPrivateKey: fromBase64Url(l2Keys.recipient_pqc_private),
                 }
                 : undefined;
-        if (!recipientSk) {
-            throw new Error('No recipient key derived');
-        }
+        
         const payload = await decryptLayer2(
             l2Envelope,
             recipientSk,
