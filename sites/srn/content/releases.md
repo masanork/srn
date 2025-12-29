@@ -19,6 +19,20 @@ Folio inbox flows.
   * Expanded transport principles to cover multi-hop routing and brokering.
   * Added a Firebase direct MCP test checklist to the Folio CLI design doc.
 
+## v2.0.1 - Reply Metadata & Routing Rules
+
+**Date:** 2025-12-30
+
+Clarified reply handling for L2-encrypted submissions, including DID resolution,
+broker forwarding rules, and Folio storage placement.
+
+* **L2 Encryption Spec**:
+  * Defined minimal `reply_to` fields (`did`, `endpoint`, optional `broker`).
+  * Added deterministic DID resolution and service endpoint selection rules.
+  * Standardized reply signing + L2E encryption order for responses.
+  * Documented broker forwarding constraints and `forwarded_by` tracking.
+  * Specified Folio `history/` metadata storage for reply threading.
+
 ## v2.0.0 - Graduated Forward Secrecy & Firebase Support
 
 **Date:** 2025-12-29
