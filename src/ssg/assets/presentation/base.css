@@ -27,8 +27,8 @@ body.presentation-mode { overflow: hidden; }
 .presentation-overlay.active { display: flex; }
 .presentation-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem 0; font-size: 0.85rem; color: var(--presentation-muted); }
 .presentation-toolbar button { border: 1px solid var(--presentation-toolbar-border); background: transparent; color: var(--presentation-text); padding: 0.4rem 0.8rem; border-radius: 999px; cursor: pointer; }
-.presentation-slide-container { flex: 1; display: flex; align-items: center; justify-content: center; }
-.presentation-slide { display: none; width: 100%; height: 100%; padding: 5vh 6vw; box-sizing: border-box; }
+.presentation-slide-container { flex: 1; display: flex; align-items: stretch; justify-content: center; overflow: auto; }
+.presentation-slide { display: none; width: 100%; height: auto; max-height: 100%; padding: 5vh 6vw; box-sizing: border-box; overflow: auto; }
 .presentation-slide.active { display: flex; flex-direction: column; justify-content: center; gap: 2.2rem; }
 .presentation-slide h1 { font-size: clamp(3.2rem, 7.5vw, 6.2rem); line-height: 1.05; margin: 0; color: var(--presentation-text); }
 .presentation-slide h2 { font-size: clamp(2.4rem, 5.5vw, 4.4rem); margin: 0; color: var(--presentation-text); }
@@ -57,6 +57,13 @@ body.presentation-mode .presentation-slide h3 { font-size: clamp(1.9rem, 4.2vw, 
 body.presentation-mode .presentation-slide p { font-size: clamp(1.6rem, 3vw, 2.4rem); }
 body.presentation-mode .presentation-slide li { font-size: clamp(1.6rem, 2.9vw, 2.3rem); }
 body.presentation-mode .presentation-slide .presentation-figure svg { max-height: 70vh; }
+.presentation-slide .mermaid { width: 100%; justify-content: center; margin: 1.5rem 0; }
+.presentation-slide .mermaid svg { max-width: 92vw; max-height: 68vh; width: 100%; height: auto; }
+.presentation-slide .mermaid .label,
+.presentation-slide .mermaid .edgeLabel,
+.presentation-slide .mermaid .nodeLabel { font-size: clamp(0.95rem, 1.8vw, 1.25rem); line-height: 1.2; }
+.presentation-slide .mermaid foreignObject,
+.presentation-slide .mermaid foreignObject * { color: var(--presentation-text) !important; }
 .presentation-overlay .mermaid text { fill: var(--presentation-text) !important; }
 .presentation-overlay .mermaid .label,
 .presentation-overlay .mermaid .edgeLabel,
