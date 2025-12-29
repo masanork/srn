@@ -28,6 +28,32 @@ import {
 import type { DidDocument, DidResolver } from './did';
 const EDDSA_JCS_2022 = 'eddsa-jcs-2022';
 const ML_DSA_44_JCS_2025 = 'ml-dsa-44-jcs-2025';
+const COSE_ALG_EDDSA = -8; // COSE Algorithms: EdDSA
+const COSE_ALG_ML_DSA_44 = -48; // draft-ietf-cose-mldsa-00: ML-DSA-44
+
+const COSE_HEADER_ALG = 1;
+const COSE_HEADER_CRIT = 2;
+const COSE_HEADER_KID = 4;
+
+const textEncoder = new TextEncoder();
+
+function createCoseSigStructure(
+    bodyProtected: Uint8Array,
+    signatureProtected: Uint8Array,
+    payload: Uint8Array
+): Uint8Array {
+    return encode([
+        "Signature",
+        bodyProtected,
+        signatureProtected,
+        new Uint8Array(0),
+        payload
+    ]);
+}
+
+function createCoseKid(value: string): Uint8Array {
+    return textEncoder.encode(value);
+}
 
 function decodeProofValue(value: string): Uint8Array {
     if (value.startsWith('z')) {
@@ -390,7 +416,7 @@ export async function createStatusListVC(
 }
 
 /**
- * Creates a binary VC (CBOR) protected by COSE Sign1-style structure.
+ * Creates a binary VC (CBOR) protected by COSE_Sign.
  * This is optimized for transport and PQC signature size.
  */
 export async function createCoseVC(
@@ -408,36 +434,49 @@ export async function createCoseVC(
 
     const payloadBytes = encode(payload);
 
-    // 2. Sign with Hybrid Keys
+    // 2. Sign with Hybrid Keys (COSE_Signature entries)
     await initWasm();
     const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
-    const pqcSig = mlDsa44Sign(pqcPrivBytes, payloadBytes);
-
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
-    const edSig = ed25519Sign(edPrivBytes, payloadBytes);
 
-    // 3. Construct COSE-style Sign1 structure (Simplified)
-    // [protected, unprotected, payload, signature]
     const idSuffix = buildId ? buildId : 'root';
-    const protectedHeader = encode({
-        alg: "ML-DSA-44+Ed25519", // Custom hybrid alg identifier
-        kid: `${issuerDid}#${idSuffix}`
-    });
+    const bodyProtected = encode(new Map());
+    const bodyUnprotected = new Map();
 
+    const edKid = createCoseKid(`${issuerDid}#${idSuffix}-ed25519`);
+    const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
+
+    const edProtected = encode(new Map([
+        [COSE_HEADER_ALG, COSE_ALG_EDDSA],
+        [COSE_HEADER_KID, edKid]
+    ]));
+    const pqcProtected = encode(new Map([
+        [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
+        [COSE_HEADER_KID, pqcKid]
+    ]));
+
+    const edSigStructure = createCoseSigStructure(bodyProtected, edProtected, payloadBytes);
+    const pqcSigStructure = createCoseSigStructure(bodyProtected, pqcProtected, payloadBytes);
+
+    const edSig = ed25519Sign(edPrivBytes, edSigStructure);
+    const pqcSig = mlDsa44Sign(pqcPrivBytes, pqcSigStructure);
+
+    // 3. Construct COSE_Sign structure
+    // [protected, unprotected, payload, signatures]
     const coseStructure = [
-        protectedHeader,
-        {}, // unprotected
+        bodyProtected,
+        bodyUnprotected,
         payloadBytes,
-        new Uint8Array([...edSig, ...pqcSig]) // Concatenated signature
+        [
+            [edProtected, new Map(), edSig],
+            [pqcProtected, new Map(), pqcSig]
+        ]
     ];
 
     const finalCbor = encode(coseStructure);
 
     // Base64URL for HTML embedding
-    const b64 = Buffer.from(finalCbor).toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+    const b64 = Buffer.from(finalCbor).toString('base64url');
 
     return {
         cbor: finalCbor,
@@ -497,23 +536,40 @@ export async function createSdCoseVC(
     // 3. Sign (Standard Hybrid)
     await initWasm();
     const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
-    const pqcSig = mlDsa44Sign(pqcPrivBytes, payloadBytes);
-
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
-    const edSig = ed25519Sign(edPrivBytes, payloadBytes);
-
     const idSuffix = buildId ? buildId : 'root';
-    const protectedHeader = encode({
-        alg: "ML-DSA-44+Ed25519",
-        kid: `${issuerDid}#${idSuffix}`,
-        crit: ["sd"] // Critical marking for SD processing
-    });
+    const bodyProtected = encode(new Map([
+        [COSE_HEADER_CRIT, ['sd']],
+        ['sd', true]
+    ]));
+    const bodyUnprotected = new Map();
+
+    const edKid = createCoseKid(`${issuerDid}#${idSuffix}-ed25519`);
+    const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
+
+    const edProtected = encode(new Map([
+        [COSE_HEADER_ALG, COSE_ALG_EDDSA],
+        [COSE_HEADER_KID, edKid]
+    ]));
+    const pqcProtected = encode(new Map([
+        [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
+        [COSE_HEADER_KID, pqcKid]
+    ]));
+
+    const edSigStructure = createCoseSigStructure(bodyProtected, edProtected, payloadBytes);
+    const pqcSigStructure = createCoseSigStructure(bodyProtected, pqcProtected, payloadBytes);
+
+    const edSig = ed25519Sign(edPrivBytes, edSigStructure);
+    const pqcSig = mlDsa44Sign(pqcPrivBytes, pqcSigStructure);
 
     const coseStructure = [
-        protectedHeader,
-        {},
+        bodyProtected,
+        bodyUnprotected,
         payloadBytes,
-        new Uint8Array([...edSig, ...pqcSig])
+        [
+            [edProtected, new Map(), edSig],
+            [pqcProtected, new Map(), pqcSig]
+        ]
     ];
 
     const finalCbor = encode(coseStructure);
