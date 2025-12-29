@@ -10,6 +10,8 @@ export interface BaseLayoutProps {
 }
 
 const MERMAID_ASSET_PATH = 'src/ssg/assets/vendor/mermaid.min.js';
+const FAVICON_DATA_URI =
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=';
 let cachedMermaidDataUri: string | null = null;
 
 function getRelativePrefix(relPath: string | undefined): string {
@@ -104,7 +106,7 @@ export function baseLayout(props: BaseLayoutProps): string {
     <meta name="color-scheme" content="light">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
     <title>${title}</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="${FAVICON_DATA_URI}">
     <link rel="stylesheet" href="${styleHref}">
     <link rel="sitemap" type="application/xml" href="${sitemapHref}">
     <link rel="help" type="text/plain" href="${llmsHref}">
