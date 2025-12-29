@@ -3,7 +3,7 @@ title: "Sorane (空音): Typography-First SSG"
 layout: width
 font: 
   - Serif
-  - logo:NotoSerifJP-VariableFont_wght.ttf
+  - logo:ReggaeOne-Regular.ttf
 ai_generated: true
 ---
 
