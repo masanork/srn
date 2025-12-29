@@ -4,6 +4,7 @@ layout: width
 date: 2025-01-04
 author: "Web/A Project"
 description: "A file-first, accountless form workflow for low-frequency, multi-organization processes that do not fit SaaS."
+ai_generated: true
 ---
 
 ## 1. The SaaS Gap

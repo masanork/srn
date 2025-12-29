@@ -3,6 +3,7 @@ title: "Discussion Paper: C2PA-style Asset Provenance in Typography"
 layout: width
 date: 2024-12-24
 author: "Sorane Project Team"
+ai_generated: true
 ---
 
 In a world of generative AI and deepfakes, the provenance of even the smallest UI elements—like fonts—matters. Sorane implements a C2PA-inspired mechanism to ensure the integrity of dynamically generated subsetted fonts.

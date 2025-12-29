@@ -2,6 +2,7 @@
 title: "Technical Overview & Developer Guide"
 layout: article
 description: "Core philosophy, architecture, and guide for developers."
+ai_generated: true
 ---
 
 ## System Concept

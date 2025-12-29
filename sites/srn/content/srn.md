@@ -4,6 +4,7 @@ layout: width
 font: 
   - Serif
   - logo:NotoSerifJP-VariableFont_wght.ttf
+ai_generated: true
 ---
 
 

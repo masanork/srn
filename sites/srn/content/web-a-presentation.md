@@ -6,6 +6,7 @@ lang: en
 presentation: true
 presentation_template: sorane
 date: 2025-02-01
+ai_generated: true
 ---
 
 <div class="slide-cover">

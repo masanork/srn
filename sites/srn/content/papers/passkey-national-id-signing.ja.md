@@ -4,6 +4,7 @@ layout: width
 date: 2025-01-04
 author: "Web/A Project"
 description: "PassKey公開鍵をマイナンバーカードの署名用証明書で署名し、本人性を担保する設計方針と実現可能性。"
+ai_generated: true
 ---
 
 ## 1. 目的

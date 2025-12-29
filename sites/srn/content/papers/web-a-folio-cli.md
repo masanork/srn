@@ -4,6 +4,7 @@ layout: article
 description: "Design specification for the Web/A Folio command-line toolkit"
 date: 2025-12-27
 author: "Sorane Project"
+ai_generated: true
 ---
 
 A reference implementation for Web/A Folio: a headless toolkit that serves as the

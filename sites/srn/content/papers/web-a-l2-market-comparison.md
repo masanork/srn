@@ -3,6 +3,7 @@ title: "Competitive Analysis: Web/A Layer 2 Encryption vs Legacy & Modern Soluti
 layout: article
 author: "Web/A Strategy Team"
 date: 2025-12-29
+ai_generated: true
 ---
 
 **Comparison with PPAP, Office Protection, IRM, and Enterprise DLP**

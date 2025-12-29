@@ -3,6 +3,7 @@ title: "討議資料：Web/A Layer 2 Encryption (日本語版)"
 layout: article
 author: "Web/A Project"
 date: 2025-12-29
+ai_generated: true
 ---
 
 ## 1. 概要

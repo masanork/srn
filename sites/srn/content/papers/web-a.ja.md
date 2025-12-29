@@ -4,6 +4,7 @@ layout: article
 author: "楠 正憲"
 date: 2025-12-27
 description: "PDF/A や XML+XSLT の課題を解決する、ポータブルで機械可読な長期保存用Web文書フォーマットの提案。"
+ai_generated: true
 ---
 
 [English version (英語版)](./web-a.html)
