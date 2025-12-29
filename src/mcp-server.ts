@@ -86,20 +86,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         // Load local DID if provided
-        const trustedKeys: Record<string, string> = {};
+        let didDocument = null;
         if (didPath) {
             const didDoc = await fs.readJson(path.resolve(process.cwd(), didPath));
-            if (Array.isArray(didDoc.verificationMethod)) {
-                didDoc.verificationMethod.forEach((vm: any) => {
-                    if (vm.id && vm.publicKeyHex) {
-                        trustedKeys[vm.id] = vm.publicKeyHex;
-                    }
-                });
-            }
+            didDocument = didDoc;
         }
 
         // Verify
-        const result = await verifyWebA(htmlContent, { checkHmp, trustedKeys });
+        const result = await verifyWebA(htmlContent, { checkHmp, didDocument: didDocument || undefined });
 
         // Format response for the AI
         let text = result.isValid

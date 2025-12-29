@@ -1,5 +1,6 @@
 
 import { verifyHybridVC } from '../../core/vc.ts';
+import { resolveDidDocument } from '../../core/did.ts';
 
 // Main entry point for browser-side verification
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Artificial delay for "scanning" effect
             await new Promise(r => setTimeout(r, 600));
 
-            const result = await verifyHybridVC(json);
+            const result = await verifyHybridVC(json, { didResolver: resolveDidDocument });
 
             if (result.isValid) {
                 // Check Revocation

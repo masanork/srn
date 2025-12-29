@@ -6,6 +6,8 @@ import { registerPasskey, signWithPasskey, derivePasskeyPrf } from './webauthn';
 
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 const EDDSA_JCS_2022 = 'eddsa-jcs-2022';
+const MULTICODEC_ED25519_PUB = 0xed;
+const MULTICODEC_P256_PUB = 0x1200;
 
 // Hex Helpers
 function bytesToHex(bytes: Uint8Array): string {
@@ -50,6 +52,26 @@ function bytesToBase58(bytes: Uint8Array): string {
 
 function bytesToMultibaseBase58btc(bytes: Uint8Array): string {
     return `z${bytesToBase58(bytes)}`;
+}
+
+function encodeUvarint(value: number): Uint8Array {
+    const output: number[] = [];
+    let remaining = value;
+    while (remaining >= 0x80) {
+        output.push((remaining & 0x7f) | 0x80);
+        remaining >>= 7;
+    }
+    output.push(remaining);
+    return new Uint8Array(output);
+}
+
+function encodeDidKey(publicKey: Uint8Array, keyType: 'ed25519' | 'p256'): string {
+    const codec = keyType === 'p256' ? MULTICODEC_P256_PUB : MULTICODEC_ED25519_PUB;
+    const prefix = encodeUvarint(codec);
+    const multicodec = new Uint8Array(prefix.length + publicKey.length);
+    multicodec.set(prefix, 0);
+    multicodec.set(publicKey, prefix.length);
+    return `did:key:${bytesToMultibaseBase58btc(multicodec)}`;
 }
 
 export class Signer {
@@ -159,7 +181,7 @@ export class Signer {
 
     public getIssuerDid(): string {
         if (!this.publicKey) return '';
-        return `did:key:z${bytesToHex(this.publicKey)}`;
+        return encodeDidKey(this.publicKey, this.publicKeyType);
     }
 
     public getPublicKey(): string {
