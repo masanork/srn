@@ -81,6 +81,90 @@ date: 2025-12-29
 
 ---
 
+<div class="slide-section">
+<div class="slide-kicker">Historical Context</div>
+<h2>The PDF/A Limitation</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Visual silos: layout preserved, semantics lost</li>
+  <li>Verification depends on narrow viewer ecosystems</li>
+  <li>Machine trust is hard to scale</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>The Machine-Only Trap (XTX / Custom XML)</h2>
+<ul>
+  <li>Structured data becomes unreadable to humans</li>
+  <li>Semantics drift across vendors and schemas</li>
+  <li>Human trust is weakened when layout is detached</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>XML + XSLT: The Connectivity Trap</h2>
+<ul>
+  <li>Rendering depends on external stylesheets</li>
+  <li>Long-term survival is fragile without dependencies</li>
+  <li>Archival integrity becomes operationally expensive</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Signature Verification Barrier</h2>
+<ul>
+  <li>AATL and viewer lock-in create hidden trust anchors</li>
+  <li>Verification is expensive outside licensed tools</li>
+  <li>Web/A aims to remove viewer dependence</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Principles</div>
+<h2>Core Principles of Web/A</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Structure optimized for humans, machines, and AI</li>
+  <li>Extreme portability: single-file HTML</li>
+  <li>Static formatting without layout drift</li>
+  <li>Cryptographic verifiability built in</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Scope</div>
+<h2>Targets and Non-Goals</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Primary: certificates, forms, official notices</li>
+  <li>Secondary: verifiable internal workflows</li>
+  <li>Non-goals: large media archiving, generic containers</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Web/A Conformance Levels</h2>
+<ul>
+  <li>Defines minimal and advanced requirements</li>
+  <li>Enables gradual adoption without breaking trust</li>
+  <li>Creates a shared bar for interoperability</li>
+</ul>
+</div>
+
+---
+
 <div class="slide-card">
 <h2>Why We Built SRN</h2>
 <ul>
@@ -192,6 +276,341 @@ flowchart LR
   E --> F[Red Team Re-Assessment]
   F --> G[Pre-Key Design Draft]
 ```
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Implementation Flexibility</div>
+<h2>The "Lightweight Trust" Model</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Lower entry cost with strong verification</li>
+  <li>Designed for gradual migration from legacy PKI</li>
+  <li>Supports PQC transition without new infrastructure</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Tiered Authority: Passkey-to-Build Delegation</h2>
+<ul>
+  <li>Root authority delegates build-time signing</li>
+  <li>Passkeys provide hardware-backed trust</li>
+  <li>Enables automation without exposing root keys</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Ephemeral Issuance</h2>
+<ul>
+  <li>Short-lived keys reduce blast radius</li>
+  <li>Encourages frequent rotation</li>
+  <li>Fits offline, file-first workflows</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Identity via Transparency (DID-lite)</h2>
+<ul>
+  <li>Trust derived from web publication and transparency</li>
+  <li>Lower friction than heavy certificate hierarchies</li>
+  <li>Works well with public-sector deployments</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Cryptographic Agility</h2>
+<ul>
+  <li>Algorithms can evolve without breaking the format</li>
+  <li>Supports hybrid signatures (classical + PQC)</li>
+  <li>Future-proofing is a first-class requirement</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Typography</div>
+<h2>Advanced Typography Requirements</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Administrative glyph coverage (IVS/SVS)</li>
+  <li>Faithful reproduction of official layouts</li>
+  <li>Zero layout shift as a security constraint</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Challenges in Form Reproduction</h2>
+<ul>
+  <li>Complex table structures and grid fidelity</li>
+  <li>Layout-dependent semantics</li>
+  <li>Signed views must remain stable over time</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Bimodal Presentation (Mobile + Desktop)</h2>
+<ul>
+  <li>Different contexts require different layouts</li>
+  <li>Layer 3 allows reflow while preserving signatures</li>
+  <li>Human readability is preserved across devices</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Implementation</div>
+<h2>Sorane (srn) in Practice</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>End-to-end signing pipeline</li>
+  <li>Verification UI and CLI tooling</li>
+  <li>Form generation and aggregation</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Comparison</div>
+<h2>Web/A vs PDF/A vs XML/XTX</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="420" viewBox="0 0 760 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="compare-title compare-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="compare-title">Comparison Table</title>
+  <desc id="compare-desc">A comparison of Web/A, PDF/A, and XML/XTX across portability, verifiability, and human readability.</desc>
+  <rect x="24" y="24" width="712" height="372" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <rect x="48" y="56" width="664" height="48" rx="8" fill="#E2E8F0"/>
+  <text x="72" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">Dimension</text>
+  <text x="300" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">Web/A</text>
+  <text x="470" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">PDF/A</text>
+  <text x="620" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">XML/XTX</text>
+
+  <rect x="48" y="112" width="664" height="64" rx="8" fill="white" stroke="#E2E8F0"/>
+  <text x="72" y="144" font-family="system-ui" font-size="13" font-weight="600" fill="#334155">Portability</text>
+  <text x="300" y="144" font-family="system-ui" font-size="12" fill="#0f172a">Single-file HTML</text>
+  <text x="470" y="144" font-family="system-ui" font-size="12" fill="#0f172a">File-based</text>
+  <text x="620" y="144" font-family="system-ui" font-size="12" fill="#0f172a">Depends on tooling</text>
+
+  <rect x="48" y="184" width="664" height="64" rx="8" fill="white" stroke="#E2E8F0"/>
+  <text x="72" y="216" font-family="system-ui" font-size="13" font-weight="600" fill="#334155">Verifiability</text>
+  <text x="300" y="216" font-family="system-ui" font-size="12" fill="#0f172a">Built-in signatures</text>
+  <text x="470" y="216" font-family="system-ui" font-size="12" fill="#0f172a">Viewer-dependent</text>
+  <text x="620" y="216" font-family="system-ui" font-size="12" fill="#0f172a">Schema-dependent</text>
+
+  <rect x="48" y="256" width="664" height="64" rx="8" fill="white" stroke="#E2E8F0"/>
+  <text x="72" y="288" font-family="system-ui" font-size="13" font-weight="600" fill="#334155">Human Readability</text>
+  <text x="300" y="288" font-family="system-ui" font-size="12" fill="#0f172a">First-class</text>
+  <text x="470" y="288" font-family="system-ui" font-size="12" fill="#0f172a">Strong</text>
+  <text x="620" y="288" font-family="system-ui" font-size="12" fill="#0f172a">Weak</text>
+
+  <rect x="48" y="328" width="664" height="48" rx="8" fill="#EEF2FF" stroke="#C7D2FE"/>
+  <text x="72" y="358" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Summary</text>
+  <text x="300" y="358" font-family="system-ui" font-size="12" fill="#4338CA">Portable + Verifiable</text>
+  <text x="470" y="358" font-family="system-ui" font-size="12" fill="#4338CA">Portable, low semantics</text>
+  <text x="620" y="358" font-family="system-ui" font-size="12" fill="#4338CA">Structured, fragile</text>
+</svg>
+</div>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Phased Adoption</div>
+<h2>Layered Strategy</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="adoption-title adoption-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="adoption-title">Phased Adoption Strategy</title>
+  <desc id="adoption-desc">Three-stage adoption plan across Layer 1, Layer 2, and Layer 3.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="72" width="200" height="210" rx="12" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1</text>
+  <text x="80" y="130" font-family="system-ui" font-size="12" fill="#4338CA">Public Documents</text>
+  <text x="80" y="158" font-family="system-ui" font-size="11" fill="#334155">Certificates, notices</text>
+  <text x="80" y="178" font-family="system-ui" font-size="11" fill="#334155">Signed templates</text>
+  <text x="80" y="198" font-family="system-ui" font-size="11" fill="#334155">Current SRN scope</text>
+
+  <rect x="280" y="72" width="200" height="210" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2</text>
+  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">Confidential Data</text>
+  <text x="300" y="158" font-family="system-ui" font-size="11" fill="#334155">L2 encryption</text>
+  <text x="300" y="178" font-family="system-ui" font-size="11" fill="#334155">Replay protection</text>
+  <text x="300" y="198" font-family="system-ui" font-size="11" fill="#334155">Key rotation</text>
+
+  <rect x="500" y="72" width="200" height="210" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Layer 3</text>
+  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">Identity & Authorization</text>
+  <text x="520" y="158" font-family="system-ui" font-size="11" fill="#334155">Verifiable presentation</text>
+  <text x="520" y="178" font-family="system-ui" font-size="11" fill="#334155">Web/A Folio</text>
+  <text x="520" y="198" font-family="system-ui" font-size="11" fill="#334155">Future scope</text>
+
+  <path d="M260 178H280" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <path d="M480 178H500" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <defs>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Typology</div>
+<h2>Document Typology & Preservation</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="typology-title typology-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="typology-title">Document Typology</title>
+  <desc id="typology-desc">Three document tiers mapped to Web/A layers and preservation requirements.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="72" width="200" height="210" rx="12" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1</text>
+  <text x="80" y="130" font-family="system-ui" font-size="12" fill="#4338CA">Public Records</text>
+  <text x="80" y="158" font-family="system-ui" font-size="11" fill="#334155">Certificates, notices</text>
+  <text x="80" y="178" font-family="system-ui" font-size="11" fill="#334155">Public verification</text>
+  <text x="80" y="198" font-family="system-ui" font-size="11" fill="#334155">Long-term readability</text>
+
+  <rect x="280" y="72" width="200" height="210" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2</text>
+  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">Private Submissions</text>
+  <text x="300" y="158" font-family="system-ui" font-size="11" fill="#334155">Encrypted payloads</text>
+  <text x="300" y="178" font-family="system-ui" font-size="11" fill="#334155">Limited access</text>
+  <text x="300" y="198" font-family="system-ui" font-size="11" fill="#334155">Audit trails</text>
+
+  <rect x="500" y="72" width="200" height="210" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Layer 3</text>
+  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">Identity & Authorization</text>
+  <text x="520" y="158" font-family="system-ui" font-size="11" fill="#334155">Verifiable presentation</text>
+  <text x="520" y="178" font-family="system-ui" font-size="11" fill="#334155">Delegation + consent</text>
+  <text x="520" y="198" font-family="system-ui" font-size="11" fill="#334155">Folio-centric</text>
+
+  <rect x="60" y="290" width="640" height="36" rx="10" fill="#F1F5F9" stroke="#CBD5E1"/>
+  <text x="80" y="312" font-family="system-ui" font-size="11" fill="#475569">Preservation note: In Japan, rare-character (gaiji) handling is a major risk to long-term readability.</text>
+</svg>
+</div>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Layer 3</div>
+<h2>Layer 3 Outlook: Web/A Folio</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="folio-title folio-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="folio-title">Web/A Folio Outlook</title>
+  <desc id="folio-desc">A conceptual view of Web/A Folio enabling verifiable presentations and identity-bound proofs.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="80" width="220" height="200" rx="14" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="116" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Web/A Folio</text>
+  <text x="80" y="142" font-family="system-ui" font-size="11" fill="#334155">Identity-bound container</text>
+  <text x="80" y="162" font-family="system-ui" font-size="11" fill="#334155">History + proofs + claims</text>
+  <text x="80" y="182" font-family="system-ui" font-size="11" fill="#334155">Portable, offline-capable</text>
+
+  <rect x="320" y="80" width="200" height="90" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="340" y="115" font-family="system-ui" font-size="12" font-weight="700" fill="#047857">Verifiable Presentation</text>
+  <text x="340" y="140" font-family="system-ui" font-size="11" fill="#334155">Selective disclosure</text>
+
+  <rect x="320" y="190" width="200" height="90" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="340" y="225" font-family="system-ui" font-size="12" font-weight="700" fill="#92400E">Authorization Flow</text>
+  <text x="340" y="250" font-family="system-ui" font-size="11" fill="#334155">Consent + delegation</text>
+
+  <rect x="560" y="130" width="160" height="120" rx="12" fill="#E0F2FE" stroke="#38BDF8"/>
+  <text x="580" y="165" font-family="system-ui" font-size="12" font-weight="700" fill="#0C4A6E">Relying Party</text>
+  <text x="580" y="190" font-family="system-ui" font-size="11" fill="#334155">Service verifier</text>
+
+  <path d="M280 150H320" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <path d="M280 210H320" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <path d="M520 150H560" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <path d="M520 230H560" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <defs>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Standardization Challenges</div>
+<h2>Open Technical Challenges</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Cross-device and in-person transfer protocols</li>
+  <li>Practical holder binding in browser sandboxes</li>
+  <li>Native browser verification support</li>
+  <li>Long-term validation (LTV)</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Legal Positioning</h2>
+<ul>
+  <li>From \"will\" to \"evidence\"</li>
+  <li>Focus on provable intent and auditability</li>
+  <li>Supports public-sector evidentiary workflows</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Ecosystem Strategy: AI Agent-First</h2>
+<ul>
+  <li>Agents can read, verify, and summarize Web/A</li>
+  <li>Structured data enables safe automation</li>
+  <li>Humans remain the final trust anchor</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Conservation Profiles</h2>
+<ul>
+  <li>Define a safe subset of web tech</li>
+  <li>Prevent browser drift from breaking archives</li>
+  <li>Long-term readability guaranteed by profile</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Standards</div>
+<h2>Alignment with Global Efforts</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>W3C Verifiable Credentials</li>
+  <li>IETF COSE / SPICE</li>
+  <li>C2PA provenance</li>
+</ul>
+</div>
 
 ---
 
