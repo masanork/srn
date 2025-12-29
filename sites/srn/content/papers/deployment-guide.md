@@ -82,11 +82,11 @@ Recommended for agile deployments and low-latency edge distribution.
     ```
 
 ### 3.3. Tier 3 (Alt): True PFS (Firebase / Google Cloud)
-Recommended for organizations requiring **ISMAP compliance** or using **Government Cloud**. This path also allows consolidating site hosting and the PFS backend under a single security boundary.
+Recommended for organizations requiring managed cloud services or specific regional compliance (e.g., ISMAP). This path also allows consolidating site hosting and the PFS backend under a single security boundary.
 
 1.  **Initialize Firebase Project**:
     - Create a project in the Firebase Console.
-    - **IMPORTANT (ISMAP/Compliance)**: Choose an appropriate region. For Japanese government projects, selecting **`asia-northeast1` (Tokyo)** or **`asia-northeast2` (Osaka)** is strongly recommended.
+    - **IMPORTANT (Regional Selection)**: Choose an appropriate region based on your regulatory requirements. For example, if data residency in Japan is required, selecting **`asia-northeast1` (Tokyo)** or **`asia-northeast2` (Osaka)** is recommended.
     - Enable **Cloud Firestore** and **Cloud Functions**.
 
 2.  **Full Firebase Deployment (Hosting + Backend)**:
@@ -125,7 +125,7 @@ To decrypt messages received via L2 encryption:
 
 ## 6. Cost Estimation & Budgeting (Firebase)
 
-For government and non-profit organizations, budgeting is critical. While Web/A can be run for $0, it is important to understand the billing structure.
+For government, non-profit, or corporate organizations, budgeting is critical. While Web/A can be run for $0, it is important to understand the billing structure.
 
 ### 6.1. Plan Selection
 - **Spark Plan (Free)**: Best for Tier 1 and Tier 2 deployments. No credit card required. Supports static hosting and Firestore.
@@ -142,7 +142,7 @@ Assuming 10,000 high-security (Tier 3) submissions per month:
 | **Cloud Run** | Compute Time | ~500 sec | 180,000 sec | $0.00 |
 | **Total** | | | | **$0.00** |
 
-**Conclusion**: For most administrative use cases, the monthly cost will remain at **$0.00**.
+**Conclusion**: For most administrative and small-to-medium scale use cases, the monthly cost will remain at **$0.00**.
 
 ---
 

@@ -183,17 +183,17 @@ weba-folio verify ./MyFolio ./out/presentation.html
 - **Cloud Vendor Lock-In**: Prevented by keeping files portable and readable.
 - **Metadata Leakage**: Mitigated by minimizing index metadata and allowing cache purge.
 
-## 7. Establishing Identity: PassKey × National ID Signatures
+## 7. Identity Assurance: Holder Binding via National ID
 
-In a general web environment, **PassKey (WebAuthn)** is the de facto standard for secure hardware-level key management. However, a PassKey alone cannot prove "whose key it is" to a third party.
-Many countries issue **national ID cards or eID schemes with qualified signing certificates**, so Web/A Folio adopts a model that binds a PassKey to a government-backed signing credential.
+In a general web environment, **PassKey (WebAuthn)** is the de facto standard for secure hardware-level key management. However, while a PassKey is secure, it does not inherently prove "who" the holder is.
+To bridge this gap without the complexity of full-scale government ID "VC-ification," Web/A Folio implements **Holder Binding**. This mechanism cryptographically links a locally-generated PassKey to an existing high-assurance identity, such as a national ID.
 
 1.  **PassKey Generation**: Generate a PassKey pair on the user's device (smartphone or PC).
-2.  **Identity Binding**: Sign the public key of the generated PassKey using the national ID signing certificate (for example, a digital signature certificate on a national ID card).
-3.  **Ownership VC**: Create a self-signed Verifiable Credential (VC) stating "This PassKey public key is managed by me, the holder of the national ID credential," and store it in the Folio.
-4.  **Presentation**: When submitting a form, include this VC as a Verifiable Presentation (VP), sign it with the PassKey, and send it.
+2.  **Identity Linking**: Use the qualified signing certificate of a national ID card to sign the public key of the new PassKey.
+3.  **Binding Proof**: Store this signature as a "Binding VC" in the Folio. This proof states: "The holder of this national ID credential has authorized this specific PassKey."
+4.  **Presentation**: When presenting any other certificate (e.g., a degree or a residence permit), the user signs the presentation (VP) with the PassKey and includes the Binding Proof.
 
-This allows daily operations to be completed with just biometric authentication (Touch ID/Face ID) while indirectly proving identity equivalent to the national ID through the signature chain.
+This architecture enables **indirect identity proof**: daily operations are completed with simple biometric authentication (PassKey), while the signature chain provides a cryptographic link back to the government-issued identity without needing to store the full government ID in the Folio.
 
 ## 8. Why Not "Wallet"?
 
