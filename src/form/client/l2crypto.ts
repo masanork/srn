@@ -147,9 +147,11 @@ export type OrgKeyPolicy = "campaign" | "campaign+layer1";
  * Calculate target size for padding based on a bucket strategy to mitigate traffic analysis.
  * Now using WASM.
  */
-export function getPaddingTargetSize(currentSize: number): number {
+export async function getPaddingTargetSize(currentSize: number): Promise<number> {
+  await ensureWasm();
   return wasmGetPaddingTargetSize(currentSize);
 }
+
 
 
 const L2_SIG_KEY_STORAGE = "weba_l2_ed25519_sk";
@@ -305,6 +307,7 @@ export async function buildLayer2Envelope(params: {
   const userSk = params.user_sk || getOrCreateL2SigKey();
   const createdAt = new Date().toISOString();
   const userKid = params.user_kid || "user#sig-1";
+
 
 
   const config = {

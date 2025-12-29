@@ -253,7 +253,8 @@ pub fn get_padding_target_size(current_size: usize) -> usize {
             return b;
         }
     }
-    current_size
+    // Round up to nearest 1MB for very large payloads
+    ((current_size + 1048575) / 1048576) * 1048576
 }
 
 // High-level L2 Envelope Implementation

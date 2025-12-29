@@ -1,0 +1,38 @@
+name: Bun CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Build WASM (Optional, if not pre-built)
+      run: |
+        # If wasm-pack is needed in CI:
+        # curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+        # bun run build:wasm (if you have such script)
+        echo "Using pre-built WASM in src/core/wasm_binary.ts"
+
+    - name: Run tests with coverage
+      run: bun run test:coverage
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage/ # Bun outputs coverage here by default or check where it goes
