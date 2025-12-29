@@ -8,6 +8,57 @@ import { initL2Viewer } from './l2viewer';
 import { initKeywrapTool } from './keywrap_tool';
 import { initAggregatorBrowser } from './aggregator_browser';
 
+type DraftState = {
+    version?: number;
+    savedAt?: string;
+    formId?: string;
+    formData?: unknown;
+    l2State?: {
+        replayNonces?: string[];
+    };
+};
+
+const L2_REPLAY_STORE_KEY = "weba_l2_nonces";
+
+function loadDraftState(): DraftState | null {
+    const script = document.getElementById('weba-draft-state');
+    if (!script?.textContent) return null;
+    try {
+        return JSON.parse(script.textContent) as DraftState;
+    } catch (e) {
+        console.warn('Failed to parse draft state', e);
+        return null;
+    }
+}
+
+function seedDraftState(state: DraftState | null) {
+    if (!state || !state.formData) return;
+    const formKey = "WebA_" + window.location.pathname;
+    try {
+        localStorage.setItem(formKey, JSON.stringify(state.formData));
+    } catch (e) {
+        console.warn('Failed to restore draft form data', e);
+    }
+    if (state.l2State?.replayNonces?.length) {
+        try {
+            const existingRaw = localStorage.getItem(L2_REPLAY_STORE_KEY);
+            const existing = existingRaw ? JSON.parse(existingRaw) : [];
+            const merged = new Set<string>();
+            if (Array.isArray(existing)) {
+                existing.forEach((value) => {
+                    if (typeof value === "string") merged.add(value);
+                });
+            }
+            state.l2State.replayNonces.forEach((value) => {
+                if (typeof value === "string") merged.add(value);
+            });
+            localStorage.setItem(L2_REPLAY_STORE_KEY, JSON.stringify(Array.from(merged)));
+        } catch (e) {
+            console.warn('Failed to restore draft L2 replay store', e);
+        }
+    }
+}
+
 export function initRuntime() {
     console.log("Web/A Runtime Booting...");
 
@@ -53,6 +104,7 @@ export function initRuntime() {
     };
 
     // Initial Setup
+    seedDraftState(loadDraftState());
     data.restoreFromLS();
     ui.applyI18n();
     ui.initTables();

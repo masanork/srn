@@ -1,9 +1,20 @@
 import type { Layer2Encrypted } from "./l2crypto";
 
+export type DraftState = {
+  version: number;
+  savedAt: string;
+  formId: string;
+  formData: unknown;
+  l2State?: {
+    replayNonces?: string[];
+  };
+};
+
 export type DownloadHtmlOptions = {
   embeddedVc?: any;
   l2Envelope?: Layer2Encrypted;
   stripPlaintext?: boolean;
+  draftState?: DraftState;
 };
 
 function stripPlaintext(doc: Document) {
@@ -65,6 +76,16 @@ function embedL2Envelope(doc: Document, envelope: Layer2Encrypted) {
   doc.body.appendChild(envScript);
 }
 
+function embedDraftState(doc: Document, draftState: DraftState) {
+  const existing = doc.getElementById("weba-draft-state");
+  if (existing) existing.remove();
+  const draftScript = doc.createElement("script");
+  draftScript.id = "weba-draft-state";
+  draftScript.type = "application/json";
+  draftScript.textContent = JSON.stringify(draftState, null, 2);
+  doc.body.appendChild(draftScript);
+}
+
 function buildFilename(title: string, filenameSuffix: string): string {
   const now = new Date();
   const dateStr =
@@ -89,6 +110,9 @@ export function buildDownloadHtml(documentHtml: string, options?: DownloadHtmlOp
   }
   if (options?.l2Envelope) {
     embedL2Envelope(doc, options.l2Envelope);
+  }
+  if (options?.draftState) {
+    embedDraftState(doc, options.draftState);
   }
   return doc.documentElement.outerHTML;
 }
