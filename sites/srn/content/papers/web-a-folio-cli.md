@@ -59,6 +59,31 @@ workflows. MCP is a higher-level bridge for agents and interactive tools.
 - **Small Outputs**: MCP returns summaries and paths; large artifacts remain on
   disk.
 
+## CLI vs MCP Split (Provisional)
+
+This split is a **temporary decision** until walk-through demos validate the
+ergonomics.
+
+**CLI should own:**
+
+- **Signing & Verification**: key usage, signing, verification, and key rotation.
+- **Persistent Writes**: deterministic file outputs (`fill`, `export`, `index`).
+- **Audit & History**: append-only logs and immutable history handling.
+- **Import & Normalize**: attachment ingestion and normalization.
+- **Conformance**: baseline compatibility tests.
+
+**MCP should own:**
+
+- **Read & Search**: safe browsing, search, and summarization.
+- **Draft Suggestions**: prefill proposals and diff previews (no writes).
+- **Guidance**: next-step recommendations and safe checks.
+
+**Boundary Rules:**
+
+- MCP is read-only by default.
+- Any write must be explicit via CLI flags (e.g., `--write`, `--export`).
+- All CLI writes must be logged in `logs/`.
+
 ## Reference Implementation & Compatibility
 
 The Folio CLI is both a **demonstration** and a **reference implementation**
@@ -86,6 +111,120 @@ reference CLI. The baseline test suite should verify:
 
 The CLI should also expose a `folio conformance` command to run these checks on
 an external implementation's outputs (planned).
+
+### Conformance Checklist (Draft)
+
+The reference suite should include:
+
+- **Manifest validity**: required fields exist, hashes match, and relations are
+  resolvable.
+- **VP scope**: only designated Level 3 fields appear in VP targets.
+- **LoA enforcement**: LoA 2+ items are machine-canonical; manual edits mark
+  invalidation.
+- **Verification report**: each target has signature/hash checks and issues
+  are machine-readable.
+- **Determinism**: repeated `folio export` yields identical bundle structure
+  (excluding timestamps/nonces).
+
+### Conformance Command (Draft)
+
+The CLI should provide a `folio conformance` command that validates a bundle
+against a selected profile.
+
+**Command:**
+
+- `folio conformance --bundle <path>`
+- `folio conformance --output <report.json>`
+- `folio conformance --profile <profile>` (profile name or DSL file)
+- `folio conformance --rules <file>` (explicit DSL ruleset)
+
+**Output (summary):**
+
+```json
+{
+  "status": "pass",
+  "profile": "casual",
+  "failed": [],
+  "warnings": []
+}
+```
+
+**Profiles (examples):**
+
+- `casual`: minimal fields only, no strict identity requirements.
+- `onboarding`: issuer/subject required, VP required for L3 claims.
+- `tax`: issuer/subject required, full verification report required.
+
+### Conformance DSL (Draft)
+
+Instead of hard-coding profiles, define requirements in a small DSL so new
+use cases can be added without changing the CLI.
+
+**Goals:**
+
+- Profile rules are data, not code.
+- Minimal requirements can be declared explicitly (privacy-first).
+- Additional rules can be layered per use case.
+
+**Format:**
+
+- **Primary**: YAML (human-writable)
+- **Secondary**: JSON (machine-transport)
+- One-to-one mapping between YAML and JSON
+
+**Grammar (Draft):**
+
+- `profile`: string
+- `requires`: list of string paths
+- `rules`: list of rule objects
+  - `id`: string
+  - `when`: string expression (optional)
+  - `assert`: string expression
+  - `level`: `error` | `warn` (optional, default `error`)
+  - `message`: string (optional)
+
+**Expressions:**
+
+- Path-like selectors with `.` (e.g., `manifest.issuer.id`)
+- Array predicates with `[]` (e.g., `documents[].loa`)
+- Simple operators: `==`, `!=`, `in`, `exists`
+
+**Expression examples:**
+
+- `manifest.issuer.id exists`
+- `subject.loa in [2,3]`
+- `documents[].loa == 1`
+- `verifiable_presentations[] exists`
+- `vp.targets.level == 3`
+
+**Example DSL (YAML):**
+
+```yaml
+profile: casual
+requires:
+  - manifest.version
+  - manifest.bundle_id
+  - manifest.created_at
+  - verification_report.path
+  - verification_report.sha256
+rules:
+  - id: vp_scope_l3_only
+    when: manifest.verifiable_presentations
+    assert: vp.targets.level == 3
+```
+
+```yaml
+profile: onboarding
+requires:
+  - issuer.id
+  - subject.id
+  - verification_report.path
+  - verification_report.sha256
+rules:
+  - id: vp_required_for_l3
+    when: claims.level == 3
+    assert: vp.exists == true
+```
 
 ## Command Surface
 
@@ -233,6 +372,173 @@ workflows (e.g., onboarding or tax filing). It contains:
 
 The package is produced by `folio export` and is the standard handoff unit for
 external systems.
+
+### VP Scope (Draft)
+
+The bundle is **VP-first**, but only for data that must not be reused without
+explicit consent. In practice:
+
+- **VP targets**: Select Level 3 (high-assurance) fields that require
+  non-transferability (e.g., identity assertions, consent-critical claims).
+- **Everything else**: Included as documents or attachments referenced by the
+  manifest.
+
+This avoids overloading the VP with high-volume content while keeping sensitive
+claims verifiable and tightly scoped.
+
+### Manifest (Draft)
+
+The submission bundle includes a `manifest.json` that is the single source of
+truth for contents and relations.
+
+```json
+{
+  "version": "0.1",
+  "bundle_id": "folio-bundle-2025-12-29T00:00:00Z",
+  "created_at": "2025-12-29T00:00:00Z",
+  "issuer": {
+    "id": "did:web:example.com",
+    "name": "Example Org"
+  },
+  "subject": {
+    "id": "did:key:z...",
+    "loa": 2
+  },
+  "documents": [
+    {
+      "id": "doc:employment-form",
+      "path": "docs/employment.html",
+      "sha256": "sha256:...",
+      "loa": 1,
+      "source": "self"
+    }
+  ],
+  "attachments": [
+    {
+      "id": "att:family-id-1",
+      "path": "attachments/family-id-1.pdf",
+      "sha256": "sha256:...",
+      "loa": 2,
+      "source": "verified"
+    }
+  ],
+  "verifiable_presentations": [
+    {
+      "id": "vp:consent-claims",
+      "path": "vp/consent.json",
+      "sha256": "sha256:...",
+      "targets": ["field:consent", "field:identity"]
+    }
+  ],
+  "relations": [
+    {
+      "from": "doc:employment-form",
+      "to": "att:family-id-1",
+      "type": "requires"
+    }
+  ],
+  "verification_report": {
+    "path": "reports/verification.json",
+    "sha256": "sha256:..."
+  }
+}
+```
+
+**Field notes:**
+
+- `loa` describes trust level at the item level.
+- `source` is `self` or `verified` to align with LoA semantics.
+- `targets` scope the VP to specific claims or fields.
+
+**Required fields (minimum, privacy-minimized):**
+
+- `version`
+- `bundle_id`
+- `created_at`
+- `documents[]` (can be empty if bundle is VP-only)
+- `verification_report.path`
+- `verification_report.sha256`
+
+**Use-case required fields:**
+
+- `issuer.id` (required when an issuer is asserted)
+- `subject.id` (required when a subject is asserted)
+- `verifiable_presentations[]` (required when VP is present)
+- `attachments[]` (required when attachments exist)
+- `relations[]` (required when dependencies are expressed)
+
+**Optional fields:**
+
+- `issuer.name`
+- `subject.loa`
+- Item-level `loa` and `source`
+- `targets` for VP scoping
+
+### Verification Report (Draft)
+
+The bundle includes a machine-readable verification report that summarizes
+signature checks, integrity, and policy violations.
+
+```json
+{
+  "version": "0.1",
+  "generated_at": "2025-12-29T00:00:00Z",
+  "bundle_id": "folio-bundle-2025-12-29T00:00:00Z",
+  "checks": [
+    {
+      "target": "doc:employment-form",
+      "type": "document",
+      "signature_valid": true,
+      "hash_match": true,
+      "loa": 1,
+      "issues": []
+    },
+    {
+      "target": "vp:consent-claims",
+      "type": "vp",
+      "signature_valid": true,
+      "hash_match": true,
+      "loa": 2,
+      "issues": []
+    }
+  ],
+  "policy": {
+    "loa_mismatch": false,
+    "manual_edit_detected": false
+  }
+}
+```
+
+**Report rules:**
+
+- `signature_valid` and `hash_match` are required per target.
+- `policy` flags summarize bundle-level constraints.
+- Any `issues[]` entry should be actionable and machine-readable.
+
+### Export Output Structure (Draft)
+
+`folio export` should emit a deterministic bundle layout:
+
+```text
+bundle/
+├── manifest.json
+├── docs/
+│   └── employment.html
+├── attachments/
+│   └── family-id-1.pdf
+├── vp/
+│   └── consent.json
+└── reports/
+    └── verification.json
+```
+
+**Export rules:**
+
+- Paths are stable and referenced from `manifest.json`.
+- `docs/` contain rendered Web/A outputs (HTML/MD).
+- `attachments/` contain original or redacted files, per policy.
+- `vp/` contains scoped VPs only for designated Level 3 targets.
+- `reports/` contains verification and policy summaries.
 
 ## Attachment Lifecycle (Draft)
 
