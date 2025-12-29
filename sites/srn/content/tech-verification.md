@@ -5,10 +5,13 @@ description: "Technical specifications for Post-Quantum Cryptography (PQC) hybri
 ai_generated: true
 ---
 
-# PQC & Verification Specs
-
 ## Overview
-Sorane adopts **Hybrid Signatures** that combine existing Elliptic Curve Cryptography (Ed25519) with **Post-Quantum Cryptography (ML-DSA-44)**, which is resistant to future quantum computer attacks. This ensures both current compatibility and long-term authenticity. Additionally, for privacy protection, we implement **Selective Disclosure (SD-CWT)**, allowing the presentation of only necessary data items.
+Sorane adopts **Hybrid Signatures** that combine existing Elliptic Curve
+Cryptography (Ed25519) with **Post-Quantum Cryptography (ML-DSA-44)**, which is
+resistant to future quantum computer attacks. This ensures both current
+compatibility and long-term authenticity. Additionally, for privacy protection,
+we implement **Selective Disclosure (SD-CWT)**, allowing the presentation of
+only necessary data items.
 
 ## Cryptographic Primitives
 Algorithms used for signing official documents and protecting privacy:
@@ -24,26 +27,31 @@ Algorithms used for signing official documents and protecting privacy:
 ## Trust Hierarchy
 
 ### 1. Root Identity (Trust Anchor)
-*   **Key Type**: Persistent Hybrid Keypair (Ed25519 + ML-DSA).
-*   **Storage**: Offline / Secure Environment (`site/data/root-key.json`).
-*   **Role**: Signs the **Status List VC**. It acts as the immutable identity of the SRN node. Verifiers trust this key (TOFU model).
+- **Key Type**: Persistent Hybrid Keypair (Ed25519 + ML-DSA).
+- **Storage**: Offline / Secure Environment (`site/data/root-key.json`).
+- **Role**: Signs the **Status List VC**. It acts as the immutable identity of
+  the SRN node. Verifiers trust this key (TOFU model).
 
 ### 2. Ephemeral Build Keys (Issuers)
-*   **Key Type**: Ephemeral Hybrid Keypair.
-*   **Lifecycle**: Generated fresh for **every build**.
-*   **Role**: Signs individual **Document VCs** (Verification Method).
-*   **Identity**: Each build has a unique DID (`did:key:...`).
+- **Key Type**: Ephemeral Hybrid Keypair.
+- **Lifecycle**: Generated fresh for **every build**.
+- **Role**: Signs individual **Document VCs** (Verification Method).
+- **Identity**: Each build has a unique DID (`did:key:...`).
 
 ### 3. Status List (Revocation)
-To bridge the trust between the persistent Root and ephemeral Build keys, we implement a **Status List VC**.
+To bridge the trust between the persistent Root and ephemeral Build keys, we
+implement a **Status List VC**.
 
-*   **Format**: Compatible with **Verifiable Credentials Status List v2021**.
-*   **Issuer**: Signed by the **Root Identity**.
-*   **Content**: A list of `revokedBuildIds` (Building blocks for potential Bitstring implementation).
-*   **Mechanism**:
-    1.  Official documents include a `credentialStatus` pointing to `status-list.json`.
-    2.  Verifiers fetch the Status List and verify it matches the Root Key.
-    3.  Verifiers check if the Document VC's issuer (Build Key) is present in the revocation list.
+- **Format**: Compatible with **Verifiable Credentials Status List v2021**.
+- **Issuer**: Signed by the **Root Identity**.
+- **Content**: A list of `revokedBuildIds` (building blocks for potential
+  Bitstring implementation).
+- **Mechanism**:
+  1. Official documents include a `credentialStatus` pointing to
+     `status-list.json`.
+  2. Verifiers fetch the Status List and verify it matches the Root Key.
+  3. Verifiers check if the Document VC's `issuer` (or Build ID) is **NOT** in
+     the revocation list.
 
 ## Data Model (JSON-LD)
 
@@ -88,16 +96,46 @@ To bridge the trust between the persistent Root and ephemeral Build keys, we imp
 ```
 
 ## Verification Process
-1.  **Integrity Check**: Validate the JCS-canonicalized JSON against the `proof` values (both Ed25519 and ML-DSA).
-2.  **Status Check**: 
-    *   Fetch the `credentialStatus.statusListCredential` URL.
-    *   Verify the Status List's signature against the known **Root Key**.
-    *   Ensure the Document VC's `issuer` (or Build ID) is **NOT** in the revocation list.
+1. **Integrity Check**: Validate the JCS-canonicalized JSON against the `proof`
+   values (both Ed25519 and ML-DSA).
+2. **Status Check**:
+   - Fetch the `credentialStatus.statusListCredential` URL.
+   - Verify the Status List's signature against the known **Root Key**.
+   - Ensure the Document VC's `issuer` (or Build ID) is **NOT** in the
+     revocation list.
+
+## DID & PQC Key Encoding Rules
+We standardize DID document keys as **multibase (base58btc) with multicodec
+prefixes**, avoiding raw hex fragments in verificationMethod IDs.
+
+- **Ed25519 public keys**: `publicKeyMultibase` with multicodec `0xed`
+  (Ed25519 public key).
+- **ML-DSA-44 public keys**: `publicKeyMultibase` with multicodec `0x1304`
+  (ML-DSA-44 public key).
+- **Key material**: raw public key bytes, no COSE_Key or JWK wrappers.
+- **VerificationMethod IDs**: use named fragments such as `#root-ed25519` or
+  `#<buildId>-pqc`, with the public key stored only in `publicKeyMultibase`.
+
+### Example DID document entry
+```json
+{
+  "id": "did:web:example.org#build-12345-pqc",
+  "type": "PqcMlDsa44VerificationKey2025",
+  "controller": "did:web:example.org",
+  "publicKeyMultibase": "z...base58btc..."
+}
+```
 
 ## Practical Proof-of-Concept (PoC)
-As a practical implementation example of these technical specifications, we provide a demo of a Resident Record (Juminhyo). This serves to verify both the effectiveness of PQC in administrative documents and the maintenance of advanced typography.
+As a practical implementation example of these technical specifications, we
+provide a demo of a Resident Record (Juminhyo). This serves to verify both the
+strength of PQC in administrative documents and the maintenance of advanced
+typography.
 
-*   [Resident Record (PoC Demo)](./juminhyo.html)
+- [Resident Record (PoC Demo)](./juminhyo.html)
 
 ---
-*Note: This specification prioritizes "Zero Overhead" and "Static Verifiability" suitable for SSG environments, essentially implementing a specialized Public Key Infrastructure (PKI) without centralized certificate authorities.*
+*Note: This specification prioritizes "Zero Overhead" and "Static
+Verifiability" suitable for SSG environments, essentially implementing a
+specialized Public Key Infrastructure (PKI) without centralized certificate
+authorities.*

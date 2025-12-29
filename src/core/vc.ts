@@ -11,6 +11,15 @@ import {
 import { p256 } from '@noble/curves/nist.js';
 import { encode, decode } from 'cbor-x';
 import crypto from 'node:crypto';
+import {
+    MULTICODEC_ED25519_PUB,
+    MULTICODEC_ML_DSA_44_PUB,
+    decodeDidKey,
+    didKeyFromPublicKey,
+    resolveVerificationMethodKey,
+    type DidDocument,
+    type DidResolver
+} from './did';
 
 // Helper for hex conversion
 function bytesToHex(bytes: Uint8Array): string {
@@ -57,7 +66,8 @@ export async function createHybridVC(
     issuerDid?: string,
     buildId?: string
 ): Promise<object> {
-    const issuer = issuerDid || `did:key:z${keys.ed25519.publicKey}`;
+    const edPublicBytes = Uint8Array.from(Buffer.from(keys.ed25519.publicKey, 'hex'));
+    const issuer = issuerDid || didKeyFromPublicKey(MULTICODEC_ED25519_PUB, edPublicBytes);
 
     // 2. Prepare Payload
     const vcPayload = {
@@ -85,7 +95,10 @@ export async function createHybridVC(
     const edSig = ed25519Sign(edPrivBytes, payloadBytes);
 
     // 4. Output Hybrid VC
-    const idSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.ed25519.publicKey);
+    const decodedDid = decodeDidKey(issuer);
+    const idSuffix = buildId
+        ? buildId
+        : (issuerDid ? 'root' : (decodedDid?.fingerprint ?? 'root'));
 
     const pqcIdSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.pqc.publicKey);
 
@@ -135,7 +148,11 @@ export interface VerificationResult {
  */
 export async function verifyHybridVC(
     vc: any,
-    options: { trustedKeys?: Record<string, string> } = {}
+    options: {
+        trustedKeys?: Record<string, string>;
+        didDocuments?: Record<string, DidDocument>;
+        didResolver?: DidResolver;
+    } = {}
 ): Promise<VerificationResult> {
     try {
         // 1. Separate Proofs from Payload
@@ -159,30 +176,18 @@ export async function verifyHybridVC(
 
         // 3. Verify Ed25519
         if (edProof) {
-            // Improved key extraction: look for known patterns or handle resolution
             const vm = edProof.verificationMethod || "";
-            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
-            // Clean suffix
-            pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
-
-            // console.log(`Debug: Classic VM: ${vm}, pubKeyHex (pre-trusted): ${pubKeyHex}`);
-
-            // Fallback: If it's a did:key and we don't have a hex, try to extract from the DID itself
-            if ((!pubKeyHex || pubKeyHex === 'root' || pubKeyHex.length < 32) && vm.startsWith('did:key:z')) {
-                // This is a simplified did:key extraction (just taking what's after 'z')
-                pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
-            }
+            const resolved = await resolveVerificationMethodKey(vm, {
+                trustedKeys: options.trustedKeys,
+                didDocuments: options.didDocuments,
+                didResolver: options.didResolver,
+                expectedCodec: MULTICODEC_ED25519_PUB
+            });
 
             const sigHex = edProof.proofValue;
 
-            // Priority: Trusted Keys
-            if (options.trustedKeys) {
-                const trusted = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!];
-                if (trusted) pubKeyHex = trusted;
-            }
-
-            if (pubKeyHex && sigHex && pubKeyHex.length >= 64) {
-                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
+            if (resolved && sigHex) {
+                const pubBytes = resolved.publicKeyBytes;
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
                 await initWasm();
                 checks.ed25519 = ed25519Verify(pubBytes, payloadBytes, sigBytes);
@@ -192,17 +197,16 @@ export async function verifyHybridVC(
         // 3.1 Verify P-256 (PassKey)
         if (p256Proof) {
             const vm = p256Proof.verificationMethod || "";
-            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
-            pubKeyHex = pubKeyHex.replace('-p256', '').replace('-ed25519', '').replace('-pqc', '');
-
-            if ((!pubKeyHex || pubKeyHex === 'root' || pubKeyHex.length < 32) && vm.startsWith('did:key:z')) {
-                pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
-            }
+            const resolved = await resolveVerificationMethodKey(vm, {
+                trustedKeys: options.trustedKeys,
+                didDocuments: options.didDocuments,
+                didResolver: options.didResolver
+            });
 
             const sigHex = p256Proof.proofValue;
 
-            if (pubKeyHex && sigHex) {
-                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
+            if (resolved && sigHex) {
+                const pubBytes = resolved.publicKeyBytes;
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
                 try {
                     checks.p256 = p256.verify(sigBytes, payloadBytes, pubBytes);
@@ -215,22 +219,18 @@ export async function verifyHybridVC(
         // 4. Verify PQC (ML-DSA)
         if (pqcProof) {
             const vm = pqcProof.verificationMethod || "";
-            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
-            pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
-
-            // Fallback for did:key (though PQC keys are usually too large for did:key:z...)
-            // But if it's there, we try. 
+            const resolved = await resolveVerificationMethodKey(vm, {
+                trustedKeys: options.trustedKeys,
+                didDocuments: options.didDocuments,
+                didResolver: options.didResolver,
+                expectedCodec: MULTICODEC_ML_DSA_44_PUB
+            });
 
             const sigHex = pqcProof.proofValue;
 
-            if (options.trustedKeys) {
-                const trusted = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!];
-                if (trusted) pubKeyHex = trusted;
-            }
-
-            if (pubKeyHex && sigHex && pubKeyHex.length > 100) {
+            if (resolved && sigHex) {
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
-                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
+                const pubBytes = resolved.publicKeyBytes;
                 await initWasm();
                 checks.pqc = mlDsa44Verify(pubBytes, payloadBytes, sigBytes);
             }

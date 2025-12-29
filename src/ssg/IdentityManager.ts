@@ -3,6 +3,12 @@ import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
 import { createHybridVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
+import {
+    MULTICODEC_ED25519_PUB,
+    MULTICODEC_ML_DSA_44_PUB,
+    didKeyFromPublicKey,
+    encodeMultibaseKey
+} from '../core/did.ts';
 import type { HybridKeys } from '../core/vc.ts';
 
 export class IdentityManager {
@@ -47,8 +53,14 @@ export class IdentityManager {
             timestamp: new Date().toISOString(),
             buildId: this.buildId,
             revoked: false,
-            ed25519Params: `did:key:z${this.currentKeys.ed25519.publicKey}`,
-            pqcParams: `did:key:zPQC${this.currentKeys.pqc.publicKey}`
+            ed25519Params: didKeyFromPublicKey(
+                MULTICODEC_ED25519_PUB,
+                Uint8Array.from(Buffer.from(this.currentKeys.ed25519.publicKey, 'hex'))
+            ),
+            pqcParams: didKeyFromPublicKey(
+                MULTICODEC_ML_DSA_44_PUB,
+                Uint8Array.from(Buffer.from(this.currentKeys.pqc.publicKey, 'hex'))
+            )
         });
 
         await fs.writeJson(historyPath, history, { spaces: 2 });
@@ -61,13 +73,34 @@ export class IdentityManager {
     }
 
     private async generateDidDoc() {
+        const rootEdKey = Uint8Array.from(Buffer.from(this.rootKeys.ed25519.publicKey, 'hex'));
+        const buildEdKey = Uint8Array.from(Buffer.from(this.currentKeys.ed25519.publicKey, 'hex'));
+        const buildPqcKey = Uint8Array.from(Buffer.from(this.currentKeys.pqc.publicKey, 'hex'));
+        const rootEdMultibase = encodeMultibaseKey(MULTICODEC_ED25519_PUB, rootEdKey);
+        const buildEdMultibase = encodeMultibaseKey(MULTICODEC_ED25519_PUB, buildEdKey);
+        const buildPqcMultibase = encodeMultibaseKey(MULTICODEC_ML_DSA_44_PUB, buildPqcKey);
         const didDoc = {
             "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"],
             "id": this.siteDid,
             "verificationMethod": [
-                { id: `${this.siteDid}#root-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.rootKeys.ed25519.publicKey },
-                { id: `${this.siteDid}#${this.buildId}-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.currentKeys.ed25519.publicKey },
-                { id: `${this.siteDid}#${this.buildId}-pqc`, type: "DataIntegrityProof", controller: this.siteDid, publicKeyHex: this.currentKeys.pqc.publicKey }
+                {
+                    id: `${this.siteDid}#root-ed25519`,
+                    type: "Ed25519VerificationKey2020",
+                    controller: this.siteDid,
+                    publicKeyMultibase: rootEdMultibase
+                },
+                {
+                    id: `${this.siteDid}#${this.buildId}-ed25519`,
+                    type: "Ed25519VerificationKey2020",
+                    controller: this.siteDid,
+                    publicKeyMultibase: buildEdMultibase
+                },
+                {
+                    id: `${this.siteDid}#${this.buildId}-pqc`,
+                    type: "PqcMlDsa44VerificationKey2025",
+                    controller: this.siteDid,
+                    publicKeyMultibase: buildPqcMultibase
+                }
             ],
             "assertionMethod": [`${this.siteDid}#root-ed25519`, `${this.siteDid}#${this.buildId}-ed25519`, `${this.siteDid}#${this.buildId}-pqc`]
         };
