@@ -5,6 +5,8 @@ import {
     createDelegateCertificate,
     verifyDelegateChain
 } from "../src/core/vc.ts";
+import { encodeDidKey } from "../src/core/did.ts";
+import { hexToBytes } from "../src/core/encoding.ts";
 
 describe("Delegation Chain Tests (PassKey Architecture)", () => {
 
@@ -16,7 +18,7 @@ describe("Delegation Chain Tests (PassKey Architecture)", () => {
 
         // 2. Build Key (Generated for a specific build session)
         const buildKeys = await generateHybridKeys();
-        const buildDid = `did:key:z${buildKeys.ed25519.publicKey}`;
+        const buildDid = encodeDidKey(hexToBytes(buildKeys.ed25519.publicKey), 'ed25519');
 
         // 3. Create Delegate Certificate (Root signs Build Key)
         const delegateCert = await createDelegateCertificate(
@@ -55,7 +57,8 @@ describe("Delegation Chain Tests (PassKey Architecture)", () => {
             1
         );
 
-        const docVc = await createHybridVC({ test: "data" }, buildKeys, `did:key:z${buildKeys.ed25519.publicKey}`);
+        const buildDid = encodeDidKey(hexToBytes(buildKeys.ed25519.publicKey), 'ed25519');
+        const docVc = await createHybridVC({ test: "data" }, buildKeys, buildDid);
 
         const result = await verifyDelegateChain(docVc, delegateCert, rootKeys.ed25519.publicKey);
         expect(result.isValid).toBe(false);

@@ -3,6 +3,8 @@ import { p256 } from "@noble/curves/nist.js";
 import { ml_dsa44 } from "@noble/post-quantum/ml-dsa.js";
 import canonicalize from 'canonicalize';
 import { verifyHybridVC, generateHybridKeys } from "../src/core/vc.ts";
+import { encodeDidKey } from "../src/core/did.ts";
+import { hexToBytes } from "../src/core/encoding.ts";
 
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
@@ -50,10 +52,11 @@ describe("PassKey (P-256) Integration", () => {
         const p256PubHex = Buffer.from(p256Pub).toString('hex');
 
         // 2. Create a VC with P-256 + PQC proofs
+        const p256Did = encodeDidKey(p256Pub, 'p256');
         const doc = {
             "@context": ["https://www.w3.org/2018/credentials/v1"],
             "type": ["VerifiableCredential"],
-            "issuer": `did:key:z${p256PubHex}`, // Simplified DID
+            "issuer": p256Did,
             "issuanceDate": new Date().toISOString(),
             "credentialSubject": { id: "did:example:123" }
         };
@@ -77,7 +80,7 @@ describe("PassKey (P-256) Integration", () => {
             "proof": [
                 {
                     "type": "EcdsaSecp256k1Signature2019",
-                    "verificationMethod": `did:key:z${p256PubHex}#root-p256`,
+                    "verificationMethod": `${p256Did}#root-p256`,
                     "proofPurpose": "assertionMethod",
                     "proofValue": p256SigHex
                 },
