@@ -12,9 +12,90 @@ import { p256 } from '@noble/curves/nist.js';
 import { encode, decode } from 'cbor-x';
 import crypto from 'node:crypto';
 
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const MULTIBASE_BASE58BTC_PREFIX = 'z';
+const EDDSA_JCS_2022 = 'eddsa-jcs-2022';
+const ML_DSA_44_JCS_2025 = 'ml-dsa-44-jcs-2025';
+
 // Helper for hex conversion
 function bytesToHex(bytes: Uint8Array): string {
     return Buffer.from(bytes).toString('hex');
+}
+
+function bytesToBase58(bytes: Uint8Array): string {
+    if (bytes.length === 0) return '';
+    const digits: number[] = [0];
+    for (const byte of bytes) {
+        let carry = byte;
+        for (let i = 0; i < digits.length; i++) {
+            const value = digits[i] * 256 + carry;
+            digits[i] = value % 58;
+            carry = Math.floor(value / 58);
+        }
+        while (carry > 0) {
+            digits.push(carry % 58);
+            carry = Math.floor(carry / 58);
+        }
+    }
+
+    let zeros = 0;
+    for (const byte of bytes) {
+        if (byte !== 0) break;
+        zeros += 1;
+    }
+
+    let result = BASE58_ALPHABET[0].repeat(zeros);
+    for (let i = digits.length - 1; i >= 0; i--) {
+        result += BASE58_ALPHABET[digits[i]];
+    }
+    return result;
+}
+
+function base58ToBytes(input: string): Uint8Array {
+    if (input.length === 0) return new Uint8Array();
+    const bytes: number[] = [0];
+    for (const char of input) {
+        const value = BASE58_ALPHABET.indexOf(char);
+        if (value < 0) {
+            throw new Error(`Invalid base58 character: ${char}`);
+        }
+        let carry = value;
+        for (let i = 0; i < bytes.length; i++) {
+            const acc = bytes[i] * 58 + carry;
+            bytes[i] = acc & 0xff;
+            carry = acc >> 8;
+        }
+        while (carry > 0) {
+            bytes.push(carry & 0xff);
+            carry >>= 8;
+        }
+    }
+
+    let zeros = 0;
+    for (const char of input) {
+        if (char !== BASE58_ALPHABET[0]) break;
+        zeros += 1;
+    }
+
+    const result = new Uint8Array(zeros + bytes.length);
+    for (let i = 0; i < bytes.length; i++) {
+        result[result.length - 1 - i] = bytes[i];
+    }
+    return result;
+}
+
+function bytesToMultibaseBase58btc(bytes: Uint8Array): string {
+    return `${MULTIBASE_BASE58BTC_PREFIX}${bytesToBase58(bytes)}`;
+}
+
+function decodeProofValue(value: string): Uint8Array {
+    if (value.startsWith(MULTIBASE_BASE58BTC_PREFIX)) {
+        return base58ToBytes(value.slice(1));
+    }
+    if (/^[0-9a-fA-F]+$/.test(value)) {
+        return Uint8Array.from(Buffer.from(value, 'hex'));
+    }
+    throw new Error(`Unsupported proofValue encoding: ${value}`);
 }
 
 export interface HybridVCResult {
@@ -23,6 +104,13 @@ export interface HybridVCResult {
         ed25519: { publicKey: string; privateKey: string; };
         pqc: { publicKey: string; privateKey: string; };
     }
+}
+
+export interface HybridProofOptions {
+    created?: string;
+    domain?: string;
+    challenge?: string;
+    proofPurpose?: string;
 }
 
 /**
@@ -55,9 +143,12 @@ export async function createHybridVC(
     document: object,
     keys: HybridKeys,
     issuerDid?: string,
-    buildId?: string
+    buildId?: string,
+    proofOptions: HybridProofOptions = {}
 ): Promise<object> {
     const issuer = issuerDid || `did:key:z${keys.ed25519.publicKey}`;
+    const created = proofOptions.created || new Date().toISOString();
+    const proofPurpose = proofOptions.proofPurpose || 'assertionMethod';
 
     // 2. Prepare Payload
     const vcPayload = {
@@ -94,17 +185,24 @@ export async function createHybridVC(
         "issuer": issuer,
         "proof": [
             {
-                "type": "Ed25519Signature2020",
+                "type": "DataIntegrityProof",
+                "cryptosuite": EDDSA_JCS_2022,
                 "verificationMethod": `${issuer}#${idSuffix}-ed25519`,
-                "proofPurpose": "assertionMethod",
-                "proofValue": bytesToHex(edSig)
+                "proofPurpose": proofPurpose,
+                "created": created,
+                ...(proofOptions.domain ? { "domain": proofOptions.domain } : {}),
+                ...(proofOptions.challenge ? { "challenge": proofOptions.challenge } : {}),
+                "proofValue": bytesToMultibaseBase58btc(edSig)
             },
             {
                 "type": "DataIntegrityProof",
-                "cryptosuite": "ml-dsa-44-2025",
+                "cryptosuite": ML_DSA_44_JCS_2025,
                 "verificationMethod": `${issuer}#${pqcIdSuffix}-pqc`,
-                "proofPurpose": "assertionMethod",
-                "proofValue": bytesToHex(pqcSig)
+                "proofPurpose": proofPurpose,
+                "created": created,
+                ...(proofOptions.domain ? { "domain": proofOptions.domain } : {}),
+                ...(proofOptions.challenge ? { "challenge": proofOptions.challenge } : {}),
+                "proofValue": bytesToMultibaseBase58btc(pqcSig)
             }
         ]
     };
@@ -135,7 +233,13 @@ export interface VerificationResult {
  */
 export async function verifyHybridVC(
     vc: any,
-    options: { trustedKeys?: Record<string, string> } = {}
+    options: {
+        trustedKeys?: Record<string, string>;
+        expectedDomain?: string;
+        expectedChallenge?: string;
+        requireCreated?: boolean;
+        allowLegacyProofs?: boolean;
+    } = {}
 ): Promise<VerificationResult> {
     try {
         // 1. Separate Proofs from Payload
@@ -151,16 +255,26 @@ export async function verifyHybridVC(
         const payloadBytes = new TextEncoder().encode(jsonString);
 
         // 2. Extract Proofs
-        const edProof = proofs.find(p => p.type === 'Ed25519Signature2020');
+        const requireCreated = options.requireCreated ?? true;
+        const allowLegacyProofs = options.allowLegacyProofs ?? true;
+        const edProof = proofs.find(
+            p => p.type === 'DataIntegrityProof' && p.cryptosuite === EDDSA_JCS_2022
+        );
+        const legacyEdProof = allowLegacyProofs
+            ? proofs.find(p => p.type === 'Ed25519Signature2020')
+            : undefined;
         const p256Proof = proofs.find(p => p.type === 'EcdsaSecp256k1Signature2019' || p.type.includes('P256'));
-        const pqcProof = proofs.find(p => p.cryptosuite === 'ml-dsa-44-2025');
+        const pqcProof = proofs.find(
+            p => p.type === 'DataIntegrityProof' && p.cryptosuite === ML_DSA_44_JCS_2025
+        );
 
         const checks = { ed25519: false, pqc: false, p256: false };
 
         // 3. Verify Ed25519
-        if (edProof) {
+        if (edProof || legacyEdProof) {
+            const proof = edProof || legacyEdProof;
             // Improved key extraction: look for known patterns or handle resolution
-            const vm = edProof.verificationMethod || "";
+            const vm = proof.verificationMethod || "";
             let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
             // Clean suffix
             pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
@@ -173,7 +287,19 @@ export async function verifyHybridVC(
                 pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
             }
 
-            const sigHex = edProof.proofValue;
+            if (proof.type === 'DataIntegrityProof') {
+                if (requireCreated && !proof.created) {
+                    throw new Error("Ed25519 proof missing created timestamp.");
+                }
+                if (options.expectedDomain && proof.domain !== options.expectedDomain) {
+                    throw new Error("Ed25519 proof domain mismatch.");
+                }
+                if (options.expectedChallenge && proof.challenge !== options.expectedChallenge) {
+                    throw new Error("Ed25519 proof challenge mismatch.");
+                }
+            }
+
+            const proofValue = proof.proofValue;
 
             // Priority: Trusted Keys
             if (options.trustedKeys) {
@@ -181,9 +307,9 @@ export async function verifyHybridVC(
                 if (trusted) pubKeyHex = trusted;
             }
 
-            if (pubKeyHex && sigHex && pubKeyHex.length >= 64) {
+            if (pubKeyHex && proofValue && pubKeyHex.length >= 64) {
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
-                const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
+                const sigBytes = decodeProofValue(proofValue);
                 await initWasm();
                 checks.ed25519 = ed25519Verify(pubBytes, payloadBytes, sigBytes);
             }
@@ -199,11 +325,11 @@ export async function verifyHybridVC(
                 pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
             }
 
-            const sigHex = p256Proof.proofValue;
+            const sigValue = p256Proof.proofValue;
 
-            if (pubKeyHex && sigHex) {
+            if (pubKeyHex && sigValue) {
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
-                const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
+                const sigBytes = decodeProofValue(sigValue);
                 try {
                     checks.p256 = p256.verify(sigBytes, payloadBytes, pubBytes);
                 } catch (e) {
@@ -221,15 +347,25 @@ export async function verifyHybridVC(
             // Fallback for did:key (though PQC keys are usually too large for did:key:z...)
             // But if it's there, we try. 
 
-            const sigHex = pqcProof.proofValue;
+            if (requireCreated && !pqcProof.created) {
+                throw new Error("PQC proof missing created timestamp.");
+            }
+            if (options.expectedDomain && pqcProof.domain !== options.expectedDomain) {
+                throw new Error("PQC proof domain mismatch.");
+            }
+            if (options.expectedChallenge && pqcProof.challenge !== options.expectedChallenge) {
+                throw new Error("PQC proof challenge mismatch.");
+            }
+
+            const sigValue = pqcProof.proofValue;
 
             if (options.trustedKeys) {
                 const trusted = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!];
                 if (trusted) pubKeyHex = trusted;
             }
 
-            if (pubKeyHex && sigHex && pubKeyHex.length > 100) {
-                const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
+            if (pubKeyHex && sigValue && pubKeyHex.length > 100) {
+                const sigBytes = decodeProofValue(sigValue);
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
                 await initWasm();
                 checks.pqc = mlDsa44Verify(pubBytes, payloadBytes, sigBytes);

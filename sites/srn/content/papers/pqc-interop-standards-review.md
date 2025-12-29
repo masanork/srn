@@ -37,11 +37,11 @@ Primary code paths and specs reviewed:
 
 ### 1. Data Integrity cryptosuite identifiers and proof encoding are custom
 
-- `src/core/vc.ts` uses `DataIntegrityProof` with `cryptosuite:
-  "ml-dsa-44-2025"` and encodes `proofValue` as hex. This diverges from W3C
-  Data Integrity conventions (multibase-encoded proof values and registered
-  cryptosuite names).
-- The classic proof uses `Ed25519Signature2020`, which is legacy in VC 2.0
+- Legacy credentials used `DataIntegrityProof` with `cryptosuite:
+  "ml-dsa-44-2025"` and encoded `proofValue` as hex. Interoperability requires
+  migrating to a registry-aligned identifier (e.g., `ml-dsa-44-jcs-2025`) and
+  multibase proof values.
+- The classic proof used `Ed25519Signature2020`, which is legacy in VC 2.0
   contexts. VC 2.0 and Data Integrity 1.0 recommend `DataIntegrityProof` with
   registered cryptosuites such as `eddsa-jcs-2022` for JCS-based signing.
 

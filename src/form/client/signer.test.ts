@@ -28,6 +28,48 @@ const hexToBytes = (hex: string): Uint8Array => {
   return bytes;
 };
 
+const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+const base58ToBytes = (input: string): Uint8Array => {
+  if (input.length === 0) return new Uint8Array();
+  const bytes: number[] = [0];
+  for (const char of input) {
+    const value = BASE58_ALPHABET.indexOf(char);
+    if (value < 0) {
+      throw new Error(`Invalid base58 character: ${char}`);
+    }
+    let carry = value;
+    for (let i = 0; i < bytes.length; i++) {
+      const acc = bytes[i] * 58 + carry;
+      bytes[i] = acc & 0xff;
+      carry = acc >> 8;
+    }
+    while (carry > 0) {
+      bytes.push(carry & 0xff);
+      carry >>= 8;
+    }
+  }
+
+  let zeros = 0;
+  for (const char of input) {
+    if (char !== BASE58_ALPHABET[0]) break;
+    zeros += 1;
+  }
+
+  const result = new Uint8Array(zeros + bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    result[result.length - 1 - i] = bytes[i];
+  }
+  return result;
+};
+
+const decodeProofValue = (value: string): Uint8Array => {
+  if (value.startsWith("z")) {
+    return base58ToBytes(value.slice(1));
+  }
+  return hexToBytes(value);
+};
+
 const toBase64Url = (bytes: Uint8Array): string => {
   return Buffer.from(bytes)
     .toString("base64")
@@ -92,11 +134,12 @@ describe("Web/A Signer", () => {
     const payload = { foo: "bar", count: 1 };
     const signed = await signer.sign(payload, "authentication");
 
-    expect(signed.proof.type).toBe("Ed25519Signature2020");
+    expect(signed.proof.type).toBe("DataIntegrityProof");
+    expect(signed.proof.cryptosuite).toBe("eddsa-jcs-2022");
     expect(typeof signed.proof.proofValue).toBe("string");
 
     const message = new TextEncoder().encode(canonicalize(payload));
-    const signature = hexToBytes(signed.proof.proofValue);
+    const signature = decodeProofValue(signed.proof.proofValue);
     const pubKey = hexToBytes(signer.getPublicKey());
     expect(ed25519.verify(signature, message, pubKey)).toBe(true);
 
