@@ -5,7 +5,19 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
-# Sorane (空音) Release Notes
+## v2.0.1 - Web/A Messaging Extension Notes
+
+**Date:** 2025-12-29
+
+Documentation updates covering transport concepts for Web/A submissions and
+Folio inbox flows.
+
+* **Documentation**:
+  * Added Messaging/Transport extension principles to the Web/A whitepaper.
+  * Clarified transport-agnostic messaging goals in the Folio concept paper.
+  * Documented Firebase-first deployment guidance in the Folio CLI design doc.
+  * Expanded transport principles to cover multi-hop routing and brokering.
+  * Added a Firebase direct MCP test checklist to the Folio CLI design doc.
 
 ## v2.0.0 - Graduated Forward Secrecy & Firebase Support
 
