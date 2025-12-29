@@ -46,7 +46,7 @@ describe("Web/A L2 crypto", () => {
       },
     });
 
-    const payload = await decryptLayer2Envelope(envelope, recipientSk);
+    const payload = await decryptLayer2Envelope(envelope, recipientSk, { skipReplayCheck: true });
     expect(payload.layer2_plain).toEqual({ answer: "yes", count: 2 });
     expect(payload.layer2_sig.alg).toBe("Ed25519");
     expect(typeof payload._padding).toBe("string");
@@ -67,7 +67,7 @@ describe("Web/A L2 crypto", () => {
     });
 
     const tampered = { ...envelope, layer1_ref: "sha256:ffff" };
-    await expect(decryptLayer2Envelope(tampered, recipientSk)).rejects.toThrow();
+    await expect(decryptLayer2Envelope(tampered, recipientSk, { skipReplayCheck: true })).rejects.toThrow();
   });
 
   test("decrypt fails when ciphertext is tampered", async () => {
@@ -95,7 +95,7 @@ describe("Web/A L2 crypto", () => {
       layer2: { ...layer2, ciphertext: b64urlEncode(ct) },
     };
 
-    await expect(decryptLayer2Envelope(tampered, recipientSk)).rejects.toThrow();
+    await expect(decryptLayer2Envelope(tampered, recipientSk, { skipReplayCheck: true })).rejects.toThrow();
   });
 
   test("PQC config works via built-in WASM provider", async () => {
@@ -239,7 +239,7 @@ describe("Web/A L2 crypto", () => {
       }
     });
     const tampered = { ...envelope, layer1_ref: "ref2" };
-    await expect(decryptLayer2Envelope(tampered, recipientSk)).rejects.toThrow("AAD mismatch");
+    await expect(decryptLayer2Envelope(tampered, recipientSk, { skipReplayCheck: true })).rejects.toThrow("AAD mismatch");
   });
 
   test("loadL2Config paths", () => {

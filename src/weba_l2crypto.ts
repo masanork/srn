@@ -10,6 +10,36 @@ const HPKE_KEM_ID_X25519 = 0x0020;
 const HPKE_KEM_ID_X25519_ML_KEM_768 = 0x0030;
 const HPKE_INFO_CONTEXT = "weba-l2";
 
+export interface ReplayStore {
+  has(nonce: string): Promise<boolean>;
+  add(nonce: string): Promise<void>;
+  reset(): Promise<void>;
+}
+
+export class ReplayGuard {
+  private seenNonces = new Set<string>();
+  private store: ReplayStore | undefined;
+
+  constructor(store?: ReplayStore) {
+    this.store = store;
+  }
+
+  async checkAndMark(nonce: string): Promise<boolean> {
+    if (this.store) {
+      if (await this.store.has(nonce)) {
+        return false;
+      }
+      await this.store.add(nonce);
+      return true;
+    }
+    if (this.seenNonces.has(nonce)) {
+      return false;
+    }
+    this.seenNonces.add(nonce);
+    return true;
+  }
+}
+
 export type Layer2Signature = {
   alg: "Ed25519";
   kid: string;
@@ -468,11 +498,28 @@ export function encryptLayer2Payload(params: {
   };
 }
 
-export function decryptLayer2Envelope(params: {
+export async function decryptLayer2Envelope(params: {
   envelope: Layer2Encrypted;
   recipient_keys: RecipientKeyFile;
+  replayGuard?: ReplayGuard;
+  skipReplayCheck?: boolean;
 }) {
   const { envelope, recipient_keys } = params;
+
+  if (!params.skipReplayCheck) {
+    let guard = params.replayGuard;
+    if (!guard) {
+      console.warn(
+        "SECURITY WARNING: No ReplayGuard provided to decryptLayer2Envelope. Using in-memory ephemeral store. Replays will only be detected within this process lifetime."
+      );
+      guard = new ReplayGuard();
+    }
+    const isFresh = await guard.checkAndMark(envelope.meta.nonce);
+    if (!isFresh) {
+      throw new Error("Security Error: Replay detected (nonce used).");
+    }
+  }
+
   if (envelope.weba_version !== WEBA_VERSION) {
     throw new Error(`Unsupported weba_version: ${envelope.weba_version}`);
   }

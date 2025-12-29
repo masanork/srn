@@ -87,7 +87,7 @@ describe("Web/A Layer 2 Crypto", () => {
 
 
     // 3. Decrypt
-    const decryptedPayload = await decryptLayer2(envelope, recipient.privateKey);
+    const decryptedPayload = await decryptLayer2(envelope, recipient.privateKey, { skipReplayCheck: true });
 
     expect(decryptedPayload.layer2_plain).toEqual(plain);
 
@@ -117,7 +117,7 @@ describe("Web/A Layer 2 Crypto", () => {
 
     // Decrypt should fail because of AAD mismatch check in decryptLayer2
     // or if we tampered the actual AAD bytes, the GCM auth would fail.
-    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow(
+    await expect(decryptLayer2(envelope, recipient.privateKey, { skipReplayCheck: true })).rejects.toThrow(
       "AAD mismatch"
     );
 
@@ -146,7 +146,7 @@ describe("Web/A Layer 2 Crypto", () => {
     }
     envelope.layer2!.ciphertext = ct.toString("base64url");
 
-    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow();
+    await expect(decryptLayer2(envelope, recipient.privateKey, { skipReplayCheck: true })).rejects.toThrow();
   });
 
   test("Hybrid PQC hook encrypts and decrypts when provided", async () => {
@@ -168,12 +168,13 @@ describe("Web/A Layer 2 Crypto", () => {
     expect(envelope.layer2.encapsulated.pqc).toBeTruthy();
     expect(envelope.layer2.suite.kem).toBe("X25519+ML-KEM-768");
 
-    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow(
+    await expect(decryptLayer2(envelope, recipient.privateKey, { skipReplayCheck: true })).rejects.toThrow(
       "Missing PQC KEM for envelope",
     );
 
     const decrypted = await decryptLayer2(envelope, recipient.privateKey, {
       pqc: { kem: pqcProvider, recipientPrivateKey: pqcKeys.privateKey },
+      skipReplayCheck: true,
     });
     expect(decrypted.layer2_plain).toEqual(plain);
   });

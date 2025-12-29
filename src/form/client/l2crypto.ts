@@ -375,12 +375,33 @@ export class ReplayGuard {
 export async function decryptLayer2Envelope(
   envelope: Layer2Encrypted,
   recipientSk: Uint8Array,
-  options?: { pqcProvider?: PqcKemProvider | null; pqcRecipientSk?: Uint8Array },
+  options?: {
+    pqcProvider?: PqcKemProvider | null;
+    pqcRecipientSk?: Uint8Array;
+    replayGuard?: ReplayGuard;
+    skipReplayCheck?: boolean;
+  },
 ): Promise<Layer2Payload> {
   await ensureWasm();
+
   if (envelope.layer2.enc !== "HPKE-v1") {
     throw new Error(`Unsupported layer2.enc: ${envelope.layer2.enc}`);
   }
+
+  if (!options?.skipReplayCheck) {
+    let guard = options?.replayGuard;
+    if (!guard) {
+      console.warn(
+        "SECURITY WARNING: No ReplayGuard provided to decryptLayer2Envelope. Using in-memory ephemeral store. Replays will only be detected within this page session."
+      );
+      guard = new ReplayGuard();
+    }
+    const isFresh = await guard.checkAndMark(envelope.meta.nonce);
+    if (!isFresh) {
+      throw new Error("Security Error: Replay detected (nonce used).");
+    }
+  }
+
   const envelopeJson = JSON.stringify(envelope);
   const pqcSk = options?.pqcRecipientSk;
 
