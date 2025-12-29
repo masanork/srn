@@ -171,7 +171,7 @@ ai_generated: true
 </div>
 </div>
 <div class="footer-status">
-    Runtime: Bun v1.x | Engine: opentype.js | Database: JSON/Memory
+    Runtime: Bun v1.x | Engine: opentype.js
 </div>
 
 <style>
