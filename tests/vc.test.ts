@@ -1,4 +1,4 @@
-import { expect, test, describe } from "bun:test";
+import { expect, test, describe, beforeAll } from "bun:test";
 import {
     generateHybridKeys,
     createHybridVC,
@@ -8,9 +8,15 @@ import {
     createSdCoseVC
 } from "../src/core/vc.ts";
 import { decode } from "cbor-x";
+import { initWasm } from "../src/core/wasm_core.ts";
 
 describe("VC & Signing Tests", () => {
-    const keys = generateHybridKeys();
+    let keys: any;
+
+    beforeAll(async () => {
+        await initWasm();
+        keys = await generateHybridKeys();
+    });
 
     test("generateHybridKeys should return valid hex strings for Ed25519 and PQC", () => {
         expect(keys.ed25519.publicKey).toMatch(/^[0-9a-f]{64}$/);

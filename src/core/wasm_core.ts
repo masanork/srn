@@ -12,6 +12,12 @@ import init, {
     ml_kem_768_generate_keypair as wasm_ml_kem_gen,
     ml_kem_768_encapsulate as wasm_ml_kem_enc,
     ml_kem_768_decapsulate as wasm_ml_kem_dec,
+    ml_dsa_44_generate_keypair as wasm_ml_dsa_gen,
+    ml_dsa_44_sign as wasm_ml_dsa_sign,
+    ml_dsa_44_verify as wasm_ml_dsa_verify,
+    sha256_hash as wasm_sha256,
+    hkdf_sha256_derive as wasm_hkdf,
+    get_padding_target_size as wasm_get_padding,
 } from "./wasm_bindings/weba_crypto_wasm.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -152,4 +158,57 @@ export function mlKem768Encapsulate(publicKey: Uint8Array): { ciphertext: Uint8A
 export function mlKem768Decapsulate(privateKey: Uint8Array, ciphertext: Uint8Array): Uint8Array {
     if (!initialized) throw new Error("WASM not initialized");
     return wasm_ml_kem_dec(privateKey, ciphertext);
+}
+
+/**
+ * ML-DSA-44 Key Pair generation using WASM.
+ * Returns { privateKey: 2560 bytes, publicKey: 1312 bytes }
+ */
+export function mlDsa44GenerateKeyPair(): { privateKey: Uint8Array; publicKey: Uint8Array } {
+    if (!initialized) throw new Error("WASM not initialized");
+    const bytes = wasm_ml_dsa_gen();
+    return {
+        privateKey: bytes.slice(0, 2560),
+        publicKey: bytes.slice(2560, 2560 + 1312),
+    };
+}
+
+/**
+ * ML-DSA-44 Signing using WASM.
+ */
+export function mlDsa44Sign(privateKey: Uint8Array, message: Uint8Array): Uint8Array {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_ml_dsa_sign(privateKey, message);
+}
+
+/**
+ * ML-DSA-44 Verification using WASM.
+ */
+export function mlDsa44Verify(publicKey: Uint8Array, message: Uint8Array, signature: Uint8Array): boolean {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_ml_dsa_verify(publicKey, message, signature);
+}
+
+/**
+ * SHA-256 Hash using WASM.
+ */
+export function sha256Hash(data: Uint8Array): Uint8Array {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_sha256(data);
+}
+
+/**
+ * HKDF-SHA256 derivation using WASM.
+ */
+export function hkdfSha256(ikm: Uint8Array, salt: Uint8Array | undefined, info: Uint8Array, length: number): Uint8Array {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_hkdf(ikm, salt, info, length);
+}
+
+/**
+ * Bucket-based padding target size calculation in WASM.
+ */
+export function getPaddingTargetSize(currentSize: number): number {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_get_padding(currentSize);
 }

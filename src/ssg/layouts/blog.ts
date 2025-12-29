@@ -19,7 +19,16 @@ export interface BlogData {
     featuredCount?: number;
 }
 
-export function blogLayout(data: BlogData, allPages: BlogItem[], fontCss: string, fontFamilies: string[], htmlContent: string, latestArticleContent?: string, latestArticleData?: any) {
+export function blogLayout(
+    data: BlogData,
+    allPages: BlogItem[],
+    fontCss: string,
+    fontFamilies: string[],
+    htmlContent: string,
+    latestArticleContent?: string,
+    latestArticleData?: any,
+    basePath = ''
+) {
     // Filter out index and system pages, showing only user articles
     let articles = allPages.filter(item =>
         item.layout === 'article' &&
@@ -216,6 +225,7 @@ export function blogLayout(data: BlogData, allPages: BlogItem[], fontCss: string
         title: data.title,
         content: fullContent,
         fontCss,
-        fontFamilies
+        fontFamilies,
+        basePath
     });
 }

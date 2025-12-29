@@ -21,15 +21,15 @@ describe("Web/A Layer 2 Crypto", () => {
     expect(canonicalJson(obj1)).toBe('{"a":1,"b":2,"c":{"d":4,"e":5}}');
   });
 
-  test("Derived org keys are deterministic with policy", () => {
+  test("Derived org keys are deterministic with policy", async () => {
     const root = new Uint8Array(32).fill(1);
-    const a = deriveOrgX25519KeyPair({
+    const a = await deriveOrgX25519KeyPair({
       orgRootKey: root,
       campaignId: "campaign-1",
       layer1Ref: "sha256:aaa",
       keyPolicy: "campaign+layer1",
     });
-    const b = deriveOrgX25519KeyPair({
+    const b = await deriveOrgX25519KeyPair({
       orgRootKey: root,
       campaignId: "campaign-1",
       layer1Ref: "sha256:bbb",
@@ -37,12 +37,12 @@ describe("Web/A Layer 2 Crypto", () => {
     });
     expect(Buffer.from(a.publicKey).equals(Buffer.from(b.publicKey))).toBe(false);
 
-    const c = deriveOrgX25519KeyPair({
+    const c = await deriveOrgX25519KeyPair({
       orgRootKey: root,
       campaignId: "campaign-1",
       keyPolicy: "campaign",
     });
-    const d = deriveOrgX25519KeyPair({
+    const d = await deriveOrgX25519KeyPair({
       orgRootKey: root,
       campaignId: "campaign-1",
       keyPolicy: "campaign",
@@ -50,11 +50,11 @@ describe("Web/A Layer 2 Crypto", () => {
     expect(Buffer.from(c.publicKey).equals(Buffer.from(d.publicKey))).toBe(true);
   });
 
-  test("Org root key is deterministic per org", () => {
+  test("Org root key is deterministic per org", async () => {
     const instance = new Uint8Array(32).fill(2);
-    const a = deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-1" });
-    const b = deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-1" });
-    const c = deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-2" });
+    const a = await deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-1" });
+    const b = await deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-1" });
+    const c = await deriveOrgRootKey({ srnInstanceKey: instance, orgId: "org-2" });
     expect(Buffer.from(a).equals(Buffer.from(b))).toBe(true);
     expect(Buffer.from(a).equals(Buffer.from(c))).toBe(false);
   });

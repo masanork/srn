@@ -6,10 +6,22 @@ export interface BaseLayoutProps {
     jsonLd?: object;
     lang?: string;
     className?: string;
+    basePath?: string;
 }
 
 const MERMAID_ASSET_PATH = 'src/ssg/assets/vendor/mermaid.min.js';
 let cachedMermaidDataUri: string | null = null;
+
+function normalizeBasePath(value: string): string {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === '/') return '';
+    const withLeading = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return withLeading.endsWith('/') ? withLeading.slice(0, -1) : withLeading;
+}
+
+function resolveAssetHref(basePath: string, assetPath: string): string {
+    return basePath ? `${basePath}/${assetPath}` : `/${assetPath}`;
+}
 
 function getMermaidDataUri(): string | null {
     if (cachedMermaidDataUri !== null) return cachedMermaidDataUri;
@@ -27,7 +39,11 @@ function getMermaidDataUri(): string | null {
 }
 
 export function baseLayout(props: BaseLayoutProps): string {
-    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja', className = '' } = props;
+    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja', className = '', basePath = '' } = props;
+    const normalizedBasePath = normalizeBasePath(basePath);
+    const styleHref = resolveAssetHref(normalizedBasePath, 'style.css');
+    const sitemapHref = resolveAssetHref(normalizedBasePath, 'sitemap.xml');
+    const llmsHref = resolveAssetHref(normalizedBasePath, 'llms.txt');
 
     // JSON-LD script block
     const jsonLdScript = jsonLd
@@ -93,9 +109,9 @@ export function baseLayout(props: BaseLayoutProps): string {
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
     <title>${title}</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css">
-    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
-    <link rel="help" type="text/plain" href="/llms.txt">
+    <link rel="stylesheet" href="${styleHref}">
+    <link rel="sitemap" type="application/xml" href="${sitemapHref}">
+    <link rel="help" type="text/plain" href="${llmsHref}">
     ${fontCss}
     ${jsonLdScript}
     ${mermaidScript}

@@ -1,6 +1,3 @@
-import { ed25519, x25519 } from "../vendor/curves/ed25519.js";
-import { sha256 } from "../vendor/hashes/sha2.js";
-import { hkdf } from "../vendor/hashes/hkdf.js";
 import { randomBytes } from "node:crypto";
 import { createCipheriv, createDecipheriv } from "node:crypto";
 import canonicalize from "canonicalize";
@@ -16,6 +13,9 @@ import {
   ed25519GenerateKeyPair,
   ed25519Sign,
   ed25519Verify,
+  sha256Hash,
+  hkdfSha256,
+  getPaddingTargetSize as wasmGetPadding,
 } from "./wasm_core";
 
 export interface ReplayStore {
@@ -153,20 +153,17 @@ export type OrgKeyPolicy = "campaign" | "campaign+layer1";
  * Uses jumps (1KB, 4KB, 16KB, 64KB, 256KB, 1MB) to hide exact payload size for larger data.
  */
 export function getPaddingTargetSize(currentSize: number): number {
-  const buckets = [1024, 4096, 16384, 65536, 262144, 1048576];
-  for (const b of buckets) {
-    if (currentSize <= b) return b;
-  }
-  return Math.ceil(currentSize / 1048576) * 1048576;
+  return wasmGetPadding(currentSize);
 }
 
-export function deriveOrgRootKey(params: { srnInstanceKey: Uint8Array; orgId: string }) {
+export async function deriveOrgRootKey(params: { srnInstanceKey: Uint8Array; orgId: string }) {
+  await initWasm();
   const context = canonicalJson({
     domain: "weba-l2/org-root",
     org_id: params.orgId,
   });
   const info = Buffer.from(context, "utf-8");
-  const rootKey = hkdf(sha256, params.srnInstanceKey, undefined, info, 32);
+  const rootKey = hkdfSha256(params.srnInstanceKey, undefined, info, 32);
   return rootKey;
 }
 
@@ -177,12 +174,13 @@ function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
   return out;
 }
 
-export function deriveOrgX25519KeyPair(params: {
+export async function deriveOrgX25519KeyPair(params: {
   orgRootKey: Uint8Array;
   campaignId: string;
   layer1Ref?: string;
   keyPolicy?: OrgKeyPolicy;
 }) {
+  await initWasm();
   const policy = params.keyPolicy ?? "campaign+layer1";
   if (policy === "campaign+layer1" && !params.layer1Ref) {
     throw new Error("layer1_ref is required for campaign+layer1 policy");
@@ -194,8 +192,8 @@ export function deriveOrgX25519KeyPair(params: {
     layer1_ref: policy === "campaign+layer1" ? params.layer1Ref : undefined,
   });
   const info = Buffer.from(context, "utf-8");
-  const seed = hkdf(sha256, params.orgRootKey, undefined, info, 32);
-  const publicKey = x25519.getPublicKey(seed);
+  const seed = hkdfSha256(params.orgRootKey, undefined, info, 32);
+  const publicKey = x25519GetPublicKey(seed);
   return { publicKey, privateKey: seed, keyPolicy: policy };
 }
 
@@ -290,9 +288,9 @@ export async function encryptLayer2(
 
   // 3. KDF: HKDF-SHA256
   // Use aadBytes as salt to bind the key to the context
-  const prk = hkdf(sha256, ikm, aadBytes, Buffer.from("weba-l2/prk", "utf-8"), 32);
-  const key = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
-  const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
+  const prk = hkdfSha256(ikm, aadBytes, Buffer.from("weba-l2/prk", "utf-8"), 32);
+  const key = hkdfSha256(prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
+  const iv = hkdfSha256(prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
 
   // 4. AEAD: AES-256-GCM
   // Pad using bucket method to mitigate traffic analysis
@@ -422,9 +420,9 @@ export async function decryptLayer2(
 
     // 2. KDF: HKDF-SHA256
     const salt = aadBytes; // Use aadBytes as salt to bind the key to the context
-    const prk = hkdf(sha256, ikm, salt, Buffer.from("weba-l2/prk", "utf-8"), 32);
-    const key = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
-    const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
+    const prk = hkdfSha256(ikm, salt, Buffer.from("weba-l2/prk", "utf-8"), 32);
+    const key = hkdfSha256(prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
+    const iv = hkdfSha256(prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
 
     // 3. AEAD: AES-256-GCM
     const ciphertext = fromBase64Url(envelope.layer2.ciphertext);
