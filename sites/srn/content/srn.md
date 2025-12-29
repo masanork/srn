@@ -59,6 +59,9 @@ ai_generated: true
 <a href="./web-a-presentation.html" class="nav-item">
 <span class="icon">🎞️</span><span class="label">Web/A Presentation</span><span class="desc">Read as article, switch to full-screen slides.</span>
 </a>
+<a href="./web-a-tech-presentation.html" class="nav-item">
+<span class="icon">🛡️</span><span class="label">Web/A Tech Presentation (EN)</span><span class="desc">Deep dive into the verification model and security architecture.</span>
+</a>
 <a href="./guide.html" class="nav-item">
 <span class="icon">📖</span><span class="label">Developer Guide</span><span class="desc">System architecture & Usage manual.</span>
 </a>
