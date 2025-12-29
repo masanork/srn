@@ -18,67 +18,124 @@ ai_generated: true
 
 <div class="vision-banner">
     <h2>The Vision</h2>
-    <p>Breaking the "Integration Trap" through <strong>Loosely Coupled Trust</strong>. We aim for an AI-agent-ready future where verifiable files decouple the human interface from the backend system.</p>
-    <div class="vision-links">
-        <a href="./vision.html">Read the Vision Statement (EN)</a> | 
-        <a href="./vision.ja.html">ビジョン・ステートメントを読む (JA)</a>
+    <div lang="en">
+        <p>Breaking the "Integration Trap" through <strong>Loosely Coupled Trust</strong>. We aim for an AI-agent-ready future where verifiable files decouple the human interface from the backend system.</p>
+        <div class="vision-links">
+            <a href="./vision.html">Read the Vision Statement</a>
+        </div>
+    </div>
+    <div lang="ja">
+        <p><strong>「疎結合な信頼」</strong>によって、システムの「接続の罠」を突破する。検証可能なファイルによってフロントエンドをバックエンドから解放し、AIエージェントが自由に活躍できる未来を目指します。</p>
+        <div class="vision-links">
+            <a href="./vision.ja.html">ビジョン・ステートメントを読む</a>
+        </div>
     </div>
 </div>
 
 <div class="dashboard-grid">
 <div class="panel">
-<div class="panel-header">CORE PHILOSOPHY</div>
+<div class="panel-header">
+    <span lang="en">CORE PHILOSOPHY</span>
+    <span lang="ja">基本理念</span>
+</div>
 <div class="panel-body">
 <ul class="spec-list">
-<li><strong>Zero Layout Shift (CLS 0)</strong><span>Subsetting fonts per page ensures content renders immediately with correct glyphs. No FOUT/FOIT.</span></li>
-<li><strong>Zero Request Overhead</strong><span>Fonts are embedded as Base64 Data URIs. No external font requests. Offline ready.</span></li>
-<li><strong>AI-First Workflows</strong><span>Documents are structured for agents to read, fill, and summarize end-to-end.</span></li>
-<li><strong>Future-Proof Auth</strong><span>Built-in Post-Quantum Cryptography (ML-DSA-44) support for document signing.</span></li>
+<li><strong>Zero Layout Shift (CLS 0)</strong>
+    <span lang="en">Subsetting fonts per page ensures content renders immediately with correct glyphs. No FOUT/FOIT.</span>
+    <span lang="ja">フォントをページ毎にサブセット化し、常に正しい字体で即座にレンダリング。レイアウト崩れを防ぎます。</span>
+</li>
+<li><strong>Zero Request Overhead</strong>
+    <span lang="en">Fonts are embedded as Base64 Data URIs. No external font requests. Offline ready.</span>
+    <span lang="ja">フォントをBase64で埋め込み。外部リクエスト不要で、オフラインでも完全な表示を維持。</span>
+</li>
+<li><strong>AI-First Workflows</strong>
+    <span lang="en">Documents are structured for agents to read, fill, and summarize end-to-end.</span>
+    <span lang="ja">AIエージェントによる読み取り、自動入力、要約を前提とした構造化ドキュメント。</span>
+</li>
+<li><strong>Future-Proof Auth</strong>
+    <span lang="en">Built-in Post-Quantum Cryptography (ML-DSA-44) support for document signing.</span>
+    <span lang="ja">耐量子暗号 (ML-DSA-44) を標準サポート。長期的な真正性を保証。</span>
+</li>
 </ul>
 </div>
 </div>
 
 <div class="panel">
-<div class="panel-header">DISCUSSION PAPERS</div>
+<div class="panel-header">
+    <span lang="en">DISCUSSION PAPERS</span>
+    <span lang="ja">ディスカッション・ペーパー</span>
+</div>
 <div class="panel-body nav-links">
 <a href="./papers/web-a.html" class="nav-item">
-<span class="icon">📄</span><span class="label">Web/A: Archival Web</span><span class="desc">A portable, machine-readable alternative to PDF/A and XML.</span>
+<span class="icon">📄</span><span class="label">Web/A: Archival Web</span>
+<span class="desc" lang="en">A portable, machine-readable alternative to PDF/A and XML.</span>
+<span class="desc" lang="ja">PDF/AやXMLに代わる、ポータブルでマシン可読なアーカイブ形式。</span>
 </a>
 <a href="./papers/web-a-form.html" class="nav-item">
-<span class="icon">🧾</span><span class="label">Web/A Form</span><span class="desc">File-first forms for low-frequency workflows.</span>
+<span class="icon">🧾</span><span class="label">Web/A Form</span>
+<span class="desc" lang="en">File-first forms for low-frequency workflows.</span>
+<span class="desc" lang="ja">システム間連携を容易にする、ファイルベースの検証可能フォーム。</span>
 </a>
 <a href="./papers/web-a-folio.html" class="nav-item">
-<span class="icon">💼</span><span class="label">Web/A Folio</span><span class="desc">Concept: The Personal Data Container.</span>
+<span class="icon">💼</span><span class="label">Web/A Folio</span>
+<span class="desc" lang="en">Concept: The Personal Data Container.</span>
+<span class="desc" lang="ja">個人が自身の「証拠」を保持し持ち運ぶためのデータコンテナの概念。</span>
 </a>
 <a href="./papers/web-a-l2-encryption.html" class="nav-item">
-<span class="icon">🔐</span><span class="label">Web/A L2 Encryption</span><span class="desc">Confidential, recipient-only submission envelopes.</span>
+<span class="icon">🔐</span><span class="label">Web/A L2 Encryption</span>
+<span class="desc" lang="en">Confidential, recipient-only submission envelopes.</span>
+<span class="desc" lang="ja">受信者のみが復号可能な、機密性の高い提出エンベロープ。</span>
 </a>
 <a href="./papers/web-a-l2-market-comparison.html" class="nav-item">
-<span class="icon">⚖️</span><span class="label">Competitive Analysis</span><span class="desc">Web/A vs PPAP, Office, IRM, and SSI.</span>
+<span class="icon">⚖️</span><span class="label">Competitive Analysis</span>
+<span class="desc" lang="en">Web/A vs PPAP, Office, IRM, and SSI.</span>
+<span class="desc" lang="ja">PPAP、Office文書、IRM、SSI等とWeb/Aの比較。</span>
 </a>
 </div>
 </div>
 
 <div class="panel">
-<div class="panel-header">MODULES & NAVIGATION</div>
+<div class="panel-header">
+    <span lang="en">MODULES & NAVIGATION</span>
+    <span lang="ja">モジュール ＆ ナビゲーション</span>
+</div>
 <div class="panel-body nav-links">
 <a href="./maker.html" class="nav-item primary">
-<span class="icon">📝</span><span class="label">Web/A Form Maker</span><span class="desc">Create verifiable forms visually. (Beta)</span>
+<span class="icon">📝</span><span class="label">Web/A Form Maker</span>
+<span class="desc" lang="en">Create verifiable forms visually. (Beta)</span>
+<span class="desc" lang="ja">検証可能なフォームをブラウザ上で視覚的に作成。(Beta)</span>
 </a>
 <a href="./web-a-presentation.html" class="nav-item">
-<span class="icon">🎞️</span><span class="label">Web/A Presentation</span><span class="desc">Read as article, switch to full-screen slides.</span>
+<span class="icon">🎞️</span><span class="label">Web/A Presentation</span>
+<span class="desc" lang="en">Read as article, switch to full-screen slides.</span>
+<span class="desc" lang="ja">記事として読み、必要に応じてフルスクリーン・スライドでプレゼン。</span>
 </a>
+
+<div lang="ja">
+<a href="./web-a-tech-presentation.ja.html" class="nav-item">
+<span class="icon">🛡️</span><span class="label">Web/A 技術解説デッキ</span><span class="desc">検証モデルとセキュリティアーキテクチャの技術的深掘り。</span>
+</a>
+</div>
+<div lang="en">
 <a href="./web-a-tech-presentation.html" class="nav-item">
-<span class="icon">🛡️</span><span class="label">Web/A Tech Presentation (EN)</span><span class="desc">Deep dive into the verification model and security architecture.</span>
+<span class="icon">🛡️</span><span class="label">Web/A Tech Presentation</span><span class="desc">Deep dive into the verification model and security architecture.</span>
 </a>
+</div>
+
 <a href="./guide.html" class="nav-item">
-<span class="icon">📖</span><span class="label">Developer Guide</span><span class="desc">System architecture & Usage manual.</span>
+<span class="icon">📖</span><span class="label">Developer Guide</span>
+<span lang="en" class="desc">System architecture & Usage manual.</span>
+<span lang="ja" class="desc">開発者向けのシステム構成解説 ＆ 利用マニュアル。</span>
 </a>
 <a href="./releases.html" class="nav-item">
-<span class="icon">🔖</span><span class="label">Release History</span><span class="desc">Changelog & versions.</span>
+<span class="icon">🔖</span><span class="label">Release History</span>
+<span lang="en" class="desc">Changelog & versions.</span>
+<span lang="ja" class="desc">更新履歴 ＆ バージョン情報。</span>
 </a>
 <a href="https://github.com/masanork/srn" class="nav-item">
-<span class="icon">🐙</span><span class="label">Source Code</span><span class="desc">Sorane engine on GitHub.</span>
+<span class="icon">🐙</span><span class="label">Source Code</span>
+<span lang="en" class="desc">Sorane engine on GitHub.</span>
+<span lang="ja" class="desc">Soraneエンジンのソースコード（GitHub）。</span>
 </a>
 </div>
 </div>

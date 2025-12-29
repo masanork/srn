@@ -114,6 +114,12 @@ export function baseLayout(props: BaseLayoutProps): string {
     ${jsonLdScript}
     ${mermaidScript}
 </head>
+    <style>
+        [lang="ja"] { display: none !important; }
+        .js-lang-ja [lang="ja"] { display: block !important; }
+        .js-lang-ja span[lang="ja"], .js-lang-ja a[lang="ja"], .js-lang-ja i[lang="ja"] { display: inline !important; }
+        .js-lang-ja [lang="en"] { display: none !important; }
+    </style>
 </head>
 <body class="${className}">
     <main>
@@ -121,12 +127,18 @@ export function baseLayout(props: BaseLayoutProps): string {
     </main>
     <script>
         (() => {
-            const lang = (navigator.language || '').toLowerCase();
-            const isJa = lang.startsWith('ja');
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.body.classList.add('js-lang-ja');
+            } else {
+                document.body.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple text replacements
             document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
                 const ja = el.getAttribute('data-i18n-ja') || '';
                 const en = el.getAttribute('data-i18n-en') || ja;
-                el.textContent = isJa ? ja : en;
+                el.textContent = lang === 'ja' ? ja : en;
             });
         })();
     </script>
