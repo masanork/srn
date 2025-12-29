@@ -13,6 +13,10 @@ This report follows the initial remediation attempts (Padding, PQC Injection ref
 
 **Verdict: HIGH RISK. Not recommended for classified or high-value financial data without strict operational controls.**
 
+### Follow-up
+- [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
+- [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
+
 ## 2. Review of Remediation Attempts
 
 ### 2.1. Traffic Analysis Mitigation (Padding)

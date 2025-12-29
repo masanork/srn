@@ -11,6 +11,13 @@ date: 2025-12-29
 ## 1. Abstract
 This report details the architectural design and implementation of **Layer 2 Encryption** for the Web/A protocol. Web/A Layer 2 Encryption provides end-to-end confidentiality for user responses (Layer 2) in a file-centric, serverless environment. By utilizing a Hybrid Public Key Encryption (HPKE)-like construction, it ensures that sensitive data is readable only by the intended recipient (Issuer/Aggregator), protecting it during transit and storage. The system supports a hybrid Post-Quantum Cryptography (PQC) mode and integrates with WebAuthn PRF for browser-native decryption.
 
+### Related Reports
+- [Security Audit v1](./web-a-l2-security-audit.html)
+- [Security Audit v2](./web-a-l2-security-audit-v2.html)
+- [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
+- [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
+- [Market Comparison](./web-a-l2-market-comparison.html)
+
 ## 2. Introduction
 In the Web/A model, documents are self-contained artifacts. A "Form" (Layer 1) is a static file that users fill out to generate an "Answer" (Layer 2). Unlike traditional web forms that POST data to a specific server, Web/A answers can be transported via any channel (email, USB, IPFS, etc.).
 

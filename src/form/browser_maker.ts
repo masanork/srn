@@ -128,6 +128,7 @@ function applyI18n() {
         "en": {
             "md_def": "Markdown Definition",
             "btn_download": "Download",
+            "btn_load_file": "Load File",
             "preview": "Preview",
             "btn_preview_form": "Form",
             "btn_preview_agg": "Aggregator"
@@ -135,6 +136,7 @@ function applyI18n() {
         "ja": {
             "md_def": "定義 (Markdown)",
             "btn_download": "ダウンロード",
+            "btn_load_file": "ファイル読込",
             "preview": "プレビュー",
             "btn_preview_form": "入力画面",
             "btn_preview_agg": "集計画面"
@@ -295,6 +297,20 @@ async function loadToolFile(input: HTMLInputElement) {
 
     try {
         const text = await file.text();
+        const isMarkdown = file.name.toLowerCase().endsWith('.md');
+
+        if (isMarkdown) {
+            const editor = getEditor();
+            if (editor) {
+                editor.value = text;
+                window.setPreviewMode('form');
+                updatePreview();
+                alert("Markdown loaded.");
+            }
+            input.value = '';
+            return;
+        }
+
         const doc = new DOMParser().parseFromString(text, "text/html");
 
         // 0. Recover Source Markdown

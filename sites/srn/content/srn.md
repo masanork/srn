@@ -44,9 +44,6 @@ font:
 <a href="./papers/web-a-l2-market-comparison.html" class="nav-item">
 <span class="icon">⚖️</span><span class="label">Competitive Analysis</span><span class="desc">Web/A vs PPAP, Office, IRM, and SSI.</span>
 </a>
-<a href="./papers/web-a-l2-security-audit-v2.html" class="nav-item">
-<span class="icon">🛡️</span><span class="label">Security Audit v2</span><span class="desc">Red-team evaluation of L2 Security.</span>
-</a>
 </div>
 </div>
 

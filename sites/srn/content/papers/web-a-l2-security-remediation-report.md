@@ -1,7 +1,18 @@
+---
+title: "Security Audit Remediation Report (Response to v2)"
+layout: article
+author: "Web/A Project Team"
+date: 2025-12-29
+---
+
 # Security Audit Remediation Report (Response to v2)
 
 **Date:** 2025-12-29
 **Reference:** `sites/srn/content/papers/web-a-l2-security-audit-v2.md`
+
+### Related
+- [Security Audit v2](./web-a-l2-security-audit-v2.html)
+- [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
 
 ## 1. Overview
 This report documents the remediation actions taken in response to the "Critical Security Audit Report v2". The development team has executed a major architectural refactoring, primarily focusing on migrating cryptographic operations to WebAssembly (Wasm) to address side-channel attacks and execution integrity, while also hardening the aggregator against replay attacks.

@@ -24,12 +24,11 @@ export interface LayoutContext {
     distDir: string;
     relPath: string;
     contentDir: string;
-    basePath: string;
 }
 
 export class LayoutManager {
     async render(ctx: LayoutContext): Promise<{ html: string, vc?: any }> {
-        const { data, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir, relPath, basePath } = ctx;
+        const { data, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir, relPath } = ctx;
 
         let finalHtml = '';
         let vc: any = null;
@@ -44,10 +43,10 @@ export class LayoutManager {
                         contentDigest: crypto.createHash('sha256').update(content).digest('hex')
                     }
                 });
-                finalHtml = formLayout(data, content, fontCss, safeFontFamilies, vc, basePath);
+                finalHtml = formLayout(data, content, fontCss, safeFontFamilies, vc, relPath);
 
                 // Extra output: Report page
-                const reportHtml = formReportLayout(data, content, fontCss, safeFontFamilies, basePath);
+                const reportHtml = formReportLayout(data, content, fontCss, safeFontFamilies, relPath);
                 await fs.writeFile(path.join(distDir, relPath.replace('.md', '.report.html')), reportHtml);
                 break;
 
@@ -82,17 +81,17 @@ export class LayoutManager {
                     }
                 }
 
-                finalHtml = blogLayout(data, allPages, fontCss, safeFontFamilies, htmlContent, latestArticleContent, latestArticleData, basePath);
+                finalHtml = blogLayout(data, allPages, fontCss, safeFontFamilies, htmlContent, latestArticleContent, latestArticleData, relPath);
                 break;
 
             case 'verifier':
-                finalHtml = verifierLayout(data, htmlContent, fontCss, safeFontFamilies, basePath);
+                finalHtml = verifierLayout(data, htmlContent, fontCss, safeFontFamilies, relPath);
                 break;
 
             case 'juminhyo':
                 {
                     const jsonLd = buildJuminhyoJsonLd(data);
-                    const draftHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, undefined, undefined, undefined, undefined, basePath);
+                    const draftHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, undefined, undefined, undefined, undefined, relPath);
                     const htmlDigest = crypto.createHash('sha256').update(draftHtml).digest('hex');
                     const jsonLdDigest = crypto.createHash('sha256').update(JSON.stringify(jsonLd)).digest('hex');
                     const contentDigest = crypto.createHash('sha256')
@@ -127,7 +126,7 @@ export class LayoutManager {
                     });
 
                     vc = instanceVc;
-                    finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, templateVc, instanceVc, undefined, undefined, basePath);
+                    finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, templateVc, instanceVc, undefined, undefined, relPath);
                 }
                 break;
 
@@ -141,7 +140,7 @@ export class LayoutManager {
                         contentDigest: crypto.createHash('sha256').update(cheerio.load(htmlContent).text().trim()).digest('hex')
                     }
                 });
-                finalHtml = articleLayout(data, htmlContent, fontCss, safeFontFamilies, vc, basePath);
+                finalHtml = articleLayout(data, htmlContent, fontCss, safeFontFamilies, vc, relPath);
                 break;
         }
 

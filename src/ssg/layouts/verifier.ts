@@ -13,7 +13,7 @@ export function verifierLayout(
     htmlContent: string,
     fontCss: string,
     fontFamilies: string[],
-    basePath = ''
+    relPath = ''
 ) {
     // We expect the verify-app.js bundle to be available at /assets/verify-bundle.js
 
@@ -94,6 +94,6 @@ export function verifierLayout(
         content: fullContent,
         fontCss,
         fontFamilies,
-        basePath
+        relPath
     });
 }
