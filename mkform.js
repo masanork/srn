@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2025-12-29T00:13:08Z';
+window.__WEBA_BUILD_TIME__='2025-12-29T00:22:04Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -4954,6 +4954,19 @@ function deriveKeyPairFromPrf(prfKey) {
   const seed = hkdf(sha256, prfKey, undefined, info, 32);
   const publicKey = x25519.getPublicKey(seed);
   return { publicKey, privateKey: seed };
+}
+class ReplayGuard {
+  seenNonces = new Set;
+  checkAndMark(nonce) {
+    if (this.seenNonces.has(nonce)) {
+      return false;
+    }
+    this.seenNonces.add(nonce);
+    return true;
+  }
+  reset() {
+    this.seenNonces.clear();
+  }
 }
 
 // node_modules/@noble/hashes/sha3.js
