@@ -17,6 +17,7 @@ Folio inbox flows.
   * Clarified transport-agnostic messaging goals in the Folio concept paper.
   * Documented Firebase-first deployment guidance in the Folio CLI design doc.
   * Expanded transport principles to cover multi-hop routing and brokering.
+  * Added a Firebase direct MCP test checklist to the Folio CLI design doc.
 
 ## v2.0.0 - Graduated Forward Secrecy & Firebase Support
 
