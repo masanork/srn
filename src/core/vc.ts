@@ -21,6 +21,7 @@ import {
 import {
     collectVerificationMethods,
     decodeDidKey,
+    decodeMulticodec,
     encodeDidKey,
     encodePqcPublicKeyJwk,
     extractPublicKeyBytes
@@ -88,15 +89,12 @@ async function resolveVerificationMethodKey(
         return base64UrlToBytes(trustedValue);
     }
 
-    if (vm.startsWith('did:key:')) {
-        const decoded = decodeDidKey(vm);
-        return decoded.publicKey;
-    }
+    // Move did:key check below since it might have fragments
 
-    const baseDid = vm.includes('#') ? vm.split('#')[0] : vm;
+    const baseDid = vm.includes('#') ? (vm.split('#')[0] || '') : vm;
     const doc = options.didDocument
-        ?? options.didDocuments?.[baseDid]
-        ?? (options.didResolver ? await options.didResolver(baseDid) : null);
+        ?? (options.didDocuments && baseDid ? options.didDocuments[baseDid] : undefined)
+        ?? (options.didResolver && baseDid ? await options.didResolver(baseDid) : null);
     if (doc) {
         const methods = collectVerificationMethods(doc);
         const method = methods.get(vm)
@@ -110,8 +108,23 @@ async function resolveVerificationMethodKey(
     if (vm.includes('#')) {
         const fragment = vm.split('#')[1] || '';
         const cleaned = fragment.replace(/-(ed25519|pqc|p256)$/i, '');
-        if (cleaned.startsWith('z')) return decodeMultibaseBase58btc(cleaned);
-        if (/^[0-9a-fA-F]+$/.test(cleaned)) return hexToBytes(cleaned);
+        if (cleaned.startsWith('z')) {
+            const raw = decodeMultibaseBase58btc(cleaned);
+            try {
+                const { data } = decodeMulticodec(raw);
+                return data;
+            } catch {
+                return raw;
+            }
+        }
+        if (/^[0-9a-fA-F]+$/.test(cleaned) && (cleaned.length === 64 || cleaned.length > 2000)) {
+            return hexToBytes(cleaned);
+        }
+    }
+
+    if (vm.startsWith('did:key:')) {
+        const decoded = decodeDidKey(vm);
+        return decoded.publicKey;
     }
 
     return null;
@@ -446,11 +459,11 @@ export async function createCoseVC(
     const edKid = createCoseKid(`${issuerDid}#${idSuffix}-ed25519`);
     const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
 
-    const edProtected = encode(new Map([
+    const edProtected = encode(new Map<number, any>([
         [COSE_HEADER_ALG, COSE_ALG_EDDSA],
         [COSE_HEADER_KID, edKid]
     ]));
-    const pqcProtected = encode(new Map([
+    const pqcProtected = encode(new Map<number, any>([
         [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
         [COSE_HEADER_KID, pqcKid]
     ]));
@@ -538,7 +551,7 @@ export async function createSdCoseVC(
     const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
     const idSuffix = buildId ? buildId : 'root';
-    const bodyProtected = encode(new Map([
+    const bodyProtected = encode(new Map<any, any>([
         [COSE_HEADER_CRIT, ['sd']],
         ['sd', true]
     ]));
@@ -547,11 +560,11 @@ export async function createSdCoseVC(
     const edKid = createCoseKid(`${issuerDid}#${idSuffix}-ed25519`);
     const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
 
-    const edProtected = encode(new Map([
+    const edProtected = encode(new Map<number, any>([
         [COSE_HEADER_ALG, COSE_ALG_EDDSA],
         [COSE_HEADER_KID, edKid]
     ]));
-    const pqcProtected = encode(new Map([
+    const pqcProtected = encode(new Map<number, any>([
         [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
         [COSE_HEADER_KID, pqcKid]
     ]));
@@ -620,7 +633,7 @@ export async function verifyDelegateChain(
     rootPublicKeyHex: string,
     rootPqcPublicKey?: VerificationKeyInput
 ): Promise<VerificationResult> {
-    const trustedKeys: Record<string, string> = {};
+    const trustedKeys: Record<string, VerificationKeyInput> = {};
     if (rootPublicKeyHex) trustedKeys['root'] = rootPublicKeyHex;
     // We can also map specific DIDs if we want
     const rootDid = delegateCert.issuer;

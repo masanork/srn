@@ -177,7 +177,7 @@ describe("Web/A Aggregator", () => {
   test("extractPlainFromHtml throws when no key is provided", async () => {
     const html = `<html><body><script id="weba-l2-envelope" type="application/json">{"layer2":{}}</script></body></html>`;
     const keys: L2KeyFile = {};
-    await expect(extractPlainFromHtml(html, keys)).rejects.toThrow("No recipient key provided");
+    await expect(extractPlainFromHtml(html, keys)).rejects.toThrow("No recipient key derived or found in keystore");
   });
 
   test("builds row with raw JSON when enabled", () => {

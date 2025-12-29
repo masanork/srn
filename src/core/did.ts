@@ -43,6 +43,7 @@ function decodeUvarint(bytes: Uint8Array): { value: number; length: number } {
     let shift = 0;
     for (let i = 0; i < bytes.length; i++) {
         const byte = bytes[i];
+        if (byte === undefined) break;
         value |= (byte & 0x7f) << shift;
         if ((byte & 0x80) === 0) {
             return { value, length: i + 1 };
@@ -63,7 +64,7 @@ function encodeUvarint(value: number): Uint8Array {
     return new Uint8Array(output);
 }
 
-function decodeMulticodec(bytes: Uint8Array): MulticodecDecodeResult {
+export function decodeMulticodec(bytes: Uint8Array): MulticodecDecodeResult {
     const { value, length } = decodeUvarint(bytes);
     return {
         code: value,
@@ -144,7 +145,8 @@ export function collectVerificationMethods(doc: DidDocument): Map<string, Verifi
 }
 
 export function decodeDidKey(did: string): { code: number; publicKey: Uint8Array } {
-    const didKey = did.split('#')[0];
+    const parts = did.split('#');
+    const didKey = parts[0] || '';
     if (!didKey.startsWith('did:key:')) {
         throw new Error(`Unsupported DID method for did:key decoding: ${did}`);
     }

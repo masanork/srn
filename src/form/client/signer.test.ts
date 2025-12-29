@@ -3,6 +3,7 @@ import { ed25519 } from "@noble/curves/ed25519.js";
 // @ts-ignore
 import canonicalize from "canonicalize";
 import { Signer } from "./signer";
+import { encodeDidKey } from "../../core/did";
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -126,7 +127,7 @@ describe("Web/A Signer", () => {
     expect(signed.proof["srn:authenticatorData"]).toBeTruthy();
     expect(signed.proof["srn:clientDataJSON"]).toBeTruthy();
     expect(signed.proof["srn:credentialId"]).toBe("cred-1");
-    expect(signer.getIssuerDid()).toContain(pubHex);
+    expect(signer.getIssuerDid()).toBe(encodeDidKey(pubKey, 'p256'));
   });
 
   test("falls back to Ed25519 and verifies signature", async () => {
