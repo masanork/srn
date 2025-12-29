@@ -115,7 +115,7 @@ type Layer2Payload = {
     sig: string;     // base64url encoded signature
     created_at: string;
   };
-  _padding?: string; // Random hex string (0-255 bytes) to mitigate traffic analysis
+  _padding?: string; // Hex string to pad the payload to a fixed block size (e.g., 512 bytes)
 };
 ```
 
@@ -209,26 +209,37 @@ A critical threat is an attacker taking an encrypted answer from Form A (e.g., "
 *   **Mitigation**: The `layer1_ref` (hash of the Form) is included in the **AAD**.
 *   **Effect**: If the envelope is moved to a form with a different `layer1_ref`, the AEAD decryption will fail (Auth Tag mismatch) because the AAD verification fails.
 
-### 7.2. Replay Attacks
-Since the protocol is stateless, an attacker could resubmit a valid encrypted envelope multiple times.
-*   **Mitigation**: Aggregators **MUST** implement nonce verification. The `meta.nonce` field (or the signature itself) should be tracked to reject duplicates.
+### 7.2. Replay Protection (Nonce Tracking)
+Since the Layer 2 protocol is stateless, an attacker could resubmit a valid encrypted envelope multiple times.
+*   **Mitigation**: The `Layer2Encrypted` structure includes a `meta.nonce` field.
+*   **Requirement**: Aggregators **MUST** implement nonce verification. A reference `ReplayGuard` utility is provided in the core library that tracks seen nonces in memory. For production use, this should be backed by a persistent store to prevent replays across aggregator restarts.
 
 ### 7.3. Traffic Analysis (Padding)
 The length of the ciphertext reveals the approximate size of the plaintext, which might leak information (e.g., "Yes" vs "No" answers).
-*   **Mitigation**: The `Layer2Payload` includes a `_padding` field containing 0-255 bytes of random data. This obscures the exact length of the user's input.
+*   **Mitigation**: The `Layer2Payload` includes a `_padding` field. The implementation pads the JSON payload to the next **512-byte boundary**. This ensures that messages of similar sizes are indistinguishable on the wire.
 
-### 7.4. Forward Secrecy
-*   **Current State**: The scheme uses static recipient public keys. If the recipient's private key is compromised, past messages can be decrypted.
-*   **Mitigation**: Use distinct keys per campaign (Key Derivation) and rotate keys frequently. The hierarchical derivation makes rotation cheap (no storage cost).
+### 7.4. Side-Channel Mitigation (Unified Errors)
+Detailed error messages in cryptographic operations can act as an oracle for attackers.
+*   **Mitigation**: The `decryptLayer2` function is designed to return a generic "Decryption failed" error regardless of the specific failure point (AAD mismatch, MAC failure, KEM failure). This prevents attackers from distinguishing between different types of invalid messages.
 
-### 7.3. Post-Quantum Readiness
-*   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today cannot be decrypted by future quantum computers, provided the quantum computer cannot break SHA-256 (used in HKDF) or AES-256.
+### 7.5. Forward Secrecy
+*   **Current State**: The default scheme uses static recipient public keys embedded in the Layer 1 form. While hierarchical derivation isolates campaigns, it does not provide true Forward Secrecy for historical messages if the campaign key is leaked.
+*   **Mitigation (Key Rotation)**: The hierarchical derivation makes rotating keys cheap. Issuers are encouraged to use distinct keys per campaign and rotate them frequently.
+*   **Enhancement (Pre-Keys)**: For high-security applications, Web/A supports **Pre-Keys**. If a `prekey_url` is configured in the form, the client will attempt to fetch a one-time use public key from a server before encryption. This ensures that even if the long-term organization key is compromised, previous messages encrypted with ephemeral pre-keys remain secure.
 
-## 8. Current Implementation Status
+### 7.6. Post-Quantum Readiness & Provider Integrity
+*   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today cannot be decrypted by future quantum computers.
+*   **Integrity Protection**: To prevent malicious PQC provider injection (e.g., via XSS), the application **MUST** use a strict Content Security Policy (CSP) and Subresource Integrity (SRI) for all cryptographic modules. The project is moving toward a self-contained WebAssembly module to further isolate cryptographic logic from the highly dynamic JavaScript environment.
+
+### 7.7. Supply Chain Security
+*   **Dependency Pinning**: All cryptographic dependencies (e.g., `@noble/*`) are pinned to specific versions in `package-lock.json`. 
+*   **Future Mitigation**: The roadmap includes "Vendoring" (in-tree copies) of verified cryptographic primitives to eliminate reliance on public registries for critical security logic.
+
+## 8. Current Implementation Status & Roadmap
 *   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`).
-*   **Browser Support**: Verified in Chrome/Edge/Safari. PQC support requires a WASM polyfill (e.g., specific libraries).
-*   **WebAuthn PRF**: Implemented but requires browser support (Chrome/Edge stable).
-*   **CLI Tooling**: `weba-l2-crypto` CLI supports key generation and manual encryption/decryption.
+*   **Replay Protection**: Integrated into Aggregator CLI and Browser tools via `ReplayGuard`.
+*   **Forward Secrecy**: Pre-key fetching hook implemented; requires a compatible pre-key server.
+*   **WASM Transition (Roadmap)**: Move core cryptographic primitives to a Rust-compiled WebAssembly module (`weba-crypto-wasm`) to ensure constant-time execution and better memory isolation.
 
 ## 9. Conclusion
 Web/A Layer 2 Encryption provides a robust, flexible, and future-proof confidentiality layer for serverless forms. By leveraging standard primitives (HPKE, AES-GCM) and modern browser capabilities (WebAuthn PRF), it enables secure workflows ranging from personal medical forms to large-scale organizational surveys without centralized infrastructure dependency.

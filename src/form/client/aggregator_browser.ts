@@ -1,6 +1,6 @@
 import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
 import { buildCsv, buildRowFromPlain } from "./aggregator_browser_csv";
-import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf } from "./l2crypto";
+import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf, ReplayGuard } from "./l2crypto";
 import type { L2KeyFile, Layer2Signature } from "./l2crypto";
 import { globalSigner } from "./signer";
 import { parseMarkdown } from "../parser";
@@ -253,8 +253,8 @@ function getValueByPath(source: any, path: string): any {
     if (current === null || current === undefined) return undefined;
     const match = segment.match(/^(.*)\[(\d+)\]$/);
     if (match) {
-      const key = match[1];
-      const index = parseInt(match[2], 10);
+      const key = match[1] ?? "";
+      const index = parseInt(match[2] ?? "0", 10);
       const value = key ? current[key] : current;
       current = Array.isArray(value) ? value[index] : undefined;
       continue;
@@ -852,6 +852,7 @@ export function initAggregatorBrowser() {
     let processed = 0;
     let errors = 0;
 
+    const replayGuard = new ReplayGuard();
     const l2Keys = passkeyDerivedKeys || embeddedKey;
 
     if (aggHeader) aggHeader.innerHTML = 'Web/A Aggregator <span style="font-size:0.75rem; background:#10b981; color:white; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle;">REAL DATA</span>';
@@ -859,6 +860,16 @@ export function initAggregatorBrowser() {
     for (const file of allFiles) {
       try {
         const html = await file.text();
+
+        // Replay protection
+        const l2ForCheck = extractL2EnvelopeFromHtml(html);
+        if (l2ForCheck?.meta?.nonce) {
+          if (!replayGuard.checkAndMark(l2ForCheck.meta.nonce)) {
+            console.warn(`Replay detected in ${file.name} (nonce: ${l2ForCheck.meta.nonce}). Skipping.`);
+            continue;
+          }
+        }
+
         const extracted = await extractPlainFromHtml(html, l2Keys);
         if (extracted.source !== "unknown" && extracted.plain) {
           rawPayloads.push({ filename: file.name, plain: extracted.plain, sig: extracted.sig });
