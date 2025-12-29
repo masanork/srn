@@ -27,13 +27,13 @@ Layer 2 Encryption acts as a wrapper around the standard signed Layer 2 payload.
 
 ```mermaid
 flowchart LR
-    User[User Input] --> Plain[L2 Plaintext]
-    Plain --> Sign[Signer (Ed25519)]
-    Sign --> Signed[L2 Payload (Signed)]
-    Signed --> Encrypt[Encrypter (HPKE X25519)]
-    Encrypt --> Envelope[L2 Encrypted Envelope]
+    User["User Input"] --> Plain["L2 Plaintext"]
+    Plain --> Sign["Signer (Ed25519)"]
+    Sign --> Signed["L2 Payload (Signed)"]
+    Signed --> Encrypt["Encrypter (HPKE X25519)"]
+    Encrypt --> Envelope["L2 Encrypted Envelope"]
     
-    subgraph "Browser Client"
+    subgraph browser ["Browser Client"]
         User
         Plain
         Sign
@@ -41,12 +41,12 @@ flowchart LR
         Encrypt
     end
     
-    Envelope --> Storage[Storage Transport]
-    Storage --> Decrypt[Decrypter]
-    Decrypt --> Verify[Signature Verifier]
-    Verify --> Data[Validated Data]
+    Envelope --> Storage["Storage Transport"]
+    Storage --> Decrypt["Decrypter"]
+    Decrypt --> Verify["Signature Verifier"]
+    Verify --> Data["Validated Data"]
 
-    subgraph "Aggregator Issuer"
+    subgraph aggregator ["Aggregator Issuer"]
         Decrypt
         Verify
         Data
@@ -159,13 +159,13 @@ To manage keys effectively across many campaigns and forms, Web/A employs a hier
 Instead of managing thousands of random key pairs, an organization maintains a single **SRN Instance Key**.
 
 ```mermaid
-graph TD
-    Instance[SRN Instance Key] -->|HKDF org-root| Root[Org Root Key]
-    Root -->|HKDF campaign+layer1| Campaign[Campaign/Form Key]
+flowchart TD
+    Instance["SRN Instance Key"] -->|HKDF org-root| Root["Org Root Key"]
+    Root -->|HKDF campaign+layer1| Campaign["Campaign/Form Key"]
     
-    subgraph "Per Form"
-    Campaign --> Pub[Public Key (embedded in Form)]
-    Campaign --> Priv[Private Key (used by Aggregator)]
+    subgraph per_form ["Per Form"]
+    Campaign --> Pub["Public Key (embedded in Form)"]
+    Campaign --> Priv["Private Key (used by Aggregator)"]
     end
 ```
 
