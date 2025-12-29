@@ -7,7 +7,19 @@ export function aes_gcm_encrypt(key: Uint8Array, iv: Uint8Array, plaintext: Uint
 
 export function constant_time_equal(a: Uint8Array, b: Uint8Array): boolean;
 
+export function ed25519_generate_keypair(): Uint8Array;
+
+export function ed25519_sign(private_key: Uint8Array, message: Uint8Array): Uint8Array;
+
+export function ed25519_verify(public_key: Uint8Array, message: Uint8Array, signature: Uint8Array): boolean;
+
 export function get_version(): string;
+
+export function x25519_generate_keypair(): Uint8Array;
+
+export function x25519_get_public_key(private_key: Uint8Array): Uint8Array;
+
+export function x25519_get_shared_secret(private_key: Uint8Array, public_key: Uint8Array): Uint8Array;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -16,7 +28,15 @@ export interface InitOutput {
   readonly aes_gcm_decrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number, number, number];
   readonly aes_gcm_encrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number, number, number];
   readonly constant_time_equal: (a: number, b: number, c: number, d: number) => number;
+  readonly ed25519_generate_keypair: () => [number, number, number, number];
+  readonly ed25519_sign: (a: number, b: number, c: number, d: number) => [number, number, number, number];
+  readonly ed25519_verify: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
   readonly get_version: () => [number, number];
+  readonly x25519_generate_keypair: () => [number, number, number, number];
+  readonly x25519_get_public_key: (a: number, b: number) => [number, number, number, number];
+  readonly x25519_get_shared_secret: (a: number, b: number, c: number, d: number) => [number, number, number, number];
+  readonly __wbindgen_exn_store: (a: number) => void;
+  readonly __externref_table_alloc: () => number;
   readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __externref_table_dealloc: (a: number) => void;

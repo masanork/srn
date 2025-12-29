@@ -5,7 +5,18 @@ import { randomBytes } from "node:crypto";
 import { createCipheriv, createDecipheriv } from "node:crypto";
 import canonicalize from "canonicalize";
 import * as fs from "node:fs";
-import { initWasm, aesGcmEncrypt, aesGcmDecrypt } from "./wasm_core";
+import {
+  initWasm,
+  constantTimeEqual,
+  aesGcmEncrypt,
+  aesGcmDecrypt,
+  x25519GenerateKeyPair,
+  x25519GetSharedSecret,
+  x25519GetPublicKey,
+  ed25519GenerateKeyPair,
+  ed25519Sign,
+  ed25519Verify,
+} from "./wasm_core";
 
 export interface ReplayStore {
   has(nonce: string): Promise<boolean>;
@@ -192,51 +203,49 @@ export function deriveOrgX25519KeyPair(params: {
 /**
  * Generate a recipient keypair for encryption (X25519).
  */
-export function generateRecipientKeyPair() {
-  const priv = randomBytes(32);
-  const pub = x25519.getPublicKey(priv);
-  return { publicKey: pub, privateKey: priv };
+export async function generateRecipientKeyPair(): Promise<{ privateKey: Uint8Array; publicKey: Uint8Array }> {
+  await initWasm();
+  return x25519GenerateKeyPair();
 }
 
 /**
  * Generate a user keypair for signing (Ed25519).
  */
-export function generateUserKeyPair() {
-  const priv = randomBytes(32);
-  const pub = ed25519.getPublicKey(priv);
-  return { publicKey: pub, privateKey: priv };
+export async function generateUserKeyPair(): Promise<{ privateKey: Uint8Array; publicKey: Uint8Array }> {
+  await initWasm();
+  return ed25519GenerateKeyPair();
 }
 
 /**
  * Sign Layer 2 plaintext.
  */
-export async function signLayer2(
-  plain: Layer2Plain,
-  privateKey: Uint8Array,
-  kid: string
-): Promise<Layer2Signature> {
-  const createdAt = new Date().toISOString();
-  const msg = canonicalJson(plain);
-  const sig = ed25519.sign(Buffer.from(msg, "utf-8"), privateKey);
+export async function signLayer2(payload: any, privateKey: Uint8Array, userId: string): Promise<Layer2Signature> {
+  const canon = canonicalize(payload);
+  if (!canon) throw new Error("Failed to canonicalize payload");
+  const msg = new TextEncoder().encode(canon);
+
+  await initWasm();
+  const sigBytes = ed25519Sign(privateKey, msg);
 
   return {
     alg: "Ed25519",
-    kid,
-    sig: toBase64Url(sig),
-    created_at: createdAt,
+    kid: userId,
+    sig: toBase64Url(sigBytes),
+    created_at: new Date().toISOString(),
   };
 }
 
 /**
  * Verify Layer 2 signature.
  */
-export function verifyLayer2Signature(
-  payload: Layer2Payload,
-  publicKey: Uint8Array
-): boolean {
-  const msg = canonicalJson(payload.layer2_plain);
-  const sig = fromBase64Url(payload.layer2_sig.sig);
-  return ed25519.verify(sig, Buffer.from(msg, "utf-8"), publicKey);
+export async function verifyLayer2Signature(payload: Layer2Payload, publicKey: Uint8Array): Promise<boolean> {
+  const canon = canonicalize(payload.layer2_plain);
+  if (!canon) return false;
+  const msg = new TextEncoder().encode(canon);
+  const sigBytes = fromBase64Url(payload.layer2_sig.sig);
+
+  await initWasm();
+  return ed25519Verify(publicKey, msg, sigBytes);
 }
 
 /**
@@ -263,9 +272,11 @@ export async function encryptLayer2(
   const aadBytes = Buffer.from(aadStr, "utf-8");
 
   // 2. KEM: X25519
-  const ephemeralPriv = randomBytes(32);
-  const ephemeralPub = x25519.getPublicKey(ephemeralPriv);
-  const ss1 = x25519.getSharedSecret(ephemeralPriv, recipientPublicKey);
+  await initWasm();
+  const ephemeral = x25519GenerateKeyPair();
+  const ephemeralPriv = ephemeral.privateKey;
+  const ephemeralPub = ephemeral.publicKey;
+  const ss1 = x25519GetSharedSecret(ephemeralPriv, recipientPublicKey);
 
   let ikm = ss1;
   let pqcEncapsulation: Uint8Array | undefined;
@@ -396,8 +407,9 @@ export async function decryptLayer2(
     }
 
     // 1. KEM: X25519
+    await initWasm();
     const ephemeralPub = fromBase64Url(envelope.layer2.encapsulated.classical);
-    const ss1 = x25519.getSharedSecret(recipientPrivateKey, ephemeralPub);
+    const ss1 = x25519GetSharedSecret(recipientPrivateKey, ephemeralPub);
     let ikm = ss1;
     if (envelope.layer2.encapsulated.pqc) {
       const pqc = options?.pqc;
