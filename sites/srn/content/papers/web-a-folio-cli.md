@@ -302,6 +302,70 @@ Most frequently used by AI agents.
   - `prefill.budget`
   - `prefill.allergies`
 
+**Policy datasets (concept):**
+
+- Folio may also include policy/program datasets (eligibility rules,
+  application requirements).
+- Agents can match user needs with policies to enable **push-style support**
+  rather than user-initiated searches.
+
+**Policy dataset fields (minimum):**
+
+- `title`
+- `summary` (free text)
+- `purpose` (policy intent)
+- `eligibility` (target audience and conditions)
+- `constraints` (exclusions, limits, deadlines)
+- `required_documents` (list)
+- `submission_formats` (preferred and accepted formats)
+- `related_profiles` (fields to match, e.g., income, household)
+
+**Example (YAML):**
+
+```yaml
+title: "Local Event Support Grant"
+summary: "Small grant to support community-led events."
+purpose: "Reduce cost barriers for local organizers."
+eligibility:
+  - "Resident of the municipality"
+  - "Event is open to the public"
+constraints:
+  - "Max grant: JPY 50,000"
+  - "One application per year"
+required_documents:
+  - "Event plan (PDF)"
+  - "Budget sheet (PDF)"
+submission_formats:
+  preferred: ["web-a"]
+  accepted: ["web-a", "pdf"]
+related_profiles:
+  - "profile.address"
+  - "profile.affiliation"
+```
+
+**Storage & naming (draft):**
+
+- Store under `policies/` in the Folio root.
+- Use stable slugs: `policies/local-event-support.yaml`.
+- Keep a plain index: `policies/index.json` for quick discovery.
+
+**Index format (draft):**
+
+```json
+{
+  "version": "0.1",
+  "policies": [
+    {
+      "id": "local-event-support",
+      "title": "Local Event Support Grant",
+      "path": "policies/local-event-support.yaml",
+      "tags": ["community", "events"],
+      "updated_at": "2025-12-29T00:00:00Z"
+    }
+  ]
+}
+```
+
 ### 2. Folio Management
 
 Used by users (humans) or setup agents.
