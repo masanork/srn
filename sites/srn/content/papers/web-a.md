@@ -197,6 +197,9 @@ While Layer 2 handles user authenticity, **Layer 2 Encryption (L2E)** ensures co
 - **Verification without Decryption**: The envelope itself carries a signature (authenticity) and a plain-text hash of the template (context binding). This allows intermediate nodes or archivists to verify the *existence and integrity* of the record without being able to read its private contents.
 - **Selective Decryption**: Compatible with organizational key management, allowing decryption only by authorized personnel (e.g., via a designated YubiKey or HSM).
 
+> [!TIP]
+> **Detailed Resources**: For the technical details of L2E, see [Web/A L2 Encryption](./web-a-l2-encryption.html). For security evaluations, see our [Red-Team Audit v2](./web-a-l2-security-audit-v2.html) and [Competitive Analysis](./web-a-l2-market-comparison.html).
+
 ## 7. Implementation Flexibility: The "Lightweight Trust" Model
 A major barrier to archival signing is the complexity of key management. Web/A does not negate the use of high-assurance methods like HSMs; rather, it complements them with a "Lightweight Trust" model designed to lower the entry barrier and encourage widespread adoption.
 

@@ -14,6 +14,7 @@ export type L2Config = {
   user_kid?: string;
   campaign_id?: string;
   key_policy?: OrgKeyPolicy;
+  prekey_url?: string; // URL to fetch a one-time use public key for Forward Secrecy
 };
 
 export type L2KeyFile = {
@@ -253,10 +254,18 @@ export async function buildLayer2Envelope(params: {
     layer2_sig: layer2Sig,
   };
 
-  // Add random padding to mitigate traffic analysis
-  const paddingLen = Math.floor(Math.random() * 256); // 0-255 bytes
-  const paddingBytes = randomBytes(paddingLen);
-  // hex encode padding for JSON safety
+  // Pad to next 512-byte block to mitigate traffic analysis
+  const currentBytes = new TextEncoder().encode(canonicalJson(payload));
+  // We want the FINAL payloadBytes to be multiple of 512.
+  // But payloadBytes includes the padding field itself.
+  // Simple approach: calculate how much padding we need to reach the next 512-byte boundary
+  // for the JSON representation.
+  const BLOCK_SIZE = 512;
+  const overhead = 20; // approximate overhead for JSON structure {"_padding":"..."}
+  const targetSize = Math.ceil((currentBytes.length + overhead) / BLOCK_SIZE) * BLOCK_SIZE;
+  const paddingNeeded = targetSize - currentBytes.length - overhead;
+
+  const paddingBytes = randomBytes(Math.max(0, paddingNeeded));
   let paddingHex = "";
   paddingBytes.forEach((b) => {
     paddingHex += b.toString(16).padStart(2, "0");
@@ -329,42 +338,76 @@ export function loadL2Config(): L2Config | null {
   }
 }
 
+/**
+ * ReplayGuard provides a simple mechanism to track nonces and prevent replay attacks.
+ */
+export class ReplayGuard {
+  private seenNonces = new Set<string>();
+
+  checkAndMark(nonce: string): boolean {
+    if (this.seenNonces.has(nonce)) {
+      return false;
+    }
+    this.seenNonces.add(nonce);
+    return true;
+  }
+
+  reset(): void {
+    this.seenNonces.clear();
+  }
+}
+
 export async function decryptLayer2Envelope(
   envelope: Layer2Encrypted,
   recipientSk: Uint8Array,
   options?: { pqcProvider?: PqcKemProvider | null; pqcRecipientSk?: Uint8Array },
 ): Promise<Layer2Payload> {
-  const aadBytes = b64urlDecode(envelope.layer2.aad);
-  const aadObj = {
-    layer1_ref: envelope.layer1_ref,
-    recipient: envelope.layer2.recipient,
-    weba_version: envelope.weba_version,
-  };
-  const expectedAad = new TextEncoder().encode(canonicalJson(aadObj));
-  if (b64urlEncode(expectedAad) !== envelope.layer2.aad) {
-    throw new Error("AAD mismatch");
-  }
-
-  const ephPub = b64urlDecode(envelope.layer2.encapsulated.classical);
-  const ss1 = x25519.getSharedSecret(recipientSk, ephPub);
-  let ikm = ss1;
-  if (envelope.layer2.encapsulated.pqc) {
-    const provider = options?.pqcProvider;
-    const pqcSk = options?.pqcRecipientSk;
-    if (!provider || !pqcSk) {
-      throw new Error("Missing PQC KEM for envelope");
+  try {
+    const aadBytes = b64urlDecode(envelope.layer2.aad);
+    const aadObj = {
+      layer1_ref: envelope.layer1_ref,
+      recipient: envelope.layer2.recipient,
+      weba_version: envelope.weba_version,
+    };
+    const expectedAad = new TextEncoder().encode(canonicalJson(aadObj));
+    if (b64urlEncode(expectedAad) !== envelope.layer2.aad) {
+      throw new Error("AAD mismatch");
     }
-    const pqcEnc = b64urlDecode(envelope.layer2.encapsulated.pqc);
-    const ss2 = provider.decapsulate(pqcSk, pqcEnc);
-    ikm = concatBytes(ss1, ss2);
-  }
-  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
-  const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
-  const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
 
-  const ct = b64urlDecode(envelope.layer2.ciphertext);
-  const pt = await aesGcmDecrypt(ct, key, iv, aadBytes);
-  return JSON.parse(new TextDecoder().decode(pt)) as Layer2Payload;
+    const ephPub = b64urlDecode(envelope.layer2.encapsulated.classical);
+    const ss1 = x25519.getSharedSecret(recipientSk, ephPub);
+    let ikm = ss1;
+    if (envelope.layer2.encapsulated.pqc) {
+      const provider = options?.pqcProvider;
+      const pqcSk = options?.pqcRecipientSk;
+      if (!provider || !pqcSk) {
+        throw new Error("Missing PQC KEM for envelope");
+      }
+      const pqcEnc = b64urlDecode(envelope.layer2.encapsulated.pqc);
+      const ss2 = provider.decapsulate(pqcSk, pqcEnc);
+      ikm = concatBytes(ss1, ss2);
+    }
+    const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
+    const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
+    const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
+
+    const ct = b64urlDecode(envelope.layer2.ciphertext);
+    const pt = await aesGcmDecrypt(ct, key, iv, aadBytes);
+    return JSON.parse(new TextDecoder().decode(pt)) as Layer2Payload;
+  } catch (e) {
+    throw new Error("Decryption failed");
+  }
+}
+
+export async function fetchPreKey(url: string): Promise<{ recipient_x25519: string; recipient_pqc?: string; kid: string } | null> {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Pre-key fetch failed: ${resp.status}`);
+    return await resp.json();
+  } catch (e) {
+    console.error("Failed to fetch pre-key", e);
+    return null;
+  }
 }
 
 export async function unwrapRecipientPrivateKey(params: {

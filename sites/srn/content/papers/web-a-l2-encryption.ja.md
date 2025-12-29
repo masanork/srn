@@ -1,76 +1,62 @@
 ---
-title: "Discussion Paper: Web/A Layer 2 Encryption (日本語版)"
+title: "討議資料：Web/A Layer 2 Encryption (日本語版)"
 layout: article
 author: "Web/A Project"
-date: 2025-12-27
+date: 2025-12-29
 ---
 
 # Web/A Layer 2 Encryption: 送信内容の機密性を守る仕組み
 
 ## 1. 概要
-本稿は Web/A 文書の **Layer 2 Encryption** を定義します。Layer 1 はテンプレート（質問）の完全性、Layer 2（Signature）はユーザー回答（回答者）の真正性を保証します。Layer 2 Encryption は **機密性** を提供し、配送経路やブラウザ保存が信頼できない場合でも、回答内容が **受領者（Issuer/Aggregator）だけ** に読めるようにします。
+本稿は Web/A 文書の **Layer 2 Encryption (L2E)** を定義します。Layer 1 はテンプレート（質問）の完全性、Layer 2（Signature）はユーザー回答（回答者）の真正性を保証します。Layer 2 Encryption は **機密性** を提供し、配送経路やブラウザ保存が信頼できない場合でも、回答内容が **受領者（Issuer/Aggregator）だけ** に読めるようにします。
 
 ## 2. 脅威モデル
-- **機密性**: メール・CDN・悪意ある拡張機能など中間者から回答を保護
-- **テンプレート結合**: 暗号文が特定の Layer 1 テンプレートに強く結び付くこと（回答の貼り替え攻撃を防止）
-- **将来互換性**: 高速な ECC と PQC のハイブリッド経路を両立
-
-## 2.5. Web/A Form への統合（任意）
-Layer 2 Encryption は Web/A Form で **オプション** です。ON の場合は L2 を暗号化した **Layer2Encrypted** を出力し、OFF の場合は従来通り平文 L2 を出力します。
-
-前提:
-- 発行者は受領者の公開鍵（X25519、任意で ML-KEM-768）をフォームに埋め込む
-- UI は「L2 を暗号化」のトグルを明示し、復号可能者を説明する
-- AAD に `layer1_ref` を含めてテンプレートへ強くバインドする
+- **機密性**: メール・CDN・悪意ある拡張機能など中間者から回答を保護。
+- **テンプレート結合**: 暗号文が特定の Layer 1 テンプレートに強く結び付くこと（回答の差し替え攻撃を防止）。
+- **前方秘匿性 (Forward Secrecy)**: 過去の通信が、将来の鍵漏洩によって遡及的に復号されないこと。
+- **トラフィック分析耐性**: メッセージのサイズから内容を推測されないこと。
 
 ## 3. 暗号構成
 
 ### 3.1. HPKE 風ハイブリッド暗号
-Web/A L2 は **HPKE (RFC 9180)** の考え方を取り入れた JSON 向け構成です。
+Web/A L2E は **HPKE (RFC 9180)** の設計思想を取り入れた構成を採用しています。
 
-- **KEM**: 
-  - Classical: **X25519**
-  - PQC（任意）: **ML-KEM-768 (Kyber)**
-- **KDF**: **HKDF-SHA256**
-- **AEAD**: **AES-256-GCM**
+- **KEM (Key Encapsulation Mechanism)**: 
+  - 古典暗号: **X25519**
+  - 耐量子暗号 (任意): **ML-KEM-768 (Kyber)**
+- **KDF (Key Derivation Function)**: **HKDF-SHA256**
+- **AEAD (Authenticated Encryption with Associated Data)**: **AES-256-GCM**
 
 ### 3.2. AAD によるバインド
-AEAD の `aad` に `layer1_ref` を含め、テンプレート差し替えを防ぎます。`layer1_ref` が一致しない場合、復号は失敗します。
+AEAD の `aad` に `layer1_ref` を含めることで、テンプレートの差し替えを防止します。`layer1_ref` が一致しない場合、AEAD の認証タグ検証に失敗（復号不能）します。
 
-```json
-{
-  "layer1_ref": "sha256:...",
-  "recipient": "issuer#kem-2025",
-  "weba_version": "0.1"
-}
-```
+---
 
-### 3.3. カノニカル JSON
-署名と AAD 生成のために **簡易 Canonical JSON** を採用します。
-1. キーの辞書順ソート
-2. 余分な空白なし
-3. UTF-8
-4. 浮動小数は非推奨（必要なら文字列化）
+## 4. セキュリティ強化 (Security Enhancements)
 
-## 4. データ構造
+### 4.1. リプレイ保護 (Nonce Tracking)
+Web/A プロトコルはステートレスであるため、攻撃者が有効な暗号化エンベロープを物理的に再送する（リプレイ攻撃）リスクがあります。
+*   **対策**: `Layer2Encrypted` 構造体に `meta.nonce` フィールドを含みます。
+*   **要件**: 集計ツール（Aggregator）は **必ず** nonce の検証を実装しなければなりません。コアライブラリには、メモリ上で nonce を追跡する `ReplayGuard` ユーティリティが用意されています。
 
-### 4.1. Layer 2 Payload（暗号化前）
-```json
-{
-  "layer2_plain": {
-    "name": "John Doe",
-    "medical_history": "..."
-  },
-  "layer2_sig": {
-    "alg": "Ed25519",
-    "kid": "user#sig-1",
-    "sig": "base64...",
-    "created_at": "2025-12-27T..."
-  }
-}
-```
+### 4.2. トラフィック分析（パディング）
+暗号文の長さは、平文のおおよそのサイズを露呈させ、情報の推測（例：「はい」と「いいえ」の回答差）を許す可能性があります。
+*   **対策**: ペイロードを **512バイトの固定ブロック境界** に切り上げるパディング処理を行います。これにより、メッセージサイズから内容を特定することを困難にします。
 
-### 4.2. Layer 2 Encrypted Envelope
+### 4.3. サイドチャンネル対策 (Unified Errors)
+暗号操作における詳細なエラーメッセージは、攻撃者にとっての「オラクル（神託）」となります（例：AADミスマッチとMAC失敗の区別による推測）。
+*   **対策**: 復号処理を行う `decryptLayer2` 関数は、失敗の理由（AADミスマッチ、MAC不一致、パースエラー等）に関わらず、一律で **"Decryption failed"** という汎用エラーを返します。
+
+### 4.4. 前方秘匿性 (Forward Secrecy) と Pre-Key
+*   **現状**: デフォルトでは、Layer 1 フォームに埋め込まれた静的な受信者公開鍵を使用します。これは運用が容易ですが、将来受信者の秘密鍵が漏洩した場合、過去の通信が復号されるリスクがあります。
+*   **対策（鍵の更新）**: 階層的鍵派生により、キャンペーンごとに鍵を分けることが容易です。運用者は頻繁に鍵を更新することが推奨されます。
+*   **強化（Pre-Key 方式）**: 高いセキュリティが求められる用途向けに **Pre-Key** をサポートします。フォームに `prekey_url` が設定されている場合、クライアントは送信直前にサーバーから「一度使い捨ての公開鍵」を取得し、それを用いて暗号化します。これにより、長期鍵が漏洩しても過去の通信の安全性が保たれます。
+
+---
+
+## 5. データ構造
+
+### 5.1. Layer 2 Encrypted Envelope
 ```json
 {
   "weba_version": "0.1",
@@ -82,177 +68,25 @@ AEAD の `aad` に `layer1_ref` を含め、テンプレート差し替えを防
       "kdf": "HKDF-SHA256",
       "aead": "AES-256-GCM"
     },
-    "recipient": "issuer#kem-2025",
-    "encapsulated": {
-      "classical": "base64(ephemeral_pk)",
-      "pqc": "base64(kem_ct)"
-    },
-    "ciphertext": "base64(aead_ct)",
-    "aad": "base64(aad_json)"
+    /* ... 鍵カプセル化データ、暗号文、AAD ... */
   },
   "meta": {
-    "created_at": "2025-12-27T...",
-    "nonce": "base64..."
+    "nonce": "base64...",
+    "created_at": "2025-12-29T..."
   }
 }
 ```
 
-## 5. 実装メモ（Bun/TypeScript）
-- `@noble/curves/ed25519` と `x25519` を利用
-- `node:crypto` の `hkdf` / `randomBytes` / `createCipheriv` を利用
-- ブラウザ移植を意識して最小構成にする
-
-## 6. 使い方（Web/A Form 統合）
-
-### 6.1. Frontmatter で有効化
-Web/A Form の Markdown に以下を追加すると、L2 暗号化が有効になります。
-
-```yaml
 ---
-layout: form
-l2_encrypt: true
-l2_recipient_kid: "issuer#kem-2025"
-l2_recipient_x25519: "<base64url>"
-# l2_recipient_pqc: "<base64url>" # Optional. ML-KEM-768 公開鍵（ハイブリッド用）
-# l2_layer1_ref: "sha256:..."  # Optional. 未指定ならテンプレートのVCダイジェストから算出
-l2_encrypt_default: true       # Optional. トグルの初期状態
-l2_user_kid: "user#sig-1"       # Optional. ユーザー署名鍵ID
-l2_keywrap:                    # Optional. Passkey での復号を有効化
-  alg: "WebAuthn-PRF-AESGCM-v1"
-  kid: "issuer#passkey-1"
-  credential_id: "base64url(...)"
-  prf_salt: "base64url(...)"
-  wrapped_key: "base64url(...)"
-  aad: "base64url(layer1_ref)"
----
-```
 
-### 6.2. ユーザーフロー
-1. 発行者が受領者公開鍵込みのフォームを配布
-2. ユーザーが通常通り入力
-3. 「L2 を暗号化」を ON
-4. 送信物が平文ではなく Layer2Encrypted を出力
+## 6. 実装とロードマップ
 
-### 6.3. 出力仕様
-暗号化 ON の場合:
-- `<script id="weba-l2-envelope" type="application/json">` に暗号化 envelope を埋め込む
-- 平文 JSON-LD は出力しない
-- `layer1_ref` による AAD バインドを必ず適用
+### 6.1. サプライチェーンセキュリティ
+*   **依存関係の固定**: `@noble/*` 等の暗号ライブラリは `package-lock.json` により特定のバージョンに固定されています。
+*   **将来の対策**: 外部レジストリのリスクを排除するため、検証済みの暗号プリミティブをリポジトリ内に直接取り込む（Vendoring）方針です。
 
-### 6.4. 集計（CSV + JSON オプション）
-集計では L2 の JSON をフラット化して CSV に出力できます。配列は `[]`、オブジェクトは `.` で表現します。
+### 6.2. WebAssembly (WASM) への移行
+JavaScript 環境における実行タイミングの揺らぎやメモリ管理の不透明性を解消するため、コアとなる暗号ロジックを Rust で記述し、WebAssembly にコンパイルして利用する計画です。これにより、コンスタントタイム実行の保証と、より強固なメモリ分離を実現します。
 
-例:
-- `org.name`
-- `items[0].amount`
-
-原文 JSON を保持したい場合は `--include-json` で `_json` 列を追加できます。
-
-**フラット化ルール**:
-- オブジェクトは `.` で連結
-- 配列は `[index]` を付与
-- `null` / `undefined` は CSV 処理に応じて空または null
-
-**例**:
-```json
-{
-  "org": { "name": "ACME" },
-  "items": [{ "amount": 1200 }, { "amount": 900 }]
-}
-```
-出力例:
-- `org.name` = `ACME`
-- `items[0].amount` = `1200`
-- `items[1].amount` = `900`
-
-### 6.5. ブラウザ集計（鍵埋め込み）
-Aggregator は **ブラウザだけ** で動作させることもできます。受領者の秘密鍵を HTML に埋め込むことで、CLI を使わずに一括復号と CSV 出力が可能です。
-
-Aggregator HTML に鍵ファイルを埋め込みます:
-```html
-<script id="weba-l2-keys" type="application/json">
-{"recipient_kid":"issuer#kem-2025","recipient_x25519_private":"...base64url..."}
-</script>
-```
-
-これは **Aggregator Escrow** モードに相当します。テンポラリー鍵を集計ツールに仕込み、複数オペレーターが安全に復号・集計できるようにします。
-
-#### 6.5.2 Aggregator 鍵ファイル（JSON）
-集計ツールは鍵 JSON を受け取れます。推奨フィールド:
-
-```json
-{
-  "recipient_kid": "issuer#kem-2025",
-  "recipient_x25519_private": "base64url(...)",
-  "recipient_pqc_kem": "ML-KEM-768",
-  "recipient_pqc_private": "base64url(...)",
-  "org_root_key": "base64url(...)",
-  "org_campaign_id": "campaign-1",
-  "org_key_policy": "campaign+layer1"
-}
-```
-
-`recipient_x25519_private` か `org_root_key` のどちらかを指定します。`org_root_key` を使う場合は、集計側で秘密鍵を決定的に導出するため、運用者が鍵を選ぶ必要がありません。
-
-#### 6.5.1 ルート鍵派生（事故防止）
-「鍵ズレ事故」を防ぐために、発行者は **組織ルート鍵** から **キャンペーンID** で受領者鍵を派生させる方式を採用できます（必要なら `layer1_ref` にもバインド）。
-
-- **ルート鍵** は集計環境に保管
-- **受領者公開鍵** はフォーム生成時に決定的に導出
-- Aggregator は **同じ導出手順** で秘密鍵を得る
-
-推奨する派生コンテキスト:
-- `campaign_id`（必須）
-- `layer1_ref`（`campaign+layer1` ポリシー時）
-
-これにより、運用者が鍵を選ばずに Form/集計で常に同じ鍵を使えます。
-
-#### 6.5.1.1 SRN インスタンス鍵との関係
-より強い管理のために、**組織ルート鍵** 自体を **SRN インスタンス鍵** から決定的に導出できます。
-
-```
-org_root_key = HKDF(srn_instance_key, info = "weba-l2/org-root" || org_id)
-```
-
-これにより、インスタンス鍵をオフラインに置いたまま、組織単位で安全に鍵を分離できます。
-
-### 6.6. PQC 有効化（ハイブリッド）
-PQC は **明示的に有効化した場合のみ** 利用します。`l2_recipient_pqc` に ML-KEM-768 公開鍵を設定すると **X25519 + ML-KEM-768** になります。未設定なら古典暗号のみです。
-
-**CLI 例**:
-- PQC 鍵を含めて生成: `bun src/bin/weba-l2-crypto.ts gen-keys --pqc`
-- 生成される JSON に `pqc_kem`, `pqc_publicKey`, `pqc_privateKey` が入ります。
-
-**ブラウザ側**:
-PQC 復号には ML-KEM-768 のプロバイダを用意し、`webaPqcKem` に登録します。
-
-## 7. ブラウザのみでの復号（Passkey 概念）
-Web/A は「単一 HTML で完結する」ことを重視するため、**ブラウザだけで復号できる UI** を想定します。
-
-### 7.1. Key Wrap の考え方
-受領者の **CEK** を Passkey 由来の鍵でラップし、HTML 内に埋め込みます。
-
-- フォームに **Key Wrap Package (KWP)** を添付
-- Passkey でアンロックすると CEK を復元
-- CEK で L2 envelope を復号
-
-### 7.2. 想定データブロック
-```json
-{
-  "weba-l2-envelope": { /* Layer2Encrypted */ },
-  "weba-l2-keywrap": {
-    "alg": "WebAuthn-PRF-AESGCM-v1",
-    "kid": "issuer#passkey-1",
-    "wrapped_key": "base64url(...)",
-    "credential_id": "base64url(...)",
-    "prf_salt": "base64url(...)",
-    "aad": "base64url(layer1_ref)"
-  }
-}
-```
-
-### 7.3. アンロックフロー
-1. 受領者が HTML を開く
-2. 「Unlock (Passkey)」をクリック
-3. WebAuthn `get()` を実行
-4. ブラウザが CEK を復元し L2 を復号
+## 7. 結論
+Web/A Layer 2 Encryption は、標準的なプリミティブ（HPKE, AES-GCM）とブラウザのネイティブ能力を活用し、サーバーレスでありながら高度な機密性を提供します。本稿で定義したセキュリティ強化策を適用することで、個人向けのアンケートから組織間の機密データ交換まで、幅広いユースケースにおいて信頼できるインフラを提供します。

@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cheerio from 'cheerio';
 import * as csv from 'fast-csv';
-import { decryptLayer2, deriveOrgX25519KeyPair, type OrgKeyPolicy } from '../core/l2crypto';
+import { decryptLayer2, deriveOrgX25519KeyPair, type OrgKeyPolicy, ReplayGuard } from '../core/l2crypto';
 import { createMlKem768Provider } from '../core/pqc';
 
 export type L2KeyFile = {
@@ -175,6 +175,7 @@ program
         const files = fs.readdirSync(dirPath).filter(f => f.toLowerCase().endsWith('.html'));
         console.log(`Found ${files.length} HTML files in ${dirPath}`);
 
+        const replayGuard = new ReplayGuard();
         const aggregatedData: any[] = [];
         const allKeys = new Set<string>(['_filename']);
 
@@ -185,6 +186,16 @@ program
             const filePath = path.join(dirPath, file);
             try {
                 const content = fs.readFileSync(filePath, 'utf-8');
+
+                // Replay protection check for L2
+                const l2EnvelopeForCheck = extractL2EnvelopeFromHtml(content);
+                if (l2EnvelopeForCheck?.meta?.nonce) {
+                    if (!replayGuard.checkAndMark(l2EnvelopeForCheck.meta.nonce)) {
+                        console.warn(`Warning: Replay detected in ${file} (nonce: ${l2EnvelopeForCheck.meta.nonce}). Skipping.`);
+                        continue;
+                    }
+                }
+
                 const extracted = await extractPlainFromHtml(content, l2Keys);
                 if (extracted.source === 'l2' && extracted.plain) {
                     const built = buildRowFromPlain({

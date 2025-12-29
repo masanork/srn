@@ -217,8 +217,13 @@ export async function encryptLayer2(
   const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
 
   // 4. AEAD: AES-256-GCM
-  // Add random padding to mitigate traffic analysis
-  const paddingLen = Math.floor(Math.random() * 256); // 0-255 bytes
+  // Pad to next 512-byte block to mitigate traffic analysis
+  const currentBytes = Buffer.from(canonicalJson(payload), "utf-8");
+  const BLOCK_SIZE = 512;
+  const overhead = 20; // approximate overhead for JSON structure {"_padding":"..."}
+  const targetSize = Math.ceil((currentBytes.length + overhead) / BLOCK_SIZE) * BLOCK_SIZE;
+  const paddingLen = Math.max(0, targetSize - currentBytes.length - overhead);
+
   const padding = randomBytes(paddingLen).toString("hex");
   const payloadWithPadding = { ...payload, _padding: padding };
 
@@ -258,55 +263,87 @@ export async function encryptLayer2(
 /**
  * Decrypt Layer 2 envelope.
  */
+/**
+ * ReplayGuard provides a simple mechanism to track nonces and prevent replay attacks.
+ * In a production environment, this should be backed by a persistent store (e.g., Redis).
+ */
+export class ReplayGuard {
+  private seenNonces = new Set<string>();
+
+  /**
+   * Check if a nonce has been seen before. If not, mark it as seen.
+   * @param nonce The nonce to check (base64url)
+   * @returns true if the nonce is new, false if it's a replay
+   */
+  checkAndMark(nonce: string): boolean {
+    if (this.seenNonces.has(nonce)) {
+      return false;
+    }
+    this.seenNonces.add(nonce);
+    return true;
+  }
+
+  /**
+   * Clear the seen nonces.
+   */
+  reset(): void {
+    this.seenNonces.clear();
+  }
+}
+
 export async function decryptLayer2(
   envelope: Layer2Encrypted,
   recipientPrivateKey: Uint8Array,
   options?: { pqc?: PqcDecryptOptions }
 ): Promise<Layer2Payload> {
-  if (envelope.layer2.suite.aead !== "AES-256-GCM") {
-    throw new Error("Unsupported AEAD");
-  }
-
-  const aadBytes = fromBase64Url(envelope.layer2.aad);
-  
-  // Verify AAD consistency with envelope
-  const aadObj = JSON.parse(Buffer.from(aadBytes).toString("utf-8"));
-  if (aadObj.layer1_ref !== envelope.layer1_ref || aadObj.recipient !== envelope.layer2.recipient) {
-    throw new Error("AAD mismatch");
-  }
-
-  // 1. KEM: X25519
-  const ephemeralPub = fromBase64Url(envelope.layer2.encapsulated.classical);
-  const ss1 = x25519.getSharedSecret(recipientPrivateKey, ephemeralPub);
-  let ikm = ss1;
-  if (envelope.layer2.encapsulated.pqc) {
-    const pqc = options?.pqc;
-    if (!pqc) {
-      throw new Error("Missing PQC KEM for envelope");
+  try {
+    if (envelope.layer2.suite.aead !== "AES-256-GCM") {
+      throw new Error("Unsupported AEAD");
     }
-    const pqcEnc = fromBase64Url(envelope.layer2.encapsulated.pqc);
-    const ss2 = pqc.kem.decapsulate(pqc.recipientPrivateKey, pqcEnc);
-    ikm = concatBytes(ss1, ss2);
+
+    const aadBytes = fromBase64Url(envelope.layer2.aad);
+
+    // Verify AAD consistency with envelope
+    const aadObj = JSON.parse(Buffer.from(aadBytes).toString("utf-8"));
+    if (aadObj.layer1_ref !== envelope.layer1_ref || aadObj.recipient !== envelope.layer2.recipient) {
+      throw new Error("AAD mismatch");
+    }
+
+    // 1. KEM: X25519
+    const ephemeralPub = fromBase64Url(envelope.layer2.encapsulated.classical);
+    const ss1 = x25519.getSharedSecret(recipientPrivateKey, ephemeralPub);
+    let ikm = ss1;
+    if (envelope.layer2.encapsulated.pqc) {
+      const pqc = options?.pqc;
+      if (!pqc) {
+        throw new Error("Missing PQC KEM for envelope");
+      }
+      const pqcEnc = fromBase64Url(envelope.layer2.encapsulated.pqc);
+      const ss2 = pqc.kem.decapsulate(pqc.recipientPrivateKey, pqcEnc);
+      ikm = concatBytes(ss1, ss2);
+    }
+
+    // 2. KDF: HKDF-SHA256
+    const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
+    const key = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
+    const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
+
+    // 3. AEAD: AES-256-GCM
+    const fullCiphertext = fromBase64Url(envelope.layer2.ciphertext);
+    const authTag = fullCiphertext.slice(-16);
+    const ciphertext = fullCiphertext.slice(0, -16);
+
+    const decipher = createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAAD(aadBytes);
+    decipher.setAuthTag(authTag);
+
+    const plaintext = Buffer.concat([
+      decipher.update(ciphertext),
+      decipher.final(),
+    ]);
+
+    return JSON.parse(plaintext.toString("utf-8"));
+  } catch (e) {
+    throw new Error("Decryption failed");
   }
-
-  // 2. KDF: HKDF-SHA256
-  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
-  const key = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
-  const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
-
-  // 3. AEAD: AES-256-GCM
-  const fullCiphertext = fromBase64Url(envelope.layer2.ciphertext);
-  const authTag = fullCiphertext.slice(-16);
-  const ciphertext = fullCiphertext.slice(0, -16);
-
-  const decipher = createDecipheriv("aes-256-gcm", key, iv);
-  decipher.setAAD(aadBytes);
-  decipher.setAuthTag(authTag);
-  
-  const plaintext = Buffer.concat([
-    decipher.update(ciphertext),
-    decipher.final(),
-  ]);
-
-  return JSON.parse(plaintext.toString("utf-8"));
 }
