@@ -6,6 +6,8 @@ use aes_gcm::{
 };
 use x25519_dalek::{StaticSecret, PublicKey as XPublicKey};
 use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
+use ml_kem::{MlKem768, MlKem768Params, Encoded, EncodedSizeUser, KemCore, Ciphertext};
+use ml_kem::kem::{EncapsulationKey, DecapsulationKey, Encapsulate, Decapsulate};
 use rand::prelude::*;
 
 #[wasm_bindgen]
@@ -18,7 +20,7 @@ pub fn constant_time_equal(a: &[u8], b: &[u8]) -> bool {
 
 #[wasm_bindgen]
 pub fn get_version() -> String {
-    "Web/A Crypto WASM v0.1.2 (AES-GCM + X25519 + Ed25519)".to_string()
+    "Web/A Crypto WASM v0.1.3 (AES-GCM + X25519 + Ed25519 + ML-KEM-768)".to_string()
 }
 
 #[wasm_bindgen]
@@ -126,4 +128,49 @@ pub fn ed25519_verify(public_key: &[u8], message: &[u8], signature: &[u8]) -> Re
     let signature = Signature::from_bytes(&sig_bytes);
     
     Ok(verifying_key.verify(message, &signature).is_ok())
+}
+
+// ML-KEM-768
+#[wasm_bindgen]
+pub fn ml_kem_768_generate_keypair() -> Result<Vec<u8>, JsValue> {
+    let mut rng = thread_rng();
+    let (dk, ek) = MlKem768::generate(&mut rng);
+    
+    let ek_bytes = ek.as_bytes();
+    let dk_bytes = dk.as_bytes();
+    
+    let mut out = Vec::with_capacity(ek_bytes.len() + dk_bytes.len());
+    out.extend_from_slice(dk_bytes.as_slice()); 
+    out.extend_from_slice(ek_bytes.as_slice());
+    Ok(out)
+}
+
+#[wasm_bindgen]
+pub fn ml_kem_768_encapsulate(public_key: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let mut rng = thread_rng();
+    
+    let ek_encoded = Encoded::<EncapsulationKey<MlKem768Params>>::try_from(public_key)
+        .map_err(|_| JsValue::from_str("Invalid public key length"))?;
+    let ek = EncapsulationKey::<MlKem768Params>::from_bytes(&ek_encoded);
+    
+    let (ct, ss) = ek.encapsulate(&mut rng).map_err(|_| JsValue::from_str("Encapsulation failed"))?;
+    
+    let mut out = Vec::with_capacity(ct.len() + ss.len());
+    out.extend_from_slice(ss.as_slice()); 
+    out.extend_from_slice(ct.as_slice());
+    Ok(out)
+}
+
+#[wasm_bindgen]
+pub fn ml_kem_768_decapsulate(private_key: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let dk_encoded = Encoded::<DecapsulationKey<MlKem768Params>>::try_from(private_key)
+        .map_err(|_| JsValue::from_str("Invalid private key length"))?;
+    let dk = DecapsulationKey::<MlKem768Params>::from_bytes(&dk_encoded);
+    
+    let ct = Ciphertext::<MlKem768>::try_from(ciphertext)
+        .map_err(|_| JsValue::from_str("Invalid ciphertext length"))?;
+    
+    let ss = dk.decapsulate(&ct).map_err(|_| JsValue::from_str("Decapsulation failed"))?;
+    
+    Ok(ss.to_vec())
 }

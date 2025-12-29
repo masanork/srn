@@ -4,7 +4,7 @@
     "serialNumber": "urn:uuid:68e82a47-f3c5-4424-8b1e-987654321098",
     "version": 2,
     "metadata": {
-        "timestamp": "2025-12-29T10:00:00Z",
+        "timestamp": "2025-12-29T10:05:00Z",
         "tools": [
             {
                 "vendor": "Sorane Project",
@@ -17,15 +17,15 @@
             "name": "srn",
             "version": "1.0.0",
             "type": "application",
-            "description": "Short for Sorane, a Static Site Generator with PQC security (CBOM enabled)."
+            "description": "Short for Sorane, a Static Site Generator with WASM-based PQC security (CBOM enabled)."
         }
     },
     "components": [
         {
             "name": "Web/A L2 Encryption Layer",
-            "version": "1.1",
+            "version": "1.2",
             "type": "cryptographic-asset",
-            "description": "The core cryptographic protocol for Web/A Layer 2 Confidentiality.",
+            "description": "The core cryptographic protocol for Web/A Layer 2 Confidentiality (Rust/WASM implementation).",
             "properties": [
                 {
                     "name": "crypto:algorithm:classical",
@@ -46,6 +46,10 @@
                 {
                     "name": "crypto:pqc_readiness",
                     "value": "Hybrid (Classical + PQC)"
+                },
+                {
+                    "name": "crypto:implementation",
+                    "value": "WebAssembly (Rust-based)"
                 },
                 {
                     "name": "crypto:crypto_agility",

@@ -8,7 +8,7 @@ export interface BaseLayoutProps {
     className?: string;
 }
 
-const MERMAID_ASSET_PATH = 'src/ssg/assets/vendor/mermaid.esm.min.mjs';
+const MERMAID_ASSET_PATH = 'src/ssg/assets/vendor/mermaid.min.js';
 let cachedMermaidDataUri: string | null = null;
 
 function getMermaidDataUri(): string | null {
@@ -39,30 +39,48 @@ export function baseLayout(props: BaseLayoutProps): string {
 
     const mermaidDataUri = getMermaidDataUri();
     const mermaidScript = mermaidDataUri ? `
-    <script type="module">
-        import mermaid from '${mermaidDataUri}';
-        
-        const fonts = ${fontListJson};
-        const fontFamily = fonts.join(', ');
-        
-        document.querySelectorAll('pre > code.language-mermaid').forEach((code) => {
-            const pre = code.closest('pre');
-            if (!pre) return;
-            const container = document.createElement('div');
-            container.className = 'mermaid';
-            container.textContent = code.textContent || '';
-            pre.replaceWith(container);
-        });
+    <script>
+        (() => {
+            const runMermaid = () => {
+                const mermaid = window.mermaid;
+                if (!mermaid) return;
 
-        mermaid.initialize({
-            startOnLoad: false,
-            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
-            fontFamily: fontFamily
-        });
-        
-        await mermaid.run({
-            querySelector: '.mermaid'
-        });
+                const fonts = ${fontListJson};
+                const fontFamily = fonts.join(', ');
+
+                document.querySelectorAll('pre > code.language-mermaid').forEach((code) => {
+                    const pre = code.closest('pre');
+                    if (!pre) return;
+                    const container = document.createElement('div');
+                    container.className = 'mermaid';
+                    container.textContent = code.textContent || '';
+                    pre.replaceWith(container);
+                });
+
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+                    fontFamily: fontFamily
+                });
+
+                mermaid.run({
+                    querySelector: '.mermaid'
+                });
+            };
+
+            const onReady = () => {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', runMermaid, { once: true });
+                } else {
+                    runMermaid();
+                }
+            };
+
+            const script = document.createElement('script');
+            script.src = '${mermaidDataUri}';
+            script.onload = onReady;
+            document.head.appendChild(script);
+        })();
     </script>
     ` : '';
 
