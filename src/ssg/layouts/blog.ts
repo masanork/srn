@@ -27,7 +27,7 @@ export function blogLayout(
     htmlContent: string,
     latestArticleContent?: string,
     latestArticleData?: any,
-    basePath = ''
+    relPath = ''
 ) {
     // Filter out index and system pages, showing only user articles
     let articles = allPages.filter(item =>
@@ -226,6 +226,6 @@ export function blogLayout(
         content: fullContent,
         fontCss,
         fontFamilies,
-        basePath
+        relPath
     });
 }

@@ -6,21 +6,17 @@ export interface BaseLayoutProps {
     jsonLd?: object;
     lang?: string;
     className?: string;
-    basePath?: string;
+    relPath?: string;
 }
 
 const MERMAID_ASSET_PATH = 'src/ssg/assets/vendor/mermaid.min.js';
 let cachedMermaidDataUri: string | null = null;
 
-function normalizeBasePath(value: string): string {
-    const trimmed = value.trim();
-    if (!trimmed || trimmed === '/') return '';
-    const withLeading = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    return withLeading.endsWith('/') ? withLeading.slice(0, -1) : withLeading;
-}
-
-function resolveAssetHref(basePath: string, assetPath: string): string {
-    return basePath ? `${basePath}/${assetPath}` : `/${assetPath}`;
+function getRelativePrefix(relPath: string | undefined): string {
+    if (!relPath) return '';
+    const normalized = relPath.replace(/\\/g, '/');
+    const depth = normalized.split('/').length - 1;
+    return depth > 0 ? '../'.repeat(depth) : '';
 }
 
 function getMermaidDataUri(): string | null {
@@ -39,11 +35,11 @@ function getMermaidDataUri(): string | null {
 }
 
 export function baseLayout(props: BaseLayoutProps): string {
-    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja', className = '', basePath = '' } = props;
-    const normalizedBasePath = normalizeBasePath(basePath);
-    const styleHref = resolveAssetHref(normalizedBasePath, 'style.css');
-    const sitemapHref = resolveAssetHref(normalizedBasePath, 'sitemap.xml');
-    const llmsHref = resolveAssetHref(normalizedBasePath, 'llms.txt');
+    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja', className = '', relPath } = props;
+    const relativePrefix = getRelativePrefix(relPath);
+    const styleHref = `${relativePrefix}style.css`;
+    const sitemapHref = `${relativePrefix}sitemap.xml`;
+    const llmsHref = `${relativePrefix}llms.txt`;
 
     // JSON-LD script block
     const jsonLdScript = jsonLd

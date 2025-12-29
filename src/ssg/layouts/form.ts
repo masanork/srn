@@ -13,7 +13,7 @@ export function formLayout(
     fontCss: string,
     fontFamilies: string[],
     vc?: object,
-    basePath = ''
+    relPath = ''
 ) {
     const { html, jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
@@ -111,7 +111,7 @@ export function formLayout(
         fontCss,
         fontFamilies,
         lang: lang,
-        basePath
+        relPath
     });
 }
 
@@ -120,7 +120,7 @@ export function formReportLayout(
     rawMarkdown: string,
     fontCss: string,
     fontFamilies: string[],
-    basePath = ''
+    relPath = ''
 ) {
     const { jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
@@ -295,6 +295,6 @@ export function formReportLayout(
         fontCss,
         fontFamilies,
         lang: lang,
-        basePath
+        relPath
     });
 }

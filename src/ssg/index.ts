@@ -77,8 +77,7 @@ async function build() {
             idManager,
             distDir: DIST_DIR,
             relPath: file,
-            contentDir: CONTENT_DIR,
-            basePath: config.identity.path
+            contentDir: CONTENT_DIR
         });
 
         // Write Outputs
@@ -184,7 +183,35 @@ async function isUpToDate(src: string, relPath: string, distDir: string, layout:
     const target = path.join(distDir, relPath.replace('.md', '.html'));
     if (!await fs.pathExists(target)) return false;
     const [s, t] = await Promise.all([fs.stat(src), fs.stat(target)]);
-    return s.mtime <= t.mtime;
+    if (s.mtime > t.mtime) return false;
+
+    const deps = getLayoutDependencies(layout);
+    if (deps.length === 0) return true;
+
+    const depStats = await Promise.all(
+        deps.map(dep => fs.stat(dep).catch(() => null))
+    );
+    const latestDep = depStats.reduce((latest, stat) => {
+        if (!stat) return latest;
+        return latest && latest > stat.mtime ? latest : stat.mtime;
+    }, null as Date | null);
+
+    return latestDep ? latestDep <= t.mtime : true;
+}
+
+function getLayoutDependencies(layout: string) {
+    const baseDir = path.join(process.cwd(), 'src', 'ssg', 'layouts');
+    const base = path.join(baseDir, 'base.ts');
+    const layoutKey = (layout || 'article').toString();
+    const layoutFiles: Record<string, string> = {
+        article: path.join(baseDir, 'article.ts'),
+        blog: path.join(baseDir, 'blog.ts'),
+        form: path.join(baseDir, 'form.ts'),
+        verifier: path.join(baseDir, 'verifier.ts'),
+        juminhyo: path.join(baseDir, 'juminhyo.ts')
+    };
+    const layoutPath = layoutFiles[layoutKey];
+    return layoutPath ? [base, layoutPath] : [base];
 }
 
 async function bundleClientScripts(distDir: string) {

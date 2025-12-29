@@ -17,7 +17,7 @@ export function articleLayout(
     fontCss: string,
     fontFamilies: string[],
     vc?: any,
-    basePath = ''
+    relPath = ''
 ) {
     const siteDid = vc?.issuer || "did:web:masanork.github.io:srn";
     const lang = (data.lang || 'ja').toString();
@@ -252,7 +252,7 @@ export function articleLayout(
         jsonLd: schema,
         lang: lang,
         className: `layout-${data.layout || 'article'}${presentationEnabled ? ` presentation-template-${presentationTemplate}` : ''}`,
-        basePath
+        relPath
     });
 }
 
