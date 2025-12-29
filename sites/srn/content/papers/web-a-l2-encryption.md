@@ -212,11 +212,12 @@ A critical threat is an attacker taking an encrypted answer from Form A (e.g., "
 ### 7.2. Replay Protection (Nonce Tracking)
 Since the Layer 2 protocol is stateless, an attacker could resubmit a valid encrypted envelope multiple times.
 *   **Mitigation**: The `Layer2Encrypted` structure includes a `meta.nonce` field.
-*   **Requirement**: Aggregators **MUST** implement nonce verification. A reference `ReplayGuard` utility is provided in the core library that tracks seen nonces in memory. For production use, this should be backed by a persistent store to prevent replays across aggregator restarts.
+*   **Requirement**: Aggregators **MUST** implement nonce verification. A reference `ReplayGuard` utility is provided in the core library that tracks seen nonces.
+    *   **Persistent Storage**: To prevent replays across aggregator restarts, persistent stores are provided: `JsonFileReplayStore` for CLI (using `--replay-store`) and `LocalStorageReplayStore` for browsers (zero-touch).
 
 ### 7.3. Traffic Analysis (Padding)
 The length of the ciphertext reveals the approximate size of the plaintext, which might leak information (e.g., "Yes" vs "No" answers).
-*   **Mitigation**: The `Layer2Payload` includes a `_padding` field. The implementation pads the JSON payload to the next **512-byte boundary**. This ensures that messages of similar sizes are indistinguishable on the wire.
+*   **Mitigation**: The `Layer2Payload` includes a `_padding` field. The implementation uses a **bucket-based padding strategy** (e.g., 1KB, 4KB, 16KB, 64KB, etc.). This ensures that messages are normalized to specific size tiers, making it extremely difficult to distinguish between payloads of different sizes, even for larger documents.
 
 ### 7.4. Side-Channel Mitigation (Unified Errors)
 Detailed error messages in cryptographic operations can act as an oracle for attackers.
@@ -232,13 +233,13 @@ Detailed error messages in cryptographic operations can act as an oracle for att
 *   **Integrity Protection**: To prevent malicious PQC provider injection (e.g., via XSS), the application **MUST** use a strict Content Security Policy (CSP) and Subresource Integrity (SRI) for all cryptographic modules. The project is moving toward a self-contained WebAssembly module to further isolate cryptographic logic from the highly dynamic JavaScript environment.
 
 ### 7.7. Supply Chain Security
-*   **Dependency Pinning**: All cryptographic dependencies (e.g., `@noble/*`) are pinned to specific versions in `package-lock.json`. 
-*   **Future Mitigation**: The roadmap includes "Vendoring" (in-tree copies) of verified cryptographic primitives to eliminate reliance on public registries for critical security logic.
+*   **Vendoring**: Core cryptographic primitives (e.g., `@noble/*`) are vendored directly into the source tree (`src/vendor/`) to eliminate reliance on public registries and prevent supply chain injection for critical security logic.
+*   **SBOM/CBOM**: A full Software and Cryptography Bill of Materials (`sbom.json`) is maintained to ensure transparency and auditability of the cryptographic stack.
 
 ## 8. Current Implementation Status & Roadmap
-*   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`).
-*   **Replay Protection**: Integrated into Aggregator CLI and Browser tools via `ReplayGuard`.
-*   **Forward Secrecy**: Pre-key fetching hook implemented; requires a compatible pre-key server.
+*   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`) using vendored primitives.
+*   **Replay Protection**: Fully implemented with persistent storage support in both CLI and Browser aggregators.
+*   **Supply Chain**: Vendoring completed; SBOM/CBOM (`sbom.json`) available.
 *   **WASM Transition (Roadmap)**: Move core cryptographic primitives to a Rust-compiled WebAssembly module (`weba-crypto-wasm`) to ensure constant-time execution and better memory isolation.
 
 ## 9. Conclusion

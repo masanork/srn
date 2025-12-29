@@ -136,6 +136,18 @@ export type PqcKemProvider = {
 
 export type OrgKeyPolicy = "campaign" | "campaign+layer1";
 
+/**
+ * Calculate target size for padding based on a bucket strategy to mitigate traffic analysis.
+ * Uses jumps (1KB, 4KB, 16KB, 64KB, 256KB, 1MB) to hide exact payload size for larger data.
+ */
+export function getPaddingTargetSize(currentSize: number): number {
+  const buckets = [1024, 4096, 16384, 65536, 262144, 1048576];
+  for (const b of buckets) {
+    if (currentSize <= b) return b;
+  }
+  return Math.ceil(currentSize / 1048576) * 1048576;
+}
+
 const L2_SIG_KEY_STORAGE = "weba_l2_ed25519_sk";
 
 export function b64urlEncode(bytes: Uint8Array): string {
@@ -307,15 +319,10 @@ export async function buildLayer2Envelope(params: {
     layer2_sig: layer2Sig,
   };
 
-  // Pad to next 512-byte block to mitigate traffic analysis
+  // Pad using bucket method to mitigate traffic analysis
   const currentBytes = new TextEncoder().encode(canonicalJson(payload));
-  // We want the FINAL payloadBytes to be multiple of 512.
-  // But payloadBytes includes the padding field itself.
-  // Simple approach: calculate how much padding we need to reach the next 512-byte boundary
-  // for the JSON representation.
-  const BLOCK_SIZE = 512;
-  const overhead = 20; // approximate overhead for JSON structure {"_padding":"..."}
-  const targetSize = Math.ceil((currentBytes.length + overhead) / BLOCK_SIZE) * BLOCK_SIZE;
+  const overhead = 32; // approximate overhead for JSON structure {"_padding":"..."}
+  const targetSize = getPaddingTargetSize(currentBytes.length + overhead);
   const paddingNeeded = targetSize - currentBytes.length - overhead;
 
   const paddingBytes = randomBytes(Math.max(0, paddingNeeded));
