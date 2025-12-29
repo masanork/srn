@@ -82,6 +82,21 @@ sequenceDiagram
 - Phase 2: Signed pre-key bundles + replay-safe issuance.
 - Phase 3: Privacy-preserving request logs + anomaly detection.
 
+## 10. Operations & Testing (Draft)
+
+### 10.1. Operations Checklist
+- Daily batch upload of pre-keys with TTL (e.g. 24h).
+- Monitor key pool depth and auto-replenish on low watermark.
+- Rotate server credentials and audit log access quarterly.
+- Alert when fallback-to-static-key rate exceeds threshold.
+
+### 10.2. Test Plan (Minimum)
+- **Key Exhaustion**: Simulate zero pre-keys and verify fallback behavior + warning logs.
+- **One-Time Use**: Fetch same `kid` twice and ensure the second request fails.
+- **TTL Enforcement**: Reject expired keys even if unused.
+- **Rate Limiting**: Confirm request bursts are throttled.
+- **Integrity**: Validate signatures on signed bundles (Phase 2).
+
 ## 10. Related Documents
 - [Web/A L2 Encryption](./web-a-l2-encryption.html)
 - [Security Audit v2](./web-a-l2-security-audit-v2.html)

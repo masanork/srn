@@ -252,7 +252,10 @@ Detailed error messages in cryptographic operations can act as an oracle for att
            frame-ancestors 'none';">
 ```
 *   **SRI Values**: Replace `__SRI_MKFORM__` and `__SRI_WASM_GLUE__` with build-generated SHA-256 hashes for `mkform.js` and the Wasm loader script.
-*   **Delivery**: Prefer HTTP headers for CSP, and keep inline scripts to a minimum to avoid `unsafe-inline` for `script-src`.
+*   **Delivery**: Prefer HTTP headers for CSP on hosted deployments. For offline HTML bundles, use `<meta http-equiv="Content-Security-Policy">` and keep inline scripts to a minimum.
+*   **Build Guidance**:
+    *   Generate SRI with a reproducible build, e.g. `openssl dgst -sha256 -binary mkform.js | openssl base64 -A`.
+    *   If a page embeds inline runtime (e.g. `weba-structure` JSON), either hash that inline block or move it to a separate file and add its SRI.
 
 ### 7.8. Supply Chain Security
 *   **Vendoring**: Core cryptographic primitives (e.g., `@noble/*`) are vendored directly into the source tree (`src/vendor/`) to eliminate reliance on public registries and prevent supply chain injection for critical security logic.
