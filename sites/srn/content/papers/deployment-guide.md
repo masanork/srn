@@ -18,7 +18,7 @@ The security of Web/A relies on the strict separation of public artifacts and pr
 | :--- | :--- | :--- |
 | **Form HTML (L1)** | Static Web Server / CDN | Public |
 | **Epoch Registry** (`epoch-public.json`) | Static Web Server / CDN | Public |
-| **Pre-key Worker** (Cloudflare) | Cloudflare Edge | Public (Handles metadata) |
+| **Pre-key Worker** (Cloudflare/Firebase) | Cloudflare Edge / Google Cloud | Public (Handles metadata) |
 | **Org Root Key** | Aggregator Local Storage | **CRITICAL PRIVATE** |
 | **Epoch/Pre-key Keystores** | Aggregator Local Storage | **CRITICAL PRIVATE** |
 
@@ -60,39 +60,47 @@ This tier requires pre-generating keys for future time windows.
     Ensure your form config has `l2_epoch_registry_url: "/keys/epoch-public.json"`.
 
 ### 3.2. Tier 3: True PFS (Cloudflare Worker)
-(Existing Cloudflare instructions...)
+Recommended for agile deployments and low-latency edge distribution.
+
+1.  **Create D1 Database**:
+    ```bash
+    bunx wrangler d1 create weba-prekeys
+    ```
+2.  **Generate Pre-keys**:
+    ```bash
+    bun src/bin/weba-l2-crypto.ts gen-prekeys --format cloudflare -n 1000 --out ./keys
+    ```
+3.  **Upload to Cloudflare**:
+    ```bash
+    bunx wrangler d1 execute weba-prekeys --remote --file ./keys/prekeys-public.sql
+    ```
+4.  **Deploy Worker**:
+    ```bash
+    cd src/tools/prekey-worker
+    # Edit wrangler.toml with your database_id
+    bunx wrangler deploy
+    ```
 
 ### 3.3. Tier 3 (Alt): True PFS (Firebase / Google Cloud)
 Recommended for organizations requiring **ISMAP compliance** or using **Government Cloud**. This path also allows consolidating site hosting and the PFS backend under a single security boundary.
 
-#### A. Full Firebase Deployment (Hosting + Backend)
-By using Firebase for both static hosting and the pre-key server, you simplify government compliance reviews.
+1.  **Initialize Firebase Project**:
+    - Create a project in the Firebase Console.
+    - **IMPORTANT (ISMAP/Compliance)**: Choose an appropriate region. For Japanese government projects, selecting **`asia-northeast1` (Tokyo)** or **`asia-northeast2` (Osaka)** is strongly recommended.
+    - Enable **Cloud Firestore** and **Cloud Functions**.
 
-1.  **Site Build**:
+2.  **Full Firebase Deployment (Hosting + Backend)**:
     ```bash
-    bun run build  # Ensure static files are in the 'dist' directory
-    ```
-2.  **Configuration**:
-    - Update `.firebaserc` with your project ID.
-    - `firebase.json` is already configured to serve `dist/` and route `/api/v1/prekey`.
-3.  **Deployment**:
-    ```bash
-    # Deploys both the static site and the PFS Cloud Function
+    bun run build  # Static files into 'dist/srn'
     firebase deploy
     ```
 
-#### B. Pre-key Backend Setup Only
-(Existing instructions...)
-1.  **Generate Pre-keys (Firebase Format)**:
+3.  **Import Pre-keys to Firestore**:
     ```bash
     bun src/bin/weba-l2-crypto.ts gen-prekeys --format firebase -n 1000 --out ./keys
-    ```
-2.  **Import to Firestore**:
-    ```bash
     export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
     bun src/tools/prekey-firebase/scripts/import_keys.ts ./keys/prekeys-firebase.json
     ```
-
 
 ---
 
