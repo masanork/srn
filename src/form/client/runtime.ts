@@ -113,6 +113,37 @@ export function initRuntime() {
     initKeywrapTool();
     initAggregatorBrowser();
 
+    // Inject Security Signal Element
+    if (l2Config?.enabled) {
+        const toolbar = document.querySelector('.form-toolbar');
+        if (toolbar) {
+            const signal = document.createElement('div');
+            signal.id = 'weba-security-signal';
+            signal.className = 'security-badge';
+            signal.textContent = 'Initializing Security...';
+            toolbar.appendChild(signal);
+
+            // Initial proactive check
+            (async () => {
+                let initialTier: 'high' | 'standard' | 'offline' = 'offline';
+                if (l2Config.prekey_url) {
+                    try {
+                        const res = await fetch(l2Config.prekey_url, { method: 'HEAD' });
+                        if (res.ok) initialTier = 'high';
+                    } catch { }
+                }
+                if (initialTier === 'offline' && l2Config.epoch_registry_url) {
+                    try {
+                        const res = await fetch(l2Config.epoch_registry_url, { method: 'HEAD' });
+                        if (res.ok) initialTier = 'standard';
+                    } catch { }
+                }
+                // Dispatch event to update UI
+                window.dispatchEvent(new CustomEvent('weba-security-tier-change', { detail: { tier: initialTier } }));
+            })();
+        }
+    }
+
     // Global Input Listener
     let tm: any;
     document.addEventListener('input', (e) => {
