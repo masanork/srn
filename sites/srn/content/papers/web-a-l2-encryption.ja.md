@@ -6,8 +6,6 @@ date: 2025-12-29
 ai_generated: true
 ---
 
-# 討議資料：Web/A Layer 2 Encryption
-
 ## 1. 概要
 本稿は Web/A 文書の **Layer 2 Encryption (L2E)** を定義します。Layer 1 はテンプレート（質問）の完全性、Layer 2（Signature）はユーザー回答（回答者）の真正性を保証します。Layer 2 Encryption は **機密性** を提供し、配送経路やブラウザ保存が信頼できない場合でも、回答内容が **受領者（Issuer/Aggregator）だけ** に読めるようにします。
 
@@ -78,6 +76,45 @@ Web/A プロトコルはステートレスであるため、攻撃者が有効�
   }
 }
 ```
+
+### 5.2. Reply メタデータとルーティング
+
+L2E で受領した回答に対する返信を定義するため、`meta.reply_to` を追加
+します。返信先の決定、DID 解決、暗号化と署名、そして Folio への保存
+位置をここで標準化します。
+
+**reply_to の必須フィールド（最小セット）**
+- `reply_to.did`: 返信先の DID。必須。
+- `reply_to.endpoint`: 返信先の配信エンドポイント。必須。
+- `reply_to.broker`: 仲介を行うブローカーの DID。任意。
+
+**DID 解決手順（返信先の確定）**
+1. `reply_to.endpoint` があれば、それを優先して使用。
+2. `reply_to.endpoint` が無い場合、`reply_to.did` を解決して DID Doc を
+   取得。
+3. DID Doc の `service` から `type: "weba-reply"` を検索し、`serviceEndpoint`
+   を返信先として採用。
+4. `did:web` の場合は HTTPS で DID Doc を取得し、サービスエントリを
+   検索する。
+5. 取得結果が複数ある場合は、`priority` の低いもの（数値が小さいもの）
+   を優先する。解決不能なら返信は失敗とする。
+
+**暗号化対象と署名対象**
+- 返信ペイロードは「送信者署名 → 受信者 DID への L2E 暗号化」の順。
+- 署名対象は、返信本文・`reply_to`・`layer1_ref` を含む「平文 JSON」。
+- 暗号化対象は署名済みペイロード全体（署名情報を含む）。
+
+**ブローカー経由のルール**
+- ブローカーは `reply_to.did` と `reply_to.endpoint` を **上書きしては
+  ならない**。
+- ブローカーは転送記録を `meta.forwarded_by[]` に追記する。
+- 送信者は `reply_to.broker` を指定した場合、ブローカーによる
+  `forwarded_by` 追記を許容する。
+
+**Folio への保存先**
+- Folio では返信メタデータを `history/` 内のメッセージ記録に保持する。
+- メッセージ本文とは別に、`history/<message-id>.meta.json` に
+  `reply_to` と `forwarded_by` を保存し、スレッド管理と紐付ける。
 
 ---
 
