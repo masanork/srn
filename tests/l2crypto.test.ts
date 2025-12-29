@@ -60,8 +60,8 @@ describe("Web/A Layer 2 Crypto", () => {
   });
 
   test("Roundtrip encryption and signature", async () => {
-    const recipient = generateRecipientKeyPair();
-    const user = generateUserKeyPair();
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
     const layer1Ref = "sha256:test-form-hash";
     const plain = {
       question1: "Answer 1",
@@ -90,13 +90,13 @@ describe("Web/A Layer 2 Crypto", () => {
     expect(decryptedPayload.layer2_plain).toEqual(plain);
 
     // 4. Verify Signature
-    const isSigValid = verifyLayer2Signature(decryptedPayload, user.publicKey);
+    const isSigValid = await verifyLayer2Signature(decryptedPayload as any, user.publicKey);
     expect(isSigValid).toBe(true);
   });
 
   test("Decryption fails if AAD is tampered", async () => {
-    const recipient = generateRecipientKeyPair();
-    const user = generateUserKeyPair();
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
     const plain = { hello: "world" };
     const sig = await signLayer2(plain, user.privateKey, "user#1");
     const payload = { layer2_plain: plain, layer2_sig: sig };
@@ -117,8 +117,8 @@ describe("Web/A Layer 2 Crypto", () => {
   });
 
   test("Decryption fails if ciphertext is tampered", async () => {
-    const recipient = generateRecipientKeyPair();
-    const user = generateUserKeyPair();
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
     const plain = { hello: "world" };
     const sig = await signLayer2(plain, user.privateKey, "user#1");
     const payload = { layer2_plain: plain, layer2_sig: sig };
@@ -131,6 +131,7 @@ describe("Web/A Layer 2 Crypto", () => {
     );
 
     // Tamper with ciphertext
+    if (!envelope.layer2.ciphertext) throw new Error("Missing ciphertext");
     const ct = Buffer.from(envelope.layer2.ciphertext, "base64url");
     ct[0] ^= 0xff;
     envelope.layer2.ciphertext = ct.toString("base64url");
@@ -139,8 +140,8 @@ describe("Web/A Layer 2 Crypto", () => {
   });
 
   test("Hybrid PQC hook encrypts and decrypts when provided", async () => {
-    const recipient = generateRecipientKeyPair();
-    const user = generateUserKeyPair();
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
     const plain = { hello: "pqc" };
     const sig = await signLayer2(plain, user.privateKey, "user#1");
     const payload = { layer2_plain: plain, layer2_sig: sig };

@@ -1,5 +1,5 @@
 import { expect, test, describe, beforeAll } from "bun:test";
-import { initWasm, constantTimeEqual, aesGcmEncrypt, aesGcmDecrypt } from "../src/core/wasm_core.ts";
+import { initWasm, constantTimeEqual, aesGcmEncrypt, aesGcmDecrypt, x25519GenerateKeyPair, x25519GetSharedSecret } from "../src/core/wasm_core.ts";
 
 describe("WASM Crypto Core", () => {
     beforeAll(async () => {
@@ -39,6 +39,18 @@ describe("WASM Crypto Core", () => {
 
         const ciphertext = aesGcmEncrypt(key, iv, plaintext, aad);
 
+
         expect(() => aesGcmDecrypt(key, iv, ciphertext, new Uint8Array([1, 2, 4]))).toThrow("Decryption failed");
+    });
+
+    test("x25519 should roundtrip correctly", () => {
+        const alice = x25519GenerateKeyPair();
+        const bob = x25519GenerateKeyPair();
+
+        const ss1 = x25519GetSharedSecret(alice.privateKey, bob.publicKey);
+        const ss2 = x25519GetSharedSecret(bob.privateKey, alice.publicKey);
+
+        expect(ss1).toEqual(ss2);
+        expect(ss1.length).toBe(32);
     });
 });
