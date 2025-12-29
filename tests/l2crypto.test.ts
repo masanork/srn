@@ -81,8 +81,10 @@ describe("Web/A Layer 2 Crypto", () => {
       payload,
       recipient.publicKey,
       layer1Ref,
-      "issuer#1"
+      "issuer#1",
+      { userSk: user.privateKey }
     );
+
 
     // 3. Decrypt
     const decryptedPayload = await decryptLayer2(envelope, recipient.privateKey);
@@ -105,8 +107,10 @@ describe("Web/A Layer 2 Crypto", () => {
       payload,
       recipient.publicKey,
       "ref1",
-      "issuer#1"
+      "issuer#1",
+      { userSk: user.privateKey }
     );
+
 
     // Tamper with layer1_ref in envelope (not AAD byte array yet)
     envelope.layer1_ref = "ref2";
@@ -114,8 +118,9 @@ describe("Web/A Layer 2 Crypto", () => {
     // Decrypt should fail because of AAD mismatch check in decryptLayer2
     // or if we tampered the actual AAD bytes, the GCM auth would fail.
     await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow(
-      "Decryption failed",
+      "AAD mismatch"
     );
+
   });
 
   test("Decryption fails if ciphertext is tampered", async () => {
@@ -133,12 +138,13 @@ describe("Web/A Layer 2 Crypto", () => {
     );
 
     // Tamper with ciphertext
-    if (!envelope.layer2.ciphertext) throw new Error("Missing ciphertext");
-    const ct = Buffer.from(envelope.layer2.ciphertext, "base64url");
-    if (ct.length > 0) {
+    const ciphertext = envelope.layer2?.ciphertext;
+    if (!ciphertext) throw new Error("Missing ciphertext");
+    const ct = Buffer.from(ciphertext, "base64url");
+    if (ct && ct.length > 0) {
       ct[0] ^= 0xff;
     }
-    envelope.layer2.ciphertext = ct.toString("base64url");
+    envelope.layer2!.ciphertext = ct.toString("base64url");
 
     await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow();
   });
@@ -155,7 +161,9 @@ describe("Web/A Layer 2 Crypto", () => {
 
     const envelope = await encryptLayer2(payload, recipient.publicKey, "ref1", "issuer#1", {
       pqc: { kem: pqcProvider, recipientPublicKey: pqcKeys.publicKey },
+      userSk: user.privateKey,
     });
+
 
     expect(envelope.layer2.encapsulated.pqc).toBeTruthy();
     expect(envelope.layer2.suite.kem).toBe("X25519+ML-KEM-768");

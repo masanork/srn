@@ -193,4 +193,93 @@ describe("Web/A L2 crypto", () => {
       }),
     ).rejects.toThrow();
   });
+
+  describe("LocalStorageReplayStore", () => {
+    test("persistence and reset", async () => {
+      localStorageMock.clear();
+      const store = new (require("./l2crypto").LocalStorageReplayStore)("test_nonces");
+      await store.add("n1");
+      expect(await store.has("n1")).toBe(true);
+      expect(localStorageMock.getItem("test_nonces")).toContain("n1");
+
+      const store2 = new (require("./l2crypto").LocalStorageReplayStore)("test_nonces");
+      expect(await store2.has("n1")).toBe(true);
+
+      await store2.reset();
+      expect(await store2.has("n1")).toBe(false);
+      expect(localStorageMock.getItem("test_nonces")).toBe("[]");
+    });
+
+    test("handles corrupt data", () => {
+      localStorageMock.setItem("corrupt", "invalid-json");
+      const store = new (require("./l2crypto").LocalStorageReplayStore)("corrupt");
+      expect(store).toBeDefined();
+    });
+  });
+
+  describe("ReplayGuard", () => {
+    test("memory-only guard", async () => {
+      const guard = new (require("./l2crypto").ReplayGuard)();
+      expect(await guard.checkAndMark("a")).toBe(true);
+      expect(await guard.checkAndMark("a")).toBe(false);
+      await guard.reset();
+      expect(await guard.checkAndMark("a")).toBe(true);
+    });
+  });
+
+  test("getPaddingTargetSize for large sizes", () => {
+    const { getPaddingTargetSize } = require("./l2crypto");
+    expect(getPaddingTargetSize(2000000)).toBe(1048576 * 2);
+  });
+
+  test("deriveOrgX25519KeyPair validation", () => {
+    const { deriveOrgX25519KeyPair } = require("./l2crypto");
+    expect(() => deriveOrgX25519KeyPair({
+      orgRootKey: new Uint8Array(32),
+      campaignId: "c1",
+      keyPolicy: "campaign+layer1"
+    })).toThrow("layer1_ref is required");
+  });
+
+  test("fetchPreKey", async () => {
+    const { fetchPreKey } = require("./l2crypto");
+    (globalThis as any).fetch = async () => ({
+      ok: true,
+      json: async () => ({ kid: "k1", recipient_x25519: "pub" })
+    });
+    const key = await fetchPreKey("http://example.com");
+    expect(key?.kid).toBe("k1");
+
+    (globalThis as any).fetch = async () => ({ ok: false, status: 500 });
+    const fail = await fetchPreKey("http://example.com");
+    expect(fail).toBeNull();
+  });
+
+  test("decryptLayer2Envelope AAD mismatch", async () => {
+    const recipientSk = x25519.utils.randomSecretKey();
+    const recipientPk = x25519.getPublicKey(recipientSk);
+    const envelope = await buildLayer2Envelope({
+      layer2_plain: { foo: "bar" },
+      config: {
+        enabled: true,
+        recipient_kid: "issuer#1",
+        recipient_x25519: b64urlEncode(recipientPk),
+        layer1_ref: "ref1"
+      }
+    });
+    const tampered = { ...envelope, layer1_ref: "ref2" };
+    await expect(decryptLayer2Envelope(tampered, recipientSk)).rejects.toThrow("AAD mismatch");
+  });
+
+  test("loadL2Config paths", () => {
+    const { loadL2Config } = require("./l2crypto");
+    document.body.innerHTML = '<script id="weba-l2-config" type="application/json">{"enabled":true}</script>';
+    expect(loadL2Config()?.enabled).toBe(true);
+
+    document.body.innerHTML = '<script id="weba-l2-config" type="application/json">invalid</script>';
+    expect(loadL2Config()).toBeNull();
+
+    document.body.innerHTML = '';
+    expect(loadL2Config()).toBeNull();
+  });
 });

@@ -113,35 +113,41 @@ export function baseLayout(props: BaseLayoutProps): string {
     ${fontCss}
     ${jsonLdScript}
     ${mermaidScript}
-</head>
     <style>
-        [lang="ja"] { display: none !important; }
-        .js-lang-ja [lang="ja"] { display: block !important; }
-        .js-lang-ja span[lang="ja"], .js-lang-ja a[lang="ja"], .js-lang-ja i[lang="ja"] { display: inline !important; }
-        .js-lang-ja [lang="en"] { display: none !important; }
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
     </style>
-</head>
-<body class="${className}">
-    <main>
-        ${content}
-    </main>
     <script>
         (() => {
             const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
             if (lang === 'ja') {
                 document.documentElement.lang = 'ja';
-                document.body.classList.add('js-lang-ja');
+                document.documentElement.classList.add('js-lang-ja');
             } else {
-                document.body.classList.add('js-lang-en');
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
             }
-            // Backward compatibility for simple text replacements
-            document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
-                const ja = el.getAttribute('data-i18n-ja') || '';
-                const en = el.getAttribute('data-i18n-en') || ja;
-                el.textContent = lang === 'ja' ? ja : en;
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
             });
         })();
     </script>
+</head>
+<body class="${className}">
+    <main>
+        ${content}
+    </main>
 </body>
 </html>`;
 }

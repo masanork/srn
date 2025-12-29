@@ -15,38 +15,62 @@ import init, {
     ml_dsa_44_generate_keypair as wasm_ml_dsa_gen,
     ml_dsa_44_sign as wasm_ml_dsa_sign,
     ml_dsa_44_verify as wasm_ml_dsa_verify,
-    sha256_hash as wasm_sha256,
-    hkdf_sha256_derive as wasm_hkdf,
+    sha256_wasm as wasm_sha256,
+    hkdf_sha256_wasm as wasm_hkdf,
     get_padding_target_size as wasm_get_padding,
+    build_l2_envelope_wasm as wasm_build_l2,
+    decrypt_l2_envelope_wasm as wasm_decrypt_l2,
 } from "./wasm_bindings/weba_crypto_wasm.js";
-import * as fs from "node:fs";
-import * as path from "node:path";
+import { WASM_BINARY_B64 } from "./wasm_binary.ts";
+
+// No top-level Node imports here to keep it browser-compatible
 
 let initialized = false;
 
 /**
  * Initialize the WASM crypto module.
- * In a Node.js/Bun environment, we read the .wasm file from the filesystem.
+ * @param source Optional WASM source (URL, Response, or Buffer). If omitted, tries to load from local filesystem (Node/Bun only).
  */
-export async function initWasm() {
+export async function initWasm(source?: any) {
     if (initialized) return;
 
-    // For Node.js/Bun compatibility
-    const wasmPath = path.join(import.meta.dirname, "wasm_bindings/weba_crypto_wasm_bg.wasm");
-    const wasmBuffer = fs.readFileSync(wasmPath);
-    await init(wasmBuffer);
+    if (source) {
+        await init(source);
+    } else if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+        // Node.js / Bun environment
+        const fs = await import("node:fs");
+        const path = await import("node:path");
+        // @ts-ignore
+        const wasmPath = path.join(import.meta.dirname, "wasm_bindings/weba_crypto_wasm_bg.wasm");
+        const wasmBuffer = fs.readFileSync(wasmPath);
+        await init(wasmBuffer);
+    } else {
+        throw new Error("WASM source must be provided in browser environment");
+    }
 
     initialized = true;
     console.log(`WASM Crypto Initialized: ${get_version()}`);
 }
 
 /**
+ * Initialize WASM from the embedded base64 binary.
+ * Useful for standalone browser environments.
+ */
+export async function initWasmFromB64() {
+    if (initialized) return;
+    const binary = atob(WASM_BINARY_B64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    await initWasm(bytes);
+}
+
+/**
  * Constant-time byte array comparison using WASM.
  */
 export function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
-    if (!initialized) {
-        throw new Error("WASM module not initialized. Call initWasm() first.");
-    }
+    if (!initialized) throw new Error("WASM not initialized");
     return wasm_ct_equal(a, b);
 }
 
@@ -126,12 +150,10 @@ export function ed25519Verify(publicKey: Uint8Array, message: Uint8Array, signat
 
 /**
  * ML-KEM-768 Key Pair generation using WASM.
- * Returns { privateKey, publicKey }
  */
 export function mlKem768GenerateKeyPair(): { privateKey: Uint8Array; publicKey: Uint8Array } {
     if (!initialized) throw new Error("WASM not initialized");
     const bytes = wasm_ml_kem_gen();
-    // ML-KEM-768: dk=2400, ek=1184
     return {
         privateKey: bytes.slice(0, 2400),
         publicKey: bytes.slice(2400, 2400 + 1184),
@@ -140,12 +162,10 @@ export function mlKem768GenerateKeyPair(): { privateKey: Uint8Array; publicKey: 
 
 /**
  * ML-KEM-768 Encapsulation using WASM.
- * Returns { ciphertext, sharedSecret }
  */
 export function mlKem768Encapsulate(publicKey: Uint8Array): { ciphertext: Uint8Array; sharedSecret: Uint8Array } {
     if (!initialized) throw new Error("WASM not initialized");
     const bytes = wasm_ml_kem_enc(publicKey);
-    // ML-KEM-768: ss=32, ct=1088
     return {
         sharedSecret: bytes.slice(0, 32),
         ciphertext: bytes.slice(32, 32 + 1088),
@@ -162,7 +182,6 @@ export function mlKem768Decapsulate(privateKey: Uint8Array, ciphertext: Uint8Arr
 
 /**
  * ML-DSA-44 Key Pair generation using WASM.
- * Returns { privateKey: 2560 bytes, publicKey: 1312 bytes }
  */
 export function mlDsa44GenerateKeyPair(): { privateKey: Uint8Array; publicKey: Uint8Array } {
     if (!initialized) throw new Error("WASM not initialized");
@@ -202,7 +221,7 @@ export function sha256Hash(data: Uint8Array): Uint8Array {
  */
 export function hkdfSha256(ikm: Uint8Array, salt: Uint8Array | undefined, info: Uint8Array, length: number): Uint8Array {
     if (!initialized) throw new Error("WASM not initialized");
-    return wasm_hkdf(ikm, salt, info, length);
+    return wasm_hkdf(ikm, salt || new Uint8Array(0), info, length);
 }
 
 /**
@@ -211,4 +230,30 @@ export function hkdfSha256(ikm: Uint8Array, salt: Uint8Array | undefined, info: 
 export function getPaddingTargetSize(currentSize: number): number {
     if (!initialized) throw new Error("WASM not initialized");
     return wasm_get_padding(currentSize);
+}
+
+/**
+ * High-level L2 Envelope building in WASM.
+ */
+export function buildL2Envelope(
+    payloadJson: string,
+    userSk: Uint8Array,
+    userKid: string,
+    configJson: string,
+    createdAt: string
+): string {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_build_l2(payloadJson, userSk, userKid, configJson, createdAt);
+}
+
+/**
+ * High-level L2 Envelope decryption in WASM.
+ */
+export function decryptL2Envelope(
+    envelopeJson: string,
+    recipientSk: Uint8Array,
+    pqcSk?: Uint8Array
+): string {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_decrypt_l2(envelopeJson, recipientSk, pqcSk);
 }

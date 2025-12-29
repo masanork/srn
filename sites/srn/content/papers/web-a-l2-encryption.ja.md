@@ -1,12 +1,12 @@
 ---
-title: "討議資料：Web/A Layer 2 Encryption (日本語版)"
+title: "討議資料：Web/A Layer 2 Encryption"
 layout: article
 author: "Web/A Project"
 date: 2025-12-29
 ai_generated: true
 ---
 
-# 討議資料：Web/A Layer 2 Encryption (日本語版)
+# 討議資料：Web/A Layer 2 Encryption
 
 ## 1. 概要
 本稿は Web/A 文書の **Layer 2 Encryption (L2E)** を定義します。Layer 1 はテンプレート（質問）の完全性、Layer 2（Signature）はユーザー回答（回答者）の真正性を保証します。Layer 2 Encryption は **機密性** を提供し、配送経路やブラウザ保存が信頼できない場合でも、回答内容が **受領者（Issuer/Aggregator）だけ** に読めるようにします。
@@ -24,7 +24,7 @@ Web/A L2E は **HPKE (RFC 9180)** の設計思想を取り入れた構成を採�
 
 - **KEM (Key Encapsulation Mechanism)**: 
   - 古典暗号: **X25519**
-  - 耐量子暗号 (任意): **ML-KEM-768 (Kyber)**
+  - 耐量子暗号 (任意): **ML-KEM-768**
 - **KDF (Key Derivation Function)**: **HKDF-SHA256**
 - **AEAD (Authenticated Encryption with Associated Data)**: **AES-256-GCM**
 
@@ -90,7 +90,7 @@ Web/A プロトコルはステートレスであるため、攻撃者が有効�
 ### 6.2. 実装状況
 *   **コアロジック**: ベンンダリングされたプリミティブを用いた TypeScript 実装（`src/core/l2crypto.ts`）が完了しています。
 *   **リプレイ保護**: CLI およびブラウザアグリゲーターでの永続化ストレージ対応が完了しています。
-*   **WebAssembly (WASM) への移行 (ロードマップ)**: JavaScript 環境における実行タイミングの揺らぎやメモリ管理の不透明性を解消するため、コアとなる暗号ロジックを Rust で記述し、WebAssembly にコンパイルして利用する計画です。
+*   **WebAssembly (WASM) による実装**: JavaScript 環境における実行タイミングの揺らぎやメモリ管理の不透明性を解消するため、コアとなる暗号ロジック（AES-GCM, X25519, ML-KEM/ML-DSA等）は Rust で記述され、WebAssembly にコンパイルされて提供されています。これにより、ブラウザのメインスレッドをブロックせず、かつ安全で決定論的な暗号操作が保証されます。
 
 ## 7. 結論
 Web/A Layer 2 Encryption は、標準的なプリミティブ（HPKE, AES-GCM）とブラウザのネイティブ能力を活用し、サーバーレスでありながら高度な機密性を提供します。本稿で定義したセキュリティ強化策を適用することで、個人向けのアンケートから組織間の機密データ交換まで、幅広いユースケースにおいて信頼できるインフラを提供します。

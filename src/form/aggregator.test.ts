@@ -30,6 +30,17 @@ describe("Web/A Aggregator", () => {
     expect(extracted.plain?.foo).toBe("bar");
   });
 
+  test("extracts JSON-LD from data-layer script", () => {
+    const html = `<html><body><script id="data-layer" type="application/json">{"baz":123}</script></body></html>`;
+    const json = extractJsonLdFromHtml(html);
+    expect(json?.baz).toBe(123);
+  });
+
+  test("returns null for invalid JSON in script", () => {
+    const html = `<html><body><script type="application/ld+json">{invalid}</script></body></html>`;
+    expect(extractJsonLdFromHtml(html)).toBeNull();
+  });
+
   test("falls back to JSON-LD when L2 keys are missing", async () => {
     const html = `
       <html><body>
@@ -139,6 +150,8 @@ describe("Web/A Aggregator", () => {
       org: { name: "ACME", addr: { city: "Tokyo" } },
       list: [{ v: 1 }, { v: 2 }],
       flag: true,
+      empty: null,
+      val: 42
     };
     const flat = flattenForCsv(input);
     expect(flat["org.name"]).toBe("ACME");
@@ -146,6 +159,25 @@ describe("Web/A Aggregator", () => {
     expect(flat["list[0].v"]).toBe(1);
     expect(flat["list[1].v"]).toBe(2);
     expect(flat["flag"]).toBe(true);
+    expect(flat["empty"]).toBe(null);
+    expect(flat["val"]).toBe(42);
+  });
+
+  test("flattenForCsv handles edge cases", () => {
+    expect(flattenForCsv({ "": "root" })[""]).toBeUndefined();
+    expect(flattenForCsv({ a: undefined })["a"]).toBeNull();
+  });
+
+  test("extractPlainFromHtml throws when campaign ID is missing for org root", async () => {
+    const html = `<html><body><script id="weba-l2-envelope" type="application/json">{"meta":{}}</script></body></html>`;
+    const keys: L2KeyFile = { org_root_key: "aaaa" };
+    await expect(extractPlainFromHtml(html, keys)).rejects.toThrow("org_campaign_id is required");
+  });
+
+  test("extractPlainFromHtml throws when no key is provided", async () => {
+    const html = `<html><body><script id="weba-l2-envelope" type="application/json">{"layer2":{}}</script></body></html>`;
+    const keys: L2KeyFile = {};
+    await expect(extractPlainFromHtml(html, keys)).rejects.toThrow("No recipient key provided");
   });
 
   test("builds row with raw JSON when enabled", () => {

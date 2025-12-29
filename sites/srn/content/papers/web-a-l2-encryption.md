@@ -66,7 +66,7 @@ The protocol uses a suite inspired by **HPKE (RFC 9180)** but optimized for JSON
 | :--- | :--- | :--- |
 | **Signing** | Ed25519 | For user authentication of the plaintext. |
 | **KEM** | X25519 | Classical Diffie-Hellman (Curve25519). |
-| **KEM (PQC)** | ML-KEM-768 | Optional hybrid extension (Kyber). |
+| **KEM (PQC)** | ML-KEM-768 | Optional hybrid extension. |
 | **KDF** | HKDF-SHA256 | Key Derivation Function. |
 | **AEAD** | AES-256-GCM | Authenticated Encryption. |
 
@@ -267,7 +267,7 @@ Detailed error messages in cryptographic operations can act as an oracle for att
 *   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`) using vendored primitives.
 *   **Replay Protection**: Fully implemented with persistent storage support in both CLI and Browser aggregators.
 *   **Supply Chain**: Vendoring completed; SBOM/CBOM (`sbom.json`) available.
-*   **WASM Transition (Roadmap)**: Move core cryptographic primitives to a Rust-compiled WebAssembly module (`weba-crypto-wasm`) to ensure constant-time execution and better memory isolation.
+*   **WASM Implementation**: Core cryptographic primitives (AES-GCM, X25519, ML-KEM, ML-DSA) have been migrated to a Rust-compiled WebAssembly module to ensure safe memory management and deterministic execution across different browser environments.
 *   **Pre-Key Infrastructure (Roadmap)**: Design document published; server PoC planned to enable one-time recipient keys for forward secrecy.
 *   **Client Integrity (Roadmap)**: Publish SRI values and CSP guidance for all distributed scripts and Wasm artifacts.
 *   **Decoy Traffic (Roadmap)**: Evaluate constant-rate or batch scheduling options for high-sensitivity deployments.

@@ -5,7 +5,11 @@ export function aes_gcm_decrypt(key: Uint8Array, iv: Uint8Array, ciphertext: Uin
 
 export function aes_gcm_encrypt(key: Uint8Array, iv: Uint8Array, plaintext: Uint8Array, aad: Uint8Array): Uint8Array;
 
+export function build_l2_envelope_wasm(payload_json: string, user_sk: Uint8Array, user_kid: string, config_json: string, created_at: string): string;
+
 export function constant_time_equal(a: Uint8Array, b: Uint8Array): boolean;
+
+export function decrypt_l2_envelope_wasm(envelope_json: string, recipient_sk: Uint8Array, pqc_sk?: Uint8Array | null): string;
 
 export function ed25519_generate_keypair(): Uint8Array;
 
@@ -18,6 +22,8 @@ export function get_padding_target_size(current_size: number): number;
 export function get_version(): string;
 
 export function hkdf_sha256_derive(ikm: Uint8Array, salt: Uint8Array | null | undefined, info: Uint8Array, length: number): Uint8Array;
+
+export function hkdf_sha256_wasm(ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, okm_len: number): Uint8Array;
 
 export function ml_dsa_44_generate_keypair(): Uint8Array;
 
@@ -33,6 +39,8 @@ export function ml_kem_768_generate_keypair(): Uint8Array;
 
 export function sha256_hash(data: Uint8Array): Uint8Array;
 
+export function sha256_wasm(data: Uint8Array): Uint8Array;
+
 export function x25519_generate_keypair(): Uint8Array;
 
 export function x25519_get_public_key(private_key: Uint8Array): Uint8Array;
@@ -45,13 +53,16 @@ export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly aes_gcm_decrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number, number, number];
   readonly aes_gcm_encrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number, number, number];
+  readonly build_l2_envelope_wasm: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => [number, number, number, number];
   readonly constant_time_equal: (a: number, b: number, c: number, d: number) => number;
+  readonly decrypt_l2_envelope_wasm: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
   readonly ed25519_generate_keypair: () => [number, number, number, number];
   readonly ed25519_sign: (a: number, b: number, c: number, d: number) => [number, number, number, number];
   readonly ed25519_verify: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
   readonly get_padding_target_size: (a: number) => number;
   readonly get_version: () => [number, number];
   readonly hkdf_sha256_derive: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
+  readonly hkdf_sha256_wasm: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
   readonly ml_dsa_44_generate_keypair: () => [number, number, number, number];
   readonly ml_dsa_44_sign: (a: number, b: number, c: number, d: number) => [number, number, number, number];
   readonly ml_dsa_44_verify: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
@@ -59,6 +70,7 @@ export interface InitOutput {
   readonly ml_kem_768_encapsulate: (a: number, b: number) => [number, number, number, number];
   readonly ml_kem_768_generate_keypair: () => [number, number, number, number];
   readonly sha256_hash: (a: number, b: number) => [number, number];
+  readonly sha256_wasm: (a: number, b: number) => [number, number];
   readonly x25519_generate_keypair: () => [number, number, number, number];
   readonly x25519_get_public_key: (a: number, b: number) => [number, number, number, number];
   readonly x25519_get_shared_secret: (a: number, b: number, c: number, d: number) => [number, number, number, number];
@@ -68,6 +80,7 @@ export interface InitOutput {
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __externref_table_dealloc: (a: number) => void;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+  readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_start: () => void;
 }
 
