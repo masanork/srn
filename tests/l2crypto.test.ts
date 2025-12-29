@@ -133,7 +133,9 @@ describe("Web/A Layer 2 Crypto", () => {
     // Tamper with ciphertext
     if (!envelope.layer2.ciphertext) throw new Error("Missing ciphertext");
     const ct = Buffer.from(envelope.layer2.ciphertext, "base64url");
-    ct[0] ^= 0xff;
+    if (ct.length > 0) {
+      ct[0] ^= 0xff;
+    }
     envelope.layer2.ciphertext = ct.toString("base64url");
 
     await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow();
@@ -147,7 +149,7 @@ describe("Web/A Layer 2 Crypto", () => {
     const payload = { layer2_plain: plain, layer2_sig: sig };
 
     const pqcProvider = createMlKem768Provider();
-    const pqcKeys = generateMlKem768KeyPair();
+    const pqcKeys = await generateMlKem768KeyPair();
 
     const envelope = await encryptLayer2(payload, recipient.publicKey, "ref1", "issuer#1", {
       pqc: { kem: pqcProvider, recipientPublicKey: pqcKeys.publicKey },

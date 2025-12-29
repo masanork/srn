@@ -9,6 +9,9 @@ import init, {
     ed25519_generate_keypair as wasm_ed25519_gen,
     ed25519_sign as wasm_ed25519_sign,
     ed25519_verify as wasm_ed25519_verify,
+    ml_kem_768_generate_keypair as wasm_ml_kem_gen,
+    ml_kem_768_encapsulate as wasm_ml_kem_enc,
+    ml_kem_768_decapsulate as wasm_ml_kem_dec,
 } from "./wasm_bindings/weba_crypto_wasm.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -113,4 +116,40 @@ export function ed25519Sign(privateKey: Uint8Array, message: Uint8Array): Uint8A
 export function ed25519Verify(publicKey: Uint8Array, message: Uint8Array, signature: Uint8Array): boolean {
     if (!initialized) throw new Error("WASM not initialized");
     return wasm_ed25519_verify(publicKey, message, signature);
+}
+
+/**
+ * ML-KEM-768 Key Pair generation using WASM.
+ * Returns { privateKey, publicKey }
+ */
+export function mlKem768GenerateKeyPair(): { privateKey: Uint8Array; publicKey: Uint8Array } {
+    if (!initialized) throw new Error("WASM not initialized");
+    const bytes = wasm_ml_kem_gen();
+    // ML-KEM-768: dk=2400, ek=1184
+    return {
+        privateKey: bytes.slice(0, 2400),
+        publicKey: bytes.slice(2400, 2400 + 1184),
+    };
+}
+
+/**
+ * ML-KEM-768 Encapsulation using WASM.
+ * Returns { ciphertext, sharedSecret }
+ */
+export function mlKem768Encapsulate(publicKey: Uint8Array): { ciphertext: Uint8Array; sharedSecret: Uint8Array } {
+    if (!initialized) throw new Error("WASM not initialized");
+    const bytes = wasm_ml_kem_enc(publicKey);
+    // ML-KEM-768: ss=32, ct=1088
+    return {
+        sharedSecret: bytes.slice(0, 32),
+        ciphertext: bytes.slice(32, 32 + 1088),
+    };
+}
+
+/**
+ * ML-KEM-768 Decapsulation using WASM.
+ */
+export function mlKem768Decapsulate(privateKey: Uint8Array, ciphertext: Uint8Array): Uint8Array {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_ml_kem_dec(privateKey, ciphertext);
 }

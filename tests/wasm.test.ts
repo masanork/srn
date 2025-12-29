@@ -1,5 +1,18 @@
 import { expect, test, describe, beforeAll } from "bun:test";
-import { initWasm, constantTimeEqual, aesGcmEncrypt, aesGcmDecrypt, x25519GenerateKeyPair, x25519GetSharedSecret } from "../src/core/wasm_core.ts";
+import {
+    initWasm,
+    constantTimeEqual,
+    aesGcmEncrypt,
+    aesGcmDecrypt,
+    x25519GenerateKeyPair,
+    x25519GetSharedSecret,
+    ed25519GenerateKeyPair,
+    ed25519Sign,
+    ed25519Verify,
+    mlKem768GenerateKeyPair,
+    mlKem768Encapsulate,
+    mlKem768Decapsulate,
+} from "../src/core/wasm_core.ts";
 
 describe("WASM Crypto Core", () => {
     beforeAll(async () => {
@@ -52,5 +65,32 @@ describe("WASM Crypto Core", () => {
 
         expect(ss1).toEqual(ss2);
         expect(ss1.length).toBe(32);
+    });
+
+    test("ed25519 should sign and verify correctly", () => {
+        const keypair = ed25519GenerateKeyPair();
+        const msg = new TextEncoder().encode("Attack at dawn");
+
+        const sig = ed25519Sign(keypair.privateKey, msg);
+        expect(sig.length).toBe(64);
+
+        const valid = ed25519Verify(keypair.publicKey, msg, sig);
+        expect(valid).toBe(true);
+
+        const invalid = ed25519Verify(keypair.publicKey, new TextEncoder().encode("Attack at noon"), sig);
+        expect(invalid).toBe(false);
+    });
+
+    test("ml-kem-768 should roundtrip correctly", () => {
+        const alice = mlKem768GenerateKeyPair();
+        expect(alice.privateKey.length).toBe(2400);
+        expect(alice.publicKey.length).toBe(1184);
+
+        const bob = mlKem768Encapsulate(alice.publicKey);
+        expect(bob.ciphertext.length).toBe(1088);
+        expect(bob.sharedSecret.length).toBe(32);
+
+        const ssRecv = mlKem768Decapsulate(alice.privateKey, bob.ciphertext);
+        expect(ssRecv).toEqual(bob.sharedSecret);
     });
 });

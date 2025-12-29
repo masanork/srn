@@ -130,11 +130,10 @@ export function canonicalJson(obj: any): string {
 
 export type PqcKemProvider = {
   kemId: string;
-  encapsulate: (recipientPublicKey: Uint8Array) => {
-    sharedSecret: Uint8Array;
-    encapsulation: Uint8Array;
-  };
-  decapsulate: (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => Uint8Array;
+  encapsulate: (recipientPublicKey: Uint8Array) =>
+    | { sharedSecret: Uint8Array; encapsulation: Uint8Array }
+    | Promise<{ sharedSecret: Uint8Array; encapsulation: Uint8Array }>;
+  decapsulate: (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => Uint8Array | Promise<Uint8Array>;
 };
 
 export type PqcEncryptOptions = {
@@ -283,9 +282,9 @@ export async function encryptLayer2(
   let kemId = "X25519";
   if (options?.pqc) {
     const pqc = options.pqc;
-    const kemResult = pqc.kem.encapsulate(pqc.recipientPublicKey);
-    pqcEncapsulation = kemResult.encapsulation;
-    ikm = concatBytes(ss1, kemResult.sharedSecret);
+    const pqcEnc = await options.pqc.kem.encapsulate(options.pqc.recipientPublicKey);
+    pqcEncapsulation = pqcEnc.encapsulation;
+    ikm = concatBytes(ss1, pqcEnc.sharedSecret);
     kemId = `X25519+${pqc.kem.kemId}`;
   }
 
@@ -417,7 +416,7 @@ export async function decryptLayer2(
         throw new Error("Missing PQC KEM for envelope");
       }
       const pqcEnc = fromBase64Url(envelope.layer2.encapsulated.pqc);
-      const ss2 = pqc.kem.decapsulate(pqc.recipientPrivateKey, pqcEnc);
+      const ss2 = await pqc.kem.decapsulate(pqc.recipientPrivateKey, pqcEnc);
       ikm = concatBytes(ss1, ss2);
     }
 

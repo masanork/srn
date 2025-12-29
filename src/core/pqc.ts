@@ -1,20 +1,22 @@
-import { ml_kem768 } from "../vendor/post-quantum/ml-kem.js";
+import { initWasm, mlKem768GenerateKeyPair, mlKem768Encapsulate, mlKem768Decapsulate } from "./wasm_core";
 import type { PqcKemProvider } from "./l2crypto";
 
 export function createMlKem768Provider(): PqcKemProvider {
   return {
     kemId: "ML-KEM-768",
-    encapsulate: (recipientPublicKey: Uint8Array) => {
-      const { cipherText, sharedSecret } = ml_kem768.encapsulate(recipientPublicKey);
-      return { sharedSecret, encapsulation: cipherText };
+    encapsulate: async (recipientPublicKey: Uint8Array) => {
+      await initWasm();
+      const { ciphertext, sharedSecret } = mlKem768Encapsulate(recipientPublicKey);
+      return { sharedSecret, encapsulation: ciphertext };
     },
-    decapsulate: (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => {
-      return ml_kem768.decapsulate(encapsulation, recipientPrivateKey);
+    decapsulate: async (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => {
+      await initWasm();
+      return mlKem768Decapsulate(recipientPrivateKey, encapsulation);
     },
   };
 }
 
-export function generateMlKem768KeyPair() {
-  const { publicKey, secretKey } = ml_kem768.keygen();
-  return { publicKey, privateKey: secretKey };
+export async function generateMlKem768KeyPair() {
+  await initWasm();
+  return mlKem768GenerateKeyPair();
 }
