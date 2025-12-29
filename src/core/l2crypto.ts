@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import { createCipheriv, createDecipheriv } from "node:crypto";
 import canonicalize from "canonicalize";
 import * as fs from "node:fs";
+import { initWasm, aesGcmEncrypt, aesGcmDecrypt } from "./wasm_core";
 
 export interface ReplayStore {
   has(nonce: string): Promise<boolean>;
@@ -89,7 +90,8 @@ export type Layer2Encrypted = {
       classical: string; // base64url(ephemeral_pk)
       pqc?: string;      // base64url(kem_ct)
     };
-    ciphertext: string; // base64url
+    ciphertext: string; // base64url (without tag)
+    auth_tag: string;   // base64url (16 bytes)
     aad: string;        // base64url(aad_json)
   };
   meta: {
@@ -278,7 +280,7 @@ export async function encryptLayer2(
 
   // 3. KDF: HKDF-SHA256
   // Use aadBytes as salt to bind the key to the context
-  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
+  const prk = hkdf(sha256, ikm, aadBytes, Buffer.from("weba-l2/prk", "utf-8"), 32);
   const key = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
   const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
 
@@ -293,10 +295,12 @@ export async function encryptLayer2(
   const payloadWithPadding = { ...payload, _padding: padding };
 
   const plaintext = Buffer.from(canonicalJson(payloadWithPadding), "utf-8");
-  const cipher = createCipheriv("aes-256-gcm", key, iv);
-  cipher.setAAD(aadBytes);
-  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  const authTag = cipher.getAuthTag();
+
+  // Use WASM for encryption
+  await initWasm();
+  const ciphertextWithTag = aesGcmEncrypt(key, iv, plaintext, aadBytes);
+  const authTag = ciphertextWithTag.slice(-16);
+  const actualCiphertext = ciphertextWithTag.slice(0, -16);
 
   return {
     weba_version: webaVersion,
@@ -313,7 +317,8 @@ export async function encryptLayer2(
         classical: toBase64Url(ephemeralPub),
         ...(pqcEncapsulation ? { pqc: toBase64Url(pqcEncapsulation) } : {}),
       },
-      ciphertext: toBase64Url(Buffer.concat([ciphertext, authTag])),
+      ciphertext: toBase64Url(actualCiphertext),
+      auth_tag: toBase64Url(authTag),
       aad: toBase64Url(aadBytes),
     },
     meta: {
@@ -405,25 +410,23 @@ export async function decryptLayer2(
     }
 
     // 2. KDF: HKDF-SHA256
-    const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
+    const salt = aadBytes; // Use aadBytes as salt to bind the key to the context
+    const prk = hkdf(sha256, ikm, salt, Buffer.from("weba-l2/prk", "utf-8"), 32);
     const key = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
     const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
 
     // 3. AEAD: AES-256-GCM
-    const fullCiphertext = fromBase64Url(envelope.layer2.ciphertext);
-    const authTag = fullCiphertext.slice(-16);
-    const ciphertext = fullCiphertext.slice(0, -16);
+    const ciphertext = fromBase64Url(envelope.layer2.ciphertext);
+    const authTag = fromBase64Url(envelope.layer2.auth_tag);
+    const ciphertextWithTag = new Uint8Array(ciphertext.length + authTag.length);
+    ciphertextWithTag.set(ciphertext);
+    ciphertextWithTag.set(authTag, ciphertext.length);
 
-    const decipher = createDecipheriv("aes-256-gcm", key, iv);
-    decipher.setAAD(aadBytes);
-    decipher.setAuthTag(authTag);
+    // Use WASM for decryption
+    await initWasm();
+    const plaintext = aesGcmDecrypt(key, iv, ciphertextWithTag, aadBytes);
 
-    const plaintext = Buffer.concat([
-      decipher.update(ciphertext),
-      decipher.final(),
-    ]);
-
-    return JSON.parse(plaintext.toString("utf-8"));
+    return JSON.parse(Buffer.from(plaintext).toString("utf-8"));
   } catch (e) {
     throw new Error("Decryption failed");
   }
