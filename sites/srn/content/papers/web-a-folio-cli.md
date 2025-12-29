@@ -34,6 +34,18 @@ graph TD
     Key[PassKey/JPKI] -->|sign| Signed[Signed.md]
 ```
 
+## Firebase-First Deployment (Early Stage)
+
+The initial deployment target can be **Firebase**, focusing on a practical path
+to host an inbox, MCP endpoints, and a lightweight Web UI. This should remain
+**optional** and **non-binding** for long-term portability, but it helps validate
+real-world flows quickly.
+
+Early-stage goals:
+- **Inbox Hosting**: Store encrypted submissions and verification results.
+- **MCP Hosting**: Expose MCP tools that mirror CLI capabilities for agents.
+- **Web UI**: Provide a minimal viewer and inbox triage experience.
+
 ## Design Principles: CLI vs MCP
 
 The CLI and MCP surface should be **mirror capabilities**, but not mirror
