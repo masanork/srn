@@ -1,0 +1,16 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default: Deny all access from client SDKs.
+    // Cloud Functions use Admin SDK and bypass these rules.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Explicitly secure the prekeys collection
+    match /prekeys/{keyId} {
+      allow read, write: if false;
+    }
+  }
+}
