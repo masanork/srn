@@ -55,6 +55,12 @@ The aggregator reference implementation now includes a persistent store for nonc
     }
     ```
 
+### 3.4. Draft State Preservation (Client)
+The form client now embeds a structured draft state inside downloaded draft HTML files so that user work can be restored across devices or after cache clears without relying on browser storage.
+*   **Draft Payload**: The embedded state includes the form data snapshot and a minimal L2 replay cache (nonce list) needed for safe reprocessing.
+*   **Security Note**: Draft files should be treated as sensitive artifacts because they may contain plaintext responses and replay metadata.
+*   **Code**: `src/form/client/data.ts`, `src/form/client/download.ts`, `src/form/client/runtime.ts`.
+
 ## 4. Remaining Risks & Future Work
 
 1.  **Forward Secrecy**: The system still relies on the long-term safety of the Organization's private key. If this key is compromised, all past messages can be decrypted. Implementing ephemeral key negotiation requires a fundamental protocol change (interactive flow or pre-key server).

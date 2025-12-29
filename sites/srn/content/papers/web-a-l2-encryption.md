@@ -215,24 +215,29 @@ Since the Layer 2 protocol is stateless, an attacker could resubmit a valid encr
 *   **Requirement**: Aggregators **MUST** implement nonce verification. A reference `ReplayGuard` utility is provided in the core library that tracks seen nonces.
     *   **Persistent Storage**: To prevent replays across aggregator restarts, persistent stores are provided: `JsonFileReplayStore` for CLI (using `--replay-store`) and `LocalStorageReplayStore` for browsers (zero-touch).
 
-### 7.3. Traffic Analysis (Padding)
+### 7.3. Draft State Handling (Client)
+Draft downloads embed a structured draft state inside the HTML so users can restore work after cache clears or on other devices.
+*   **Embedded State**: Includes the form data snapshot and the browser replay nonce list used by the local replay guard.
+*   **Operational Note**: Treat draft files as sensitive artifacts because they may contain plaintext responses and replay metadata.
+
+### 7.4. Traffic Analysis (Padding)
 The length of the ciphertext reveals the approximate size of the plaintext, which might leak information (e.g., "Yes" vs "No" answers).
 *   **Mitigation**: The `Layer2Payload` includes a `_padding` field. The implementation uses a **bucket-based padding strategy** (e.g., 1KB, 4KB, 16KB, 64KB, etc.). This ensures that messages are normalized to specific size tiers, making it extremely difficult to distinguish between payloads of different sizes, even for larger documents.
 
-### 7.4. Side-Channel Mitigation (Unified Errors)
+### 7.5. Side-Channel Mitigation (Unified Errors)
 Detailed error messages in cryptographic operations can act as an oracle for attackers.
 *   **Mitigation**: The `decryptLayer2` function is designed to return a generic "Decryption failed" error regardless of the specific failure point (AAD mismatch, MAC failure, KEM failure). This prevents attackers from distinguishing between different types of invalid messages.
 
-### 7.5. Forward Secrecy
+### 7.6. Forward Secrecy
 *   **Current State**: The default scheme uses static recipient public keys embedded in the Layer 1 form. While hierarchical derivation isolates campaigns, it does not provide true Forward Secrecy for historical messages if the campaign key is leaked.
 *   **Mitigation (Key Rotation)**: The hierarchical derivation makes rotating keys cheap. Issuers are encouraged to use distinct keys per campaign and rotate them frequently.
 *   **Enhancement (Pre-Keys)**: For high-security applications, Web/A supports **Pre-Keys**. If a `prekey_url` is configured in the form, the client will attempt to fetch a one-time use public key from a server before encryption. This ensures that even if the long-term organization key is compromised, previous messages encrypted with ephemeral pre-keys remain secure.
 
-### 7.6. Post-Quantum Readiness & Provider Integrity
+### 7.7. Post-Quantum Readiness & Provider Integrity
 *   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today cannot be decrypted by future quantum computers.
 *   **Integrity Protection**: To prevent malicious PQC provider injection (e.g., via XSS), the application **MUST** use a strict Content Security Policy (CSP) and Subresource Integrity (SRI) for all cryptographic modules. The project is moving toward a self-contained WebAssembly module to further isolate cryptographic logic from the highly dynamic JavaScript environment.
 
-### 7.7. Supply Chain Security
+### 7.8. Supply Chain Security
 *   **Vendoring**: Core cryptographic primitives (e.g., `@noble/*`) are vendored directly into the source tree (`src/vendor/`) to eliminate reliance on public registries and prevent supply chain injection for critical security logic.
 *   **SBOM/CBOM**: A full Software and Cryptography Bill of Materials (`sbom.json`) is maintained to ensure transparency and auditability of the cryptographic stack.
 

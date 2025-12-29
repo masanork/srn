@@ -21,6 +21,8 @@ Updates focused on the Web/A Layer 2 encryption security posture, documentation,
   * Embedded Mermaid renderer via a local data URI to avoid CDN dependencies.
   * Improved incremental rebuild safety when templates change.
   * Added consistent build stamps and favicon data URIs across generated outputs.
+* **Form Drafts**:
+  * Draft downloads now embed a structured draft state, allowing safe restoration across devices or after cache clears.
 
 ## v1.8.0 - Web/A L2 Encryption & PQC Default
 
