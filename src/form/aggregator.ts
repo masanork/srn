@@ -25,6 +25,13 @@ export type L2KeyFile = {
             validUntil: string;
         }>;
     };
+    prekey_keystore?: {
+        updated_at: string;
+        keys: Record<string, {
+            privateKey: string;
+            pqcPrivateKey?: string | null;
+        }>;
+    };
 };
 
 function fromBase64Url(str: string): Uint8Array {
@@ -63,25 +70,39 @@ export async function extractPlainFromHtml(
 ): Promise<{ plain?: any; sig?: any; source: 'l2' | 'jsonld' | null }> {
     const l2Envelope = extractL2EnvelopeFromHtml(html);
     if (l2Envelope && l2Keys) {
-        // Check kid match, allowing for epoch keys
+        // Check kid match, allowing for epoch and pre-keys
         if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
             const isEpochMatch = l2Keys.epoch_keystore?.keys.some(k => k.kid === l2Envelope.layer2.recipient);
-            if (!isEpochMatch) {
+            const isPrekeyMatch = l2Keys.prekey_keystore?.keys[l2Envelope.layer2.recipient];
+            
+            if (!isEpochMatch && !isPrekeyMatch) {
                 throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
             }
         }
 
         let recipientSk: Uint8Array | null = null;
+        let pqcSk: Uint8Array | null = null;
 
-        // 1. Try Epoch Keystore
-        if (l2Keys.epoch_keystore && l2Envelope.layer2?.recipient) {
+        // 1. Try Pre-key Keystore (True PFS - Tier 3)
+        if (l2Keys.prekey_keystore && l2Envelope.layer2?.recipient?.startsWith("pre_")) {
+            const found = l2Keys.prekey_keystore.keys[l2Envelope.layer2.recipient];
+            if (found) {
+                recipientSk = fromBase64Url(found.privateKey);
+                if (found.pqcPrivateKey) {
+                    pqcSk = fromBase64Url(found.pqcPrivateKey);
+                }
+            }
+        }
+
+        // 2. Try Epoch Keystore (Tier 2)
+        if (!recipientSk && l2Keys.epoch_keystore && l2Envelope.layer2?.recipient) {
             const found = l2Keys.epoch_keystore.keys.find(k => k.kid === l2Envelope.layer2.recipient);
             if (found) {
                 recipientSk = fromBase64Url(found.privateKey);
             }
         }
 
-        // 2. Try Org Root Key (Derivation)
+        // 3. Try Org Root Key (Derivation)
         if (!recipientSk && l2Keys.org_root_key) {
             const campaignId = l2Keys.org_campaign_id || l2Envelope.meta?.campaign_id;
             if (!campaignId) {
@@ -95,7 +116,7 @@ export async function extractPlainFromHtml(
             });
             recipientSk = derived.privateKey;
         } 
-        // 3. Try Static Key
+        // 4. Try Static Key (Tier 1)
         else if (!recipientSk && l2Keys.recipient_x25519_private) {
             recipientSk = fromBase64Url(l2Keys.recipient_x25519_private);
         }
@@ -104,13 +125,15 @@ export async function extractPlainFromHtml(
             throw new Error('No recipient key derived or found in keystore');
         }
 
-        const pqc =
-            l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === 'ML-KEM-768'
+        const pqc = pqcSk ? {
+            kem: createMlKem768Provider(),
+            recipientPrivateKey: pqcSk
+        } : (l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === 'ML-KEM-768'
                 ? {
                     kem: createMlKem768Provider(),
                     recipientPrivateKey: fromBase64Url(l2Keys.recipient_pqc_private),
                 }
-                : undefined;
+                : undefined);
         
         const payload = await decryptLayer2(
             l2Envelope,

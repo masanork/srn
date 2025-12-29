@@ -78,6 +78,73 @@ program
   });
 
 program
+  .command("gen-prekeys")
+  .description("Generate bulk one-time pre-keys for Tier 3 True PFS")
+  .option("-n, --count <number>", "Number of keys to generate", "100")
+  .option("-o, --out <dir>", "Output directory", "./keys")
+  .option("--pqc", "Include ML-KEM-768 for each pre-key")
+  .action(async (options) => {
+    const outDir = path.resolve(options.out);
+    await fs.mkdir(outDir, { recursive: true });
+    
+    const count = parseInt(options.count, 10);
+    console.log(`Generating ${count} pre-keys...`);
+    
+    const publicKeys: any[] = [];
+    const privateKeys: Record<string, any> = {};
+    
+    for (let i = 0; i < count; i++) {
+      const kid = "pre_" + randomBytes(8).toString("hex");
+      const xkp = await generateRecipientKeyPair();
+      
+      let pqcPub = null;
+      let pqcPriv = null;
+      if (options.pqc) {
+        const pkp = generateMlKem768KeyPair();
+        pqcPub = toBase64Url(pkp.publicKey);
+        pqcPriv = toBase64Url(pkp.privateKey);
+      }
+      
+      publicKeys.push({
+        kid,
+        pub_key: toBase64Url(xkp.publicKey),
+        pqc_pub_key: pqcPub
+      });
+      
+      privateKeys[kid] = {
+        privateKey: toBase64Url(xkp.privateKey),
+        pqcPrivateKey: pqcPriv
+      };
+    }
+    
+    // 1. SQL for D1
+    const sqlLines = [
+      "CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY AUTOINCREMENT, kid TEXT UNIQUE NOT NULL, pub_key TEXT NOT NULL, pqc_pub_key TEXT, status TEXT DEFAULT 'available', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, consumed_at DATETIME);",
+      "CREATE INDEX IF NOT EXISTS idx_prekeys_status ON prekeys(status);"
+    ];
+    
+    for (const k of publicKeys) {
+      const pqcVal = k.pqc_pub_key ? `'${k.pqc_pub_key}'` : "NULL";
+      sqlLines.push(`INSERT INTO prekeys (kid, pub_key, pqc_pub_key) VALUES ('${k.kid}', '${k.pub_key}', ${pqcVal});`);
+    }
+    
+    await fs.writeFile(path.join(outDir, "prekeys-public.sql"), sqlLines.join("\n"));
+    
+    // 2. Private Keystore
+    await fs.writeFile(
+      path.join(outDir, "prekeys-private.json"),
+      JSON.stringify({ 
+        updated_at: new Date().toISOString(),
+        keys: privateKeys 
+      }, null, 2)
+    );
+    
+    console.log(`Generated ${count} keys.`);
+    console.log(`- SQL for D1: ${path.join(outDir, "prekeys-public.sql")}`);
+    console.log(`- Private Vault: ${path.join(outDir, "prekeys-private.json")}`);
+  });
+
+program
   .command("gen-keys")
   .description("Generate recipient (encryption) and user (signing) keypairs")
   .option("-o, --out <dir>", "Output directory", "./keys")
