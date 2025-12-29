@@ -82,13 +82,15 @@ program
   .description("Generate bulk one-time pre-keys for Tier 3 True PFS")
   .option("-n, --count <number>", "Number of keys to generate", "100")
   .option("-o, --out <dir>", "Output directory", "./keys")
+  .option("--format <format>", "Output format: cloudflare (SQL) or firebase (JSON)", "cloudflare")
   .option("--pqc", "Include ML-KEM-768 for each pre-key")
   .action(async (options) => {
     const outDir = path.resolve(options.out);
     await fs.mkdir(outDir, { recursive: true });
     
     const count = parseInt(options.count, 10);
-    console.log(`Generating ${count} pre-keys...`);
+    const format = options.format.toLowerCase();
+    console.log(`Generating ${count} pre-keys in ${format} format...`);
     
     const publicKeys: any[] = [];
     const privateKeys: Record<string, any> = {};
@@ -117,20 +119,30 @@ program
       };
     }
     
-    // 1. SQL for D1
-    const sqlLines = [
-      "CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY AUTOINCREMENT, kid TEXT UNIQUE NOT NULL, pub_key TEXT NOT NULL, pqc_pub_key TEXT, status TEXT DEFAULT 'available', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, consumed_at DATETIME);",
-      "CREATE INDEX IF NOT EXISTS idx_prekeys_status ON prekeys(status);"
-    ];
-    
-    for (const k of publicKeys) {
-      const pqcVal = k.pqc_pub_key ? `'${k.pqc_pub_key}'` : "NULL";
-      sqlLines.push(`INSERT INTO prekeys (kid, pub_key, pqc_pub_key) VALUES ('${k.kid}', '${k.pub_key}', ${pqcVal});`);
+    if (format === "cloudflare") {
+      // SQL for D1
+      const sqlLines = [
+        "CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY AUTOINCREMENT, kid TEXT UNIQUE NOT NULL, pub_key TEXT NOT NULL, pqc_pub_key TEXT, status TEXT DEFAULT 'available', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, consumed_at DATETIME);",
+        "CREATE INDEX IF NOT EXISTS idx_prekeys_status ON prekeys(status);"
+      ];
+      for (const k of publicKeys) {
+        const pqcVal = k.pqc_pub_key ? `'${k.pqc_pub_key}'` : "NULL";
+        sqlLines.push(`INSERT INTO prekeys (kid, pub_key, pqc_pub_key) VALUES ('${k.kid}', '${k.pub_key}', ${pqcVal});`);
+      }
+      await fs.writeFile(path.join(outDir, "prekeys-public.sql"), sqlLines.join("\n"));
+      console.log(`- SQL for D1: ${path.join(outDir, "prekeys-public.sql")}`);
+    } else if (format === "firebase") {
+      // JSON for Firestore import
+      const firebaseData = {
+        batch_id: randomBytes(4).toString("hex"),
+        generated_at: new Date().toISOString(),
+        keys: publicKeys
+      };
+      await fs.writeFile(path.join(outDir, "prekeys-firebase.json"), JSON.stringify(firebaseData, null, 2));
+      console.log(`- JSON for Firestore: ${path.join(outDir, "prekeys-firebase.json")}`);
     }
     
-    await fs.writeFile(path.join(outDir, "prekeys-public.sql"), sqlLines.join("\n"));
-    
-    // 2. Private Keystore
+    // Private Keystore
     await fs.writeFile(
       path.join(outDir, "prekeys-private.json"),
       JSON.stringify({ 
@@ -139,8 +151,6 @@ program
       }, null, 2)
     );
     
-    console.log(`Generated ${count} keys.`);
-    console.log(`- SQL for D1: ${path.join(outDir, "prekeys-public.sql")}`);
     console.log(`- Private Vault: ${path.join(outDir, "prekeys-private.json")}`);
   });
 

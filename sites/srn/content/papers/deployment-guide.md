@@ -60,25 +60,27 @@ This tier requires pre-generating keys for future time windows.
     Ensure your form config has `l2_epoch_registry_url: "/keys/epoch-public.json"`.
 
 ### 3.2. Tier 3: True PFS (Cloudflare Worker)
-This tier requires a Cloudflare account.
+(Existing Cloudflare instructions...)
 
-1.  **Create D1 Database**:
+### 3.3. Tier 3 (Alt): True PFS (Firebase / Google Cloud)
+Recommended for organizations requiring **ISMAP compliance** or using **Government Cloud**.
+
+1.  **Initialize Firebase Project**:
+    - Create a project in the Firebase Console.
+    - Enable **Cloud Firestore** and **Cloud Functions**.
+2.  **Generate Pre-keys (Firebase Format)**:
     ```bash
-    bunx wrangler d1 create weba-prekeys
+    bun src/bin/weba-l2-crypto.ts gen-prekeys --format firebase -n 1000 --out ./keys
     ```
-2.  **Generate Pre-keys**:
+3.  **Import to Firestore**:
     ```bash
-    bun src/bin/weba-l2-crypto.ts gen-prekeys -n 1000 --out ./keys
+    export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
+    bun src/tools/prekey-firebase/scripts/import_keys.ts ./keys/prekeys-firebase.json
     ```
-3.  **Upload to Cloudflare**:
+4.  **Deploy Functions**:
     ```bash
-    bunx wrangler d1 execute weba-prekeys --remote --file ./keys/prekeys-public.sql
-    ```
-4.  **Deploy Worker**:
-    ```bash
-    cd src/tools/prekey-worker
-    # Edit wrangler.toml with your database_id
-    bunx wrangler deploy
+    cd src/tools/prekey-firebase
+    firebase deploy --only functions
     ```
 
 ---
