@@ -177,6 +177,19 @@ Sorane implements several measures to ensure high-security requirements for publ
     *   **Browser**: Automatically uses `localStorage` for zero-touch persistent replay protection.
 *   **Side-Channel & Traffic Analysis Resistance**: Includes unified error handling for decryption and block-size padding (512-byte multiples) to mitigate information leakage.
 
+### 8. Testing & Coverage
+
+Use Bun's built-in coverage to monitor regression risk before major changes.
+
+```bash
+# Run full test suite with coverage
+bun test --coverage
+```
+
+* **Output**: Bun prints a per-file coverage table (functions/lines) to stdout.
+* **Baseline Tracking**: Record the summary (% funcs/lines) in your work logs or release notes when making security-sensitive changes.
+* **Headless Notes**: Tests that rely on WebAuthn or WASM may require the default Bun environment; keep versions aligned with `package.json`.
+
 ## Troubleshooting
 
 * **Missing Glyphs**: Run `bun run db:build` to refresh the glyph database, then rebuild the site.
