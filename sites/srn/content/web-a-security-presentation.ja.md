@@ -4,7 +4,7 @@ description: "セキュリティ改善の取り組み、レッドチームのフ
 layout: article
 lang: ja
 presentation: true
-presentation_template: sorane
+presentation_template: minimal
 date: 2025-12-29
 ---
 

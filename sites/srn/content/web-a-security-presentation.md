@@ -4,7 +4,7 @@ description: "A long-form, technical presentation covering SRN verification mode
 layout: article
 lang: en
 presentation: true
-presentation_template: sorane
+presentation_template: minimal
 date: 2025-12-29
 ---
 
@@ -27,6 +27,55 @@ date: 2025-12-29
   <li>Web/A Form: Layer 1, Layer 2, Layer 3</li>
   <li>L2 encryption design, padding, replay protection</li>
   <li>Red Team feedback loop and remaining gaps</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Context</div>
+<h2>What Is Sorane?</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>An open-source reference implementation for <strong>verifiable web documents</strong></li>
+  <li>Focused on <strong>long-term readability</strong> and <strong>cryptographic trust</strong></li>
+  <li>Designed for public-sector workflows where PDFs fall short</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Web/A: The Core Concept</h2>
+<ul>
+  <li>Single-file HTML as the delivery format</li>
+  <li>Human + machine views bound by signatures</li>
+  <li>Portable, auditable, and future-proof</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">Whitepapers</div>
+<h2>What the Papers Cover</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>Web/A</strong>: archival web documents and HMP model</li>
+  <li><strong>Web/A Form</strong>: interactive, verifiable forms</li>
+  <li><strong>L2 Encryption</strong>: confidentiality for submitted data</li>
+  <li><strong>Security Audits</strong>: red-team findings and remediation</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Why Web/A Instead of PDF</h2>
+<ul>
+  <li>PDF is readable but hard to verify at scale</li>
+  <li>Web is flexible but lacks built-in authenticity</li>
+  <li>Web/A combines both with a signed, portable artifact</li>
 </ul>
 </div>
 
@@ -66,16 +115,50 @@ date: 2025-12-29
 </ul>
 </div>
 <div class="presentation-figure">
-<svg width="560" height="380" viewBox="0 0 560 380" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="layer-title layer-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
-  <title id="layer-title">Web/A Layers</title>
-  <desc id="layer-desc">A Web/A document with three layers: presentation, encrypted user payload, and issuer-signed core.</desc>
-  <rect x="30" y="30" width="500" height="320" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
-  <rect x="60" y="60" width="440" height="70" rx="8" fill="#E2E8F0" stroke="#94A3B8"/>
-  <text x="80" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#334155">Layer 3: Presentation</text>
-  <rect x="60" y="150" width="440" height="80" rx="8" fill="#ECFDF5" stroke="#10B981"/>
-  <text x="80" y="185" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: User Payload (Encrypted)</text>
-  <rect x="60" y="250" width="440" height="70" rx="8" fill="#EEF2FF" stroke="#6366F1"/>
-  <text x="80" y="285" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: Issuer Signed Core</text>
+<svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#6366F1" />
+    </marker>
+  </defs>
+  <rect width="600" height="460" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+  <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
+
+  <!-- Layer 3: Presentation -->
+  <rect x="60" y="70" width="480" height="50" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Layer 3: Portable Presentation (View)</text>
+  <text x="75" y="110" font-family="system-ui" font-size="10" fill="#64748B">CSS, Fonts (Replaceable for Future Compatibility)</text>
+
+  <!-- Layer 2: User Signed -->
+  <rect x="60" y="130" width="480" height="80" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="155" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: User-Signed Context (Input/Fact)</text>
+  <text x="75" y="175" font-family="system-ui" font-size="11" fill="#065F46">User Answers / Agreement</text>
+  <text x="75" y="190" font-family="system-ui" font-size="11" fill="#065F46">Passkey Signature (VP)</text>
+  <!-- Link to Layer 1 -->
+  <path d="M300 210V220" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Layer 1: Issuer Signed -->
+  <rect x="60" y="220" width="480" height="150" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="245" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: Issuer-Signed Core (Template/Law)</text>
+
+  <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Human Readable</text>
+  <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / Questions</text>
+
+  <!-- Semantic Mapping -->
+  <path d="M280 290H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
+  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">Mapping</text>
+
+  <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Machine Readable</text>
+  <text x="330" y="300" font-family="system-ui" font-size="11" fill="#64748B">JSON-LD / Logic</text>
+
+  <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">Issuer Signature: Ed25519 + PQC</text>
 </svg>
 </div>
 </div>
