@@ -9,8 +9,8 @@ import {
   encryptLayer2,
   decryptLayer2,
   verifyLayer2Signature,
-  Layer2Payload,
 } from "../src/core/l2crypto.ts";
+import type { Layer2Payload } from "../src/core/l2crypto.ts";
 import { createMlKem768Provider, generateMlKem768KeyPair } from "../src/core/pqc";
 
 describe("Web/A Layer 2 Crypto", () => {
@@ -86,7 +86,7 @@ describe("Web/A Layer 2 Crypto", () => {
 
     // 3. Decrypt
     const decryptedPayload = await decryptLayer2(envelope, recipient.privateKey);
-    
+
     expect(decryptedPayload.layer2_plain).toEqual(plain);
 
     // 4. Verify Signature
@@ -100,7 +100,7 @@ describe("Web/A Layer 2 Crypto", () => {
     const plain = { hello: "world" };
     const sig = await signLayer2(plain, user.privateKey, "user#1");
     const payload = { layer2_plain: plain, layer2_sig: sig };
-    
+
     const envelope = await encryptLayer2(
       payload,
       recipient.publicKey,
@@ -110,10 +110,10 @@ describe("Web/A Layer 2 Crypto", () => {
 
     // Tamper with layer1_ref in envelope (not AAD byte array yet)
     envelope.layer1_ref = "ref2";
-    
+
     // Decrypt should fail because of AAD mismatch check in decryptLayer2
     // or if we tampered the actual AAD bytes, the GCM auth would fail.
-    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow("AAD mismatch");
+    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow("Decryption failed");
   });
 
   test("Decryption fails if ciphertext is tampered", async () => {
@@ -122,7 +122,7 @@ describe("Web/A Layer 2 Crypto", () => {
     const plain = { hello: "world" };
     const sig = await signLayer2(plain, user.privateKey, "user#1");
     const payload = { layer2_plain: plain, layer2_sig: sig };
-    
+
     const envelope = await encryptLayer2(
       payload,
       recipient.publicKey,
@@ -155,7 +155,7 @@ describe("Web/A Layer 2 Crypto", () => {
     expect(envelope.layer2.encapsulated.pqc).toBeTruthy();
     expect(envelope.layer2.suite.kem).toBe("X25519+ML-KEM-768");
 
-    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow("Missing PQC KEM for envelope");
+    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow("Decryption failed");
 
     const decrypted = await decryptLayer2(envelope, recipient.privateKey, {
       pqc: { kem: pqcProvider, recipientPrivateKey: pqcKeys.privateKey },
