@@ -6,24 +6,36 @@ date: 2025-12-29
 ai_generated: true
 ---
 
-# Technical Report: Web/A Layer 2 Encryption Architecture
-
 **Confidentiality and Privacy for Distributed Form Data**
 
 ## 1. Abstract
-This report details the architectural design and implementation of **Layer 2 Encryption** for the Web/A protocol. Web/A Layer 2 Encryption provides end-to-end confidentiality for user responses (Layer 2) in a file-centric, serverless environment. By utilizing a Hybrid Public Key Encryption (HPKE)-like construction, it ensures that sensitive data is readable only by the intended recipient (Issuer/Aggregator), protecting it during transit and storage. The system supports a hybrid Post-Quantum Cryptography (PQC) mode and integrates with WebAuthn PRF for browser-native decryption.
+This report details the architectural design and implementation of **Layer 2
+Encryption** for the Web/A protocol. Web/A Layer 2 Encryption provides
+end-to-end confidentiality for user responses (Layer 2) in a file-centric,
+serverless environment. By utilizing a Hybrid Public Key Encryption (HPKE)-like
+construction, it ensures that sensitive data is readable only by the intended
+recipient (Issuer/Aggregator), protecting it during transit and storage. The
+system supports a hybrid Post-Quantum Cryptography (PQC) mode and integrates
+with WebAuthn PRF for browser-native decryption.
 
 ## 2. Introduction
-In the Web/A model, documents are self-contained artifacts. A "Form" (Layer 1) is a static file that users fill out to generate an "Answer" (Layer 2). Unlike traditional web forms that POST data to a specific server, Web/A answers can be transported via any channel (email, USB, IPFS, etc.).
+In the Web/A model, documents are self-contained artifacts. A "Form" (Layer 1)
+is a static file that users fill out to generate an "Answer" (Layer 2). Unlike
+traditional web forms that POST data to a specific server, Web/A answers can be
+transported via any channel (email, USB, IPFS, etc.).
 
 This decoupled architecture necessitates a robust encryption mechanism that:
-1.  **Protects Confidentiality**: Data must remain encrypted at rest and in transit.
-2.  **Binds to Context**: Answers must be cryptographically bound to the specific question (Layer 1) to prevent splicing attacks.
-3.  **Enables Offline Operations**: Decryption should be possible in offline environments (e.g., local browser, air-gapped aggregators).
+1.  **Protects Confidentiality**: Data must remain encrypted at rest and in
+    transit.
+2.  **Binds to Context**: Answers must be cryptographically bound to the
+    specific question (Layer 1) to prevent splicing attacks.
+3.  **Enables Offline Operations**: Decryption should be possible in offline
+    environments (e.g., local browser, air-gapped aggregators).
 
 ## 3. Architecture Overview
 
-Layer 2 Encryption acts as a wrapper around the standard signed Layer 2 payload.
+Layer 2 Encryption acts as a wrapper around the standard signed Layer 2
+payload.
 
 ```mermaid
 flowchart LR
@@ -54,13 +66,21 @@ flowchart LR
 ```
 
 ### 3.1. Design Principles
-*   **Identity Separation**: Signing (Authentication) and Encryption (Confidentiality) use different keys. Signing keys are user-controlled (ephemeral or persistent), while encryption keys are issuer-controlled.
-*   **Hybrid Encryption**: We use a KEM (Key Encapsulation Mechanism) + DEM (Data Encapsulation Mechanism) approach, allowing efficient encryption of large payloads.
-*   **Context Binding**: Using AEAD (Authenticated Encryption with Associated Data), we bind the encryption to the Layer 1 hash (`layer1_ref`), ensuring that an encrypted answer cannot be validly decrypted in the context of a different form.
+*   **Identity Separation**: Signing (Authentication) and Encryption
+    (Confidentiality) use different keys. Signing keys are user-controlled
+    (ephemeral or persistent), while encryption keys are issuer-controlled.
+*   **Hybrid Encryption**: We use a KEM (Key Encapsulation Mechanism) + DEM
+    (Data Encapsulation Mechanism) approach, allowing efficient encryption of
+    large payloads.
+*   **Context Binding**: Using AEAD (Authenticated Encryption with Associated
+    Data), we bind the encryption to the Layer 1 hash (`layer1_ref`), ensuring
+    that an encrypted answer cannot be validly decrypted in the context of a
+    different form.
 
 ## 4. Cryptographic Specifications
 
-The protocol uses a suite inspired by **HPKE (RFC 9180)** but optimized for JSON/JavaScript environments.
+The protocol uses a suite inspired by **HPKE (RFC 9180)** but optimized for
+JSON/JavaScript environments.
 
 | Component | Primitive | Notes |
 | :--- | :--- | :--- |
@@ -100,8 +120,10 @@ sequenceDiagram
     ```
 3.  **KEM**: Generate an ephemeral X25519 key pair. Compute shared secret with Recipient Public Key.
     *   *Hybrid PQC*: If enabled, also generate PQC encapsulation and concatenate shared secrets.
-4.  **KDF**: Derive `key` (32 bytes) and `iv` (12 bytes) using HKDF-SHA256. The AAD is used as the salt.
-5.  **AEAD**: Encrypt the payload using AES-256-GCM with the derived key, IV, and AAD.
+4.  **KDF**: Derive `key` (32 bytes) and `iv` (12 bytes) using HKDF-SHA256.
+    The AAD is used as the salt.
+5.  **AEAD**: Encrypt the payload using AES-256-GCM with the derived key, IV,
+    and AAD. The output is split into `ciphertext` and `auth_tag` fields.
 
 ### 4.2. Data Structures
 
@@ -140,8 +162,9 @@ type Layer2Encrypted = {
       classical: string; // base64url(ephemeral_pk)
       pqc?: string;      // base64url(kem_ct) [Optional]
     };
-    ciphertext: string;  // base64url(aes_ct + auth_tag)
-    aad: string;         // base64url(aad_json)
+    ciphertext: string; // base64url(aes_ct)
+    auth_tag: string;   // base64url(16 bytes)
+    aad: string;        // base64url(aad_json)
   };
   meta: {
     created_at: string;
@@ -151,12 +174,18 @@ type Layer2Encrypted = {
 };
 ```
 
+**Compatibility checks**
+- `layer2.enc` MUST be `"HPKE-v1"` for newly created envelopes.
+- Decryptors MUST reject any other `layer2.enc` value.
+
 ## 5. Key Management & Hierarchy
 
-To manage keys effectively across many campaigns and forms, Web/A employs a hierarchical key derivation scheme for organizations.
+To manage keys effectively across many campaigns and forms, Web/A employs a
+hierarchical key derivation scheme for organizations.
 
 ### 5.1. Organization Key Derivation
-Instead of managing thousands of random key pairs, an organization maintains a single **SRN Instance Key**.
+Instead of managing thousands of random key pairs, an organization maintains a
+single **SRN Instance Key**.
 
 ```mermaid
 flowchart TD
@@ -170,22 +199,32 @@ flowchart TD
 ```
 
 *   **SRN Instance Key**: The master secret for the server/node.
-*   **Org Root Key**: Derived per organization ID. Allows multi-tenant isolation.
-*   **Campaign/Form Key**: Derived for a specific campaign or form (`layer1_ref`).
+*   **Org Root Key**: Derived per organization ID. Allows multi-tenant
+    isolation.
+*   **Campaign/Form Key**: Derived for a specific campaign or form
+    (`layer1_ref`).
 
-This ensures that compromising a key for one form does not compromise past or future forms.
+This ensures that compromising a key for one form does not compromise past or
+future forms.
 
 ### 5.2. Aggregator Escrow
-In the "Aggregator Escrow" model, the derived private key for a specific form is temporarily provided to the aggregator tool (browser-based or CLI). This allows authorized operators to batch-decrypt responses without needing access to the master root key.
+In the "Aggregator Escrow" model, the derived private key for a specific form
+is temporarily provided to the aggregator tool (browser-based or CLI). This
+allows authorized operators to batch-decrypt responses without needing access
+to the master root key.
 
 ## 6. Browser Integration & WebAuthn PRF
 
-For individual recipients (e.g., a doctor receiving a patient form directly), we support **Browser-Only Decryption** using WebAuthn PRF (Pseudo-Random Function).
+For individual recipients (e.g., a doctor receiving a patient form directly),
+we support **Browser-Only Decryption** using WebAuthn PRF (Pseudo-Random
+Function).
 
 ### 6.1. Key Wrapping Flow
 1.  **Setup**: The recipient generates a persistent L2 encryption key pair.
-2.  **Wrapping**: The private key is encrypted (wrapped) using a key derived from their Passkey (WebAuthn PRF).
-3.  **Embedding**: The wrapped key is embedded in the Form HTML or the Aggregator HTML.
+2.  **Wrapping**: The private key is encrypted (wrapped) using a key derived
+    from their Passkey (WebAuthn PRF).
+3.  **Embedding**: The wrapped key is embedded in the Form HTML or the
+    Aggregator HTML.
 
 ```mermaid
 sequenceDiagram
@@ -202,44 +241,88 @@ sequenceDiagram
     Browser->>User: Show Plaintext Data
 ```
 
-This enables a "smart document" experience where the file itself verifies the user's identity via biometric/security key before revealing its contents, without contacting any central server.
+This enables a "smart document" experience where the file itself verifies the
+user's identity via biometric/security key before revealing its contents,
+without contacting any central server.
 
 ## 7. Security Considerations
 
 ### 7.1. Context Binding (Anti-Splicing)
-A critical threat is an attacker taking an encrypted answer from Form A (e.g., "Sign up for Newsletter") and injecting it into Form B (e.g., "Authorize Transfer").
-*   **Mitigation**: The `layer1_ref` (hash of the Form) is included in the **AAD**.
-*   **Effect**: If the envelope is moved to a form with a different `layer1_ref`, the AEAD decryption will fail (Auth Tag mismatch) because the AAD verification fails.
+A critical threat is an attacker taking an encrypted answer from Form A (e.g.,
+"Sign up for Newsletter") and injecting it into Form B (e.g., "Authorize
+Transfer").
+*   **Mitigation**: The `layer1_ref` (hash of the Form) is included in the
+    **AAD**.
+*   **Effect**: If the envelope is moved to a form with a different
+    `layer1_ref`, the AEAD decryption will fail (Auth Tag mismatch) because the
+    AAD verification fails.
 
 ### 7.2. Replay Protection (Nonce Tracking)
-Since the Layer 2 protocol is stateless, an attacker could resubmit a valid encrypted envelope multiple times.
-*   **Mitigation**: The `Layer2Encrypted` structure includes a `meta.nonce` field.
-*   **Requirement**: Aggregators **MUST** implement nonce verification. A reference `ReplayGuard` utility is provided in the core library that tracks seen nonces.
-    *   **Persistent Storage**: To prevent replays across aggregator restarts, persistent stores are provided: `JsonFileReplayStore` for CLI (using `--replay-store`) and `LocalStorageReplayStore` for browsers (zero-touch).
-*   **Policy (Secure by Default)**: Replay checks will be required by default at the API boundary. Bypassing the check must be an explicit opt-out with a "safe mode" warning.
+Since the Layer 2 protocol is stateless, an attacker could resubmit a valid
+encrypted envelope multiple times.
+*   **Mitigation**: The `Layer2Encrypted` structure includes a `meta.nonce`
+    field.
+*   **Requirement**: Aggregators **MUST** implement nonce verification. A
+    reference `ReplayGuard` utility is provided in the core library that tracks
+    seen nonces.
+    *   **Persistent Storage**: To prevent replays across aggregator restarts,
+        persistent stores are provided: `JsonFileReplayStore` for CLI (using
+        `--replay-store`) and `LocalStorageReplayStore` for browsers
+        (zero-touch).
+*   **Policy (Secure by Default)**: Replay checks will be required by default
+    at the API boundary. Bypassing the check must be an explicit opt-out with a
+    "safe mode" warning.
 
 ### 7.3. Draft State Handling (Client)
-Draft downloads embed a structured draft state inside the HTML so users can restore work after cache clears or on other devices.
-*   **Embedded State**: Includes the form data snapshot and the browser replay nonce list used by the local replay guard.
-*   **Operational Note**: Treat draft files as sensitive artifacts because they may contain plaintext responses and replay metadata.
+Draft downloads embed a structured draft state inside the HTML so users can
+restore work after cache clears or on other devices.
+*   **Embedded State**: Includes the form data snapshot and the browser replay
+    nonce list used by the local replay guard.
+*   **Operational Note**: Treat draft files as sensitive artifacts because they
+    may contain plaintext responses and replay metadata.
 
 ### 7.4. Traffic Analysis (Padding)
-The length of the ciphertext reveals the approximate size of the plaintext, which might leak information (e.g., "Yes" vs "No" answers).
-*   **Mitigation**: The `Layer2Payload` includes a `_padding` field. The implementation uses a **bucket-based padding strategy** (e.g., 1KB, 4KB, 16KB, 64KB, etc.). This ensures that messages are normalized to specific size tiers, making it extremely difficult to distinguish between payloads of different sizes, even for larger documents.
-*   **Roadmap (Decoy Traffic)**: Introduce optional "decoy submissions" (constant-rate background traffic or batched delays) for high-sensitivity deployments to reduce timing metadata leakage.
+The length of the ciphertext reveals the approximate size of the plaintext,
+which might leak information (e.g., "Yes" vs "No" answers).
+*   **Mitigation**: The `Layer2Payload` includes a `_padding` field. The
+    implementation uses a **bucket-based padding strategy** (e.g., 1KB, 4KB,
+    16KB, 64KB, etc.). This ensures that messages are normalized to specific
+    size tiers, making it extremely difficult to distinguish between payloads
+    of different sizes, even for larger documents.
+*   **Roadmap (Decoy Traffic)**: Introduce optional "decoy submissions"
+    (constant-rate background traffic or batched delays) for high-sensitivity
+    deployments to reduce timing metadata leakage.
 
 ### 7.5. Side-Channel Mitigation (Unified Errors)
-Detailed error messages in cryptographic operations can act as an oracle for attackers.
-*   **Mitigation**: The `decryptLayer2` function is designed to return a generic "Decryption failed" error regardless of the specific failure point (AAD mismatch, MAC failure, KEM failure). This prevents attackers from distinguishing between different types of invalid messages.
+Detailed error messages in cryptographic operations can act as an oracle for
+attackers.
+*   **Mitigation**: The `decryptLayer2` function is designed to return a
+    generic "Decryption failed" error regardless of the specific failure point
+    (AAD mismatch, MAC failure, KEM failure). This prevents attackers from
+    distinguishing between different types of invalid messages.
 
 ### 7.6. Forward Secrecy
-*   **Current State**: The default scheme uses static recipient public keys embedded in the Layer 1 form. While hierarchical derivation isolates campaigns, it does not provide true Forward Secrecy for historical messages if the campaign key is leaked.
-*   **Mitigation (Key Rotation)**: The hierarchical derivation makes rotating keys cheap. Issuers are encouraged to use distinct keys per campaign and rotate them frequently.
-*   **Enhancement (Pre-Keys)**: For high-security applications, Web/A supports **Pre-Keys**. If a `prekey_url` is configured in the form, the client will attempt to fetch a one-time use public key from a server before encryption. This ensures that even if the long-term organization key is compromised, previous messages encrypted with ephemeral pre-keys remain secure.
+*   **Current State**: The default scheme uses static recipient public keys
+    embedded in the Layer 1 form. While hierarchical derivation isolates
+    campaigns, it does not provide true Forward Secrecy for historical messages
+    if the campaign key is leaked.
+*   **Mitigation (Key Rotation)**: The hierarchical derivation makes rotating
+    keys cheap. Issuers are encouraged to use distinct keys per campaign and
+    rotate them frequently.
+*   **Enhancement (Pre-Keys)**: For high-security applications, Web/A supports
+    **Pre-Keys**. If a `prekey_url` is configured in the form, the client will
+    attempt to fetch a one-time use public key from a server before encryption.
+    This ensures that even if the long-term organization key is compromised,
+    previous messages encrypted with ephemeral pre-keys remain secure.
 
 ### 7.7. Post-Quantum Readiness & Provider Integrity
-*   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today cannot be decrypted by future quantum computers.
-*   **Integrity Protection**: To prevent malicious PQC provider injection (e.g., via XSS), the application **MUST** use a strict Content Security Policy (CSP) and Subresource Integrity (SRI) for all cryptographic modules. The project is moving toward a self-contained WebAssembly module to further isolate cryptographic logic from the highly dynamic JavaScript environment.
+*   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today
+    cannot be decrypted by future quantum computers.
+*   **Integrity Protection**: To prevent malicious PQC provider injection
+    (e.g., via XSS), the application **MUST** use a strict Content Security
+    Policy (CSP) and Subresource Integrity (SRI) for all cryptographic modules.
+    The project is moving toward a self-contained WebAssembly module to further
+    isolate cryptographic logic from the highly dynamic JavaScript environment.
 
 **CSP/SRI Template (Strict Mode Example)**:
 ```html
@@ -253,27 +336,49 @@ Detailed error messages in cryptographic operations can act as an oracle for att
            object-src 'none';
            frame-ancestors 'none';">
 ```
-*   **SRI Values**: Replace `__SRI_MKFORM__` and `__SRI_WASM_GLUE__` with build-generated SHA-256 hashes for `mkform.js` and the Wasm loader script.
-*   **Delivery**: Prefer HTTP headers for CSP on hosted deployments. For offline HTML bundles, use `<meta http-equiv="Content-Security-Policy">` and keep inline scripts to a minimum.
+*   **SRI Values**: Replace `__SRI_MKFORM__` and `__SRI_WASM_GLUE__` with
+    build-generated SHA-256 hashes for `mkform.js` and the Wasm loader script.
+*   **Delivery**: Prefer HTTP headers for CSP on hosted deployments. For
+    offline HTML bundles, use `<meta http-equiv="Content-Security-Policy">`
+    and keep inline scripts to a minimum.
 *   **Build Guidance**:
-    *   Generate SRI with a reproducible build, e.g. `openssl dgst -sha256 -binary mkform.js | openssl base64 -A`.
-    *   If a page embeds inline runtime (e.g. `weba-structure` JSON), either hash that inline block or move it to a separate file and add its SRI.
+    *   Generate SRI with a reproducible build, e.g.
+        `openssl dgst -sha256 -binary mkform.js | openssl base64 -A`.
+    *   If a page embeds inline runtime (e.g. `weba-structure` JSON), either
+        hash that inline block or move it to a separate file and add its SRI.
 
 ### 7.8. Supply Chain Security
-*   **Vendoring**: Core cryptographic primitives (e.g., `@noble/*`) are vendored directly into the source tree (`src/vendor/`) to eliminate reliance on public registries and prevent supply chain injection for critical security logic.
-*   **SBOM/CBOM**: A full Software and Cryptography Bill of Materials (`sbom.json`) is maintained to ensure transparency and auditability of the cryptographic stack.
+*   **Vendoring**: Core cryptographic primitives (e.g., `@noble/*`) are
+    vendored directly into the source tree (`src/vendor/`) to eliminate
+    reliance on public registries and prevent supply chain injection for
+    critical security logic.
+*   **SBOM/CBOM**: A full Software and Cryptography Bill of Materials
+    (`sbom.json`) is maintained to ensure transparency and auditability of the
+    cryptographic stack.
 
 ## 8. Current Implementation Status & Roadmap
-*   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`) using vendored primitives.
-*   **Replay Protection**: Fully implemented with persistent storage support in both CLI and Browser aggregators.
+*   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`) using
+    vendored primitives.
+*   **Replay Protection**: Fully implemented with persistent storage support
+    in both CLI and Browser aggregators.
 *   **Supply Chain**: Vendoring completed; SBOM/CBOM (`sbom.json`) available.
-*   **WASM Implementation**: Core cryptographic primitives (AES-GCM, X25519, ML-KEM, ML-DSA) have been migrated to a Rust-compiled WebAssembly module to ensure safe memory management and deterministic execution across different browser environments.
-*   **Pre-Key Infrastructure (Roadmap)**: Design document published; server PoC planned to enable one-time recipient keys for forward secrecy.
-*   **Client Integrity (Roadmap)**: Publish SRI values and CSP guidance for all distributed scripts and Wasm artifacts.
-*   **Decoy Traffic (Roadmap)**: Evaluate constant-rate or batch scheduling options for high-sensitivity deployments.
+*   **WASM Implementation**: Core cryptographic primitives (AES-GCM, X25519,
+    ML-KEM, ML-DSA) have been migrated to a Rust-compiled WebAssembly module to
+    ensure safe memory management and deterministic execution across different
+    browser environments.
+*   **Pre-Key Infrastructure (Roadmap)**: Design document published; server
+    PoC planned to enable one-time recipient keys for forward secrecy.
+*   **Client Integrity (Roadmap)**: Publish SRI values and CSP guidance for
+    all distributed scripts and Wasm artifacts.
+*   **Decoy Traffic (Roadmap)**: Evaluate constant-rate or batch scheduling
+    options for high-sensitivity deployments.
 
 ## 9. Conclusion
-Web/A Layer 2 Encryption provides a robust, flexible, and future-proof confidentiality layer for serverless forms. By leveraging standard primitives (HPKE, AES-GCM) and modern browser capabilities (WebAuthn PRF), it enables secure workflows ranging from personal medical forms to large-scale organizational surveys without centralized infrastructure dependency.
+Web/A Layer 2 Encryption provides a robust, flexible, and future-proof
+confidentiality layer for serverless forms. By leveraging standard primitives
+(HPKE, AES-GCM) and modern browser capabilities (WebAuthn PRF), it enables
+secure workflows ranging from personal medical forms to large-scale
+organizational surveys without centralized infrastructure dependency.
 
 ---
 
