@@ -63,25 +63,36 @@ This tier requires pre-generating keys for future time windows.
 (Existing Cloudflare instructions...)
 
 ### 3.3. Tier 3 (Alt): True PFS (Firebase / Google Cloud)
-Recommended for organizations requiring **ISMAP compliance** or using **Government Cloud**.
+Recommended for organizations requiring **ISMAP compliance** or using **Government Cloud**. This path also allows consolidating site hosting and the PFS backend under a single security boundary.
 
-1.  **Initialize Firebase Project**:
-    - Create a project in the Firebase Console.
-    - Enable **Cloud Firestore** and **Cloud Functions**.
-2.  **Generate Pre-keys (Firebase Format)**:
+#### A. Full Firebase Deployment (Hosting + Backend)
+By using Firebase for both static hosting and the pre-key server, you simplify government compliance reviews.
+
+1.  **Site Build**:
+    ```bash
+    bun run build  # Ensure static files are in the 'dist' directory
+    ```
+2.  **Configuration**:
+    - Update `.firebaserc` with your project ID.
+    - `firebase.json` is already configured to serve `dist/` and route `/api/v1/prekey`.
+3.  **Deployment**:
+    ```bash
+    # Deploys both the static site and the PFS Cloud Function
+    firebase deploy
+    ```
+
+#### B. Pre-key Backend Setup Only
+(Existing instructions...)
+1.  **Generate Pre-keys (Firebase Format)**:
     ```bash
     bun src/bin/weba-l2-crypto.ts gen-prekeys --format firebase -n 1000 --out ./keys
     ```
-3.  **Import to Firestore**:
+2.  **Import to Firestore**:
     ```bash
     export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
     bun src/tools/prekey-firebase/scripts/import_keys.ts ./keys/prekeys-firebase.json
     ```
-4.  **Deploy Functions**:
-    ```bash
-    cd src/tools/prekey-firebase
-    firebase deploy --only functions
-    ```
+
 
 ---
 
