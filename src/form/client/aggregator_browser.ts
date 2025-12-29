@@ -48,7 +48,7 @@ export interface RawPayload {
 /**
  * UTILS: Selector and Metrics
  */
-function selectValues(source: any, path: string): any[] {
+export function selectValues(source: any, path: string): any[] {
   const normalized = path.trim().replace(/^\$\./, "");
   if (!normalized) return [];
   const segments = normalized.split(".");
@@ -80,7 +80,7 @@ function selectValues(source: any, path: string): any[] {
   return current;
 }
 
-function computeMetric(metric: MetricSpec, payloads: RawPayload[]): number | string {
+export function computeMetric(metric: MetricSpec, payloads: RawPayload[]): number | string {
   const values: any[] = [];
   payloads.forEach((p) => {
     const extracted = selectValues(p.plain, metric.path);
@@ -108,7 +108,7 @@ function computeMetric(metric: MetricSpec, payloads: RawPayload[]): number | str
 /**
  * UI Components
  */
-function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawPayload[]) {
+export function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawPayload[]) {
   if (!spec) {
     root.innerHTML = "";
     return;
@@ -191,7 +191,7 @@ function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawP
   root.innerHTML = html;
 }
 
-function renderTable(root: HTMLElement, rows: any[], keys: string[]) {
+export function renderTable(root: HTMLElement, rows: any[], keys: string[]) {
   if (rows.length === 0) {
     root.innerHTML = `<div class="agg-empty-state">
       <div class="icon">📂</div>
@@ -484,7 +484,9 @@ function showRecordDetail(idx: number) {
     populateFormPreview(formPreview, raw);
   }
 }
-(window as any).showRecordDetail = showRecordDetail;
+if (typeof window !== "undefined") {
+  (window as any).showRecordDetail = showRecordDetail;
+}
 
 /**
  * SCRIPT PARSING
@@ -526,7 +528,9 @@ async function extractPlainFromHtml(html: string, l2Keys: L2KeyFile | null, repl
       }
 
       if (recipientSk) {
-        const payload = await decryptLayer2Envelope(l2, recipientSk, { replayGuard });
+        const payload = await decryptLayer2Envelope(l2, recipientSk, {
+          ...(replayGuard ? { replayGuard } : {})
+        });
         return { source: "l2", plain: payload.layer2_plain, sig: payload.layer2_sig };
       }
     } catch (e) {

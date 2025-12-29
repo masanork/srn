@@ -145,6 +145,64 @@ describe("Web/A Aggregator", () => {
     );
   });
 
+  test("decrypts with pre-key from keystore", async () => {
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
+    const layer2Plain = { answer: "pfs" };
+    const sig = await signLayer2(layer2Plain, user.privateKey, "user#sig-1");
+    const payload: Layer2Payload = { layer2_plain: layer2Plain, layer2_sig: sig };
+    const envelope = await encryptLayer2(
+      payload,
+      recipient.publicKey,
+      "sha256:abcd",
+      "pre_abc",
+    );
+    const html = `<html><body><script id="weba-l2-envelope" type="application/json">${JSON.stringify(envelope)}</script></body></html>`;
+
+    const keys: L2KeyFile = {
+      prekey_keystore: {
+        updated_at: "2025-01-01T00:00:00Z",
+        keys: {
+          "pre_abc": {
+            privateKey: Buffer.from(recipient.privateKey).toString("base64url")
+          }
+        }
+      }
+    };
+    const extracted = await extractPlainFromHtml(html, keys);
+    expect(extracted.plain?.answer).toBe("pfs");
+  });
+
+  test("decrypts with epoch key from keystore", async () => {
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
+    const layer2Plain = { answer: "epoch" };
+    const sig = await signLayer2(layer2Plain, user.privateKey, "user#sig-1");
+    const payload: Layer2Payload = { layer2_plain: layer2Plain, layer2_sig: sig };
+    const envelope = await encryptLayer2(
+      payload,
+      recipient.publicKey,
+      "sha256:abcd",
+      "epoch_2025_01",
+    );
+    const html = `<html><body><script id="weba-l2-envelope" type="application/json">${JSON.stringify(envelope)}</script></body></html>`;
+
+    const keys: L2KeyFile = {
+      epoch_keystore: {
+        updated_at: "2025-01-01T00:00:00Z",
+        keys: [{
+          kid: "epoch_2025_01",
+          publicKey: "", // not used for decryption
+          privateKey: Buffer.from(recipient.privateKey).toString("base64url"),
+          validFrom: "2025-01-01T00:00:00Z",
+          validUntil: "2025-02-01T00:00:00Z"
+        }]
+      }
+    };
+    const extracted = await extractPlainFromHtml(html, keys);
+    expect(extracted.plain?.answer).toBe("epoch");
+  });
+
   test("flattens nested JSON for CSV", () => {
     const input = {
       org: { name: "ACME", addr: { city: "Tokyo" } },

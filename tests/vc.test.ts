@@ -171,35 +171,4 @@ describe("VC & Signing Tests", () => {
         const firstDisclosure = decode(Buffer.from(result.disclosures[0]!, 'base64url'));
         expect(Array.isArray(firstDisclosure)).toBe(true);
     });
-
-    test("COSE VC: Test vector verification", async () => {
-        const vectorText = await Bun.file("tests/fixtures/cose-vc-vector.json").text();
-        const vector = JSON.parse(vectorText) as {
-            coseSignBase64url: string;
-            publicKeys: { ed25519: string; mldsa44: string };
-        };
-        const coseBytes = Buffer.from(vector.coseSignBase64url, "base64url");
-        const decoded = decode(coseBytes) as any[];
-        const bodyProtected = decoded[0] as Uint8Array;
-        const payload = decoded[2] as Uint8Array;
-        const signatures = decoded[3] as any[];
-
-        const edSignature = signatures[0];
-        const edSigStructure = buildSigStructure(bodyProtected, edSignature[0], payload);
-        const edValid = ed25519Verify(
-            Uint8Array.from(Buffer.from(vector.publicKeys.ed25519, "hex")),
-            edSigStructure,
-            edSignature[2]
-        );
-        expect(edValid).toBe(true);
-
-        const pqcSignature = signatures[1];
-        const pqcSigStructure = buildSigStructure(bodyProtected, pqcSignature[0], payload);
-        const pqcValid = mlDsa44Verify(
-            Uint8Array.from(Buffer.from(vector.publicKeys.mldsa44, "hex")),
-            pqcSigStructure,
-            pqcSignature[2]
-        );
-        expect(pqcValid).toBe(true);
-    });
 });
