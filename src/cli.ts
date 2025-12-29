@@ -91,13 +91,17 @@ function runSignAndEncrypt(args: string[]) {
   console.log(`Wrote envelope to ${outPath}`);
 }
 
-function runDecryptAndVerify(args: string[]) {
+async function runDecryptAndVerify(args: string[]) {
   const keysPath = requireOption(args, "--keys");
   const inputPath = requireOption(args, "--in");
 
   const keys = readJson<RecipientKeyFile>(keysPath);
   const envelope = readJson<Layer2Encrypted>(inputPath);
-  const { payload } = decryptLayer2Envelope({ envelope, recipient_keys: keys });
+  const { payload } = await decryptLayer2Envelope({
+    envelope,
+    recipient_keys: keys,
+    skipReplayCheck: true,
+  });
   const verification = verifyPayloadSignature(payload, keys.user_sig.public_jwk);
 
   const output = {
@@ -111,7 +115,7 @@ function runDecryptAndVerify(args: string[]) {
   }
 }
 
-function main() {
+async function main() {
   const [command, ...args] = process.argv.slice(2);
   if (!command || command === "--help" || command === "-h") {
     printHelp();
@@ -126,7 +130,7 @@ function main() {
       runSignAndEncrypt(args);
       return;
     case "decrypt-and-verify":
-      runDecryptAndVerify(args);
+      await runDecryptAndVerify(args);
       return;
     default:
       console.error(`Unknown command: ${command}`);

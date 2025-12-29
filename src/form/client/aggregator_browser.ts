@@ -509,7 +509,7 @@ function parseAggSpecScript(): AggSpec | null {
   }
 }
 
-async function extractPlainFromHtml(html: string, l2Keys: L2KeyFile | null): Promise<{ source: string; plain: any; sig?: Layer2Signature }> {
+async function extractPlainFromHtml(html: string, l2Keys: L2KeyFile | null, replayGuard?: ReplayGuard): Promise<{ source: string; plain: any; sig?: Layer2Signature }> {
   const l2 = extractL2EnvelopeFromHtml(html);
   if (l2) {
     if (!l2Keys) return { source: "l2", plain: null }; // Encrypted but no key
@@ -526,7 +526,7 @@ async function extractPlainFromHtml(html: string, l2Keys: L2KeyFile | null): Pro
       }
 
       if (recipientSk) {
-        const payload = await decryptLayer2Envelope(l2, recipientSk);
+        const payload = await decryptLayer2Envelope(l2, recipientSk, { replayGuard });
         return { source: "l2", plain: payload.layer2_plain, sig: payload.layer2_sig };
       }
     } catch (e) {
@@ -863,16 +863,7 @@ export function initAggregatorBrowser() {
       try {
         const html = await file.text();
 
-        // Replay protection
-        const l2ForCheck = extractL2EnvelopeFromHtml(html);
-        if (l2ForCheck?.meta?.nonce) {
-          if (!(await replayGuard.checkAndMark(l2ForCheck.meta.nonce))) {
-            console.warn(`Replay detected in ${file.name} (nonce: ${l2ForCheck.meta.nonce}). Skipping.`);
-            continue;
-          }
-        }
-
-        const extracted = await extractPlainFromHtml(html, l2Keys);
+        const extracted = await extractPlainFromHtml(html, l2Keys, replayGuard);
         if (extracted.source !== "unknown" && extracted.plain) {
           rawPayloads.push({ filename: file.name, plain: extracted.plain, sig: extracted.sig });
           const built = buildRowFromPlain({

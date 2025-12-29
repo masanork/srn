@@ -161,6 +161,53 @@ export function getPaddingTargetSize(currentSize: number): number {
   return wasmGetPadding(currentSize);
 }
 
+export type EpochKey = {
+  kid: string; // YYYY-MM-DD
+  publicKey: string; // base64url
+  privateKey: string; // base64url
+  start: string; // ISO
+  end: string; // ISO
+};
+
+/**
+ * Generate keys for a series of epochs (days).
+ */
+export async function generateEpochKeys(
+  startDate: string,
+  durationDays: number
+): Promise<EpochKey[]> {
+  await initWasm();
+  const keys: EpochKey[] = [];
+  const start = new Date(startDate);
+
+  for (let i = 0; i < durationDays; i++) {
+    const current = new Date(start);
+    current.setUTCDate(start.getUTCDate() + i);
+    
+    // YYYY-MM-DD
+    const kid = current.toISOString().split("T")[0];
+    
+    // Start of day UTC
+    current.setUTCHours(0, 0, 0, 0);
+    const validFrom = current.toISOString();
+    
+    // End of day UTC
+    current.setUTCHours(23, 59, 59, 999);
+    const validUntil = current.toISOString();
+
+    const kp = await x25519GenerateKeyPair();
+    
+    keys.push({
+      kid,
+      publicKey: toBase64Url(kp.publicKey),
+      privateKey: toBase64Url(kp.privateKey),
+      start: validFrom,
+      end: validUntil,
+    });
+  }
+  return keys;
+}
+
 export async function deriveOrgRootKey(params: { srnInstanceKey: Uint8Array; orgId: string }) {
   await initWasm();
   const context = canonicalJson({
@@ -346,12 +393,32 @@ export class ReplayGuard {
 export async function decryptLayer2(
   envelope: Layer2Encrypted,
   recipientPrivateKey: Uint8Array,
-  options?: { pqc?: PqcDecryptOptions }
+  options?: {
+    pqc?: PqcDecryptOptions;
+    replayGuard?: ReplayGuard;
+    skipReplayCheck?: boolean;
+  }
 ): Promise<Layer2Payload> {
   await initWasm();
+
   if (envelope.layer2.enc !== "HPKE-v1") {
     throw new Error(`Unsupported layer2.enc: ${envelope.layer2.enc}`);
   }
+
+  if (!options?.skipReplayCheck) {
+    let guard = options?.replayGuard;
+    if (!guard) {
+      console.warn(
+        "SECURITY WARNING: No ReplayGuard provided to decryptLayer2. Using in-memory ephemeral store. Replays will only be detected within this process lifetime."
+      );
+      guard = new ReplayGuard();
+    }
+    const isFresh = await guard.checkAndMark(envelope.meta.nonce);
+    if (!isFresh) {
+      throw new Error("Security Error: Replay detected (nonce used).");
+    }
+  }
+
   const envelopeJson = JSON.stringify(envelope);
   const pqcSk = options?.pqc?.recipientPrivateKey;
 

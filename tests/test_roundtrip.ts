@@ -23,7 +23,7 @@ describe("canonicalJson", () => {
 });
 
 describe("layer2 encrypt/decrypt", () => {
-  it("roundtrips payload", () => {
+  it("roundtrips payload", async () => {
     const keys = generateRecipientKeys({ recipientKid: "issuer#kem-2025" });
     const layer2Plain = { answer: "yes", count: 2 };
     const sig = signLayer2Plain(layer2Plain, keys.user_sig);
@@ -36,15 +36,16 @@ describe("layer2 encrypt/decrypt", () => {
       recipient_public_jwk: keys.x25519.public_jwk,
     });
 
-    const { payload: decrypted } = decryptLayer2Envelope({
+    const { payload: decrypted } = await decryptLayer2Envelope({
       envelope,
       recipient_keys: keys,
+      skipReplayCheck: true,
     });
 
     expect(decrypted).toEqual(payload);
   });
 
-  it("fails when layer1_ref changes", () => {
+  it("fails when layer1_ref changes", async () => {
     const keys = generateRecipientKeys({ recipientKid: "issuer#kem-2025" });
     const layer2Plain = { answer: "yes", count: 2 };
     const sig = signLayer2Plain(layer2Plain, keys.user_sig);
@@ -60,15 +61,16 @@ describe("layer2 encrypt/decrypt", () => {
     const tampered = structuredClone(envelope);
     tampered.layer1_ref = "sha256:zzzz";
 
-    expect(() =>
+    expect(
       decryptLayer2Envelope({
         envelope: tampered,
         recipient_keys: keys,
+        skipReplayCheck: true,
       }),
-    ).toThrow();
+    ).rejects.toThrow();
   });
 
-  it("fails when ciphertext changes", () => {
+  it("fails when ciphertext changes", async () => {
     const keys = generateRecipientKeys({ recipientKid: "issuer#kem-2025" });
     const layer2Plain = { answer: "yes", count: 2 };
     const sig = signLayer2Plain(layer2Plain, keys.user_sig);
@@ -86,12 +88,13 @@ describe("layer2 encrypt/decrypt", () => {
     ct[0] = ct[0] ^ 0xff;
     tampered.layer2.ciphertext = b64urlEncode(ct);
 
-    expect(() =>
+    expect(
       decryptLayer2Envelope({
         envelope: tampered,
         recipient_keys: keys,
+        skipReplayCheck: true,
       }),
-    ).toThrow();
+    ).rejects.toThrow();
   });
 });
 

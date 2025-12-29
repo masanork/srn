@@ -49,6 +49,7 @@ export function extractL2EnvelopeFromHtml(html: string): any | null {
 export async function extractPlainFromHtml(
     html: string,
     l2Keys?: L2KeyFile | null,
+    replayGuard?: ReplayGuard,
 ): Promise<{ plain?: any; sig?: any; source: 'l2' | 'jsonld' | null }> {
     const l2Envelope = extractL2EnvelopeFromHtml(html);
     if (l2Envelope && l2Keys) {
@@ -86,7 +87,7 @@ export async function extractPlainFromHtml(
         const payload = await decryptLayer2(
             l2Envelope,
             recipientSk,
-            pqc ? { pqc } : undefined
+            { pqc: pqc ? { pqc } : undefined, replayGuard }
         );
         const plain = (payload as any).layer2_plain ?? payload;
         const sig = (payload as any).layer2_sig;
@@ -194,16 +195,7 @@ program
             try {
                 const content = fs.readFileSync(filePath, 'utf-8');
 
-                // Replay protection check for L2
-                const l2EnvelopeForCheck = extractL2EnvelopeFromHtml(content);
-                if (l2EnvelopeForCheck?.meta?.nonce) {
-                    if (!(await replayGuard.checkAndMark(l2EnvelopeForCheck.meta.nonce))) {
-                        console.warn(`Warning: Replay detected in ${file} (nonce: ${l2EnvelopeForCheck.meta.nonce}). Skipping.`);
-                        continue;
-                    }
-                }
-
-                const extracted = await extractPlainFromHtml(content, l2Keys);
+                const extracted = await extractPlainFromHtml(content, l2Keys, replayGuard);
                 if (extracted.source === 'l2' && extracted.plain) {
                     const built = buildRowFromPlain({
                         plain: extracted.plain,

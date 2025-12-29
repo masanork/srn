@@ -81,7 +81,7 @@ To consider this system "Secure" for high-value usage, we demand the following:
 
 This section records the current response plan and documentation deliverables. It does not alter the audit findings above.
 
-1.  **Mandatory Replay Checks**: Will be enforced by default at the API boundary with explicit opt-out only. Status: **Planned**.
+1.  **Mandatory Replay Checks**: Will be enforced by default at the API boundary with explicit opt-out only. Status: **Implemented** (v0.1.6).
 2.  **Pre-Key Infrastructure Plan**: Design document published. Status: **Draft Published**.  
     *   [Offline Pre-Key Server Plan](./web-a-l2-prekey-server-plan.html)
 3.  **Client-Side Integrity (SRI/CSP)**: Strict CSP/SRI template published in the L2 Encryption paper. Status: **Guidance Published**.  

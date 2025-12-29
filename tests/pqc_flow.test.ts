@@ -25,38 +25,43 @@ globalThis.localStorage = {
 
 describe("End-to-End PQC Hybrid Encryption Flow", () => {
     const layer1Ref = "demo-L1";
+    
+    let config: any;
+    let l2Keys: any;
 
-    // 1. Setup (Maker)
-    // User generates Passkey-derived X25519 keys
-    const fakePrfKey = new Uint8Array(32).fill(1); // Mock PRF output
-    const userKeyPair = deriveKeyPairFromPrf(fakePrfKey);
-    const userPubKey = b64urlEncode(userKeyPair.publicKey);
+    beforeAll(async () => {
+        // 1. Setup (Maker)
+        // User generates Passkey-derived X25519 keys
+        const fakePrfKey = new Uint8Array(32).fill(1); // Mock PRF output
+        const userKeyPair = await deriveKeyPairFromPrf(fakePrfKey);
+        // const userPubKey = b64urlEncode(userKeyPair.publicKey); // Unused
 
-    // Recipient (Form Owner) generates keys
-    // For X25519
-    const recipientX25519 = deriveKeyPairFromPrf(new Uint8Array(32).fill(2));
-    const recipientX25519Pub = b64urlEncode(recipientX25519.publicKey);
-    const recipientX25519Priv = b64urlEncode(recipientX25519.privateKey);
+        // Recipient (Form Owner) generates keys
+        // For X25519
+        const recipientX25519 = await deriveKeyPairFromPrf(new Uint8Array(32).fill(2));
+        const recipientX25519Pub = b64urlEncode(recipientX25519.publicKey);
+        const recipientX25519Priv = b64urlEncode(recipientX25519.privateKey);
 
-    // For PQC (ML-KEM-768)
-    const pqcKeys = ml_kem768.keygen();
-    const pqcPub = b64urlEncode(pqcKeys.publicKey);
-    const pqcPriv = b64urlEncode(pqcKeys.secretKey);
+        // For PQC (ML-KEM-768)
+        const pqcKeys = ml_kem768.keygen();
+        const pqcPub = b64urlEncode(pqcKeys.publicKey);
+        const pqcPriv = b64urlEncode(pqcKeys.secretKey);
 
-    const config = {
-        enabled: true,
-        recipient_kid: "test-recipient",
-        recipient_x25519: recipientX25519Pub, // Public key for X25519
-        recipient_pqc: pqcPub,               // Public key for ML-KEM
-        layer1_ref: layer1Ref,
-    };
+        config = {
+            enabled: true,
+            recipient_kid: "test-recipient",
+            recipient_x25519: recipientX25519Pub, // Public key for X25519
+            recipient_pqc: pqcPub,               // Public key for ML-KEM
+            layer1_ref: layer1Ref,
+        };
 
-    const l2Keys = {
-        recipient_kid: "test-recipient",
-        recipient_x25519_private: recipientX25519Priv,
-        recipient_pqc_private: pqcPriv,
-        recipient_pqc_kem: "ML-KEM-768"
-    };
+        l2Keys = {
+            recipient_kid: "test-recipient",
+            recipient_x25519_private: recipientX25519Priv,
+            recipient_pqc_private: pqcPriv,
+            recipient_pqc_kem: "ML-KEM-768"
+        };
+    });
 
     it("should encrypt and decrypt using Hybrid PQC", async () => {
         const payloadData = {
@@ -91,7 +96,8 @@ describe("End-to-End PQC Hybrid Encryption Flow", () => {
             recipientSk,
             { 
                 pqcRecipientSk: pqcSk,
-                pqcProvider: provider
+                pqcProvider: provider,
+                skipReplayCheck: true
             }
         );
 
@@ -118,7 +124,7 @@ describe("End-to-End PQC Hybrid Encryption Flow", () => {
             await decryptLayer2Envelope(
                 envelope,
                 recipientSk,
-                { pqcProvider: provider }
+                { pqcProvider: provider, skipReplayCheck: true }
             );
             throw new Error("Should have failed");
         } catch (e: any) {

@@ -257,7 +257,10 @@ program
     const payload = await decryptLayer2(
       envelope,
       fromBase64Url(recipientKey.privateKey),
-      pqc ? { pqc } : undefined
+      {
+        pqc: pqc ? pqc : undefined,
+        skipReplayCheck: true
+      }
     );
 
     const isValid = verifyLayer2Signature(
