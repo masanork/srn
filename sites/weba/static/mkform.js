@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2025-12-29T01:46:18Z';
+window.__WEBA_BUILD_TIME__='2025-12-29T03:02:21Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -3294,6 +3294,7 @@ var CLIENT_BUNDLE = 'var xQ=Object.create;var{getPrototypeOf:SQ,defineProperty:E
 
 // src/form/generator.ts
 var RUNTIME_SCRIPT = CLIENT_BUNDLE;
+var FAVICON_DATA_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=";
 function initRuntime() {
   if (typeof window === "undefined")
     return;
@@ -3308,7 +3309,7 @@ function initRuntime() {
 function generateHtml(markdown) {
   const { html, jsonStructure } = parseMarkdown(markdown);
   const sourceMd = markdown.replace(/<\/script>/g, "<\\/script>");
-  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${jsonStructure.name || "Web/A Form"}</title><style>
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${jsonStructure.name || "Web/A Form"}</title><link rel="icon" href="${FAVICON_DATA_URI}"><style>
     body{font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;}
     .form-row{margin-bottom:1rem;}
     .form-label{font-weight:bold;display:block;margin-bottom:0.5rem;}
@@ -3327,7 +3328,7 @@ function generateAggregatorHtml(markdown) {
   const aggSpec = jsonStructure.aggSpec ? JSON.stringify(jsonStructure.aggSpec) : "";
   const sourceMd = markdown.replace(/<\/script>/g, "<\\/script>");
   const buildStamp = typeof window !== "undefined" && window.__WEBA_BUILD_TIME__ ? window.__WEBA_BUILD_TIME__ : "";
-  return `<!DOCTYPE html><html><head><title>Aggregator</title><style>
+  return `<!DOCTYPE html><html><head><title>Aggregator</title><link rel="icon" href="${FAVICON_DATA_URI}"><style>
     body{font-family:sans-serif;max-width:1100px;margin:0 auto;padding:2rem;}
     h1{margin-bottom:1.5rem;}
     .agg-panel{border:1px solid #ddd;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem;background:#fafafa;}

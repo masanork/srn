@@ -87,6 +87,3 @@ This section records the current response plan and documentation deliverables. I
     *   [Web/A L2 Encryption](./web-a-l2-encryption.html)
 4.  **Formal Audit of Rust Bindings**: Third-party review scope to be defined (focus: shared secret + HKDF flows). Status: **Planned**.
 5.  **Decoy Traffic**: Roadmap entry added for high-sensitivity deployments. Status: **Planned**.
-
-### Related Index
-- [Security Audit Index](./web-a-l2-security-audit-index.html)
