@@ -349,6 +349,9 @@ export async function decryptLayer2(
   options?: { pqc?: PqcDecryptOptions }
 ): Promise<Layer2Payload> {
   await initWasm();
+  if (envelope.layer2.enc !== "HPKE-v1") {
+    throw new Error(`Unsupported layer2.enc: ${envelope.layer2.enc}`);
+  }
   const envelopeJson = JSON.stringify(envelope);
   const pqcSk = options?.pqc?.recipientPrivateKey;
 

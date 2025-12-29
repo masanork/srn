@@ -25,6 +25,7 @@ describe("aggregator browser helpers", () => {
         recipient: "issuer#kem-2025",
         encapsulated: { classical: "" },
         ciphertext: "",
+        auth_tag: "",
         aad: "",
       },
       meta: { created_at: "2025-01-01T00:00:00Z", nonce: "" },

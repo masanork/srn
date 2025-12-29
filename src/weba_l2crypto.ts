@@ -38,6 +38,7 @@ export type Layer2Encrypted = {
       pqc?: string;
     };
     ciphertext: string;
+    auth_tag: string;
     aad: string;
   };
   meta: {
@@ -329,19 +330,26 @@ function aeadEncrypt(plaintext: Uint8Array, key: Uint8Array, iv: Uint8Array, aad
   cipher.setAAD(Buffer.from(aad));
   const enc = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const tag = cipher.getAuthTag();
-  return new Uint8Array(Buffer.concat([enc, tag]));
+  return {
+    ciphertext: new Uint8Array(enc),
+    authTag: new Uint8Array(tag),
+  };
 }
 
-function aeadDecrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, aad: Uint8Array) {
-  if (ciphertext.length < 16) {
-    throw new Error("Ciphertext too short for AES-GCM");
+function aeadDecrypt(
+  ciphertext: Uint8Array,
+  authTag: Uint8Array,
+  key: Uint8Array,
+  iv: Uint8Array,
+  aad: Uint8Array,
+) {
+  if (authTag.length !== 16) {
+    throw new Error("Invalid auth tag length for AES-GCM");
   }
-  const data = ciphertext.slice(0, -16);
-  const tag = ciphertext.slice(-16);
   const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
   decipher.setAAD(Buffer.from(aad));
-  decipher.setAuthTag(Buffer.from(tag));
-  const dec = Buffer.concat([decipher.update(data), decipher.final()]);
+  decipher.setAuthTag(Buffer.from(authTag));
+  const dec = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
   return new Uint8Array(dec);
 }
 
@@ -436,7 +444,7 @@ export function encryptLayer2Payload(params: {
     recipient: params.recipient_kid,
   });
   const { key, iv } = deriveKeyMaterial({ suite, info: infoBytes, ikm });
-  const ciphertext = aeadEncrypt(payloadBytes, key, iv, aadBytes);
+  const { ciphertext, authTag } = aeadEncrypt(payloadBytes, key, iv, aadBytes);
 
   return {
     weba_version: WEBA_VERSION,
@@ -450,6 +458,7 @@ export function encryptLayer2Payload(params: {
         ...(kemResult.pqcEnc ? { pqc: b64urlEncode(kemResult.pqcEnc) } : {}),
       },
       ciphertext: b64urlEncode(ciphertext),
+      auth_tag: b64urlEncode(authTag),
       aad: b64urlEncode(aadBytes),
     },
     meta: {
@@ -466,6 +475,9 @@ export function decryptLayer2Envelope(params: {
   const { envelope, recipient_keys } = params;
   if (envelope.weba_version !== WEBA_VERSION) {
     throw new Error(`Unsupported weba_version: ${envelope.weba_version}`);
+  }
+  if (envelope.layer2.enc !== "HPKE-v1") {
+    throw new Error(`Unsupported layer2.enc: ${envelope.layer2.enc}`);
   }
   if (envelope.layer2.recipient !== recipient_keys.recipient_kid) {
     throw new Error("Recipient kid mismatch");
@@ -492,7 +504,13 @@ export function decryptLayer2Envelope(params: {
     recipient: envelope.layer2.recipient,
   });
   const { key, iv } = deriveKeyMaterial({ suite: envelope.layer2.suite, info: infoBytes, ikm });
-  const payloadBytes = aeadDecrypt(b64urlDecode(envelope.layer2.ciphertext), key, iv, aadBytes);
+  const payloadBytes = aeadDecrypt(
+    b64urlDecode(envelope.layer2.ciphertext),
+    b64urlDecode(envelope.layer2.auth_tag),
+    key,
+    iv,
+    aadBytes,
+  );
   const payload = JSON.parse(Buffer.from(payloadBytes).toString("utf8")) as Layer2Payload;
   return { payload };
 }

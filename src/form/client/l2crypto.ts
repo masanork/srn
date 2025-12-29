@@ -112,6 +112,7 @@ export type Layer2Encrypted = {
       pqc?: string;
     };
     ciphertext: string;
+    auth_tag: string;
     aad: string;
   };
   meta: {
@@ -377,6 +378,9 @@ export async function decryptLayer2Envelope(
   options?: { pqcProvider?: PqcKemProvider | null; pqcRecipientSk?: Uint8Array },
 ): Promise<Layer2Payload> {
   await ensureWasm();
+  if (envelope.layer2.enc !== "HPKE-v1") {
+    throw new Error(`Unsupported layer2.enc: ${envelope.layer2.enc}`);
+  }
   const envelopeJson = JSON.stringify(envelope);
   const pqcSk = options?.pqcRecipientSk;
 
@@ -416,4 +420,3 @@ export async function unwrapRecipientPrivateKey(params: {
   const wrapped = b64urlDecode(params.keywrap.wrapped_key);
   return aesGcmDecrypt(wrapped, key, iv, aad);
 }
-
