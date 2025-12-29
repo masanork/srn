@@ -51,6 +51,7 @@ describe("Web/A Signer", () => {
       (globalThis as any).atob = (b64: string) =>
         Buffer.from(b64, "base64").toString("binary");
     }
+    (globalThis as any).prompt = (message: string, defaultValue: string) => defaultValue;
     (globalThis as any).navigator = {
       credentials: {
         create: async () => {

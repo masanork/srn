@@ -1,7 +1,14 @@
-import { ed25519, x25519 } from "../../vendor/curves/ed25519.js";
-import { sha256 } from "../../vendor/hashes/sha2.js";
-import { hkdf } from "../../vendor/hashes/hkdf.js";
 import canonicalize from "canonicalize";
+import {
+  initWasmFromB64,
+  buildL2Envelope as wasmBuildL2,
+  decryptL2Envelope as wasmDecryptL2,
+  getPaddingTargetSize as wasmGetPaddingTargetSize,
+  hkdfSha256,
+  x25519GetPublicKey
+} from "../../core/wasm_core";
+
+
 
 export interface ReplayStore {
   has(nonce: string): Promise<boolean>;
@@ -138,17 +145,28 @@ export type OrgKeyPolicy = "campaign" | "campaign+layer1";
 
 /**
  * Calculate target size for padding based on a bucket strategy to mitigate traffic analysis.
- * Uses jumps (1KB, 4KB, 16KB, 64KB, 256KB, 1MB) to hide exact payload size for larger data.
+ * Now using WASM.
  */
 export function getPaddingTargetSize(currentSize: number): number {
-  const buckets = [1024, 4096, 16384, 65536, 262144, 1048576];
-  for (const b of buckets) {
-    if (currentSize <= b) return b;
-  }
-  return Math.ceil(currentSize / 1048576) * 1048576;
+  return wasmGetPaddingTargetSize(currentSize);
 }
 
+
 const L2_SIG_KEY_STORAGE = "weba_l2_ed25519_sk";
+
+function getOrCreateL2SigKey(): Uint8Array {
+  const stored = localStorage.getItem(L2_SIG_KEY_STORAGE);
+  if (stored) {
+    return b64urlDecode(stored);
+  }
+  // Fallback to random if not in WASM yet, but we should use WASM gen if possible
+  // For now, simple random is fine for seed
+  const sk = new Uint8Array(32);
+  crypto.getRandomValues(sk);
+  localStorage.setItem(L2_SIG_KEY_STORAGE, b64urlEncode(sk));
+  return sk;
+}
+
 
 export function b64urlEncode(bytes: Uint8Array): string {
   if (typeof Buffer !== "undefined") {
@@ -194,60 +212,43 @@ function randomBytes(len: number): Uint8Array {
   return bytes;
 }
 
-function getOrCreateL2SigKey(): Uint8Array {
-  const stored = localStorage.getItem(L2_SIG_KEY_STORAGE);
-  if (stored) {
-    return b64urlDecode(stored);
-  }
-  const sk = ed25519.utils.randomSecretKey();
-  localStorage.setItem(L2_SIG_KEY_STORAGE, b64urlEncode(sk));
-  return sk;
+// Utility mapping for WASM/JS compatibility
+async function ensureWasm() {
+  await initWasmFromB64();
 }
 
-function buildAad(layer1Ref: string, recipientKid: string, webaVersion: string): Uint8Array {
-  const aadObj = {
-    layer1_ref: layer1Ref,
-    recipient: recipientKid,
-    weba_version: webaVersion,
-  };
-  return new TextEncoder().encode(canonicalJson(aadObj));
-}
-
-function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
-  const out = new Uint8Array(a.length + b.length);
-  out.set(a, 0);
-  out.set(b, a.length);
-  return out;
-}
-
-export function deriveOrgX25519KeyPair(params: {
+export async function deriveOrgX25519KeyPair(params: {
   orgRootKey: Uint8Array;
   campaignId: string;
   layer1Ref?: string;
   keyPolicy?: OrgKeyPolicy;
 }) {
+  await ensureWasm();
   const policy = params.keyPolicy ?? "campaign+layer1";
   if (policy === "campaign+layer1" && !params.layer1Ref) {
     throw new Error("layer1_ref is required for campaign+layer1 policy");
   }
-  const context = canonicalJson({
+  const context = JSON.stringify({
     domain: "weba-l2/org-x25519",
     campaign_id: params.campaignId,
     key_policy: policy,
     layer1_ref: policy === "campaign+layer1" ? params.layer1Ref : undefined,
   });
   const info = new TextEncoder().encode(context);
-  const seed = hkdf(sha256, params.orgRootKey, undefined, info, 32);
-  const publicKey = x25519.getPublicKey(seed);
+  const seed = hkdfSha256(params.orgRootKey, undefined, info, 32);
+  const publicKey = x25519GetPublicKey(seed);
   return { publicKey, privateKey: seed, keyPolicy: policy };
 }
 
-export function deriveKeyPairFromPrf(prfKey: Uint8Array) {
+export async function deriveKeyPairFromPrf(prfKey: Uint8Array) {
+  await ensureWasm();
   const info = new TextEncoder().encode("weba-l2/user-x25519");
-  const seed = hkdf(sha256, prfKey, undefined, info, 32);
-  const publicKey = x25519.getPublicKey(seed);
+  const seed = hkdfSha256(prfKey, undefined, info, 32);
+  const publicKey = x25519GetPublicKey(seed);
   return { publicKey, privateKey: seed };
 }
+
+
 
 async function aesGcmEncrypt(
   plaintext: Uint8Array,
@@ -269,12 +270,14 @@ export async function wrapRecipientPrivateKey(params: {
   prfKey: Uint8Array;
   aad?: Uint8Array;
 }): Promise<Uint8Array> {
-  const prk = hkdf(sha256, params.prfKey, undefined, undefined, 32);
-  const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw"), 32);
-  const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw-iv"), 12);
+  await ensureWasm();
+  const prk = hkdfSha256(params.prfKey, undefined, new TextEncoder().encode("weba-l2/prk"), 32);
+  const key = hkdfSha256(prk, undefined, new TextEncoder().encode("weba-l2/kw"), 32);
+  const iv = hkdfSha256(prk, undefined, new TextEncoder().encode("weba-l2/kw-iv"), 12);
   const aad = params.aad ?? new Uint8Array();
   return aesGcmEncrypt(params.recipientSk, key, iv, aad);
 }
+
 
 async function aesGcmDecrypt(
   ciphertext: Uint8Array,
@@ -296,96 +299,28 @@ export async function buildLayer2Envelope(params: {
   config: L2Config;
   user_kid?: string;
   pqcProvider?: PqcKemProvider | null;
+  user_sk?: Uint8Array;
 }): Promise<Layer2Encrypted> {
-  const webaVersion = params.config.weba_version ?? "0.1";
-  const recipientKid = params.config.recipient_kid;
-  const layer1Ref = params.config.layer1_ref;
+  await ensureWasm();
+  const userSk = params.user_sk || getOrCreateL2SigKey();
+  const createdAt = new Date().toISOString();
+  const userKid = params.user_kid || "user#sig-1";
 
-  const userKid = params.user_kid ?? "user#sig-1";
-  const userSk = getOrCreateL2SigKey();
 
-  const plainJson = canonicalJson(params.layer2_plain);
-  const plainBytes = new TextEncoder().encode(plainJson);
-  const sig = ed25519.sign(plainBytes, userSk);
-  const layer2Sig: Layer2Signature = {
-    alg: "Ed25519",
-    kid: userKid,
-    sig: b64urlEncode(sig),
-    created_at: new Date().toISOString(),
+  const config = {
+    ...params.config,
+    recipient_pqc: params.config.recipient_pqc || undefined, // handled in WASM
   };
 
-  const payload: Layer2Payload = {
-    layer2_plain: params.layer2_plain,
-    layer2_sig: layer2Sig,
-  };
+  const envelopeJson = wasmBuildL2(
+    canonicalJson(params.layer2_plain),
+    userSk,
+    userKid,
+    JSON.stringify(config),
+    createdAt
+  );
 
-  // Pad using bucket method to mitigate traffic analysis
-  const currentBytes = new TextEncoder().encode(canonicalJson(payload));
-  const overhead = 32; // approximate overhead for JSON structure {"_padding":"..."}
-  const targetSize = getPaddingTargetSize(currentBytes.length + overhead);
-  const paddingNeeded = targetSize - currentBytes.length - overhead;
-
-  const paddingBytes = randomBytes(Math.max(0, paddingNeeded));
-  let paddingHex = "";
-  paddingBytes.forEach((b) => {
-    paddingHex += b.toString(16).padStart(2, "0");
-  });
-  payload._padding = paddingHex;
-
-  const aadBytes = buildAad(layer1Ref, recipientKid, webaVersion);
-  const payloadBytes = new TextEncoder().encode(canonicalJson(payload));
-
-  const recipientPub = b64urlDecode(params.config.recipient_x25519);
-  const ephSk = randomBytes(32);
-  const ephPk = x25519.getPublicKey(ephSk);
-  const ss1 = x25519.getSharedSecret(ephSk, recipientPub);
-
-  let ikm = ss1;
-  let pqcEncapsulation: Uint8Array | undefined;
-  let kemId = "X25519";
-  if (params.config.recipient_pqc) {
-    const provider = params.pqcProvider;
-    if (!provider) {
-      throw new Error("PQC requested but no provider is available");
-    }
-    const pqcPub = b64urlDecode(params.config.recipient_pqc);
-    const kemResult = provider.encapsulate(pqcPub);
-    pqcEncapsulation = kemResult.encapsulation;
-    ikm = concatBytes(ss1, kemResult.sharedSecret);
-    kemId = `X25519+${provider.kemId}`;
-  }
-
-  const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
-  const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
-  const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
-
-  const ciphertext = await aesGcmEncrypt(payloadBytes, key, iv, aadBytes);
-
-  return {
-    weba_version: webaVersion,
-    layer1_ref: layer1Ref,
-    layer2: {
-      enc: "HPKE-v1",
-      suite: {
-        kem: kemId,
-        kdf: "HKDF-SHA256",
-        aead: "AES-256-GCM",
-      },
-      recipient: recipientKid,
-      encapsulated: {
-        classical: b64urlEncode(ephPk),
-        ...(pqcEncapsulation ? { pqc: b64urlEncode(pqcEncapsulation) } : {}),
-      },
-      ciphertext: b64urlEncode(ciphertext),
-      aad: b64urlEncode(aadBytes),
-    },
-    meta: {
-      created_at: new Date().toISOString(),
-      nonce: b64urlEncode(randomBytes(16)),
-      ...(params.config.campaign_id ? { campaign_id: params.config.campaign_id } : {}),
-      ...(params.config.key_policy ? { key_policy: params.config.key_policy } : {}),
-    },
-  };
+  return JSON.parse(envelopeJson);
 }
 
 export function loadL2Config(): L2Config | null {
@@ -438,41 +373,18 @@ export async function decryptLayer2Envelope(
   recipientSk: Uint8Array,
   options?: { pqcProvider?: PqcKemProvider | null; pqcRecipientSk?: Uint8Array },
 ): Promise<Layer2Payload> {
+  await ensureWasm();
+  const envelopeJson = JSON.stringify(envelope);
+  const pqcSk = options?.pqcRecipientSk;
+
   try {
-    const aadBytes = b64urlDecode(envelope.layer2.aad);
-    const aadObj = {
-      layer1_ref: envelope.layer1_ref,
-      recipient: envelope.layer2.recipient,
-      weba_version: envelope.weba_version,
-    };
-    const expectedAad = new TextEncoder().encode(canonicalJson(aadObj));
-    if (b64urlEncode(expectedAad) !== envelope.layer2.aad) {
-      throw new Error("AAD mismatch");
-    }
-
-    const ephPub = b64urlDecode(envelope.layer2.encapsulated.classical);
-    const ss1 = x25519.getSharedSecret(recipientSk, ephPub);
-    let ikm = ss1;
-    if (envelope.layer2.encapsulated.pqc) {
-      const provider = options?.pqcProvider;
-      const pqcSk = options?.pqcRecipientSk;
-      if (!provider || !pqcSk) {
-        throw new Error("Missing PQC KEM for envelope");
-      }
-      const pqcEnc = b64urlDecode(envelope.layer2.encapsulated.pqc);
-      const ss2 = provider.decapsulate(pqcSk, pqcEnc);
-      ikm = concatBytes(ss1, ss2);
-    }
-    const prk = hkdf(sha256, ikm, aadBytes, undefined, 32);
-    const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/key"), 32);
-    const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/iv"), 12);
-
-    const ct = b64urlDecode(envelope.layer2.ciphertext);
-    const pt = await aesGcmDecrypt(ct, key, iv, aadBytes);
-    return JSON.parse(new TextDecoder().decode(pt)) as Layer2Payload;
-  } catch (e) {
-    if (e instanceof Error && e.message === "Missing PQC KEM for envelope") {
-      throw e;
+    const plainJson = wasmDecryptL2(envelopeJson, recipientSk, pqcSk);
+    return JSON.parse(plainJson);
+  } catch (e: any) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Re-throw specific errors to match existing behavior
+    if (msg.includes("Missing PQC KEM") || msg.includes("AAD mismatch")) {
+      throw new Error(msg);
     }
     throw new Error("Decryption failed");
   }
@@ -493,10 +405,12 @@ export async function unwrapRecipientPrivateKey(params: {
   keywrap: L2Keywrap;
   prfKey: Uint8Array;
 }): Promise<Uint8Array> {
-  const prk = hkdf(sha256, params.prfKey, undefined, undefined, 32);
-  const key = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw"), 32);
-  const iv = hkdf(sha256, prk, undefined, new TextEncoder().encode("weba-l2/kw-iv"), 12);
+  await ensureWasm();
+  const prk = hkdfSha256(params.prfKey, undefined, new TextEncoder().encode("weba-l2/prk"), 32);
+  const key = hkdfSha256(prk, undefined, new TextEncoder().encode("weba-l2/kw"), 32);
+  const iv = hkdfSha256(prk, undefined, new TextEncoder().encode("weba-l2/kw-iv"), 12);
   const aad = params.keywrap.aad ? b64urlDecode(params.keywrap.aad) : new Uint8Array();
   const wrapped = b64urlDecode(params.keywrap.wrapped_key);
   return aesGcmDecrypt(wrapped, key, iv, aad);
 }
+

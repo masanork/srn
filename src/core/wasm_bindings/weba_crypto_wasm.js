@@ -44,6 +44,43 @@ function passArray8ToWasm0(arg, malloc) {
     return ptr;
 }
 
+function passStringToWasm0(arg, malloc, realloc) {
+    if (realloc === undefined) {
+        const buf = cachedTextEncoder.encode(arg);
+        const ptr = malloc(buf.length, 1) >>> 0;
+        getUint8ArrayMemory0().subarray(ptr, ptr + buf.length).set(buf);
+        WASM_VECTOR_LEN = buf.length;
+        return ptr;
+    }
+
+    let len = arg.length;
+    let ptr = malloc(len, 1) >>> 0;
+
+    const mem = getUint8ArrayMemory0();
+
+    let offset = 0;
+
+    for (; offset < len; offset++) {
+        const code = arg.charCodeAt(offset);
+        if (code > 0x7F) break;
+        mem[ptr + offset] = code;
+    }
+    if (offset !== len) {
+        if (offset !== 0) {
+            arg = arg.slice(offset);
+        }
+        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+        const view = getUint8ArrayMemory0().subarray(ptr + offset, ptr + len);
+        const ret = cachedTextEncoder.encodeInto(arg, view);
+
+        offset += ret.written;
+        ptr = realloc(ptr, len, offset, 1) >>> 0;
+    }
+
+    WASM_VECTOR_LEN = offset;
+    return ptr;
+}
+
 function takeFromExternrefTable0(idx) {
     const value = wasm.__wbindgen_externrefs.get(idx);
     wasm.__externref_table_dealloc(idx);
@@ -62,6 +99,19 @@ function decodeText(ptr, len) {
         numBytesDecoded = len;
     }
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+const cachedTextEncoder = new TextEncoder();
+
+if (!('encodeInto' in cachedTextEncoder)) {
+    cachedTextEncoder.encodeInto = function (arg, view) {
+        const buf = cachedTextEncoder.encode(arg);
+        view.set(buf);
+        return {
+            read: arg.length,
+            written: buf.length
+        };
+    }
 }
 
 let WASM_VECTOR_LEN = 0;
@@ -117,6 +167,43 @@ export function aes_gcm_encrypt(key, iv, plaintext, aad) {
 }
 
 /**
+ * @param {string} payload_json
+ * @param {Uint8Array} user_sk
+ * @param {string} user_kid
+ * @param {string} config_json
+ * @param {string} created_at
+ * @returns {string}
+ */
+export function build_l2_envelope_wasm(payload_json, user_sk, user_kid, config_json, created_at) {
+    let deferred7_0;
+    let deferred7_1;
+    try {
+        const ptr0 = passStringToWasm0(payload_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(user_sk, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(user_kid, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passStringToWasm0(config_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ptr4 = passStringToWasm0(created_at, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len4 = WASM_VECTOR_LEN;
+        const ret = wasm.build_l2_envelope_wasm(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
+        var ptr6 = ret[0];
+        var len6 = ret[1];
+        if (ret[3]) {
+            ptr6 = 0; len6 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred7_0 = ptr6;
+        deferred7_1 = len6;
+        return getStringFromWasm0(ptr6, len6);
+    } finally {
+        wasm.__wbindgen_free(deferred7_0, deferred7_1, 1);
+    }
+}
+
+/**
  * @param {Uint8Array} a
  * @param {Uint8Array} b
  * @returns {boolean}
@@ -128,6 +215,37 @@ export function constant_time_equal(a, b) {
     const len1 = WASM_VECTOR_LEN;
     const ret = wasm.constant_time_equal(ptr0, len0, ptr1, len1);
     return ret !== 0;
+}
+
+/**
+ * @param {string} envelope_json
+ * @param {Uint8Array} recipient_sk
+ * @param {Uint8Array | null} [pqc_sk]
+ * @returns {string}
+ */
+export function decrypt_l2_envelope_wasm(envelope_json, recipient_sk, pqc_sk) {
+    let deferred5_0;
+    let deferred5_1;
+    try {
+        const ptr0 = passStringToWasm0(envelope_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(recipient_sk, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        var ptr2 = isLikeNone(pqc_sk) ? 0 : passArray8ToWasm0(pqc_sk, wasm.__wbindgen_malloc);
+        var len2 = WASM_VECTOR_LEN;
+        const ret = wasm.decrypt_l2_envelope_wasm(ptr0, len0, ptr1, len1, ptr2, len2);
+        var ptr4 = ret[0];
+        var len4 = ret[1];
+        if (ret[3]) {
+            ptr4 = 0; len4 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred5_0 = ptr4;
+        deferred5_1 = len4;
+        return getStringFromWasm0(ptr4, len4);
+    } finally {
+        wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
+    }
 }
 
 /**
@@ -222,6 +340,29 @@ export function hkdf_sha256_derive(ikm, salt, info, length) {
     const ptr2 = passArray8ToWasm0(info, wasm.__wbindgen_malloc);
     const len2 = WASM_VECTOR_LEN;
     const ret = wasm.hkdf_sha256_derive(ptr0, len0, ptr1, len1, ptr2, len2, length);
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
+    var v4 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v4;
+}
+
+/**
+ * @param {Uint8Array} ikm
+ * @param {Uint8Array} salt
+ * @param {Uint8Array} info
+ * @param {number} okm_len
+ * @returns {Uint8Array}
+ */
+export function hkdf_sha256_wasm(ikm, salt, info, okm_len) {
+    const ptr0 = passArray8ToWasm0(ikm, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(salt, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArray8ToWasm0(info, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ret = wasm.hkdf_sha256_wasm(ptr0, len0, ptr1, len1, ptr2, len2, okm_len);
     if (ret[3]) {
         throw takeFromExternrefTable0(ret[2]);
     }
@@ -338,6 +479,19 @@ export function sha256_hash(data) {
     const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.sha256_hash(ptr0, len0);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
+ * @param {Uint8Array} data
+ * @returns {Uint8Array}
+ */
+export function sha256_wasm(data) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.sha256_wasm(ptr0, len0);
     var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;

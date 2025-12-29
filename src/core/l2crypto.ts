@@ -16,7 +16,10 @@ import {
   sha256Hash,
   hkdfSha256,
   getPaddingTargetSize as wasmGetPadding,
+  buildL2Envelope as wasmBuildL2,
+  decryptL2Envelope as wasmDecryptL2,
 } from "./wasm_core";
+
 
 export interface ReplayStore {
   has(nonce: string): Promise<boolean>;
@@ -253,89 +256,41 @@ export async function encryptLayer2(
   recipientPublicKey: Uint8Array,
   layer1Ref: string,
   recipientKid: string,
-  options?: { pqc?: PqcEncryptOptions; meta?: { campaign_id?: string; key_policy?: OrgKeyPolicy } }
-): Promise<Layer2Encrypted> {
-  const webaVersion = "0.1";
-  const createdAt = new Date().toISOString();
-  const nonce = randomBytes(16);
-
-  // 1. Prepare AAD
-  const aadObj = {
-    layer1_ref: layer1Ref,
-    recipient: recipientKid,
-    weba_version: webaVersion,
-  };
-  const aadStr = canonicalJson(aadObj);
-  const aadBytes = Buffer.from(aadStr, "utf-8");
-
-  // 2. KEM: X25519
-  await initWasm();
-  const ephemeral = x25519GenerateKeyPair();
-  const ephemeralPriv = ephemeral.privateKey;
-  const ephemeralPub = ephemeral.publicKey;
-  const ss1 = x25519GetSharedSecret(ephemeralPriv, recipientPublicKey);
-
-  let ikm = ss1;
-  let pqcEncapsulation: Uint8Array | undefined;
-  let kemId = "X25519";
-  if (options?.pqc) {
-    const pqc = options.pqc;
-    const pqcEnc = await options.pqc.kem.encapsulate(options.pqc.recipientPublicKey);
-    pqcEncapsulation = pqcEnc.encapsulation;
-    ikm = concatBytes(ss1, pqcEnc.sharedSecret);
-    kemId = `X25519+${pqc.kem.kemId}`;
+  options?: {
+    userSk?: Uint8Array;
+    pqc?: PqcEncryptOptions;
+    meta?: {
+      campaign_id?: string;
+      key_policy?: OrgKeyPolicy;
+      created_at?: string;
+    }
   }
-
-  // 3. KDF: HKDF-SHA256
-  // Use aadBytes as salt to bind the key to the context
-  const prk = hkdfSha256(ikm, aadBytes, Buffer.from("weba-l2/prk", "utf-8"), 32);
-  const key = hkdfSha256(prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
-  const iv = hkdfSha256(prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
-
-  // 4. AEAD: AES-256-GCM
-  // Pad using bucket method to mitigate traffic analysis
-  const currentBytes = Buffer.from(canonicalJson(payload), "utf-8");
-  const overhead = 32; // approximate overhead for JSON structure {"_padding":"..."}
-  const targetSize = getPaddingTargetSize(currentBytes.length + overhead);
-  const paddingLen = Math.max(0, targetSize - currentBytes.length - overhead);
-
-  const padding = randomBytes(paddingLen).toString("hex");
-  const payloadWithPadding = { ...payload, _padding: padding };
-
-  const plaintext = Buffer.from(canonicalJson(payloadWithPadding), "utf-8");
-
-  // Use WASM for encryption
+): Promise<Layer2Encrypted> {
   await initWasm();
-  const ciphertextWithTag = aesGcmEncrypt(key, iv, plaintext, aadBytes);
-  const authTag = ciphertextWithTag.slice(-16);
-  const actualCiphertext = ciphertextWithTag.slice(0, -16);
+  const userSk = options?.userSk || (await generateUserKeyPair()).privateKey;
+  const createdAt = options?.meta?.created_at || new Date().toISOString();
 
-  return {
-    weba_version: webaVersion,
+  const config = {
+    enabled: true,
+    recipient_kid: recipientKid,
+    recipient_x25519: toBase64Url(recipientPublicKey),
+    recipient_pqc: options?.pqc ? toBase64Url(options.pqc.recipientPublicKey) : undefined,
     layer1_ref: layer1Ref,
-    layer2: {
-      enc: "HPKE-v1",
-      suite: {
-        kem: kemId,
-        kdf: "HKDF-SHA256",
-        aead: "AES-256-GCM",
-      },
-      recipient: recipientKid,
-      encapsulated: {
-        classical: toBase64Url(ephemeralPub),
-        ...(pqcEncapsulation ? { pqc: toBase64Url(pqcEncapsulation) } : {}),
-      },
-      ciphertext: toBase64Url(actualCiphertext),
-      auth_tag: toBase64Url(authTag),
-      aad: toBase64Url(aadBytes),
-    },
-    meta: {
-      created_at: createdAt,
-      nonce: toBase64Url(nonce),
-      ...(options?.meta?.campaign_id ? { campaign_id: options.meta.campaign_id } : {}),
-      ...(options?.meta?.key_policy ? { key_policy: options.meta.key_policy } : {}),
-    },
+    campaign_id: options?.meta?.campaign_id,
   };
+
+  const userKid = options?.userSk ? "user#sig-custom" : "user#sig-1"; // Simplified for now
+
+  const envelopeJson = wasmBuildL2(
+    canonicalJson(payload.layer2_plain),
+    userSk,
+    userKid,
+    JSON.stringify(config),
+    createdAt
+  );
+
+
+  return JSON.parse(envelopeJson);
 }
 
 /**
@@ -390,55 +345,18 @@ export async function decryptLayer2(
   recipientPrivateKey: Uint8Array,
   options?: { pqc?: PqcDecryptOptions }
 ): Promise<Layer2Payload> {
+  await initWasm();
+  const envelopeJson = JSON.stringify(envelope);
+  const pqcSk = options?.pqc?.recipientPrivateKey;
+
   try {
-    if (envelope.layer2.suite.aead !== "AES-256-GCM") {
-      throw new Error("Unsupported AEAD");
-    }
-
-    const aadBytes = fromBase64Url(envelope.layer2.aad);
-
-    // Verify AAD consistency with envelope
-    const aadObj = JSON.parse(Buffer.from(aadBytes).toString("utf-8"));
-    if (aadObj.layer1_ref !== envelope.layer1_ref || aadObj.recipient !== envelope.layer2.recipient) {
-      throw new Error("AAD mismatch");
-    }
-
-    // 1. KEM: X25519
-    await initWasm();
-    const ephemeralPub = fromBase64Url(envelope.layer2.encapsulated.classical);
-    const ss1 = x25519GetSharedSecret(recipientPrivateKey, ephemeralPub);
-    let ikm = ss1;
-    if (envelope.layer2.encapsulated.pqc) {
-      const pqc = options?.pqc;
-      if (!pqc) {
-        throw new Error("Missing PQC KEM for envelope");
-      }
-      const pqcEnc = fromBase64Url(envelope.layer2.encapsulated.pqc);
-      const ss2 = await pqc.kem.decapsulate(pqc.recipientPrivateKey, pqcEnc);
-      ikm = concatBytes(ss1, ss2);
-    }
-
-    // 2. KDF: HKDF-SHA256
-    const salt = aadBytes; // Use aadBytes as salt to bind the key to the context
-    const prk = hkdfSha256(ikm, salt, Buffer.from("weba-l2/prk", "utf-8"), 32);
-    const key = hkdfSha256(prk, undefined, Buffer.from("weba-l2/key", "utf-8"), 32);
-    const iv = hkdfSha256(prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
-
-    // 3. AEAD: AES-256-GCM
-    const ciphertext = fromBase64Url(envelope.layer2.ciphertext);
-    const authTag = fromBase64Url(envelope.layer2.auth_tag);
-    const ciphertextWithTag = new Uint8Array(ciphertext.length + authTag.length);
-    ciphertextWithTag.set(ciphertext);
-    ciphertextWithTag.set(authTag, ciphertext.length);
-
-    // Use WASM for decryption
-    await initWasm();
-    const plaintext = aesGcmDecrypt(key, iv, ciphertextWithTag, aadBytes);
-
-    return JSON.parse(Buffer.from(plaintext).toString("utf-8"));
-  } catch (e) {
-    if (e instanceof Error && e.message === "Missing PQC KEM for envelope") {
-      throw e;
+    const plainJson = wasmDecryptL2(envelopeJson, recipientPrivateKey, pqcSk);
+    return JSON.parse(plainJson);
+  } catch (e: any) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Re-throw specific errors to match existing behavior
+    if (msg.includes("Missing PQC KEM") || msg.includes("AAD mismatch")) {
+      throw new Error(msg);
     }
     throw new Error("Decryption failed");
   }

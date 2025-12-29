@@ -15,6 +15,7 @@ ai_generated: true
 ### Revision History
 - **2025-12-24**: Initial Draft (v1.0)
 - **2025-12-27**: Expanded to 3-Layer Trust Architecture to support interactive forms (v1.1)
+- **2025-12-29**: Added definition of confidentiality protection via Layer 2 Encryption (L2E) (v1.2)
 
 ## 1. Abstract
 This paper proposes **Web/A**, a specification for archival-grade web documents. While PDF/A is widely used for long-term visual preservation, it often becomes a "data silo" where structure and semantic meaning are difficult to extract. Web/A leverages standard web technologies—HTML5, CSS, and JSON-LD—to create a format that is universally readable by humans and machines, portable as a single file, and digitally verifiable.
@@ -194,7 +195,7 @@ A signature from the issuer proves *who* issued the document, but it doesn't obj
 
 ### 6.5. Confidentiality: Layer 2 Encryption (L2E)
 While Layer 2 handles user authenticity, **Layer 2 Encryption (L2E)** ensures confidentiality for sensitive submissions.
-- **Recipient-Only Envelope**: The data payload (answers) is encrypted using a **PQC-ready hybrid scheme** (X25519 + Kyber/ML-KEM) targeted at the recipient's public key.
+- **Recipient-Only Envelope**: The data payload (answers) is encrypted using a **PQC-ready hybrid scheme** (X25519 + ML-KEM-768) targeted at the recipient's public key.
 - **Verification without Decryption**: The envelope itself carries a signature (authenticity) and a plain-text hash of the template (context binding). This allows intermediate nodes or archivists to verify the *existence and integrity* of the record without being able to read its private contents.
 - **Selective Decryption**: Compatible with organizational key management, allowing decryption only by authorized personnel (e.g., via a designated YubiKey or HSM).
 

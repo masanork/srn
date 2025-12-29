@@ -228,7 +228,7 @@ async function setupEncryption() {
         const salt = new Uint8Array(32); // Zero salt
         const prfKey = await derivePasskeyPrf(cred.id, salt);
 
-        const keyPair = deriveKeyPairFromPrf(prfKey);
+        const keyPair = await deriveKeyPairFromPrf(prfKey);
         const pubKey = b64urlEncode(keyPair.publicKey);
 
         // Store keys for Aggregator download

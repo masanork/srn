@@ -64,8 +64,14 @@ describe("Web/A L2 viewer", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     shouldFailUnlock = false;
-    consoleErrorMock = mock(() => {});
+    consoleErrorMock = mock(() => { });
     console.error = consoleErrorMock;
+  });
+
+  test("parseJsonScript error path", () => {
+    document.body.innerHTML = '<script id="bad-json" type="application/json">!!!</script>';
+    initL2Viewer(); // This uses parseJsonScript internally for envelope/keywrap
+    // Since initL2Viewer returns early if envelope is null, it's safe.
   });
 
   test("renders unlock panel and decrypts on click", async () => {
@@ -93,12 +99,12 @@ describe("Web/A L2 viewer", () => {
       </div>
       <script id="weba-l2-envelope" type="application/json">${JSON.stringify(envelope)}</script>
       <script id="weba-l2-keywrap" type="application/json">${JSON.stringify({
-        alg: "WebAuthn-PRF-AESGCM-v1",
-        kid: "issuer#passkey-1",
-        credential_id: b64urlEncode(new Uint8Array([1, 2, 3])),
-        prf_salt: "salt",
-        wrapped_key: b64urlEncode(wrapped),
-      })}</script>
+      alg: "WebAuthn-PRF-AESGCM-v1",
+      kid: "issuer#passkey-1",
+      credential_id: b64urlEncode(new Uint8Array([1, 2, 3])),
+      prf_salt: "salt",
+      wrapped_key: b64urlEncode(wrapped),
+    })}</script>
     `;
 
     initL2Viewer();
@@ -159,12 +165,12 @@ describe("Web/A L2 viewer", () => {
       <div class="weba-form-container"></div>
       <script id="weba-l2-envelope" type="application/json">${JSON.stringify(envelope)}</script>
       <script id="weba-l2-keywrap" type="application/json">${JSON.stringify({
-        alg: "WebAuthn-PRF-AESGCM-v1",
-        kid: "issuer#passkey-1",
-        credential_id: "cred",
-        prf_salt: "salt",
-        wrapped_key: b64urlEncode(wrapped),
-      })}</script>
+      alg: "WebAuthn-PRF-AESGCM-v1",
+      kid: "issuer#passkey-1",
+      credential_id: "cred",
+      prf_salt: "salt",
+      wrapped_key: b64urlEncode(wrapped),
+    })}</script>
     `;
 
     initL2Viewer();
@@ -177,5 +183,93 @@ describe("Web/A L2 viewer", () => {
     expect(button.disabled).toBe(false);
     shouldFailUnlock = false;
     expect(consoleErrorMock).toHaveBeenCalled();
+  });
+
+  test("applies complex payload correctly", async () => {
+    const noble = await import("@noble/curves/ed25519.js");
+    const recipientSk = new Uint8Array(32).fill(5);
+    const recipientPk = noble.x25519.getPublicKey(recipientSk);
+    const payload = {
+      chk_on: true,
+      chk_off: false,
+      rad: "v1",
+      opt: "b",
+      items: [{ name: "Alice" }, { name: "Bob" }]
+    };
+    const envelope = await buildLayer2Envelope({
+      layer2_plain: payload,
+      config: {
+        enabled: true,
+        recipient_kid: "issuer#kem-2025",
+        recipient_x25519: b64urlEncode(recipientPk),
+        layer1_ref: "sha256:abcd",
+      },
+    });
+    const wrapped = await wrapRecipientPrivateKey({
+      recipientSk,
+      prfKey,
+    });
+
+    document.body.innerHTML = `
+      <div class="weba-form-container">
+        <input type="checkbox" data-json-path="chk_on" />
+        <input type="checkbox" data-json-path="chk_off" />
+        <input type="radio" data-json-path="rad" value="v1" />
+        <input type="radio" name="opt" value="a" />
+        <input type="radio" name="opt" value="b" />
+        <table class="data-table dynamic" data-table-key="items">
+          <tbody>
+            <tr class="template-row">
+              <td><input data-base-key="name" /></td>
+              <td><button class="remove-row-btn"></button></td>
+            </tr>
+          </tbody>
+        </table>
+        <select><option value="v1">v1</option></select>
+        <textarea></textarea>
+      </div>
+      <script id="weba-l2-envelope" type="application/json">${JSON.stringify(envelope)}</script>
+      <script id="weba-l2-keywrap" type="application/json">${JSON.stringify({
+      alg: "WebAuthn-PRF-AESGCM-v1",
+      kid: "issuer#passkey-1",
+      credential_id: b64urlEncode(new Uint8Array([1, 2, 3])),
+      prf_salt: "salt",
+      wrapped_key: b64urlEncode(wrapped),
+    })}</script>
+    `;
+
+    initL2Viewer();
+    const button = document.querySelector(".weba-l2-unlock button") as HTMLButtonElement;
+    button.click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(document.querySelector<HTMLInputElement>('input[data-json-path="chk_on"]')?.checked).toBe(true);
+    expect(document.querySelector<HTMLInputElement>('input[data-json-path="chk_off"]')?.checked).toBe(false);
+    expect(document.querySelector<HTMLInputElement>('input[data-json-path="rad"]')?.["checked"]).toBe(true);
+    expect(document.querySelector<HTMLInputElement>('input[value="b"]')?.["checked"]).toBe(true);
+
+    const rows = document.querySelectorAll("table.data-table tbody tr");
+    expect(rows.length).toBe(2);
+    const row1 = rows[0] as any;
+    const row2 = rows[1] as any;
+    expect(row1.querySelector("input")?.value).toBe("Alice");
+    expect(row2.querySelector("input")?.value).toBe("Bob");
+
+    // Check readonly/disabled state application
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+      if ((el as any).type === "checkbox" || (el as any).type === "radio" || el.tagName === "SELECT") {
+        expect((el as any).disabled).toBe(true);
+      } else {
+        expect((el as any).readOnly).toBe(true);
+      }
+    });
+
+    // Test export button click
+    const exportBtn = document.querySelector(".weba-l2-unlock button:nth-of-type(2)") as HTMLButtonElement;
+    const createObjectURLMock = mock(() => "blob:url");
+    (globalThis as any).URL.createObjectURL = createObjectURLMock;
+    (globalThis as any).Blob = class { constructor() { } };
+    exportBtn.click();
+    expect(createObjectURLMock).toHaveBeenCalled();
   });
 });

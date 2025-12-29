@@ -800,9 +800,11 @@ export function initAggregatorBrowser() {
         throw new Error("PRF not supported or enabled on this key, or authentication failed.");
       }
 
+      const keyPair = await deriveKeyPairFromPrf(prfOutput);
       passkeyDerivedKeys = {
-        recipient_x25519_private: b64urlEncode(deriveKeyPairFromPrf(prfOutput).privateKey),
+        recipient_x25519_private: b64urlEncode(keyPair.privateKey),
       };
+
 
       passkeyBtn.textContent = "✅ Passkey Active";
       passkeyBtn.disabled = true;

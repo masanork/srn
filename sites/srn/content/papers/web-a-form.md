@@ -9,6 +9,10 @@ ai_generated: true
 
 # Discussion Paper: Web/A Form
 
+### Revision History
+- **2025-12-26**: Initial Draft
+- **2025-12-29**: Added confidentiality protection via Layer 2 Encryption (L2E)
+
 ## 1. The SaaS Gap
 
 SaaS is optimal for daily, fixed-member workflows, but it struggles in cases like annual submissions or surveys targeting many organizations. In those cases, the **cost of account provisioning and identity management** outweighs the value of digitization.

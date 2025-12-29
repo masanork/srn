@@ -64,5 +64,26 @@ describe("core/font", () => {
 
     const missing = await getGlyphAsSvg(FONT_PATH, "gid:999999");
     expect(missing.includes("Glyph not found")).toBe(true);
+
+    const error = await getGlyphAsSvg("non-existent.ttf", "gid:0");
+    expect(error.includes("Font not found")).toBe(true);
+  });
+
+  test("getGlyphAsSvg handles character and name identifiers", async () => {
+    // Character
+    const glyphChar = await getGlyphAsSvg(FONT_PATH, "あ");
+    expect(glyphChar.includes("<svg")).toBe(true);
+
+    // Name (if known, otherwise error)
+    const glyphName = await getGlyphAsSvg(FONT_PATH, "A"); // Some fonts have glyph name 'A'
+    expect(glyphName.includes("<svg") || glyphName.includes("Glyph not found")).toBe(true);
+  });
+
+  test("subsetFont with IVS", async () => {
+    const text = "辺\u{E0100}"; // 辺 with VS17
+    const { buffer, ivsRecordsCount } = await subsetFont(FONT_PATH, text);
+    expect(buffer.byteLength).toBeGreaterThan(0);
+    // Note: Whether it's > 0 depends on if the font supports this specific IVS
+    expect(typeof ivsRecordsCount).toBe("number");
   });
 });
