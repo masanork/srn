@@ -6,6 +6,8 @@ date: 2025-12-29
 ai_generated: true
 ---
 
+# Technical Report: Web/A Layer 2 Encryption Architecture
+
 **Confidentiality and Privacy for Distributed Form Data**
 
 ## 1. Abstract
@@ -301,19 +303,13 @@ attackers.
     (AAD mismatch, MAC failure, KEM failure). This prevents attackers from
     distinguishing between different types of invalid messages.
 
-### 7.6. Forward Secrecy
-*   **Current State**: The default scheme uses static recipient public keys
-    embedded in the Layer 1 form. While hierarchical derivation isolates
-    campaigns, it does not provide true Forward Secrecy for historical messages
-    if the campaign key is leaked.
-*   **Mitigation (Key Rotation)**: The hierarchical derivation makes rotating
-    keys cheap. Issuers are encouraged to use distinct keys per campaign and
-    rotate them frequently.
-*   **Enhancement (Pre-Keys)**: For high-security applications, Web/A supports
-    **Pre-Keys**. If a `prekey_url` is configured in the form, the client will
-    attempt to fetch a one-time use public key from a server before encryption.
-    This ensures that even if the long-term organization key is compromised,
-    previous messages encrypted with ephemeral pre-keys remain secure.
+### 7.6. Graduated Forward Secrecy (Adaptive Security)
+Web/A implements a **Graduated Forward Secrecy** model to balance the paradoxical requirements of high-grade confidentiality and total offline availability.
+*   **Adaptive Tiers**: The client automatically selects the highest available security level based on network conditions:
+    1.  **High (Tier 3)**: Fetches a one-time ephemeral pre-key from a dynamic server (e.g., Cloudflare Workers). Provides True PFS.
+    2.  **Standard (Tier 2)**: Fetches a daily rotating key from a static CDN registry (Epoch-Based FS). Provides "Practical PFS" with a 24-hour vulnerability window.
+    3.  **Basic (Tier 1)**: Falls back to a long-term master key if offline. No PFS.
+*   **Transparency**: The UI provides a "Security Signal" indicator to inform the user of the active tier, preventing silent downgrades to insecure modes without notice.
 
 ### 7.7. Post-Quantum Readiness & Provider Integrity
 *   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today
@@ -356,18 +352,24 @@ attackers.
     (`sbom.json`) is maintained to ensure transparency and auditability of the
     cryptographic stack.
 
+### 7.9. Security Disclaimer & Use Case Limitations
+**IMPORTANT**: While Web/A provides significantly higher security than standard web forms, it is NOT a replacement for dedicated secure messaging protocols (like Signal) or hardware-isolated environments in all scenarios.
+
+#### Use Case Policy
+*   **APPROVED**: General business inquiries, non-critical surveys, internal reporting, and disaster recovery communications where availability is paramount.
+*   **NOT RECOMMENDED (High Risk)**: Whistleblowing (where a 24-hour "Window of Vulnerability" could lead to source identification), handling of classified government data, or high-value financial settlements.
+*   **LIMITATION**: The "Static-Epoch" PFS model (Tier 2) carries a structural risk where all messages within a single day become vulnerable if the current private key is compromised. Users must evaluate if their threat model permits a 24-hour exposure window.
+
 ## 8. Current Implementation Status & Roadmap
 *   **Core Logic**: Implemented in TypeScript (`src/core/l2crypto.ts`) using
     vendored primitives.
 *   **Replay Protection**: Fully implemented with persistent storage support
     in both CLI and Browser aggregators.
-*   **Supply Chain**: Vendoring completed; SBOM/CBOM (`sbom.json`) available.
+*   **Graduated PFS**: Tier 2 (Epoch) and Tier 1 (Static) implemented. Tier 3 (Dynamic) is in active development.
 *   **WASM Implementation**: Core cryptographic primitives (AES-GCM, X25519,
     ML-KEM, ML-DSA) have been migrated to a Rust-compiled WebAssembly module to
     ensure safe memory management and deterministic execution across different
     browser environments.
-*   **Pre-Key Infrastructure (Roadmap)**: Design document published; server
-    PoC planned to enable one-time recipient keys for forward secrecy.
 *   **Client Integrity (Roadmap)**: Publish SRI values and CSP guidance for
     all distributed scripts and Wasm artifacts.
 *   **Decoy Traffic (Roadmap)**: Evaluate constant-rate or batch scheduling

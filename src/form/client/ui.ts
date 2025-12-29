@@ -9,6 +9,33 @@ export class UIManager {
     constructor(calc: Calculator, data: DataManager) {
         this.calc = calc;
         this.data = data;
+        this.initSecuritySignal();
+    }
+
+    private initSecuritySignal() {
+        window.addEventListener('weba-security-tier-change', (e: any) => {
+            this.updateSecurityBadge(e.detail.tier);
+        });
+    }
+
+    private updateSecurityBadge(tier: 'high' | 'standard' | 'offline') {
+        const el = document.getElementById('weba-security-signal');
+        if (!el) return;
+
+        const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+        const labels: Record<string, string> = {
+            high: isJa ? "セキュリティ: 最高 (True PFS)" : "Security: HIGH (True PFS)",
+            standard: isJa ? "セキュリティ: 標準 (Epoch-Based)" : "Security: STANDARD (Epoch)",
+            offline: isJa ? "セキュリティ: 最小 (Offline/Static)" : "Security: BASIC (Offline)"
+        };
+
+        el.textContent = labels[tier];
+        el.className = `security-badge tier-${tier}`;
+        
+        // Add visual indicator (dot)
+        const dot = document.createElement('span');
+        dot.className = 'status-dot';
+        el.prepend(dot);
     }
 
     public applyI18n() {

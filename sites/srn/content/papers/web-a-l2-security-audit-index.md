@@ -14,6 +14,7 @@ This page aggregates the security audit materials, remediation notes, and relate
 - [Security Audit v1](./web-a-l2-security-audit.html)
 - [Security Audit v2](./web-a-l2-security-audit-v2.html)
 - [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
+- [Security Re-Assessment v4](./web-a-l2-security-audit-v4.html)
 
 ## Response & Remediation
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
@@ -21,5 +22,7 @@ This page aggregates the security audit materials, remediation notes, and relate
 - [Offline Pre-Key Server Plan (Draft)](./web-a-l2-prekey-server-plan.html)
 
 ## Reference Papers
+- [Graduated Forward Secrecy (Final Architecture)](./web-a-l2-graduated-pfs.html)
+- [Epoch-Based Forward Secrecy (Proposal)](./web-a-l2-epoch-pfs.html)
 - [Web/A L2 Encryption](./web-a-l2-encryption.html)
 - [Market Comparison](./web-a-l2-market-comparison.html)

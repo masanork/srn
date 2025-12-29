@@ -5,7 +5,8 @@ import {
     type L2Config, 
     type Layer2Encrypted,
     fetchEpochRegistry,
-    selectEpochKey
+    selectEpochKey,
+    fetchPreKey
 } from './l2crypto';
 import { downloadHtml, type DownloadHtmlOptions, type DraftState } from './download';
 
@@ -13,16 +14,23 @@ export class DataManager {
     private formId: string;
     private static readonly DRAFT_STATE_VERSION = 1;
     private static readonly L2_REPLAY_STORE_KEY = "weba_l2_nonces";
+    private currentSecurityTier: 'high' | 'standard' | 'offline' = 'standard';
 
     constructor() {
         this.formId = 'WebA_' + window.location.pathname;
+    }
+
+    private updateSecurityUI(tier: 'high' | 'standard' | 'offline') {
+        this.currentSecurityTier = tier;
+        const event = new CustomEvent('weba-security-tier-change', { detail: { tier } });
+        window.dispatchEvent(event);
     }
 
     public updateJsonLd(): any {
         const w = window as any;
         const data = w.generatedJsonStructure || {};
 
-        // 1. Static Inputs
+        // ... (rest of updateJsonLd unchanged) ...
         document.querySelectorAll('[data-json-path]').forEach((input: any) => {
             const key = input.dataset.jsonPath;
             if (key) {
@@ -95,31 +103,52 @@ export class DataManager {
 
             // Create a working copy of config
             const encryptionConfig = { ...l2Config };
+            let tier: 'high' | 'standard' | 'offline' = 'offline';
 
-            // Epoch-Based PFS Logic
-            if (l2Config.epoch_registry_url) {
+            // Graduated PFS Logic
+            
+            // 1. Attempt Tier 3 (Dynamic Pre-key)
+            if (l2Config.prekey_url) {
+                try {
+                    const preKey = await fetchPreKey(l2Config.prekey_url);
+                    if (preKey) {
+                        console.log("Tier 3 Active: Using dynamic pre-key", preKey.kid);
+                        encryptionConfig.recipient_kid = preKey.kid;
+                        encryptionConfig.recipient_x25519 = preKey.recipient_x25519;
+                        if (preKey.recipient_pqc) {
+                            encryptionConfig.recipient_pqc = preKey.recipient_pqc;
+                        }
+                        tier = 'high';
+                    }
+                } catch (e) {
+                    console.warn("Tier 3 Failed. Falling back to Tier 2.");
+                }
+            }
+
+            // 2. Attempt Tier 2 (Epoch-based)
+            if (tier === 'offline' && l2Config.epoch_registry_url) {
                 try {
                     const registry = await fetchEpochRegistry(l2Config.epoch_registry_url);
                     if (registry) {
                         const epochKey = selectEpochKey(registry);
                         if (epochKey) {
-                            console.log("Using Epoch Key:", epochKey.kid);
+                            console.log("Tier 2 Active: Using epoch key", epochKey.kid);
                             encryptionConfig.recipient_kid = epochKey.kid;
                             encryptionConfig.recipient_x25519 = epochKey.publicKey;
-                            // Note: Epoch keys do not support PQC in this version (hybrid requires epoch PQC keys too)
-                            // If user wants PQC, we might need to fallback or use static PQC? 
-                            // For now, if epoch key is used, disable PQC to ensure consistency unless we add epoch PQC.
-                            // However, the current implementation keeps static PQC if present.
-                            // The Auditor might warn about "Static PQC + Ephemeral X25519" mixing security models,
-                            // but it's better than nothing.
-                        } else {
-                            console.warn("No valid epoch key found for current time. Falling back to static key.");
+                            tier = 'standard';
                         }
                     }
                 } catch (e) {
-                    console.warn("Failed to fetch epoch registry. Falling back to static key.", e);
+                    console.warn("Tier 2 Failed. Falling back to Tier 1.");
                 }
             }
+
+            // 3. Fallback Tier 1 (Static) - already in encryptionConfig
+            if (tier === 'offline') {
+                console.log("Tier 1 Active: Using static master key (Offline Mode)");
+            }
+
+            this.updateSecurityUI(tier);
 
             try {
                 const envelope = await buildLayer2Envelope({
