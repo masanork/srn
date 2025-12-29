@@ -4,6 +4,24 @@ layout: article
 description: "Release history and major updates for the Sorane project."
 ---
 
+## v1.9.0 - WASM Crypto & Security Reports
+
+**Date:** 2025-12-29
+
+Updates focused on the Web/A Layer 2 encryption security posture, documentation, and build/runtime polish.
+
+* **Cryptography (WASM Migration)**:
+  * Migrated core signing and encryption primitives (Ed25519, X25519, ML-KEM-768) to Rust/WASM bindings.
+  * Added WASM test coverage for cryptographic flows.
+* **Security Documentation**:
+  * Published the Security Audit v2 report and the post-remediation Re-Assessment v3.
+  * Added the Security Audit Remediation Report and cross-linked related papers.
+  * Released the L2 Encryption competitive analysis paper.
+* **SSG & Rendering**:
+  * Embedded Mermaid renderer via a local data URI to avoid CDN dependencies.
+  * Improved incremental rebuild safety when templates change.
+  * Added consistent build stamps and favicon data URIs across generated outputs.
+
 ## v1.8.0 - Web/A L2 Encryption & PQC Default
 
 **Date:** 2025-12-28
