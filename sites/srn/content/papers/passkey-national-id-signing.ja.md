@@ -6,8 +6,6 @@ author: "Web/A Project"
 description: "PassKey公開鍵をマイナンバーカードの署名用証明書で署名し、本人性を担保する設計方針と実現可能性。"
 ---
 
-# PassKey公開鍵のNational ID署名 設計メモ
-
 ## 1. 目的
 
 PassKey (WebAuthn) は端末内の鍵として安全だが、第三者に対して「誰の鍵か」を証明できない。

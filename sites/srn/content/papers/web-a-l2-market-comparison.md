@@ -5,7 +5,6 @@ author: "Web/A Strategy Team"
 date: 2025-12-29
 ---
 
-# Competitive Analysis: Web/A Layer 2 Encryption
 **Comparison with PPAP, Office Protection, IRM, and Enterprise DLP**
 
 ## 1. Executive Summary
@@ -128,6 +127,18 @@ The most significant competitive advantage in regulated environments is that Web
 *   **Avoids "Shadow IT" Red Flags**: Since it requires no installation, it does not trigger endpoint protection alerts or require administrator privileges.
 *   **Bypasses Infrastructure Silos**: In large organizations, upgrading an OS or installing a new security agent (like Hibun or IRM) can take months or years. Web/A can be deployed **instantly** as part of a business project because it leverages the existing, already-approved browser sandbox.
 *   **Neutralizes Compatibility Risks**: Works equally well on a managed Windows PC, a personal iPhone, or a Linux workstation without any platform-specific porting.
+
+### 4.6. Responsibility Boundaries & the SaaS Gap
+Enterprise solutions often enforce strict **responsibility boundaries** (who is
+allowed to touch, store, and process data). This is a valid governance model,
+but it creates a practical gap: real-world data flows still cross boundaries.
+That gap is one reason **PPAP and paper/Excel handoffs persist**.
+
+Web/A does not remove boundaries; it **carries responsibility across them** by
+binding data to signatures and context. When data crosses an organizational
+boundary, re-signing and explicit consent can re-establish accountability
+without forcing a shared platform. This frames the **SaaS Gap** as a governance
+issue rather than a tooling failure.
 
 ### 4.3. Future Roadmap for Competitiveness
 To compete with Enterprise IRM and SaaS:

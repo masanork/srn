@@ -6,8 +6,6 @@ date: 2025-12-27
 description: "A concept for separating data from intelligence, acting as a user-centric data container."
 ---
 
-# Web/A Folio: Separating Data from Intelligence
-
 > **Not a Wallet, but a Folio.**
 
 **Web/A Folio** is a concept for a "storage area for user data" within the Web/A Form ecosystem.

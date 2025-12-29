@@ -5,8 +5,6 @@ author: "Web/A Project Team"
 date: 2025-12-29
 ---
 
-# Security Audit Remediation Report (Response to v2)
-
 **Date:** 2025-12-29
 **Reference:** `sites/srn/content/papers/web-a-l2-security-audit-v2.md`
 

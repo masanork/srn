@@ -5,8 +5,6 @@ author: "Web/A Project Team"
 date: 2025-12-29
 ---
 
-# Offline Pre-Key Server Plan (Draft)
-
 This document describes the minimum viable design for an **Offline Pre-Key Server** that enables forward secrecy for Web/A Layer 2 encryption without requiring interactive sessions.
 
 ## 1. Goals

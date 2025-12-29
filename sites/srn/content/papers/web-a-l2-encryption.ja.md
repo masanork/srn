@@ -5,8 +5,6 @@ author: "Web/A Project"
 date: 2025-12-29
 ---
 
-# Web/A Layer 2 Encryption: 送信内容の機密性を守る仕組み
-
 ## 1. 概要
 本稿は Web/A 文書の **Layer 2 Encryption (L2E)** を定義します。Layer 1 はテンプレート（質問）の完全性、Layer 2（Signature）はユーザー回答（回答者）の真正性を保証します。Layer 2 Encryption は **機密性** を提供し、配送経路やブラウザ保存が信頼できない場合でも、回答内容が **受領者（Issuer/Aggregator）だけ** に読めるようにします。
 

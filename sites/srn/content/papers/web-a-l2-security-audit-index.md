@@ -5,8 +5,6 @@ author: "Web/A Project Team"
 date: 2025-12-29
 ---
 
-# Web/A Security Audit Index
-
 This page aggregates the security audit materials, remediation notes, and related papers for fast navigation.
 
 ## Primary Reports

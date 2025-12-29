@@ -5,8 +5,6 @@ author: "Web/A Security Team"
 date: 2025-12-29
 ---
 
-# Progressive WASM Migration Roadmap
-
 To enhance security (side-channel resistance) without compromising development velocity or quality, we adopt a phased migration of the Layer 2 Encryption core from TypeScript to Rust/WebAssembly.
 
 ## Phase 1: Infrastructure & Primitive Bridge (Current)

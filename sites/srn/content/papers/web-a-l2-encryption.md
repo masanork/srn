@@ -5,7 +5,6 @@ author: "Web/A Project"
 date: 2025-12-29
 ---
 
-# Web/A Layer 2 Encryption Architecture
 **Confidentiality and Privacy for Distributed Form Data**
 
 ## 1. Abstract
