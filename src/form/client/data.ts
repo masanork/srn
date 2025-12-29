@@ -1,10 +1,12 @@
 
 import { globalSigner } from './signer';
 import { buildLayer2Envelope, type L2Config, type Layer2Encrypted } from './l2crypto';
-import { downloadHtml } from './download';
+import { downloadHtml, type DownloadHtmlOptions, type DraftState } from './download';
 
 export class DataManager {
     private formId: string;
+    private static readonly DRAFT_STATE_VERSION = 1;
+    private static readonly L2_REPLAY_STORE_KEY = "weba_l2_nonces";
 
     constructor() {
         this.formId = 'WebA_' + window.location.pathname;
@@ -226,7 +228,7 @@ export class DataManager {
     public downloadHtml(
         filenameSuffix: string,
         isFinal: boolean,
-        options?: { embeddedVc?: any; l2Envelope?: Layer2Encrypted; stripPlaintext?: boolean },
+        options?: DownloadHtmlOptions,
     ) {
         const w = window as any;
         const title = (w.generatedJsonStructure && w.generatedJsonStructure.name) || 'web-a-form';
@@ -239,9 +241,34 @@ export class DataManager {
         });
     }
 
+    private buildDraftState(): DraftState {
+        const data = this.updateJsonLd();
+        const savedAt = new Date().toISOString();
+        const l2NoncesRaw = localStorage.getItem(DataManager.L2_REPLAY_STORE_KEY);
+        let replayNonces: string[] | undefined;
+        if (l2NoncesRaw) {
+            try {
+                const parsed = JSON.parse(l2NoncesRaw);
+                if (Array.isArray(parsed)) {
+                    replayNonces = parsed.filter((value) => typeof value === "string");
+                }
+            } catch (e) {
+                console.warn("Failed to parse L2 replay store for draft", e);
+            }
+        }
+        return {
+            version: DataManager.DRAFT_STATE_VERSION,
+            savedAt,
+            formId: this.formId,
+            formData: data,
+            l2State: replayNonces ? { replayNonces } : undefined,
+        };
+    }
+
     public saveDraft() {
+        const draftState = this.buildDraftState();
         this.bakeValues();
-        this.downloadHtml('draft', false);
+        this.downloadHtml('draft', false, { draftState });
     }
 
     public submitDocument() {
