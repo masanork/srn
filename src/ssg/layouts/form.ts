@@ -13,7 +13,8 @@ export function formLayout(
     fontCss: string,
     fontFamilies: string[],
     vc?: object,
-    relPath = ''
+    relPath = '',
+    config?: any
 ) {
     const { html, jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
@@ -41,6 +42,8 @@ export function formLayout(
               user_kid: data.l2_user_kid || 'user#sig-1',
               campaign_id: data.l2_campaign_id,
               key_policy: data.l2_key_policy,
+              prekey_url: data.l2_prekey_url || config?.l2_defaults?.prekey_url,
+              epoch_registry_url: data.l2_epoch_registry_url || config?.l2_defaults?.epoch_registry_url,
           }
         : null;
     const l2Keywrap = data.l2_keywrap ? data.l2_keywrap : null;

@@ -18,6 +18,7 @@ import type { IdentityManager } from './IdentityManager.ts';
 
 export interface LayoutContext {
     data: any;
+    config: any;
     content: string;
     htmlContent: string;
     fontCss: string;
@@ -31,7 +32,7 @@ export interface LayoutContext {
 
 export class LayoutManager {
     async render(ctx: LayoutContext): Promise<{ html: string, vc?: any }> {
-        const { data, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir, relPath } = ctx;
+        const { data, config, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir, relPath } = ctx;
 
         let finalHtml = '';
         let vc: any = null;
@@ -46,7 +47,7 @@ export class LayoutManager {
                         contentDigest: crypto.createHash('sha256').update(content).digest('hex')
                     }
                 });
-                finalHtml = formLayout(data, content, fontCss, safeFontFamilies, vc, relPath);
+                finalHtml = formLayout(data, content, fontCss, safeFontFamilies, vc, relPath, config);
 
                 // Extra output: Report page
                 const reportHtml = formReportLayout(data, content, fontCss, safeFontFamilies, relPath);

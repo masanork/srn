@@ -76,6 +76,7 @@ async function build() {
         // Render via Layout Manager
         const { html: finalHtml, vc } = await layoutManager.render({
             data,
+            config,
             content: normalizedContent,
             htmlContent,
             fontCss,

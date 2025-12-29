@@ -115,9 +115,30 @@ To decrypt messages received via L2 encryption:
     ```
     *Note: The Aggregator will automatically shred used pre-keys from memory.*
 
+## 6. Cost Estimation & Budgeting (Firebase)
+
+For government and non-profit organizations, budgeting is critical. While Web/A can be run for $0, it is important to understand the billing structure.
+
+### 6.1. Plan Selection
+- **Spark Plan (Free)**: Best for Tier 1 and Tier 2 deployments. No credit card required. Supports static hosting and Firestore.
+- **Blaze Plan (Pay-as-you-go)**: **Required for Tier 3 (Cloud Functions).** Even though it is a paid plan, Google provides a generous free tier that resets every month.
+
+### 6.2. Monthly Cost Simulation (10,000 Submissions/Month)
+Assuming 10,000 high-security (Tier 3) submissions per month:
+
+| Service | Component | Usage | Free Tier (Blaze) | Actual Cost |
+| :--- | :--- | :--- | :--- | :--- |
+| **Hosting** | Data Transfer | 500 MB | 10 GB | $0.00 |
+| **Firestore** | Key Consumed | 10,000 writes | 20,000 / day | $0.00 |
+| **Functions** | API Invocations | 10,000 calls | 2,000,000 / mo | $0.00 |
+| **Cloud Run** | Compute Time | ~500 sec | 180,000 sec | $0.00 |
+| **Total** | | | | **$0.00** |
+
+**Conclusion**: For most administrative use cases, the monthly cost will remain at **$0.00**.
+
 ---
 
-## 5. Security Best Practices
+## 7. Security Best Practices
 
 1.  **Offline Keys**: Never commit `*-private.json` files to Git. They are automatically added to `.gitignore`, but stay vigilant.
 2.  **Passphrase Protection**: In production, it is recommended to encrypt the private keystore files at rest using a tool like `gpg` or a dedicated vault.
