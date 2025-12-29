@@ -4,6 +4,9 @@ import canonicalize from 'canonicalize';
 import { decode } from 'cbor-x';
 import { registerPasskey, signWithPasskey, derivePasskeyPrf } from './webauthn';
 
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const EDDSA_JCS_2022 = 'eddsa-jcs-2022';
+
 // Hex Helpers
 function bytesToHex(bytes: Uint8Array): string {
     return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -14,6 +17,39 @@ function hexToBytes(hex: string): Uint8Array {
         bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
     }
     return bytes;
+}
+
+function bytesToBase58(bytes: Uint8Array): string {
+    if (bytes.length === 0) return '';
+    const digits: number[] = [0];
+    for (const byte of bytes) {
+        let carry = byte;
+        for (let i = 0; i < digits.length; i++) {
+            const value = digits[i] * 256 + carry;
+            digits[i] = value % 58;
+            carry = Math.floor(value / 58);
+        }
+        while (carry > 0) {
+            digits.push(carry % 58);
+            carry = Math.floor(carry / 58);
+        }
+    }
+
+    let zeros = 0;
+    for (const byte of bytes) {
+        if (byte !== 0) break;
+        zeros += 1;
+    }
+
+    let result = BASE58_ALPHABET[0].repeat(zeros);
+    for (let i = digits.length - 1; i >= 0; i--) {
+        result += BASE58_ALPHABET[digits[i]];
+    }
+    return result;
+}
+
+function bytesToMultibaseBase58btc(bytes: Uint8Array): string {
+    return `z${bytesToBase58(bytes)}`;
 }
 
 export class Signer {
@@ -163,11 +199,12 @@ export class Signer {
             return {
                 ...payload,
                 proof: {
-                    type: "Ed25519Signature2020",
+                    type: "DataIntegrityProof",
+                    cryptosuite: EDDSA_JCS_2022,
                     created: new Date().toISOString(),
                     verificationMethod: this.getIssuerDid(),
                     proofPurpose: purpose,
-                    proofValue: bytesToHex(signature)
+                    proofValue: bytesToMultibaseBase58btc(signature)
                 }
             };
         }
