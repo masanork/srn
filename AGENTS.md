@@ -32,3 +32,9 @@
 - Use fenced ```mermaid blocks; do not include YAML-style `---` inside diagrams.
 - Keep labels short; prefer quoted labels for spaces.
 - Avoid very long labels or dense annotations in presentation mode.
+
+## Release Management
+- After completing a major feature, security remediation, or architectural change, **ALWAYS update `sites/srn/content/releases.md`**.
+- Use semantic versioning (Major.Minor.Patch) based on the impact of changes.
+- Ensure the release note entry includes the date and a categorized list of improvements.
+
