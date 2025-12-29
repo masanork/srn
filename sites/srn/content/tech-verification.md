@@ -5,6 +5,8 @@ description: "Technical specifications for Post-Quantum Cryptography (PQC) hybri
 ai_generated: true
 ---
 
+# PQC & Verification Specs
+
 ## Overview
 Sorane adopts **Hybrid Signatures** that combine existing Elliptic Curve Cryptography (Ed25519) with **Post-Quantum Cryptography (ML-DSA-44)**, which is resistant to future quantum computer attacks. This ensures both current compatibility and long-term authenticity. Additionally, for privacy protection, we implement **Selective Disclosure (SD-CWT)**, allowing the presentation of only necessary data items.
 

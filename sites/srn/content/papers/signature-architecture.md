@@ -6,6 +6,8 @@ author: "Sorane Project Team"
 ai_generated: true
 ---
 
+# Discussion Paper: Hybrid Signature & Tiered Key Management
+
 Sorane utilizes a multi-layered, hybrid cryptographic architecture to ensure long-term security (Post-Quantum Resistance) and high hardware-level security (PassKey integration).
 
 ---

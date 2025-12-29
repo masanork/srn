@@ -5,6 +5,8 @@ description: "Core philosophy, architecture, and guide for developers."
 ai_generated: true
 ---
 
+# Technical Overview & Developer Guide
+
 ## System Concept
 
 Sorane (空音) is an Open Source **Reference Implementation** for a data delivery infrastructure that combines **"Precision Typography"** with **"Post-Quantum Cryptography (PQC)"**. It is not intended as a finished product but as a "Technical Blueprint" to solve implementation challenges when public institutions issue Verifiable Credentials (VCs).

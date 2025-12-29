@@ -9,6 +9,8 @@ date: 2025-12-29
 ai_generated: true
 ---
 
+# Web/A Security & Verifiability: Two-Week Engineering Deep Dive
+
 <div class="slide-cover">
 <div class="slide-logo">SORANE</div>
 <h1>Web/A Security & Verifiability</h1>

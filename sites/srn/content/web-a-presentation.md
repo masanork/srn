@@ -9,6 +9,8 @@ date: 2025-02-01
 ai_generated: true
 ---
 
+# Web/A in One Deck: HTML-Native Presentation
+
 <div class="slide-cover">
 <div class="slide-logo">SORANE</div>
 <h1>Web/A in One Deck</h1>

@@ -7,6 +7,8 @@ description: "A concept for separating data from intelligence, acting as a user-
 ai_generated: true
 ---
 
+# Concept Paper: Web/A Folio - The Digital Portfolio
+
 > **Not a Wallet, but a Folio.**
 
 **Web/A Folio** is a concept for a "storage area for user data" within the Web/A Form ecosystem.
