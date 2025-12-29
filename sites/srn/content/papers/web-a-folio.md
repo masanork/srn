@@ -48,6 +48,22 @@ system should guide the user to either:
 This separation preserves trust for verified data while keeping user-driven
 maintenance practical for everyday records.
 
+## Assistance Programs & Policy Matching
+
+Folio is not only a store of personal data. It can also hold **policy and
+program data** that a person might want to access (e.g., support programs,
+eligibility rules, application requirements).
+
+An AI agent can then match:
+
+- The person's profile and stated concerns,
+- The policy/program datasets in the Folio,
+
+to provide guidance and recommend the most appropriate applications or support
+options.
+
+This makes Folio a **decision-support workspace**, not just a filing cabinet.
+
 ## 1. Concept: Decoupling Data and Intelligence
 
 The core of Web/A Folio lies in the **complete separation of "Data (Folio)" and "Intelligence (Agent)"**.
