@@ -6,8 +6,6 @@ date: 2025-12-27
 ai_generated: true
 ---
 
-# Discussion Paper: Web/A - Archival-Grade Web Documents
-
 [日本語版 (Japanese version)](./web-a.ja.html)
 
 **Date:** December 27, 2025
@@ -16,6 +14,8 @@ ai_generated: true
 - **2025-12-24**: Initial Draft (v1.0)
 - **2025-12-27**: Expanded to 3-Layer Trust Architecture to support interactive forms (v1.1)
 - **2025-12-29**: Added definition of confidentiality protection via Layer 2 Encryption (L2E) (v1.2)
+- **2025-12-29**: Added Messaging/Transport extension principles for submissions (v1.3)
+- **2025-12-29**: Expanded transport principles for multi-hop routing (v1.4)
 
 ## 1. Abstract
 This paper proposes **Web/A**, a specification for archival-grade web documents. While PDF/A is widely used for long-term visual preservation, it often becomes a "data silo" where structure and semantic meaning are difficult to extract. Web/A leverages standard web technologies—HTML5, CSS, and JSON-LD—to create a format that is universally readable by humans and machines, portable as a single file, and digitally verifiable.
@@ -201,6 +201,31 @@ While Layer 2 handles user authenticity, **Layer 2 Encryption (L2E)** ensures co
 
 > [!TIP]
 > **Detailed Resources**: For the technical details of L2E, see [Web/A L2 Encryption](./web-a-l2-encryption.html). For security evaluations, see our [Red-Team Audit v2](./web-a-l2-security-audit-v2.html) and [Competitive Analysis](./web-a-l2-market-comparison.html).
+
+### 6.6. Messaging and Transport (Extension)
+Web/A defines trusted, portable document layers. For **submission and reception**
+flows, an optional **Messaging/Transport layer** can be introduced between the
+user content layer and the viewer layer. This extension focuses on **routing,
+delivery, and inbox storage** without changing the signed data model.
+
+Key principles for the transport extension:
+- **Verified-only acceptance**: Accept inbound payloads only after validating
+  VC/DID signatures and issuer bindings. The payload may remain encrypted (L2E),
+  but authenticity must be confirmed before storage.
+- **WebPKI-first trust**: Reuse existing WebPKI roots and DID resolution paths to
+  minimize new trust infrastructure. Transparency and auditability are preferred
+  over centralized allowlists.
+- **Distributed deployment**: Each user should be able to host their own inbox
+  using a personal serverless account, keeping data ownership decentralized and
+  portable to other platforms later.
+- **Multi-hop routing**: Support forwarding and brokered exchanges when the
+  sender does not know the final recipient's DID. These hops should preserve
+  end-to-end encryption while allowing assignment, blocking, and auditability at
+  each boundary.
+
+When the transport specification becomes large (message routing, discovery, and
+anti-abuse policy), it should be documented as a separate whitepaper while
+keeping Web/A focused on the archival and trust layers.
 
 ## 7. Implementation Flexibility: The "Lightweight Trust" Model
 A major barrier to archival signing is the complexity of key management. Web/A does not negate the use of high-assurance methods like HSMs; rather, it complements them with a "Lightweight Trust" model designed to lower the entry barrier and encourage widespread adoption.
