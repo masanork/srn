@@ -40,6 +40,22 @@ function normalizeDate(value: unknown): string {
     return String(value);
 }
 
+function stripLeadingTitleHeading(content: string, title: unknown): string {
+    if (!title) return content;
+    const lines = content.split('\n');
+    let i = 0;
+    while (i < lines.length && lines[i].trim() === '') {
+        i += 1;
+    }
+    if (i < lines.length && lines[i].startsWith('# ')) {
+        lines.splice(i, 1);
+        if (i < lines.length && lines[i].trim() === '') {
+            lines.splice(i, 1);
+        }
+    }
+    return lines.join('\n');
+}
+
 async function build() {
     const configOverridePath = process.argv.indexOf('--site-config') !== -1 ? process.argv[process.argv.indexOf('--site-config') + 1] : undefined;
     const config = await loadConfig(configOverridePath);
@@ -85,7 +101,8 @@ async function build() {
         if (!isClean && await isUpToDate(filePath, file, DIST_DIR, data.layout)) continue;
 
         console.log(`Processing: ${file}`);
-        const htmlContent = await marked.parse(content);
+        const normalizedContent = stripLeadingTitleHeading(content, data.title);
+        const htmlContent = await marked.parse(normalizedContent);
 
         // Process Fonts
         const { fontCss, safeFontFamilies } = await fontProcessor.processPageFonts(
@@ -95,7 +112,7 @@ async function build() {
         // Render via Layout Manager
         const { html: finalHtml, vc } = await layoutManager.render({
             data,
-            content,
+            content: normalizedContent,
             htmlContent,
             fontCss,
             safeFontFamilies,
@@ -150,7 +167,8 @@ async function collectMetadata(files: string[], contentDir: string) {
 
         if (data.status === 'draft') continue;
 
-        const html = await marked.parse(content);
+        const normalizedContent = stripLeadingTitleHeading(content, data.title);
+        const html = await marked.parse(normalizedContent);
         const { excerptHtml, excerptText } = buildExcerpt(html);
 
         items.push({

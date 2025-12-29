@@ -36,6 +36,22 @@ function normalizeDate(value: unknown): string {
     return String(value);
 }
 
+function stripLeadingTitleHeading(content: string, title: unknown): string {
+    if (!title) return content;
+    const lines = content.split('\n');
+    let i = 0;
+    while (i < lines.length && lines[i].trim() === '') {
+        i += 1;
+    }
+    if (i < lines.length && lines[i].startsWith('# ')) {
+        lines.splice(i, 1);
+        if (i < lines.length && lines[i].trim() === '') {
+            lines.splice(i, 1);
+        }
+    }
+    return lines.join('\n');
+}
+
 export interface LayoutContext {
     data: any;
     content: string;
@@ -102,7 +118,8 @@ export class LayoutManager {
                             aData.date = normalizeDate(aData.date);
                         }
                         latestArticleData = { ...aData, path: latest.path };
-                        latestArticleContent = await marked.parse(aContent) as string;
+                        const normalizedContent = stripLeadingTitleHeading(aContent, aData.title);
+                        latestArticleContent = await marked.parse(normalizedContent) as string;
                         latestArticlePath = latest.path;
                     }
                 }

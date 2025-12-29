@@ -7,6 +7,8 @@ author: "Sorane Project"
 ai_generated: true
 ---
 
+# Folio CLI: Design Doc
+
 A reference implementation for Web/A Folio: a headless toolkit that serves as the
 "hands and feet" for AI agents and automation systems within the Web/A Form
 ecosystem.

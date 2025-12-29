@@ -5,5 +5,7 @@ description: "A collection of articles covering design details, digital typograp
 ai_generated: true
 ---
 
+# Technical Articles & Resources
+
 This page automatically lists articles within the project.
 By adding a new Markdown file to `site/content/` and specifying `layout: article`, it will be included here.

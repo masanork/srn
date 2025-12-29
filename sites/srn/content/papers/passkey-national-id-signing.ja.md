@@ -7,6 +7,8 @@ description: "PassKey公開鍵をマイナンバーカードの署名用証明�
 ai_generated: true
 ---
 
+# 設計メモ: PassKey公開鍵のNational ID署名
+
 ## 1. 目的
 
 PassKey (WebAuthn) は端末内の鍵として安全だが、第三者に対して「誰の鍵か」を証明できない。

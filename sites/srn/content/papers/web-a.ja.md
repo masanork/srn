@@ -7,6 +7,8 @@ description: "PDF/A や XML+XSLT の課題を解決する、ポータブルで�
 ai_generated: true
 ---
 
+# 討議資料：Web/A - アーカイブ品質のWeb文書フォーマット
+
 [English version (英語版)](./web-a.html)
 
 **日付:** 2025年12月27日

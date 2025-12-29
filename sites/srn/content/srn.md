@@ -9,6 +9,8 @@ ai_generated: true
 
 
 
+# Sorane (空音): Typography-First SSG
+
 <div class="hero-section">
 <div class="logo-area font-logo">空音</div>
 <p class="lead">SORANE (空音): The Reference Implementation for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>

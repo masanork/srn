@@ -6,6 +6,8 @@ date: 2025-12-29
 ai_generated: true
 ---
 
+# 比較分析：Web/A Layer 2 暗号化 vs 既存・モダンソリューション
+
 **PPAP、Office 保護、IRM、およびエンタープライズ DLP との比較**
 
 ## 1. エグゼクティブサマリー

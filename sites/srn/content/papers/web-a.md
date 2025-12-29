@@ -6,6 +6,8 @@ date: 2025-12-27
 ai_generated: true
 ---
 
+# Discussion Paper: Web/A - Archival-Grade Web Documents
+
 [日本語版 (Japanese version)](./web-a.ja.html)
 
 **Date:** December 27, 2025

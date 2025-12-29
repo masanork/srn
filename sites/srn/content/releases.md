@@ -5,6 +5,8 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+# Sorane (空音) Release Notes
+
 ## v1.9.0 - WASM Crypto & Security Reports
 
 **Date:** 2025-12-29
