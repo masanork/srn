@@ -276,9 +276,5 @@ Web/A Layer 2 Encryption provides a robust, flexible, and future-proof confident
 ---
 
 ## Reference Links
-- [Security Audit v1](./web-a-l2-security-audit.html)
-- [Security Audit v2](./web-a-l2-security-audit-v2.html)
-- [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
-- [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
+- [Security Audit Index](./web-a-l2-security-audit-index.html)
 - [Market Comparison](./web-a-l2-market-comparison.html)
-- [Offline Pre-Key Server Plan (Draft)](./web-a-l2-prekey-server-plan.html)

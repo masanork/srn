@@ -23,6 +23,8 @@ Updates focused on the Web/A Layer 2 encryption security posture, documentation,
   * Added consistent build stamps and favicon data URIs across generated outputs.
 * **Form Drafts**:
   * Draft downloads now embed a structured draft state, allowing safe restoration across devices or after cache clears.
+* **Web/A Whitepaper**:
+  * Added security report references and related paper links to improve audit traceability.
 
 ## v1.8.0 - Web/A L2 Encryption & PQC Default
 
