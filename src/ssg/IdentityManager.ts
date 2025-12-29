@@ -4,6 +4,8 @@ import path from 'path';
 import crypto from 'node:crypto';
 import { createHybridVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
 import type { HybridKeys } from '../core/vc.ts';
+import { encodeDidKey, encodePqcPublicKeyJwk } from '../core/did.ts';
+import { hexToBytes } from '../core/encoding.ts';
 
 export class IdentityManager {
     public currentKeys!: HybridKeys;
@@ -47,8 +49,8 @@ export class IdentityManager {
             timestamp: new Date().toISOString(),
             buildId: this.buildId,
             revoked: false,
-            ed25519Params: `did:key:z${this.currentKeys.ed25519.publicKey}`,
-            pqcParams: `did:key:zPQC${this.currentKeys.pqc.publicKey}`
+            ed25519Params: encodeDidKey(hexToBytes(this.currentKeys.ed25519.publicKey), 'ed25519'),
+            pqcParams: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey))
         });
 
         await fs.writeJson(historyPath, history, { spaces: 2 });
@@ -67,7 +69,12 @@ export class IdentityManager {
             "verificationMethod": [
                 { id: `${this.siteDid}#root-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.rootKeys.ed25519.publicKey },
                 { id: `${this.siteDid}#${this.buildId}-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.currentKeys.ed25519.publicKey },
-                { id: `${this.siteDid}#${this.buildId}-pqc`, type: "DataIntegrityProof", controller: this.siteDid, publicKeyHex: this.currentKeys.pqc.publicKey }
+                {
+                    id: `${this.siteDid}#${this.buildId}-pqc`,
+                    type: "JsonWebKey2020",
+                    controller: this.siteDid,
+                    publicKeyJwk: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey))
+                }
             ],
             "assertionMethod": [`${this.siteDid}#root-ed25519`, `${this.siteDid}#${this.buildId}-ed25519`, `${this.siteDid}#${this.buildId}-pqc`]
         };

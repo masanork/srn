@@ -11,91 +11,84 @@ import {
 import { p256 } from '@noble/curves/nist.js';
 import { encode, decode } from 'cbor-x';
 import crypto from 'node:crypto';
-
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-const MULTIBASE_BASE58BTC_PREFIX = 'z';
+import {
+    base64UrlToBytes,
+    bytesToHex,
+    bytesToMultibaseBase58btc,
+    decodeMultibaseBase58btc,
+    hexToBytes
+} from './encoding';
+import {
+    collectVerificationMethods,
+    decodeDidKey,
+    encodeDidKey,
+    encodePqcPublicKeyJwk,
+    extractPublicKeyBytes
+} from './did';
+import type { DidDocument, DidResolver } from './did';
 const EDDSA_JCS_2022 = 'eddsa-jcs-2022';
 const ML_DSA_44_JCS_2025 = 'ml-dsa-44-jcs-2025';
 
-// Helper for hex conversion
-function bytesToHex(bytes: Uint8Array): string {
-    return Buffer.from(bytes).toString('hex');
-}
-
-function bytesToBase58(bytes: Uint8Array): string {
-    if (bytes.length === 0) return '';
-    const digits: number[] = [0];
-    for (const byte of bytes) {
-        let carry = byte;
-        for (let i = 0; i < digits.length; i++) {
-            const value = digits[i] * 256 + carry;
-            digits[i] = value % 58;
-            carry = Math.floor(value / 58);
-        }
-        while (carry > 0) {
-            digits.push(carry % 58);
-            carry = Math.floor(carry / 58);
-        }
-    }
-
-    let zeros = 0;
-    for (const byte of bytes) {
-        if (byte !== 0) break;
-        zeros += 1;
-    }
-
-    let result = BASE58_ALPHABET[0].repeat(zeros);
-    for (let i = digits.length - 1; i >= 0; i--) {
-        result += BASE58_ALPHABET[digits[i]];
-    }
-    return result;
-}
-
-function base58ToBytes(input: string): Uint8Array {
-    if (input.length === 0) return new Uint8Array();
-    const bytes: number[] = [0];
-    for (const char of input) {
-        const value = BASE58_ALPHABET.indexOf(char);
-        if (value < 0) {
-            throw new Error(`Invalid base58 character: ${char}`);
-        }
-        let carry = value;
-        for (let i = 0; i < bytes.length; i++) {
-            const acc = bytes[i] * 58 + carry;
-            bytes[i] = acc & 0xff;
-            carry = acc >> 8;
-        }
-        while (carry > 0) {
-            bytes.push(carry & 0xff);
-            carry >>= 8;
-        }
-    }
-
-    let zeros = 0;
-    for (const char of input) {
-        if (char !== BASE58_ALPHABET[0]) break;
-        zeros += 1;
-    }
-
-    const result = new Uint8Array(zeros + bytes.length);
-    for (let i = 0; i < bytes.length; i++) {
-        result[result.length - 1 - i] = bytes[i];
-    }
-    return result;
-}
-
-function bytesToMultibaseBase58btc(bytes: Uint8Array): string {
-    return `${MULTIBASE_BASE58BTC_PREFIX}${bytesToBase58(bytes)}`;
-}
-
 function decodeProofValue(value: string): Uint8Array {
-    if (value.startsWith(MULTIBASE_BASE58BTC_PREFIX)) {
-        return base58ToBytes(value.slice(1));
+    if (value.startsWith('z')) {
+        return decodeMultibaseBase58btc(value);
     }
     if (/^[0-9a-fA-F]+$/.test(value)) {
-        return Uint8Array.from(Buffer.from(value, 'hex'));
+        return hexToBytes(value);
     }
     throw new Error(`Unsupported proofValue encoding: ${value}`);
+}
+
+type VerificationKeyInput = string | Uint8Array | Record<string, unknown>;
+
+async function resolveVerificationMethodKey(
+    verificationMethod: string,
+    options: {
+        trustedKeys?: Record<string, VerificationKeyInput>;
+        didResolver?: DidResolver;
+        didDocument?: DidDocument;
+        didDocuments?: Record<string, DidDocument>;
+    }
+): Promise<Uint8Array | null> {
+    const vm = verificationMethod;
+    const trustedValue = options.trustedKeys?.[vm] || options.trustedKeys?.[vm.split('#')[0]!];
+    if (trustedValue) {
+        if (trustedValue instanceof Uint8Array) return trustedValue;
+        if (typeof trustedValue === 'object') {
+            return extractPublicKeyBytes({ id: 'trusted', publicKeyJwk: trustedValue });
+        }
+        if (trustedValue.startsWith('z')) return decodeMultibaseBase58btc(trustedValue);
+        if (/^[0-9a-fA-F]+$/.test(trustedValue)) return hexToBytes(trustedValue);
+        return base64UrlToBytes(trustedValue);
+    }
+
+    if (vm.startsWith('did:key:')) {
+        const decoded = decodeDidKey(vm);
+        return decoded.publicKey;
+    }
+
+    const baseDid = vm.includes('#') ? vm.split('#')[0] : vm;
+    const doc = options.didDocument
+        ?? options.didDocuments?.[baseDid]
+        ?? (options.didResolver ? await options.didResolver(baseDid) : null);
+    if (doc) {
+        const methods = collectVerificationMethods(doc);
+        const method = methods.get(vm)
+            ?? (vm.includes('#') ? methods.get(`${baseDid}#${vm.split('#')[1]}`) : undefined)
+            ?? (methods.size === 1 ? Array.from(methods.values())[0] : undefined);
+        if (method) {
+            return extractPublicKeyBytes(method);
+        }
+    }
+
+    if (vm.includes('#')) {
+        const fragment = vm.split('#')[1] || '';
+        const cleaned = fragment.replace(/-(ed25519|pqc|p256)$/i, '');
+        if (cleaned.startsWith('z')) return decodeMultibaseBase58btc(cleaned);
+        if (/^[0-9a-fA-F]+$/.test(cleaned)) return hexToBytes(cleaned);
+    }
+
+    return null;
 }
 
 export interface HybridVCResult {
@@ -146,7 +139,7 @@ export async function createHybridVC(
     buildId?: string,
     proofOptions: HybridProofOptions = {}
 ): Promise<object> {
-    const issuer = issuerDid || `did:key:z${keys.ed25519.publicKey}`;
+    const issuer = issuerDid || encodeDidKey(hexToBytes(keys.ed25519.publicKey), 'ed25519');
     const created = proofOptions.created || new Date().toISOString();
     const proofPurpose = proofOptions.proofPurpose || 'assertionMethod';
 
@@ -176,6 +169,7 @@ export async function createHybridVC(
     const edSig = ed25519Sign(edPrivBytes, payloadBytes);
 
     // 4. Output Hybrid VC
+    const didKeyFragment = issuer.startsWith('did:key:') ? issuer.split(':')[2] : null;
     const idSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.ed25519.publicKey);
 
     const pqcIdSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.pqc.publicKey);
@@ -187,7 +181,9 @@ export async function createHybridVC(
             {
                 "type": "DataIntegrityProof",
                 "cryptosuite": EDDSA_JCS_2022,
-                "verificationMethod": `${issuer}#${idSuffix}-ed25519`,
+                "verificationMethod": didKeyFragment
+                    ? `${issuer}#${didKeyFragment}`
+                    : `${issuer}#${idSuffix}-ed25519`,
                 "proofPurpose": proofPurpose,
                 "created": created,
                 ...(proofOptions.domain ? { "domain": proofOptions.domain } : {}),
@@ -234,7 +230,10 @@ export interface VerificationResult {
 export async function verifyHybridVC(
     vc: any,
     options: {
-        trustedKeys?: Record<string, string>;
+        trustedKeys?: Record<string, VerificationKeyInput>;
+        didResolver?: DidResolver;
+        didDocument?: DidDocument;
+        didDocuments?: Record<string, DidDocument>;
         expectedDomain?: string;
         expectedChallenge?: string;
         requireCreated?: boolean;
@@ -275,17 +274,7 @@ export async function verifyHybridVC(
             const proof = edProof || legacyEdProof;
             // Improved key extraction: look for known patterns or handle resolution
             const vm = proof.verificationMethod || "";
-            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
-            // Clean suffix
-            pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
-
-            // console.log(`Debug: Classic VM: ${vm}, pubKeyHex (pre-trusted): ${pubKeyHex}`);
-
-            // Fallback: If it's a did:key and we don't have a hex, try to extract from the DID itself
-            if ((!pubKeyHex || pubKeyHex === 'root' || pubKeyHex.length < 32) && vm.startsWith('did:key:z')) {
-                // This is a simplified did:key extraction (just taking what's after 'z')
-                pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
-            }
+            const pubKeyBytes = await resolveVerificationMethodKey(vm, options);
 
             if (proof.type === 'DataIntegrityProof') {
                 if (requireCreated && !proof.created) {
@@ -302,36 +291,24 @@ export async function verifyHybridVC(
             const proofValue = proof.proofValue;
 
             // Priority: Trusted Keys
-            if (options.trustedKeys) {
-                const trusted = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!];
-                if (trusted) pubKeyHex = trusted;
-            }
-
-            if (pubKeyHex && proofValue && pubKeyHex.length >= 64) {
-                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
+            if (pubKeyBytes && proofValue) {
                 const sigBytes = decodeProofValue(proofValue);
                 await initWasm();
-                checks.ed25519 = ed25519Verify(pubBytes, payloadBytes, sigBytes);
+                checks.ed25519 = ed25519Verify(pubKeyBytes, payloadBytes, sigBytes);
             }
         }
 
         // 3.1 Verify P-256 (PassKey)
         if (p256Proof) {
             const vm = p256Proof.verificationMethod || "";
-            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
-            pubKeyHex = pubKeyHex.replace('-p256', '').replace('-ed25519', '').replace('-pqc', '');
-
-            if ((!pubKeyHex || pubKeyHex === 'root' || pubKeyHex.length < 32) && vm.startsWith('did:key:z')) {
-                pubKeyHex = vm.split(':')[2]?.slice(1).split('#')[0] || "";
-            }
+            const pubKeyBytes = await resolveVerificationMethodKey(vm, options);
 
             const sigValue = p256Proof.proofValue;
 
-            if (pubKeyHex && sigValue) {
-                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
+            if (pubKeyBytes && sigValue) {
                 const sigBytes = decodeProofValue(sigValue);
                 try {
-                    checks.p256 = p256.verify(sigBytes, payloadBytes, pubBytes);
+                    checks.p256 = p256.verify(sigBytes, payloadBytes, pubKeyBytes);
                 } catch (e) {
                     console.error("P-256 verification error:", e);
                 }
@@ -341,11 +318,7 @@ export async function verifyHybridVC(
         // 4. Verify PQC (ML-DSA)
         if (pqcProof) {
             const vm = pqcProof.verificationMethod || "";
-            let pubKeyHex = vm.includes('#') ? vm.split('#')[1] || "" : "";
-            pubKeyHex = pubKeyHex.replace('-ed25519', '').replace('-pqc', '');
-
-            // Fallback for did:key (though PQC keys are usually too large for did:key:z...)
-            // But if it's there, we try. 
+            const pubKeyBytes = await resolveVerificationMethodKey(vm, options);
 
             if (requireCreated && !pqcProof.created) {
                 throw new Error("PQC proof missing created timestamp.");
@@ -359,16 +332,10 @@ export async function verifyHybridVC(
 
             const sigValue = pqcProof.proofValue;
 
-            if (options.trustedKeys) {
-                const trusted = options.trustedKeys[vm] || options.trustedKeys[vm.split('#')[0]!];
-                if (trusted) pubKeyHex = trusted;
-            }
-
-            if (pubKeyHex && sigValue && pubKeyHex.length > 100) {
+            if (pubKeyBytes && sigValue && pubKeyBytes.length > 100) {
                 const sigBytes = decodeProofValue(sigValue);
-                const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
                 await initWasm();
-                checks.pqc = mlDsa44Verify(pubBytes, payloadBytes, sigBytes);
+                checks.pqc = mlDsa44Verify(pubKeyBytes, payloadBytes, sigBytes);
             }
         }
 
@@ -413,7 +380,7 @@ export async function createStatusListVC(
             "https://w3id.org/vc/status-list/2021/v1"
         ],
         "type": ["VerifiableCredential", "StatusList2021Credential"],
-        "issuer": issuerDid || `did:key:z${rootKeys.ed25519.publicKey}`,
+        "issuer": issuerDid || encodeDidKey(hexToBytes(rootKeys.ed25519.publicKey), 'ed25519'),
         "issuanceDate": new Date().toISOString(),
         "credentialSubject": subjects
     };
@@ -578,9 +545,9 @@ export async function createDelegateCertificate(
         "issuanceDate": new Date().toISOString(),
         "expirationDate": validUntil.toISOString(),
         "credentialSubject": {
-            "id": `did:key:z${buildKeys.ed25519.publicKey}`,
+            "id": encodeDidKey(hexToBytes(buildKeys.ed25519.publicKey), 'ed25519'),
             "publicKeyEd25519": buildKeys.ed25519.publicKey,
-            "publicKeyPqc": buildKeys.pqc.publicKey
+            "publicKeyPqcJwk": encodePqcPublicKeyJwk(hexToBytes(buildKeys.pqc.publicKey))
         }
     };
 
@@ -595,14 +562,14 @@ export async function verifyDelegateChain(
     vc: any,
     delegateCert: any,
     rootPublicKeyHex: string,
-    rootPqcPublicKeyHex?: string
+    rootPqcPublicKey?: VerificationKeyInput
 ): Promise<VerificationResult> {
     const trustedKeys: Record<string, string> = {};
     if (rootPublicKeyHex) trustedKeys['root'] = rootPublicKeyHex;
     // We can also map specific DIDs if we want
     const rootDid = delegateCert.issuer;
     trustedKeys[`${rootDid}#root-ed25519`] = rootPublicKeyHex;
-    if (rootPqcPublicKeyHex) trustedKeys[`${rootDid}#root-pqc`] = rootPqcPublicKeyHex;
+    if (rootPqcPublicKey) trustedKeys[`${rootDid}#root-pqc`] = rootPqcPublicKey;
 
     // 2. Ensure it's the correct root
     // For PoC: if certResult.isValid is true, it means it was signed by the key we provided in trustedKeys.
@@ -613,14 +580,16 @@ export async function verifyDelegateChain(
     // 3. Extract Build Keys from Certificate
     const buildKeys = {
         ed25519: delegateCert.credentialSubject.publicKeyEd25519,
-        pqc: delegateCert.credentialSubject.publicKeyPqc
+        pqc: delegateCert.credentialSubject.publicKeyPqcJwk
     };
 
     // 4. Verify the Document VC (Signed by Delegate)
     const vcTrustedKeys: Record<string, string> = {};
     const vcIssuer = vc.issuer;
     vcTrustedKeys[`${vcIssuer}#root-ed25519`] = buildKeys.ed25519;
-    vcTrustedKeys[`${vcIssuer}#root-pqc`] = buildKeys.pqc;
+    if (buildKeys.pqc) {
+        vcTrustedKeys[`${vcIssuer}#root-pqc`] = buildKeys.pqc;
+    }
 
     const vcResult = await verifyHybridVC(vc, { trustedKeys: vcTrustedKeys });
     if (!vcResult.isValid) return vcResult;
