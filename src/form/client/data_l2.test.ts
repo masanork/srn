@@ -21,7 +21,12 @@ mock.module("./l2crypto", () => ({
 
 const signMock = mock(async (payload: any) => ({
   ...payload,
-  proof: { type: "Ed25519Signature2020" },
+  proof: {
+    type: "DataIntegrityProof",
+    cryptosuite: "eddsa-jcs-2022",
+    created: "2025-01-01T00:00:00Z",
+    proofValue: "z5J6",
+  },
 }));
 const getPublicKeyMock = mock(() => "pub");
 const registerMock = mock(async () => true);
