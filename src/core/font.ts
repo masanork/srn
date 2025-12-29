@@ -404,8 +404,8 @@ export async function subsetFont(
     let font = opentype.parse(arrayBuffer);
 
     // Apply variation if weight is specified and font is variable
-    if (weight !== undefined && font.tables.fvar) {
-        font = font.getVariation({ wght: weight });
+    if (weight !== undefined && font.tables.fvar && typeof (font as any).getVariation === 'function') {
+        font = (font as any).getVariation({ wght: weight });
     }
 
     let ivsMap: IVSMap | null = null;

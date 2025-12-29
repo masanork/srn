@@ -230,8 +230,21 @@ body { font-family: ${fontFamilyCss}; font-weight: 450; }
             }
 
             if (!matched) {
-                fontConfigs.push(`default:${cfg}`);
-                hasDefault = true;
+                if (cfg.includes(':')) {
+                    const parts = cfg.split(':');
+                    const styleName = (parts[0] || '').trim();
+                    const fileList = parts.slice(1).join(':').trim();
+                    if (styleName && fileList) {
+                        fontConfigs.push(`${styleName}:${fileList}`);
+                        if (styleName === 'default') hasDefault = true;
+                        if (!defaultFromFont && styleName !== 'default') defaultFromFont = styleName;
+                        matched = true;
+                    }
+                }
+                if (!matched) {
+                    fontConfigs.push(`default:${cfg}`);
+                    hasDefault = true;
+                }
             }
         }
 

@@ -71,7 +71,7 @@ export function articleLayout(
     };
 
     // Inject heading into body content unless specifically hidden or using wide layout (usually index)
-    const showHeader = data.layout !== 'width' && data.hideTitle !== true;
+    const showHeader = (data.layout !== 'width' || data.showTitle === true) && data.hideTitle !== true;
 
     const verificationFooter = vc ? `
         <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">

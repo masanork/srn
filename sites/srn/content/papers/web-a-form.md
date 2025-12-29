@@ -1,7 +1,7 @@
 ---
 title: "Discussion Paper: Web/A Form"
-layout: width
-date: 2025-01-04
+layout: article
+date: 2025-12-29
 author: "Web/A Project"
 description: "A file-first, accountless form workflow for low-frequency, multi-organization processes that do not fit SaaS."
 ai_generated: true
