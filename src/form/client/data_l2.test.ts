@@ -10,6 +10,7 @@ const buildLayer2Envelope = mock(async () => ({
     recipient: "issuer#kem-2025",
     encapsulated: { classical: "x" },
     ciphertext: "y",
+    auth_tag: "tag",
     aad: "z",
   },
   meta: { created_at: "2025-12-27T00:00:00Z", nonce: "n" },
