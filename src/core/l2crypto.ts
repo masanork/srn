@@ -136,6 +136,18 @@ export type PqcDecryptOptions = {
 
 export type OrgKeyPolicy = "campaign" | "campaign+layer1";
 
+/**
+ * Calculate target size for padding based on a bucket strategy to mitigate traffic analysis.
+ * Uses jumps (1KB, 4KB, 16KB, 64KB, 256KB, 1MB) to hide exact payload size for larger data.
+ */
+export function getPaddingTargetSize(currentSize: number): number {
+  const buckets = [1024, 4096, 16384, 65536, 262144, 1048576];
+  for (const b of buckets) {
+    if (currentSize <= b) return b;
+  }
+  return Math.ceil(currentSize / 1048576) * 1048576;
+}
+
 export function deriveOrgRootKey(params: { srnInstanceKey: Uint8Array; orgId: string }) {
   const context = canonicalJson({
     domain: "weba-l2/org-root",
@@ -271,11 +283,10 @@ export async function encryptLayer2(
   const iv = hkdf(sha256, prk, undefined, Buffer.from("weba-l2/iv", "utf-8"), 12);
 
   // 4. AEAD: AES-256-GCM
-  // Pad to next 512-byte block to mitigate traffic analysis
+  // Pad using bucket method to mitigate traffic analysis
   const currentBytes = Buffer.from(canonicalJson(payload), "utf-8");
-  const BLOCK_SIZE = 512;
-  const overhead = 20; // approximate overhead for JSON structure {"_padding":"..."}
-  const targetSize = Math.ceil((currentBytes.length + overhead) / BLOCK_SIZE) * BLOCK_SIZE;
+  const overhead = 32; // approximate overhead for JSON structure {"_padding":"..."}
+  const targetSize = getPaddingTargetSize(currentBytes.length + overhead);
   const paddingLen = Math.max(0, targetSize - currentBytes.length - overhead);
 
   const padding = randomBytes(paddingLen).toString("hex");

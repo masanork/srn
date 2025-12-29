@@ -166,6 +166,17 @@ bun run mcp
 * **Root Key**: Generated automatically on first build in `sites/srn/data/root-key.json`. Back up this file to maintain issuer identity!
 * **Revocation**: Status lists are generated in `dist/status-list.json`.
 
+### 7. Security Hardening & Auditability
+
+Sorane implements several measures to ensure high-security requirements for public institutions:
+
+*   **Dependency Vendoring**: To eliminate supply chain risks, core cryptographic libraries (`@noble/*`) are vendored into `src/vendor/`. No external registry access is required for core crypto logic during runtime.
+*   **SBOM/CBOM**: A Software Bill of Materials (SBOM) and Cryptography Bill of Materials (CBOM) is provided in `sbom.json` (CycloneDX format). This lists all components and explicitly details the cryptographic assets, algorithms (including PQC), and their operational readiness.
+*   **Persistent Replay Protection**: For data aggregation workflows, both the CLI and Browser aggregators support persistent nonce tracking.
+    *   **CLI**: Use `--replay-store path/to/store.json` to persist nonces across restarts.
+    *   **Browser**: Automatically uses `localStorage` for zero-touch persistent replay protection.
+*   **Side-Channel & Traffic Analysis Resistance**: Includes unified error handling for decryption and block-size padding (512-byte multiples) to mitigate information leakage.
+
 ## Troubleshooting
 
 * **Missing Glyphs**: Run `bun run db:build` to refresh the glyph database, then rebuild the site.
