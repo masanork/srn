@@ -7,8 +7,30 @@ import {
     createCoseVC,
     createSdCoseVC
 } from "../src/core/vc.ts";
-import { decode } from "cbor-x";
-import { initWasm } from "../src/core/wasm_core.ts";
+import { decode, encode } from "cbor-x";
+import { initWasm, ed25519Verify, mlDsa44Verify } from "../src/core/wasm_core.ts";
+
+const COSE_HEADER_ALG = 1;
+const COSE_HEADER_KID = 4;
+
+const textDecoder = new TextDecoder();
+
+const decodeHeader = (value: unknown) => {
+    const decoded = decode(value as Uint8Array);
+    if (decoded instanceof Map) return decoded;
+    return new Map(Object.entries(decoded as Record<string, unknown>));
+};
+
+const getHeaderValue = (header: Map<unknown, unknown>, key: number | string) => {
+    if (header.has(key)) return header.get(key);
+    return header.get(String(key));
+};
+
+const buildSigStructure = (
+    bodyProtected: Uint8Array,
+    signatureProtected: Uint8Array,
+    payload: Uint8Array
+) => encode(["Signature", bodyProtected, signatureProtected, new Uint8Array(0), payload]);
 
 describe("VC & Signing Tests", () => {
     let keys: any;
@@ -82,14 +104,45 @@ describe("VC & Signing Tests", () => {
         expect(result.cbor).toBeInstanceOf(Uint8Array);
         expect(result.base64url).toMatch(/^[a-zA-Z0-9_-]+$/);
 
-        // Basic CBOR structure check [protected, unprotected, payload, signature]
-        const decoded = decode(result.cbor);
+        // Basic CBOR structure check [protected, unprotected, payload, signatures]
+        const decoded = decode(result.cbor) as any[];
         expect(Array.isArray(decoded)).toBe(true);
         expect(decoded).toHaveLength(4);
 
-        const payload = decode(decoded[2]);
+        const payload = decode(decoded[2] as Uint8Array);
         expect(payload.test).toBe("data");
         expect(payload.iss).toBe("did:web:example.com");
+
+        const signatures = decoded[3] as any[];
+        expect(signatures).toHaveLength(2);
+
+        const bodyProtected = decoded[0] as Uint8Array;
+
+        const edSignature = signatures[0];
+        const edHeader = decodeHeader(edSignature[0]);
+        const edKid = getHeaderValue(edHeader, COSE_HEADER_KID) as Uint8Array;
+        const edSigStructure = buildSigStructure(bodyProtected, edSignature[0], decoded[2]);
+        const edVerify = ed25519Verify(
+            Uint8Array.from(Buffer.from(keys.ed25519.publicKey, 'hex')),
+            edSigStructure,
+            edSignature[2]
+        );
+        expect(getHeaderValue(edHeader, COSE_HEADER_ALG)).toBe(-8);
+        expect(textDecoder.decode(edKid)).toContain("-ed25519");
+        expect(edVerify).toBe(true);
+
+        const pqcSignature = signatures[1];
+        const pqcHeader = decodeHeader(pqcSignature[0]);
+        const pqcKid = getHeaderValue(pqcHeader, COSE_HEADER_KID) as Uint8Array;
+        const pqcSigStructure = buildSigStructure(bodyProtected, pqcSignature[0], decoded[2]);
+        const pqcVerify = mlDsa44Verify(
+            Uint8Array.from(Buffer.from(keys.pqc.publicKey, 'hex')),
+            pqcSigStructure,
+            pqcSignature[2]
+        );
+        expect(getHeaderValue(pqcHeader, COSE_HEADER_ALG)).toBe(-48);
+        expect(textDecoder.decode(pqcKid)).toContain("-mldsa44");
+        expect(pqcVerify).toBe(true);
     });
 
     test("SD-COSE VC: Create and check disclosures", async () => {
@@ -107,8 +160,8 @@ describe("VC & Signing Tests", () => {
 
         expect(result.disclosures.length).toBeGreaterThan(0);
 
-        const decoded = decode(result.cbor);
-        const payload = decode(decoded[2]);
+        const decoded = decode(result.cbor) as any[];
+        const payload = decode(decoded[2] as Uint8Array);
 
         // Check that members are replaced by hashes
         expect(payload.credentialSubject).toBeUndefined(); // In our implementation we put everything at root or under keys
@@ -117,5 +170,36 @@ describe("VC & Signing Tests", () => {
         // Verify at least one disclosure is valid CBOR
         const firstDisclosure = decode(Buffer.from(result.disclosures[0]!, 'base64url'));
         expect(Array.isArray(firstDisclosure)).toBe(true);
+    });
+
+    test("COSE VC: Test vector verification", async () => {
+        const vectorText = await Bun.file("tests/fixtures/cose-vc-vector.json").text();
+        const vector = JSON.parse(vectorText) as {
+            coseSignBase64url: string;
+            publicKeys: { ed25519: string; mldsa44: string };
+        };
+        const coseBytes = Buffer.from(vector.coseSignBase64url, "base64url");
+        const decoded = decode(coseBytes) as any[];
+        const bodyProtected = decoded[0] as Uint8Array;
+        const payload = decoded[2] as Uint8Array;
+        const signatures = decoded[3] as any[];
+
+        const edSignature = signatures[0];
+        const edSigStructure = buildSigStructure(bodyProtected, edSignature[0], payload);
+        const edValid = ed25519Verify(
+            Uint8Array.from(Buffer.from(vector.publicKeys.ed25519, "hex")),
+            edSigStructure,
+            edSignature[2]
+        );
+        expect(edValid).toBe(true);
+
+        const pqcSignature = signatures[1];
+        const pqcSigStructure = buildSigStructure(bodyProtected, pqcSignature[0], payload);
+        const pqcValid = mlDsa44Verify(
+            Uint8Array.from(Buffer.from(vector.publicKeys.mldsa44, "hex")),
+            pqcSigStructure,
+            pqcSignature[2]
+        );
+        expect(pqcValid).toBe(true);
     });
 });
