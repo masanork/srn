@@ -15,6 +15,7 @@ This page aggregates the security audit materials, remediation notes, and relate
 - [Security Audit v2](./web-a-l2-security-audit-v2.html)
 - [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
 - [Security Re-Assessment v4](./web-a-l2-security-audit-v4.html)
+- [Security Re-Assessment v5](./web-a-l2-security-audit-v5.html)
 
 ## Response & Remediation
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
