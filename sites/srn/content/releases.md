@@ -7,6 +7,21 @@ ai_generated: true
 
 # Sorane (空音) Release Notes
 
+## v2.0.1 - Reply Metadata & Folio Threading
+
+**Date:** 2025-12-30
+
+Specification update clarifying reply metadata, authentication, and Folio
+thread storage for Web/A Form submissions.
+
+* **Web/A Form**:
+  * Defined `reply_to` metadata (DID, endpoint, broker ID) for responses.
+  * Clarified fallback handling for unknown reply routes and one-way cases.
+  * Documented reply authentication flow and L2E re-encryption requirements.
+  * Added reply scope policy (channel, expiration, delegation).
+  * Specified Folio storage fields (`message_id`, `thread_id`, `reply_status`).
+  * Described UX requirements for reply failures.
+
 ## v2.0.0 - Graduated Forward Secrecy & Firebase Support
 
 **Date:** 2025-12-29
