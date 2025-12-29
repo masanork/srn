@@ -126,6 +126,23 @@ The reference suite should include:
 - **Determinism**: repeated `folio export` yields identical bundle structure
   (excluding timestamps/nonces).
 
+### Determinism Scope (Draft)
+
+Determinism applies to all bundle artifacts except explicitly randomized
+elements.
+
+**Deterministic by default:**
+
+- Directory layout and file naming.
+- Manifest field ordering and hashing inputs.
+- Document rendering outputs (HTML/MD).
+- Index rebuild outputs.
+
+**Non-deterministic by design:**
+
+- Timestamps (`created_at`, `generated_at`).
+- Nonces and ephemeral keys.
+
 ### Conformance Command (Draft)
 
 The CLI should provide a `folio conformance` command that validates a bundle
@@ -366,6 +383,12 @@ related_profiles:
 }
 ```
 
+**Policy updates (draft):**
+
+- Policies should be versioned with `updated_at` in the index.
+- Keep prior versions as `policies/archive/<id>/<date>.yaml` when replaced.
+- Agents should prefer the latest version unless a specific date is requested.
+
 ### 2. Folio Management
 
 Used by users (humans) or setup agents.
@@ -505,10 +528,46 @@ explicit consent. In practice:
 This avoids overloading the VP with high-volume content while keeping sensitive
 claims verifiable and tightly scoped.
 
+**General guidance (non-normative):**
+
+- Use VP for claims where **reuse without consent** would be harmful.
+- Favor VP when a program requires **explicit consent or attestation**.
+- Leave high-volume evidence (e.g., logs, receipts) in documents/attachments.
+
+**Selective disclosure (note):**
+
+- Selective disclosure is valuable, but overuse can create a dense stack of
+  signatures. Keep it focused on high-risk fields and prefer document-level
+  references for bulk evidence.
+
 ### Manifest (Draft)
 
 The submission bundle includes a `manifest.json` that is the single source of
 truth for contents and relations.
+
+**Signature policy:**
+
+- LoA 2+ documents must carry their own signatures.
+- Verifiable Presentations must be signed.
+- The bundle `manifest.json` should also be signed to express submission intent
+  and prevent repudiation.
+
+**Manifest signature (draft):**
+
+- Sign the canonicalized JSON of `manifest.json`.
+- Store signatures in `manifest.sig.json` alongside the manifest.
+- Include signer DID, algorithm, and created timestamp.
+- Canonicalization should use RFC 8785 (JSON Canonicalization Scheme).
+
+```json
+{
+  "manifest": "manifest.json",
+  "signer": "did:key:z...",
+  "alg": "Ed25519",
+  "created_at": "2025-12-29T00:00:00Z",
+  "signature": "base64url..."
+}
+```
 
 ```json
 {
@@ -619,6 +678,13 @@ signature checks, integrity, and policy violations.
       "hash_match": true,
       "loa": 2,
       "issues": []
+    },
+    {
+      "target": "manifest",
+      "type": "manifest",
+      "signature_valid": true,
+      "hash_match": true,
+      "issues": []
     }
   ],
   "policy": {
@@ -633,6 +699,13 @@ signature checks, integrity, and policy violations.
 - `signature_valid` and `hash_match` are required per target.
 - `policy` flags summarize bundle-level constraints.
 - Any `issues[]` entry should be actionable and machine-readable.
+- Manifest signatures should be reported explicitly.
+
+**LoA transitions:**
+
+- If a LoA 2+ item is edited, its verified status is invalidated.
+- Export should either downgrade it to LoA 1 (self-asserted) or mark it as
+  invalid with a policy issue.
 
 ### Export Output Structure (Draft)
 
@@ -658,6 +731,42 @@ bundle/
 - `attachments/` contain original or redacted files, per policy.
 - `vp/` contains scoped VPs only for designated Level 3 targets.
 - `reports/` contains verification and policy summaries.
+
+### Redaction Policy (Draft)
+
+Redaction is required for privacy minimization and least disclosure. Even with
+device binding, bundles may contain fields that a recipient does not need.
+
+**Goals:**
+
+- Remove non-essential fields before export.
+- Reduce attachment exposure (e.g., partial or masked copies).
+- Enforce policy-level requirements (per use case).
+
+**Granularity:**
+
+- Field-level (remove or mask specific fields).
+- Section-level (drop optional sections).
+- Attachment-level (exclude or replace with redacted versions).
+- LoA-aware (never downgrade LoA 2+ claims without explicit policy).
+
+**CLI usage:**
+
+- `folio export --redact <policy.yaml>`
+
+**Example policy (YAML):**
+
+```yaml
+profile: casual
+drop_fields:
+  - "contact.email"
+  - "contact.phone"
+mask_fields:
+  - path: "comment"
+    rule: "truncate:64"
+drop_attachments:
+  - "attachments/*"
+```
 
 ## Attachment Lifecycle (Draft)
 
@@ -723,6 +832,21 @@ The Folio CLI is not intended to:
   hardware-backed or OS keystore mechanisms before production.
 - **Explicit Review**: Document any flat-file usage and mark it for revisiting
   before production hardening.
+
+## Key & Signing Operations (Draft)
+
+**Priority order:**
+
+- Passkey or hardware-backed keys (preferred).
+- OS keystore (acceptable).
+- Flat-file keys (PoC only).
+
+**Operational rules:**
+
+- Keys must never be exported once bound to hardware.
+- Key rotation should keep prior verification keys available for audit.
+- Revocation should be recorded in `logs/` and reflected in verification reports.
+- Flat-file keys require explicit annotation in the manifest or report.
 
 ## Operational Notes (PoC)
 
