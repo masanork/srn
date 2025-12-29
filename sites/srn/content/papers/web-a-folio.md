@@ -84,6 +84,44 @@ However, this does not prevent third parties from providing Folio hosting servic
 
 However, since the Folio gathers information that can be called a person's entire life history, data concentration in a specific company should be avoided. An ecosystem where users can freely choose and change where to place their Folio (local or which cloud) is essential.
 
+### 6.1. Web/A Folio CLI (Draft)
+
+The initial CLI focuses on **local, file-based workflows**. The goal is to standardize the file layout and provide reliable audit and verification helpers.
+
+#### Core Commands (Proposed)
+
+```bash
+# Initialize a new folio
+weba-folio init ./MyFolio
+
+# Index and refresh derived caches (.index/)
+weba-folio index ./MyFolio
+
+# Import a Web/A document into the folio
+weba-folio import ./MyFolio ./incoming/form.html --into inbox
+
+# Generate a verifiable presentation from the folio
+weba-folio present ./MyFolio --from certificates/degree.html --out out/presentation.html
+
+# Verify a document or presentation
+weba-folio verify ./MyFolio ./out/presentation.html
+```
+
+#### Output and Artifacts
+- **Folio Layout**: A deterministic folder structure (see Section 4).
+- **Index Cache**: `.index/` contains derived data only (rebuildable).
+- **Audit Log**: `logs/folio.log` records operations (imports, presents, verifications).
+
+#### Security Notes (Draft)
+- The CLI should never export private keys. It only references passkey-backed credentials.
+- Verification must be offline-capable when all artifacts are local.
+- All generated presentations should include a `layer1_ref` to bind to the source template.
+
+#### Threat Model (Draft)
+- **Local Compromise**: If the device is compromised, the folio is exposed.
+- **Cloud Vendor Lock-In**: Prevented by keeping files portable and readable.
+- **Metadata Leakage**: Mitigated by minimizing index metadata and allowing cache purge.
+
 ## 7. Establishing Identity: PassKey × National ID Signatures
 
 In a general web environment, **PassKey (WebAuthn)** is the de facto standard for secure hardware-level key management. However, a PassKey alone cannot prove "whose key it is" to a third party.
