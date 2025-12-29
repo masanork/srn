@@ -68,6 +68,34 @@ implement a **Status List VC**.
   - `domain` and `challenge` are required for presentations or interactive
     verifier flows and must be checked by verifiers.
 
+### DID resolution & key encoding
+- Verifiers MUST resolve `verificationMethod` via DID documents when possible,
+  instead of assuming the fragment is an embedded public key.
+- `did:key` identifiers are parsed as multibase (`z`) + multicodec. The
+  multicodec prefix determines the key type (e.g., Ed25519 or P-256).
+
+### PQC public key representation (JWK profile)
+PQC public keys are encoded as **JWK-like objects** and carried via
+`publicKeyJwk` in DID documents. This keeps a single encoding rule for ML-DSA
+keys while remaining JSON-native.
+
+- `kty`: `PQC`
+- `crv`: `ML-DSA-44`
+- `x`: base64url-encoded raw public key bytes (1312 bytes for ML-DSA-44)
+
+```json
+{
+  "id": "did:web:example.com#build-2025-pqc",
+  "type": "JsonWebKey2020",
+  "controller": "did:web:example.com",
+  "publicKeyJwk": {
+    "kty": "PQC",
+    "crv": "ML-DSA-44",
+    "x": "base64url-encoded-ml-dsa-public-key"
+  }
+}
+```
+
 ### Document VC Structure
 ```json
 {
