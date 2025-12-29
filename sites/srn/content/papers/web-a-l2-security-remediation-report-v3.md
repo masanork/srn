@@ -19,32 +19,17 @@ This report details the remediation actions taken by the Web/A Project Team in r
 | ID | Requirement | Status | Action Taken |
 | :--- | :--- | :--- | :--- |
 | **4.1** | **Mandatory Replay Checks** | **Completed** | The `decryptLayer2` API now strictly enforces nonce uniqueness by default. A `ReplayGuard` instance is required, or an explicit `skipReplayCheck` flag must be provided. |
-| **4.2** | Pre-Key Infrastructure Plan | **Implemented** | Adopted "Static-Epoch Forward Secrecy" (SEFS). Tools for key generation, client selection logic, and aggregator support have been released. |
+| **4.2** | Pre-Key Infrastructure Plan | **Implemented** | Adopted "Static-Epoch Forward Secrecy" (SEFS) and "True PFS" tiers. Tools for key generation, client selection logic, and cloud backends have been released. |
 | **4.3** | Client-Side Integrity (SRI/CSP) | **Published** | Guidance on SRI and CSP has been added to the L2 Encryption documentation. |
 | **4.4** | Formal Audit of Rust Bindings | **Planned** | Third-party review is scheduled but not yet completed. |
 
-## 3. Technical Implementation: Mandatory Replay Checks
+## 3. Technical Implementation
 
 ### 3.1. Core API Changes
 The core decryption functions (`decryptLayer2` in `src/core/l2crypto.ts` and `decryptLayer2Envelope` in client/node libraries) have been updated to enforce a **Secure by Default** posture.
 
 *   **Behavior**: If `decryptLayer2` is called without a `replayGuard` instance and without `skipReplayCheck: true`, it logs a Security Warning and instantiates a temporary in-memory `ReplayGuard`. This ensures that even naive implementations are protected against burst replay attacks within a single session.
 *   **Enforcement**: To persist replay protection across sessions (required for Aggregators), the consumer **must** provide a backed `ReplayGuard` (e.g., `JsonFileReplayStore`).
-
-```typescript
-// Example Implementation Logic
-if (!options?.skipReplayCheck) {
-  let guard = options?.replayGuard;
-  if (!guard) {
-    console.warn("SECURITY WARNING: Using in-memory ephemeral store...");
-    guard = new ReplayGuard();
-  }
-  const isFresh = await guard.checkAndMark(envelope.meta.nonce);
-  if (!isFresh) {
-    throw new Error("Security Error: Replay detected (nonce used).");
-  }
-}
-```
 
 ### 3.2. Aggregator Refactoring
 The reference implementation of the Aggregator (`weba-aggregator`) and the Browser Aggregator have been refactored to remove manual, error-prone replay checks. Instead, they now initialize a persistent `ReplayGuard` and pass it directly to the decryption routine.
@@ -60,5 +45,14 @@ To address the lack of Forward Secrecy without introducing dynamic servers (whic
     *   Architecture: [Static-Epoch Forward Secrecy: Architecture & Risk Analysis](./web-a-l2-epoch-pfs.html)
     *   Client Guide: [Implementation Guide: Client-Side Epoch-Based PFS](./web-a-l2-pfs-implementation-guide.html)
 
+### 3.4. Real-world Deployment Verification (Firebase)
+We have verified the Tier 3 (True PFS) implementation by deploying it to a live Google Cloud / Firebase environment.
+
+*   **Verified Components**:
+    *   **Cloud Functions**: Successfully serving one-time keys with CORS support.
+    *   **Firestore Transactions**: Confirmed atomic "pick-and-consume" logic to prevent key reuse.
+    *   **Hosting Integration**: Unified deployment of static forms and PFS API under a single security boundary.
+*   **Regional Strategy**: While the development project (`sorane-7ea46`) is currently hosted in the **US region** for testing, our official Deployment Guide mandates that production environments—especially for government or ISMAP-compliant use—select appropriate local regions (e.g., `asia-northeast1` for Tokyo) to satisfy data residency requirements.
+
 ## 4. Conclusion
-With the implementation of **Mandatory Replay Checks** and **Epoch-Based Forward Secrecy**, the Web/A library now meets and exceeds the "High Bar" requirements set forth in Audit v3. The system now provides a robust defense against replay attacks and mitigates the risk of long-term key compromise, all while maintaining a serverless, file-based architecture. We request a final review of these changes.
+With the implementation of **Mandatory Replay Checks** and **Graduated Forward Secrecy**, the Web/A library now meets and exceeds the "High Bar" requirements set forth in Audit v3. The system now provides a robust defense against replay attacks and mitigates the risk of long-term key compromise, all while maintaining a serverless, file-based architecture. We request a final review of these changes.
