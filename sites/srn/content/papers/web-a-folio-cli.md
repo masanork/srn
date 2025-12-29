@@ -34,6 +34,38 @@ graph TD
     Key[PassKey/JPKI] -->|sign| Signed[Signed.md]
 ```
 
+## Firebase-First Deployment (Early Stage)
+
+The initial deployment target can be **Firebase**, focusing on a practical path
+to host an inbox, MCP endpoints, and a lightweight Web UI. This should remain
+**optional** and **non-binding** for long-term portability, but it helps validate
+real-world flows quickly.
+
+Early-stage goals:
+- **Inbox Hosting**: Store encrypted submissions and verification results.
+- **MCP Hosting**: Expose MCP tools that mirror CLI capabilities for agents.
+- **Web UI**: Provide a minimal viewer and inbox triage experience.
+
+### Firebase Direct MCP Test Checklist (Draft)
+
+The following items should be validated before hosting MCP endpoints directly on
+Firebase:
+
+- **Transport compatibility**: Confirm MCP clients can connect over HTTP/SSE and
+  sustain long-lived streams.
+- **Firebase Auth handoff**: Verify OAuth flows and ID token forwarding work for
+  MCP requests.
+- **Authorization scope**: Ensure tool-level or resource-level access controls
+  are enforceable per user.
+- **Security boundary**: Require token verification on every tool call and keep
+  TLS and origin constraints explicit.
+- **Performance limits**: Evaluate Functions/Firestore latency and rate limits
+  under realistic traffic.
+- **E2EE integrity**: Preserve encrypted payloads across routing hops without
+  leaking plaintext.
+- **Operational UX**: Confirm deployment steps are manageable for individual
+  users on free tiers.
+
 ## Design Principles: CLI vs MCP
 
 The CLI and MCP surface should be **mirror capabilities**, but not mirror

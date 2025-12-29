@@ -7,8 +7,6 @@ description: "A concept for separating data from intelligence, acting as a user-
 ai_generated: true
 ---
 
-# Concept Paper: Web/A Folio - The Digital Portfolio
-
 > **Not a Wallet, but a Folio.**
 
 **Web/A Folio** is a concept for a "storage area for user data" within the Web/A Form ecosystem.
@@ -182,6 +180,24 @@ weba-folio verify ./MyFolio ./out/presentation.html
 - **Local Compromise**: If the device is compromised, the folio is exposed.
 - **Cloud Vendor Lock-In**: Prevented by keeping files portable and readable.
 - **Metadata Leakage**: Mitigated by minimizing index metadata and allowing cache purge.
+
+### 6.2. Messaging and Transport (Draft)
+Folio workflows include **submission and reception** of Web/A documents. A
+messaging layer should remain optional and **transport-agnostic** so each user
+can choose their preferred hosting and deployment model.
+
+Design goals:
+- **Verified-only acceptance**: Use Cloud Functions (or equivalent) to validate
+  VC/DID signatures before accepting a payload. The payload can remain encrypted
+  under L2E to preserve confidentiality.
+- **Spam-aware routing**: Reject unverifiable senders early and record minimal
+  metadata for abuse tracking without exposing plaintext contents.
+- **Portability**: Keep message schemas and storage layout compatible across
+  serverless platforms so users can migrate their Folio later.
+
+If message routing and discovery grow in scope, define those details in a
+dedicated transport paper, while Folio remains focused on user workflows and
+data custody.
 
 ## 7. Identity Assurance: Holder Binding via National ID
 
