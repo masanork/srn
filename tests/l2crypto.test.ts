@@ -113,7 +113,9 @@ describe("Web/A Layer 2 Crypto", () => {
 
     // Decrypt should fail because of AAD mismatch check in decryptLayer2
     // or if we tampered the actual AAD bytes, the GCM auth would fail.
-    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow("Decryption failed");
+    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow(
+      "Decryption failed",
+    );
   });
 
   test("Decryption fails if ciphertext is tampered", async () => {
@@ -158,7 +160,9 @@ describe("Web/A Layer 2 Crypto", () => {
     expect(envelope.layer2.encapsulated.pqc).toBeTruthy();
     expect(envelope.layer2.suite.kem).toBe("X25519+ML-KEM-768");
 
-    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow("Decryption failed");
+    await expect(decryptLayer2(envelope, recipient.privateKey)).rejects.toThrow(
+      "Missing PQC KEM for envelope",
+    );
 
     const decrypted = await decryptLayer2(envelope, recipient.privateKey, {
       pqc: { kem: pqcProvider, recipientPrivateKey: pqcKeys.privateKey },

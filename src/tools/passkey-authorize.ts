@@ -45,13 +45,13 @@ async function run() {
     } else {
         // Generate a new Root Identity (Hybrid: P-256 + PQC)
         // We use P-256 here to match PassKey compatibility
-        rootKeys = generateHybridKeys();
+        rootKeys = await generateHybridKeys();
         await fs.writeJson(rootIdentityPath, rootKeys, { spaces: 2 });
         console.log("  Generated NEW Root Identity (represents your PassKey/Master Key).");
     }
 
     // 2. Generate Ephemeral Build Keys
-    const buildKeys = generateHybridKeys();
+    const buildKeys = await generateHybridKeys();
     const buildKeysPath = path.join(DATA_DIR, 'delegate-key.json');
 
     // 3. Mode Selection

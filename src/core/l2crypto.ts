@@ -437,6 +437,9 @@ export async function decryptLayer2(
 
     return JSON.parse(Buffer.from(plaintext).toString("utf-8"));
   } catch (e) {
+    if (e instanceof Error && e.message === "Missing PQC KEM for envelope") {
+      throw e;
+    }
     throw new Error("Decryption failed");
   }
 }

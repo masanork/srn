@@ -34,8 +34,8 @@ program
     const outDir = path.resolve(options.out);
     await fs.mkdir(outDir, { recursive: true });
 
-    const recipient = generateRecipientKeyPair();
-    const user = generateUserKeyPair();
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
     const pqc = options.pqc ? generateMlKem768KeyPair() : null;
 
     const recipientKey = {
@@ -137,7 +137,7 @@ program
       throw new Error("org_root_key is missing in org root file");
     }
     const policy = options.policy === "campaign" ? "campaign" : "campaign+layer1";
-    const derived = deriveOrgX25519KeyPair({
+    const derived = await deriveOrgX25519KeyPair({
       orgRootKey: fromBase64Url(root.org_root_key),
       campaignId: options.campaignId,
       layer1Ref: options.layer1Ref,
@@ -171,7 +171,7 @@ program
       throw new Error("org_root_key is missing in org root file");
     }
     const policy = options.policy === "campaign" ? "campaign" : "campaign+layer1";
-    const derived = deriveOrgX25519KeyPair({
+    const derived = await deriveOrgX25519KeyPair({
       orgRootKey: fromBase64Url(root.org_root_key),
       campaignId: options.campaignId,
       layer1Ref: options.layer1Ref,
