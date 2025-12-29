@@ -25,10 +25,10 @@ export class IdentityManager {
         
         if (await fs.pathExists(rootKeyPath)) {
             this.rootKeys = await fs.readJson(rootKeyPath);
-            this.currentKeys = generateHybridKeys(); // Ephemeral for each build
+            this.currentKeys = await generateHybridKeys(); // Ephemeral for each build
         } else {
-            this.rootKeys = generateHybridKeys();
-            this.currentKeys = generateHybridKeys();
+            this.rootKeys = await generateHybridKeys();
+            this.currentKeys = await generateHybridKeys();
             await fs.writeJson(rootKeyPath, this.rootKeys, { spaces: 2 });
         }
 
