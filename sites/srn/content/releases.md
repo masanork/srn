@@ -7,6 +7,31 @@ ai_generated: true
 
 # Sorane (空音) Release Notes
 
+## v2.0.0 - Graduated Forward Secrecy & GovCloud Ready
+
+**Date:** 2025-12-29
+
+A major security milestone introducing adaptive Forward Secrecy, mandatory replay protection, and production-ready cloud integration for government and high-assurance use cases.
+
+* **Security (Graduated Forward Secrecy)**:
+  * **3-Tier Adaptive Security**: Implemented a "Graduated PFS" model that automatically selects the best available encryption tier based on connectivity:
+    * **Tier 3 (True PFS)**: One-time ephemeral keys via dynamic backends.
+    * **Tier 2 (Epoch-based)**: Daily rotating keys via static JSON registries.
+    * **Tier 1 (Static)**: Fallback to long-term master keys for offline availability.
+  * **Adaptive UI**: Added a "Security Signal Strength" badge to the form UI (🟢 High, 🟡 Standard, 🟠 Basic) to inform users of the active protection level.
+* **Audit & Compliance**:
+  * **Mandatory Replay Checks**: Hardened the L2 API to enforce nonce uniqueness by default, addressing a critical audit finding.
+  * **Architecture Whitepapers**: Published detailed analysis on SEFS (Static-Epoch Forward Secrecy) and Graduated PFS to justify security trade-offs to auditors.
+  * **Audit Index**: Integrated a full history of security re-assessments (v1–v5) and remediation reports.
+* **Cloud & Operations**:
+  * **Firebase Integration**: Established a full Firebase (ISMAP/GovCloud ready) deployment path, consolidating static hosting and PFS backends under a single security boundary.
+  * **Multi-Cloud Backends**: Released a "Pre-key Vending Machine" implementation for both Cloudflare Workers (D1) and Firebase (Functions/Firestore).
+  * **Ops Automation**: Added a GitHub Actions workflow to monitor key registry inventory and alert administrators 30 days before expiry.
+  * **Deployment Guide**: Published a comprehensive [Deployment & Operations Guide](./papers/deployment-guide.html).
+* **UX & UI**:
+  * **Presentation Mode**: Added touch navigation support (swipe and tap zones) for better usability on tablets and mobile devices.
+  * **Style Refinement**: Added consistent security badge styling and improved toolbar layout.
+
 ## v1.9.0 - WASM Crypto & Security Reports
 
 **Date:** 2025-12-29
