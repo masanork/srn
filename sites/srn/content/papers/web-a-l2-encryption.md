@@ -214,6 +214,7 @@ Since the Layer 2 protocol is stateless, an attacker could resubmit a valid encr
 *   **Mitigation**: The `Layer2Encrypted` structure includes a `meta.nonce` field.
 *   **Requirement**: Aggregators **MUST** implement nonce verification. A reference `ReplayGuard` utility is provided in the core library that tracks seen nonces.
     *   **Persistent Storage**: To prevent replays across aggregator restarts, persistent stores are provided: `JsonFileReplayStore` for CLI (using `--replay-store`) and `LocalStorageReplayStore` for browsers (zero-touch).
+*   **Policy (Secure by Default)**: Replay checks will be required by default at the API boundary. Bypassing the check must be an explicit opt-out with a "safe mode" warning.
 
 ### 7.3. Draft State Handling (Client)
 Draft downloads embed a structured draft state inside the HTML so users can restore work after cache clears or on other devices.
@@ -223,6 +224,7 @@ Draft downloads embed a structured draft state inside the HTML so users can rest
 ### 7.4. Traffic Analysis (Padding)
 The length of the ciphertext reveals the approximate size of the plaintext, which might leak information (e.g., "Yes" vs "No" answers).
 *   **Mitigation**: The `Layer2Payload` includes a `_padding` field. The implementation uses a **bucket-based padding strategy** (e.g., 1KB, 4KB, 16KB, 64KB, etc.). This ensures that messages are normalized to specific size tiers, making it extremely difficult to distinguish between payloads of different sizes, even for larger documents.
+*   **Roadmap (Decoy Traffic)**: Introduce optional "decoy submissions" (constant-rate background traffic or batched delays) for high-sensitivity deployments to reduce timing metadata leakage.
 
 ### 7.5. Side-Channel Mitigation (Unified Errors)
 Detailed error messages in cryptographic operations can act as an oracle for attackers.
@@ -237,6 +239,21 @@ Detailed error messages in cryptographic operations can act as an oracle for att
 *   The hybrid mode (`X25519 + ML-KEM-768`) ensures that data harvested today cannot be decrypted by future quantum computers.
 *   **Integrity Protection**: To prevent malicious PQC provider injection (e.g., via XSS), the application **MUST** use a strict Content Security Policy (CSP) and Subresource Integrity (SRI) for all cryptographic modules. The project is moving toward a self-contained WebAssembly module to further isolate cryptographic logic from the highly dynamic JavaScript environment.
 
+**CSP/SRI Template (Strict Mode Example)**:
+```html
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self' 'sha256-__SRI_MKFORM__' 'sha256-__SRI_WASM_GLUE__';
+           style-src 'self' 'unsafe-inline';
+           img-src 'self' data:;
+           connect-src 'self';
+           base-uri 'self';
+           object-src 'none';
+           frame-ancestors 'none';">
+```
+*   **SRI Values**: Replace `__SRI_MKFORM__` and `__SRI_WASM_GLUE__` with build-generated SHA-256 hashes for `mkform.js` and the Wasm loader script.
+*   **Delivery**: Prefer HTTP headers for CSP, and keep inline scripts to a minimum to avoid `unsafe-inline` for `script-src`.
+
 ### 7.8. Supply Chain Security
 *   **Vendoring**: Core cryptographic primitives (e.g., `@noble/*`) are vendored directly into the source tree (`src/vendor/`) to eliminate reliance on public registries and prevent supply chain injection for critical security logic.
 *   **SBOM/CBOM**: A full Software and Cryptography Bill of Materials (`sbom.json`) is maintained to ensure transparency and auditability of the cryptographic stack.
@@ -246,6 +263,9 @@ Detailed error messages in cryptographic operations can act as an oracle for att
 *   **Replay Protection**: Fully implemented with persistent storage support in both CLI and Browser aggregators.
 *   **Supply Chain**: Vendoring completed; SBOM/CBOM (`sbom.json`) available.
 *   **WASM Transition (Roadmap)**: Move core cryptographic primitives to a Rust-compiled WebAssembly module (`weba-crypto-wasm`) to ensure constant-time execution and better memory isolation.
+*   **Pre-Key Infrastructure (Roadmap)**: Design document published; server PoC planned to enable one-time recipient keys for forward secrecy.
+*   **Client Integrity (Roadmap)**: Publish SRI values and CSP guidance for all distributed scripts and Wasm artifacts.
+*   **Decoy Traffic (Roadmap)**: Evaluate constant-rate or batch scheduling options for high-sensitivity deployments.
 
 ## 9. Conclusion
 Web/A Layer 2 Encryption provides a robust, flexible, and future-proof confidentiality layer for serverless forms. By leveraging standard primitives (HPKE, AES-GCM) and modern browser capabilities (WebAuthn PRF), it enables secure workflows ranging from personal medical forms to large-scale organizational surveys without centralized infrastructure dependency.
@@ -258,3 +278,4 @@ Web/A Layer 2 Encryption provides a robust, flexible, and future-proof confident
 - [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
 - [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
 - [Market Comparison](./web-a-l2-market-comparison.html)
+- [Offline Pre-Key Server Plan (Draft)](./web-a-l2-prekey-server-plan.html)
