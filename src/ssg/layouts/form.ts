@@ -7,7 +7,14 @@ export interface FormData {
     [key: string]: any;
 }
 
-export function formLayout(data: FormData, rawMarkdown: string, fontCss: string, fontFamilies: string[], vc?: object) {
+export function formLayout(
+    data: FormData,
+    rawMarkdown: string,
+    fontCss: string,
+    fontFamilies: string[],
+    vc?: object,
+    basePath = ''
+) {
     const { html, jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
 
@@ -103,11 +110,18 @@ export function formLayout(data: FormData, rawMarkdown: string, fontCss: string,
         content: content,
         fontCss,
         fontFamilies,
-        lang: lang
+        lang: lang,
+        basePath
     });
 }
 
-export function formReportLayout(data: FormData, rawMarkdown: string, fontCss: string, fontFamilies: string[]) {
+export function formReportLayout(
+    data: FormData,
+    rawMarkdown: string,
+    fontCss: string,
+    fontFamilies: string[],
+    basePath = ''
+) {
     const { jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
     const title = data.title ? `${data.title} (集計)` : 'Web/A Form (集計)';
@@ -280,6 +294,7 @@ export function formReportLayout(data: FormData, rawMarkdown: string, fontCss: s
         content: content,
         fontCss,
         fontFamilies,
-        lang: lang
+        lang: lang,
+        basePath
     });
 }

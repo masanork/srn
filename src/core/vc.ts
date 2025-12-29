@@ -1,6 +1,13 @@
 import canonicalize from 'canonicalize';
-import { ml_dsa44 } from '@noble/post-quantum/ml-dsa.js';
-import { ed25519 } from '@noble/curves/ed25519.js';
+import {
+    initWasm,
+    ed25519GenerateKeyPair,
+    ed25519Sign,
+    ed25519Verify,
+    mlDsa44GenerateKeyPair,
+    mlDsa44Sign,
+    mlDsa44Verify
+} from "./wasm_core";
 import { p256 } from '@noble/curves/nist.js';
 import { encode, decode } from 'cbor-x';
 import crypto from 'node:crypto';
@@ -21,25 +28,25 @@ export interface HybridVCResult {
 /**
  * Generates a new Ed25519 + ML-DSA-44 key pair.
  */
-export function generateHybridKeys() {
+export async function generateHybridKeys() {
+    await initWasm();
     // 1. Key Generation
-    const pqcKeys = ml_dsa44.keygen();
-    const edPriv = ed25519.utils.randomSecretKey();
-    const edPub = ed25519.getPublicKey(edPriv);
+    const pqcKeys = mlDsa44GenerateKeyPair();
+    const ed = ed25519GenerateKeyPair();
 
     return {
         ed25519: {
-            publicKey: bytesToHex(edPub),
-            privateKey: bytesToHex(edPriv)
+            publicKey: bytesToHex(ed.publicKey),
+            privateKey: bytesToHex(ed.privateKey)
         },
         pqc: {
             publicKey: bytesToHex(pqcKeys.publicKey),
-            privateKey: bytesToHex(pqcKeys.secretKey)
+            privateKey: bytesToHex(pqcKeys.privateKey)
         }
     };
 }
 
-export type HybridKeys = ReturnType<typeof generateHybridKeys>;
+export type HybridKeys = Awaited<ReturnType<typeof generateHybridKeys>>;
 
 /**
  * Creates a Verifiable Credential signed with provided keys.
@@ -68,16 +75,14 @@ export async function createHybridVC(
     const payloadBytes = new TextEncoder().encode(jsonString);
 
     // 3. Signing
+    await initWasm();
     // Sign with PQC (Message-first)
-    // 3. Signing
-    // Sign with PQC (Message-first)
-    // Convert hex private key back to Uint8Array for signing
     const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
-    const pqcSig = ml_dsa44.sign(payloadBytes, pqcPrivBytes);
+    const pqcSig = mlDsa44Sign(pqcPrivBytes, payloadBytes);
 
     // Sign with Ed25519
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
-    const edSig = ed25519.sign(payloadBytes, edPrivBytes);
+    const edSig = ed25519Sign(edPrivBytes, payloadBytes);
 
     // 4. Output Hybrid VC
     const idSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.ed25519.publicKey);
@@ -179,8 +184,8 @@ export async function verifyHybridVC(
             if (pubKeyHex && sigHex && pubKeyHex.length >= 64) {
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
-                checks.ed25519 = ed25519.verify(sigBytes, payloadBytes, pubBytes);
-                // console.log(`Debug: Classic verification result: ${checks.ed25519}`);
+                await initWasm();
+                checks.ed25519 = ed25519Verify(pubBytes, payloadBytes, sigBytes);
             }
         }
 
@@ -224,11 +229,10 @@ export async function verifyHybridVC(
             }
 
             if (pubKeyHex && sigHex && pubKeyHex.length > 100) {
-                // ml_dsa44.verify(signature, message, publicKey)
                 const sigBytes = Uint8Array.from(Buffer.from(sigHex, 'hex'));
                 const pubBytes = Uint8Array.from(Buffer.from(pubKeyHex, 'hex'));
-                checks.pqc = ml_dsa44.verify(sigBytes, payloadBytes, pubBytes);
-                // console.log(`Debug: PQC verification result: ${checks.pqc}`);
+                await initWasm();
+                checks.pqc = mlDsa44Verify(pubBytes, payloadBytes, sigBytes);
             }
         }
 
@@ -302,11 +306,12 @@ export async function createCoseVC(
     const payloadBytes = encode(payload);
 
     // 2. Sign with Hybrid Keys
+    await initWasm();
     const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
-    const pqcSig = ml_dsa44.sign(payloadBytes, pqcPrivBytes);
+    const pqcSig = mlDsa44Sign(pqcPrivBytes, payloadBytes);
 
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
-    const edSig = ed25519.sign(payloadBytes, edPrivBytes);
+    const edSig = ed25519Sign(edPrivBytes, payloadBytes);
 
     // 3. Construct COSE-style Sign1 structure (Simplified)
     // [protected, unprotected, payload, signature]
@@ -351,7 +356,7 @@ export async function createSdCoseVC(
 
     // Helper: Create an SD disclosure and return its hash
     const createDisclosure = (key: string | null, value: any): Uint8Array => {
-        const salt = ed25519.utils.randomSecretKey().slice(0, 16); // 128-bit salt
+        const salt = crypto.getRandomValues(new Uint8Array(16)); // 128-bit salt
         // SD-CWT style: [salt, key (if object field), value]
         const disclosureArray = key ? [salt, key, value] : [salt, value];
         const disclosureBytes = encode(disclosureArray);
@@ -387,11 +392,12 @@ export async function createSdCoseVC(
     const payloadBytes = encode(sdPayload);
 
     // 3. Sign (Standard Hybrid)
+    await initWasm();
     const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
-    const pqcSig = ml_dsa44.sign(payloadBytes, pqcPrivBytes);
+    const pqcSig = mlDsa44Sign(pqcPrivBytes, payloadBytes);
 
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
-    const edSig = ed25519.sign(payloadBytes, edPrivBytes);
+    const edSig = ed25519Sign(edPrivBytes, payloadBytes);
 
     const idSuffix = buildId ? buildId : 'root';
     const protectedHeader = encode({

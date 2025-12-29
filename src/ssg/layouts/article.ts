@@ -11,7 +11,14 @@ export interface ArticleData {
     [key: string]: any;
 }
 
-export function articleLayout(data: ArticleData, bodyContent: string, fontCss: string, fontFamilies: string[], vc?: any) {
+export function articleLayout(
+    data: ArticleData,
+    bodyContent: string,
+    fontCss: string,
+    fontFamilies: string[],
+    vc?: any,
+    basePath = ''
+) {
     const siteDid = vc?.issuer || "did:web:masanork.github.io:srn";
     const lang = (data.lang || 'ja').toString();
     const presentationEnabled = data.presentation === true;
@@ -244,7 +251,8 @@ export function articleLayout(data: ArticleData, bodyContent: string, fontCss: s
         fontFamilies,
         jsonLd: schema,
         lang: lang,
-        className: `layout-${data.layout || 'article'}${presentationEnabled ? ` presentation-template-${presentationTemplate}` : ''}`
+        className: `layout-${data.layout || 'article'}${presentationEnabled ? ` presentation-template-${presentationTemplate}` : ''}`,
+        basePath
     });
 }
 

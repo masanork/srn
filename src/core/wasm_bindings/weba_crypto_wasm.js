@@ -183,6 +183,15 @@ export function ed25519_verify(public_key, message, signature) {
 }
 
 /**
+ * @param {number} current_size
+ * @returns {number}
+ */
+export function get_padding_target_size(current_size) {
+    const ret = wasm.get_padding_target_size(current_size);
+    return ret >>> 0;
+}
+
+/**
  * @returns {string}
  */
 export function get_version() {
@@ -196,6 +205,81 @@ export function get_version() {
     } finally {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
+}
+
+/**
+ * @param {Uint8Array} ikm
+ * @param {Uint8Array | null | undefined} salt
+ * @param {Uint8Array} info
+ * @param {number} length
+ * @returns {Uint8Array}
+ */
+export function hkdf_sha256_derive(ikm, salt, info, length) {
+    const ptr0 = passArray8ToWasm0(ikm, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    var ptr1 = isLikeNone(salt) ? 0 : passArray8ToWasm0(salt, wasm.__wbindgen_malloc);
+    var len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArray8ToWasm0(info, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ret = wasm.hkdf_sha256_derive(ptr0, len0, ptr1, len1, ptr2, len2, length);
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
+    var v4 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v4;
+}
+
+/**
+ * @returns {Uint8Array}
+ */
+export function ml_dsa_44_generate_keypair() {
+    const ret = wasm.ml_dsa_44_generate_keypair();
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
+    var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v1;
+}
+
+/**
+ * @param {Uint8Array} private_key
+ * @param {Uint8Array} message
+ * @returns {Uint8Array}
+ */
+export function ml_dsa_44_sign(private_key, message) {
+    const ptr0 = passArray8ToWasm0(private_key, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(message, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.ml_dsa_44_sign(ptr0, len0, ptr1, len1);
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
+    var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v3;
+}
+
+/**
+ * @param {Uint8Array} public_key
+ * @param {Uint8Array} message
+ * @param {Uint8Array} signature_bytes
+ * @returns {boolean}
+ */
+export function ml_dsa_44_verify(public_key, message, signature_bytes) {
+    const ptr0 = passArray8ToWasm0(public_key, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(message, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArray8ToWasm0(signature_bytes, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ret = wasm.ml_dsa_44_verify(ptr0, len0, ptr1, len1, ptr2, len2);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] !== 0;
 }
 
 /**
@@ -244,6 +328,19 @@ export function ml_kem_768_generate_keypair() {
     var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v1;
+}
+
+/**
+ * @param {Uint8Array} data
+ * @returns {Uint8Array}
+ */
+export function sha256_hash(data) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.sha256_hash(ptr0, len0);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
 }
 
 /**

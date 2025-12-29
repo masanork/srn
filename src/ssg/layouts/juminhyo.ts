@@ -77,7 +77,8 @@ export function juminhyoLayout(
     templateVc?: any,
     instanceVc?: any,
     binaryVc?: string,
-    sdDisclosures?: string[]
+    sdDisclosures?: string[],
+    basePath = ''
 ) {
     const subject = prepareSubject(data);
     const lang = (data.lang || 'ja').toString();
@@ -221,5 +222,13 @@ export function juminhyoLayout(
         </style>
     `;
 
-    return baseLayout({ title: data.title, content: fullContent, fontCss, fontFamilies, jsonLd: jsonLdPayload, lang: lang });
+    return baseLayout({
+        title: data.title,
+        content: fullContent,
+        fontCss,
+        fontFamilies,
+        jsonLd: jsonLdPayload,
+        lang: lang,
+        basePath
+    });
 }

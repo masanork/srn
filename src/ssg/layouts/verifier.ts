@@ -8,7 +8,13 @@ export interface VerifierData {
     [key: string]: any;
 }
 
-export function verifierLayout(data: VerifierData, htmlContent: string, fontCss: string, fontFamilies: string[]) {
+export function verifierLayout(
+    data: VerifierData,
+    htmlContent: string,
+    fontCss: string,
+    fontFamilies: string[],
+    basePath = ''
+) {
     // We expect the verify-app.js bundle to be available at /assets/verify-bundle.js
 
     const fullContent = `
@@ -87,6 +93,7 @@ export function verifierLayout(data: VerifierData, htmlContent: string, fontCss:
         title: data.title,
         content: fullContent,
         fontCss,
-        fontFamilies
+        fontFamilies,
+        basePath
     });
 }
