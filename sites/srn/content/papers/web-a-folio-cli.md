@@ -178,7 +178,7 @@ Each CLI action appends a JSON line entry.
 
 ## Security & Threat Model (PoC)
 
-This PoC is designed to be **secure enough for local workflows**, while remaining lightweight and auditable.
+This PoC is designed to be **secure enough for local workflows**, while remaining lightweight and auditable. Production-hardening items are tracked as a memo/roadmap for later review.
 
 ### Threats Considered
 - **Local Compromise**: Malware or a hostile OS can access folio data.
@@ -187,17 +187,47 @@ This PoC is designed to be **secure enough for local workflows**, while remainin
 - **Index Leakage**: Derived caches (`.index/`) can expose metadata.
 
 ### Security Goals
-- **Integrity**: Detect tampering via Web/A signatures and verification.\n- **Confidentiality**: Keep sensitive payloads in Layer 2 envelopes.\n- **Auditability**: Append-only logs for CLI actions.\n- **Portability**: No vendor lock-in, readable files.
+- **Integrity**: Detect tampering via Web/A signatures and verification.
+- **Confidentiality**: Keep sensitive payloads in Layer 2 envelopes.
+- **Auditability**: Append-only logs for CLI actions.
+- **Portability**: No vendor lock-in, readable files.
 
 ### PoC Controls
-- **Read/Write Separation**: Inputs remain immutable; outputs are new files.\n- **Offline Verification**: `folio verify` works without network access.\n- **Minimal Secrets**: Private keys stay in hardware or OS keystore (Passkey/JPKI).\n- **Cache Purge**: `.index/` can be removed without data loss.
+- **Read/Write Separation**: Inputs remain immutable; outputs are new files.
+- **Offline Verification**: `folio verify` works without network access.
+- **Bring-Your-Own Agent**: A local agent can automate CLI runs; secrets never leave the device.
+- **Minimal Secrets**: Private keys stay in hardware or OS keystore (Passkey/JPKI) when available.
+- **Cache Purge**: `.index/` can be removed without data loss.
 
 ### Non-Goals
-- Full device hardening or secure enclave management.\n- Strong anonymity against traffic analysis.\n- Multi-tenant server isolation.
+- Full device hardening or secure enclave management.
+- Strong anonymity against traffic analysis.
+- Multi-tenant server isolation.
+
+### Key Handling (PoC vs Production)
+- **PoC Default**: Flat-file keys may be stored under OS permissions when hardware support is unavailable (e.g., early PQC flows).
+- **Passkey Priority**: For high-trust actions (submission consent, signing), use Passkey/secure hardware when available.
+- **Testing Stub**: Flat-file key stubs are allowed for tests and local demos.
+- **Production Reminder**: Flat-file storage must be replaced by hardware-backed or OS keystore mechanisms before production.
+- **Explicit Review**: Document any flat-file usage and mark it for revisiting before production hardening.
 
 ## Operational Notes (PoC)
 
-- **Backups**: Keep encrypted backups of `history/` and `certificates/` if the folio is long-lived.\n- **Key Hygiene**: Do not export private keys. Prefer hardware-backed credentials.\n- **Audit Logs**: Treat `logs/` as sensitive; rotate and archive periodically.\n- **Index Safety**: `.index/` is disposable; purge it when sharing a folio snapshot.\n- **Recovery**: A folio should be reconstructible from HTML and signed artifacts alone.
+- **Backups**: Keep encrypted backups of `history/` and `certificates/` if the folio is long-lived.
+- **Key Hygiene**: Do not export private keys. Prefer hardware-backed credentials.
+- **Audit Logs**: Treat `logs/` as sensitive; rotate and archive periodically.
+- **Index Safety**: `.index/` is disposable; purge it when sharing a folio snapshot.
+- **Recovery**: A folio should be reconstructible from HTML and signed artifacts alone.
+
+## Production Hardening Checklist (Memo)
+
+- **Key Storage Migration**: Replace flat-file keys with hardware-backed or OS-keystore keys.
+- **Credential Attestation**: Capture attestations for Passkey/JPKI where available.
+- **Key Rotation & Revocation**: Define rotation cadence and revocation handling.
+- **Log Integrity**: Add log signing and tamper-evident storage.
+- **Supply Chain**: Pin dependencies and publish reproducible build notes.
+- **Backup Strategy**: Encrypted, versioned backups with periodic restore drills.
+- **Access Controls**: Per-folio access policies for multi-user machines.
 
 ## Implementation Roadmap
 
