@@ -2,6 +2,13 @@ import crypto from "node:crypto";
 import { ml_kem768 } from "@noble/post-quantum/ml-kem";
 
 export const WEBA_VERSION = "0.1";
+const HPKE_VERSION_LABEL = "HPKE-v1";
+const HPKE_SUITE_ID_LABEL = "HPKE";
+const HPKE_KDF_ID_HKDF_SHA256 = 0x0001;
+const HPKE_AEAD_ID_AES_256_GCM = 0x0002;
+const HPKE_KEM_ID_X25519 = 0x0020;
+const HPKE_KEM_ID_X25519_ML_KEM_768 = 0x0030;
+const HPKE_INFO_CONTEXT = "weba-l2";
 
 export type Layer2Signature = {
   alg: "Ed25519";
@@ -19,7 +26,7 @@ export type Layer2Encrypted = {
   weba_version: string;
   layer1_ref: string;
   layer2: {
-    enc: "HPKE";
+    enc: "HPKE-v1";
     suite: {
       kem: string;
       kdf: "HKDF-SHA256";
@@ -196,10 +203,6 @@ export function buildAad(layer1Ref: string, recipientKid: string, webaVersion = 
   return canonicalJsonBytes(aadObj);
 }
 
-function sha256(bytes: Uint8Array): Uint8Array {
-  return new Uint8Array(crypto.createHash("sha256").update(bytes).digest());
-}
-
 function hkdfExtract(salt: Uint8Array, ikm: Uint8Array): Uint8Array {
   return new Uint8Array(crypto.createHmac("sha256", salt).update(ikm).digest());
 }
@@ -223,11 +226,101 @@ function hkdfExpand(prk: Uint8Array, info: Uint8Array, length: number): Uint8Arr
   return new Uint8Array(output.slice(0, length));
 }
 
-function deriveKeyMaterial(aad: Uint8Array, ikm: Uint8Array) {
-  const salt = sha256(aad);
-  const prk = hkdfExtract(salt, ikm);
-  const key = hkdfExpand(prk, Buffer.from("weba-l2/key", "utf8"), 32);
-  const iv = hkdfExpand(prk, Buffer.from("weba-l2/iv", "utf8"), 12);
+function toU16BE(value: number): Uint8Array {
+  const buf = Buffer.alloc(2);
+  buf.writeUInt16BE(value);
+  return new Uint8Array(buf);
+}
+
+function concatBytes(parts: Uint8Array[]) {
+  return new Uint8Array(Buffer.concat(parts.map((part) => Buffer.from(part))));
+}
+
+function suiteIdForSuite(suite: { kem: string; kdf: string; aead: string }): Uint8Array {
+  const normalizedKem = suite.kem.replace(/\s+/g, "");
+  const kemId =
+    normalizedKem === "X25519"
+      ? HPKE_KEM_ID_X25519
+      : normalizedKem === "X25519+ML-KEM-768" || normalizedKem === "X25519(+ML-KEM-768)"
+        ? HPKE_KEM_ID_X25519_ML_KEM_768
+        : undefined;
+  if (!kemId) {
+    throw new Error(`Unsupported HPKE KEM ID for suite: ${suite.kem}`);
+  }
+  if (suite.kdf !== "HKDF-SHA256" || suite.aead !== "AES-256-GCM") {
+    throw new Error(`Unsupported HPKE KDF/AEAD for suite: ${suite.kdf}/${suite.aead}`);
+  }
+  return concatBytes([
+    Buffer.from(HPKE_SUITE_ID_LABEL, "utf8"),
+    toU16BE(kemId),
+    toU16BE(HPKE_KDF_ID_HKDF_SHA256),
+    toU16BE(HPKE_AEAD_ID_AES_256_GCM),
+  ]);
+}
+
+function labeledExtract(salt: Uint8Array, suiteId: Uint8Array, label: string, ikm: Uint8Array): Uint8Array {
+  const labeledIkm = concatBytes([
+    Buffer.from(HPKE_VERSION_LABEL, "utf8"),
+    suiteId,
+    Buffer.from(label, "utf8"),
+    ikm,
+  ]);
+  return hkdfExtract(salt, labeledIkm);
+}
+
+function labeledExpand(
+  prk: Uint8Array,
+  suiteId: Uint8Array,
+  label: string,
+  info: Uint8Array,
+  length: number,
+): Uint8Array {
+  const labeledInfo = concatBytes([
+    toU16BE(length),
+    Buffer.from(HPKE_VERSION_LABEL, "utf8"),
+    suiteId,
+    Buffer.from(label, "utf8"),
+    info,
+  ]);
+  return hkdfExpand(prk, labeledInfo, length);
+}
+
+function encodeHpkeInfoField(value: string): Uint8Array {
+  const bytes = Buffer.from(value, "utf8");
+  if (bytes.length > 0xffff) {
+    throw new Error("HPKE info field too long");
+  }
+  return concatBytes([toU16BE(bytes.length), bytes]);
+}
+
+function buildHpkeInfo(params: {
+  weba_version: string;
+  enc: string;
+  suite: { kem: string; kdf: string; aead: string };
+  layer1_ref: string;
+  recipient: string;
+}): Uint8Array {
+  return concatBytes([
+    encodeHpkeInfoField(HPKE_INFO_CONTEXT),
+    encodeHpkeInfoField(params.weba_version),
+    encodeHpkeInfoField(params.enc),
+    encodeHpkeInfoField(params.suite.kem),
+    encodeHpkeInfoField(params.suite.kdf),
+    encodeHpkeInfoField(params.suite.aead),
+    encodeHpkeInfoField(params.layer1_ref),
+    encodeHpkeInfoField(params.recipient),
+  ]);
+}
+
+function deriveKeyMaterial(params: {
+  suite: { kem: string; kdf: string; aead: string };
+  info: Uint8Array;
+  ikm: Uint8Array;
+}) {
+  const suiteId = suiteIdForSuite(params.suite);
+  const prk = labeledExtract(new Uint8Array(), suiteId, "eae_prk", params.ikm);
+  const key = labeledExpand(prk, suiteId, "key", params.info, 32);
+  const iv = labeledExpand(prk, suiteId, "iv", params.info, 12);
   return { key, iv };
 }
 
@@ -330,21 +423,27 @@ export function encryptLayer2Payload(params: {
   const payloadBytes = canonicalJsonBytes(params.payload);
   const kemResult = kemEncapsulate(params.recipient_public_jwk, params.pqc_public_key);
   const ikm = concatSecrets(kemResult.sharedSecrets);
-  const { key, iv } = deriveKeyMaterial(aadBytes, ikm);
+  const suite = {
+    kem: params.pqc_public_key ? "X25519+ML-KEM-768" : "X25519",
+    kdf: "HKDF-SHA256",
+    aead: "AES-256-GCM",
+  };
+  const infoBytes = buildHpkeInfo({
+    weba_version: WEBA_VERSION,
+    enc: "HPKE-v1",
+    suite,
+    layer1_ref: params.layer1_ref,
+    recipient: params.recipient_kid,
+  });
+  const { key, iv } = deriveKeyMaterial({ suite, info: infoBytes, ikm });
   const ciphertext = aeadEncrypt(payloadBytes, key, iv, aadBytes);
-
-  const suiteKem = params.pqc_public_key ? "X25519(+ML-KEM-768)" : "X25519";
 
   return {
     weba_version: WEBA_VERSION,
     layer1_ref: params.layer1_ref,
     layer2: {
-      enc: "HPKE",
-      suite: {
-        kem: suiteKem,
-        kdf: "HKDF-SHA256",
-        aead: "AES-256-GCM",
-      },
+      enc: "HPKE-v1",
+      suite,
       recipient: params.recipient_kid,
       encapsulated: {
         classical: b64urlEncode(kemResult.classicalEnc),
@@ -385,7 +484,14 @@ export function decryptLayer2Envelope(params: {
     recipient_keys.pqc?.private_key,
   );
   const ikm = concatSecrets(secrets);
-  const { key, iv } = deriveKeyMaterial(aadBytes, ikm);
+  const infoBytes = buildHpkeInfo({
+    weba_version: envelope.weba_version,
+    enc: envelope.layer2.enc,
+    suite: envelope.layer2.suite,
+    layer1_ref: envelope.layer1_ref,
+    recipient: envelope.layer2.recipient,
+  });
+  const { key, iv } = deriveKeyMaterial({ suite: envelope.layer2.suite, info: infoBytes, ikm });
   const payloadBytes = aeadDecrypt(b64urlDecode(envelope.layer2.ciphertext), key, iv, aadBytes);
   const payload = JSON.parse(Buffer.from(payloadBytes).toString("utf8")) as Layer2Payload;
   return { payload };
