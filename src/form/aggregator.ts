@@ -61,7 +61,7 @@ export async function extractPlainFromHtml(
             if (!campaignId) {
                 throw new Error('org_campaign_id is required for org_root_key');
             }
-            const derived = deriveOrgX25519KeyPair({
+            const derived = await deriveOrgX25519KeyPair({
                 orgRootKey: fromBase64Url(l2Keys.org_root_key),
                 campaignId,
                 layer1Ref: l2Envelope.layer1_ref,

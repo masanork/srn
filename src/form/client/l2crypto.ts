@@ -471,6 +471,9 @@ export async function decryptLayer2Envelope(
     const pt = await aesGcmDecrypt(ct, key, iv, aadBytes);
     return JSON.parse(new TextDecoder().decode(pt)) as Layer2Payload;
   } catch (e) {
+    if (e instanceof Error && e.message === "Missing PQC KEM for envelope") {
+      throw e;
+    }
     throw new Error("Decryption failed");
   }
 }

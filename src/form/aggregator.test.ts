@@ -43,8 +43,8 @@ describe("Web/A Aggregator", () => {
   });
 
   test("extracts and decrypts L2 envelope", async () => {
-    const recipient = generateRecipientKeyPair();
-    const user = generateUserKeyPair();
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
     const layer2Plain = { answer: "yes", count: 2 };
     const sig = await signLayer2(layer2Plain, user.privateKey, "user#sig-1");
     const payload: Layer2Payload = { layer2_plain: layer2Plain, layer2_sig: sig };
@@ -74,13 +74,13 @@ describe("Web/A Aggregator", () => {
 
   test("decrypts with org root key", async () => {
     const orgRoot = new Uint8Array(32).fill(9);
-    const derived = deriveOrgX25519KeyPair({
+    const derived = await deriveOrgX25519KeyPair({
       orgRootKey: orgRoot,
       campaignId: "campaign-1",
       layer1Ref: "sha256:abcd",
       keyPolicy: "campaign+layer1",
     });
-    const user = generateUserKeyPair();
+    const user = await generateUserKeyPair();
     const layer2Plain = { answer: "org" };
     const sig = await signLayer2(layer2Plain, user.privateKey, "user#sig-1");
     const payload: Layer2Payload = { layer2_plain: layer2Plain, layer2_sig: sig };
@@ -108,8 +108,8 @@ describe("Web/A Aggregator", () => {
   });
 
   test("throws on recipient_kid mismatch", async () => {
-    const recipient = generateRecipientKeyPair();
-    const user = generateUserKeyPair();
+    const recipient = await generateRecipientKeyPair();
+    const user = await generateUserKeyPair();
     const layer2Plain = { answer: "yes" };
     const sig = await signLayer2(layer2Plain, user.privateKey, "user#sig-1");
     const payload: Layer2Payload = { layer2_plain: layer2Plain, layer2_sig: sig };
