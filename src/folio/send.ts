@@ -9,6 +9,7 @@ interface SendOptions {
     senderDid: string;  // Sender DID
     privateKeyHex: string; // Ed25519 private key hex (64 chars = 32 bytes)
     remote?: string;    // Override API URL (optional)
+    vc?: string | object; // Access Pass VC (optional)
 }
 
 function hexToBytes(hex: string): Uint8Array {
@@ -190,6 +191,7 @@ export async function sendMessage(options: SendOptions) {
             $did: ID!, 
             $nonce: String!, 
             $signature: String!, 
+            $vc: String,
             $senderDid: String!, 
             $recipientDid: String!, 
             $hostDid: String!, 
@@ -199,6 +201,7 @@ export async function sendMessage(options: SendOptions) {
                 did: $did, 
                 nonce: $nonce, 
                 signature: $signature, 
+                vc: $vc,
                 senderDid: $senderDid, 
                 recipientDid: $recipientDid, 
                 hostDid: $hostDid, 
@@ -235,6 +238,7 @@ export async function sendMessage(options: SendOptions) {
     // Send
     // Note: The GraphQL 'message' argument expects the ENCRYPTED envelope as string.
     const messageStr = JSON.stringify(encrypted);
+    const vcStr = options.vc ? (typeof options.vc === "string" ? options.vc : JSON.stringify(options.vc)) : null;
 
     const postResp = await fetch(endpoint, {
         method: "POST",
@@ -245,6 +249,7 @@ export async function sendMessage(options: SendOptions) {
                 did: options.senderDid,
                 nonce: nonce,
                 signature: authSig,
+                vc: vcStr,
                 senderDid: options.senderDid,
                 recipientDid: options.did,
                 hostDid: options.did,

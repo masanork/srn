@@ -173,7 +173,7 @@ export type HybridKeys = Awaited<ReturnType<typeof generateHybridKeys>>;
  */
 export async function createHybridVC(
     document: object,
-    keys: HybridKeys,
+    keys: { ed25519: { publicKey: string; privateKey: string; }; pqc?: { publicKey: string; privateKey: string; }; },
     issuerDid?: string,
     buildId?: string,
     proofOptions: HybridProofOptions = {}
@@ -199,47 +199,50 @@ export async function createHybridVC(
 
     // 3. Signing
     await initWasm();
-    // Sign with PQC (Message-first)
-    const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
-    const pqcSig = mlDsa44Sign(pqcPrivBytes, payloadBytes);
+    const proofs: any[] = [];
 
     // Sign with Ed25519
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
     const edSig = ed25519Sign(edPrivBytes, payloadBytes);
 
-    // 4. Output Hybrid VC
     const didKeyFragment = issuer.startsWith('did:key:') ? issuer.split(':')[2] : null;
     const idSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.ed25519.publicKey);
 
-    const pqcIdSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.pqc.publicKey);
+    proofs.push({
+        "type": "DataIntegrityProof",
+        "cryptosuite": EDDSA_JCS_2022,
+        "verificationMethod": didKeyFragment
+            ? `${issuer}#${didKeyFragment}`
+            : `${issuer}#${idSuffix}-ed25519`,
+        "proofPurpose": proofPurpose,
+        "created": created,
+        ...(proofOptions.domain ? { "domain": proofOptions.domain } : {}),
+        ...(proofOptions.challenge ? { "challenge": proofOptions.challenge } : {}),
+        "proofValue": bytesToMultibaseBase58btc(edSig)
+    });
+
+    // Sign with PQC (if available)
+    if (keys.pqc) {
+        const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
+        const pqcSig = mlDsa44Sign(pqcPrivBytes, payloadBytes);
+        const pqcIdSuffix = buildId ? buildId : (issuerDid ? 'root' : keys.pqc.publicKey);
+
+        proofs.push({
+            "type": "DataIntegrityProof",
+            "cryptosuite": ML_DSA_44_JCS_2025,
+            "verificationMethod": `${issuer}#${pqcIdSuffix}-pqc`,
+            "proofPurpose": proofPurpose,
+            "created": created,
+            ...(proofOptions.domain ? { "domain": proofOptions.domain } : {}),
+            ...(proofOptions.challenge ? { "challenge": proofOptions.challenge } : {}),
+            "proofValue": bytesToMultibaseBase58btc(pqcSig)
+        });
+    }
 
     const vc = {
         ...vcPayload,
         "issuer": issuer,
-        "proof": [
-            {
-                "type": "DataIntegrityProof",
-                "cryptosuite": EDDSA_JCS_2022,
-                "verificationMethod": didKeyFragment
-                    ? `${issuer}#${didKeyFragment}`
-                    : `${issuer}#${idSuffix}-ed25519`,
-                "proofPurpose": proofPurpose,
-                "created": created,
-                ...(proofOptions.domain ? { "domain": proofOptions.domain } : {}),
-                ...(proofOptions.challenge ? { "challenge": proofOptions.challenge } : {}),
-                "proofValue": bytesToMultibaseBase58btc(edSig)
-            },
-            {
-                "type": "DataIntegrityProof",
-                "cryptosuite": ML_DSA_44_JCS_2025,
-                "verificationMethod": `${issuer}#${pqcIdSuffix}-pqc`,
-                "proofPurpose": proofPurpose,
-                "created": created,
-                ...(proofOptions.domain ? { "domain": proofOptions.domain } : {}),
-                ...(proofOptions.challenge ? { "challenge": proofOptions.challenge } : {}),
-                "proofValue": bytesToMultibaseBase58btc(pqcSig)
-            }
-        ]
+        "proof": proofs
     };
 
     return vc;

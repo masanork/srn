@@ -5,6 +5,31 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.3.0 - Verifiable Credential Authorization
+
+**Date:** 2025-12-30
+
+Introduction of Advanced Authorization via Verifiable Credentials (VC), enabling decentralized permission management with Post-Quantum resilient hybrid signatures.
+
+* **Verifiable Credential (VC) Framework**:
+  * **Hybrid Access Passes**: Implemented "Access Pass" VCs using the `DataIntegrityProof` standard with dual signatures (**Ed25519** and **ML-DSA-44**).
+  * **Admin Issuance**: Added `folio admin issue-pass` command to CLI, allowing administrators to grant permissions (e.g., `post`, `admin`) that users can carry.
+  * **VC-based Authorization**: Integrated VC verification into the `postMessage` workflow. Users can now gain access by presenting a valid pass, moving beyond static database whitelists.
+
+* **Server-side Security & WASM**:
+  * **WASM-Powered Verification**: Migrated remote Firebase Functions to use the official Rust-compiled WebAssembly crypto module. This enables high-performance verification of ML-DSA-44 signatures on the server.
+  * **Unified Crypto Platform**: Standardized cryptographic operations across CLI, Browser, and Server using a single, audited WASM core.
+
+* **Folio CLI Improvements**:
+  * **Hybrid DID Creation**: Added `--hybrid` flag to `did create` to generate both classic and post-quantum keys simultaneously.
+  * **VC-Enabled Transport**: Updated `transport send` to support the `--vc` option for presenting credentials during submission.
+  * **Import Standardization**: Standardized on namespace imports (`import * as path`) to improve compatibility with various TypeScript environments.
+
+* **Documentation & Roadmap**:
+  * **Phase 3 Progress**: Completed Phase 3.1 (VC Issuance) and 3.2 (VC Presentation) of the Folio roadmap.
+  * **Status Update**: Reflected the advanced authorization status in `ROADMAP.md` and `.agent/tasks/folio_roadmap.md`.
+
+
 ## v2.2.0 - Secure Folio & Guest DID Integration
 
 **Date:** 2025-12-30

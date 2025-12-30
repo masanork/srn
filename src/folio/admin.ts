@@ -81,3 +81,22 @@ export async function addUser(options: AdminOptions, newDid: string, role: strin
         throw new Error("Failed to add user (unknown error)");
     }
 }
+
+import { createHybridVC } from "../core/vc";
+import type { HybridKeys } from "../core/vc";
+
+export async function issueAccessPass(adminKeys: HybridKeys, adminDid: string, userDid: string, scope: string = "post"): Promise<object> {
+    const subject = {
+        id: userDid,
+        "folio:access": true,
+        "folio:scope": scope
+    };
+
+    const vc = await createHybridVC(
+        { credentialSubject: subject },
+        adminKeys,
+        adminDid
+    );
+
+    return vc;
+}

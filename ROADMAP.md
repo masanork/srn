@@ -8,9 +8,9 @@ This document tracks the high-level development status, architectural decisions,
 | :--- | :--- | :--- |
 | **SRN (SSG)** | Stable (v2) | Hybrid PQC signatures, Native IVS, Web/A consolidation. |
 | **Web/A Form** | Production | Hosted within SRN site; Guest DID submission enabled. |
-| **Folio (Client)** | Beta | CLI for sync/send/admin, MCP Server, `did:key` support. |
-| **Folio (Remote)** | Production | Firebase Functions (asia-northeast1), Strict Mode, Guest DID. |
-| **Infrastructure**| Production | Firebase Functions/Hosting, simplewebauthn v13. |
+| **Folio (Client)** | Beta | CLI for sync/send/admin, VC-enabled transport, Hybrid DIDs. |
+| **Folio (Remote)** | Production | Firebase Functions (WASM enabled), VC-based Authorization. |
+| **Infrastructure**| Production | Firebase Functions/Hosting, Rust/WASM Cryptography. |
 
 ---
 
@@ -19,6 +19,7 @@ This document tracks the high-level development status, architectural decisions,
 ### 1. Identity & Credentials (High Priority)
 - [x] **Guest DID (Passkeys)**: Native WebAuthn integration for identity-less users.
 - [x] **Guest DID Messaging**: `guestPostMessage` mutation for Passkey-authenticated submissions.
+- [x] **VC-based Authorization**: JCS-based Access Passes for decentralized access control.
 - [ ] **Passkey-based VC Binding**: Linking W3C Verifiable Credentials to hardware keys.
 - [ ] **Revocation List v2**: High-performance bitstring revocation for municipality-scale DIDs.
 
@@ -36,6 +37,7 @@ This document tracks the high-level development status, architectural decisions,
 
 ### 4. Post-Quantum & Standards
 - [x] **Hybrid Signatures (ML-DSA-44)**: Ensuring long-term authenticity.
+- [x] **Hybrid DIDs**: Dual-key (Ed25519 + ML-DSA-44) implementation in Folio.
 - [ ] **Binary COSE VCs**: Optimizing for size and mobile transport.
 - [ ] **C2PA Maturity**: Formalizing the font provenance manifest (SRNC).
 

@@ -1,5 +1,5 @@
 import { program } from "commander";
-import path from "node:path";
+import * as path from "node:path";
 import * as fs from "fs-extra";
 
 program
@@ -29,6 +29,21 @@ async function loadPrivateKey(options: any): Promise<string> {
         throw new Error("Either --key or --key-file must be provided.");
     }
     return privateKeyHex;
+}
+
+// Helper to load full key object
+async function loadKeyData(options: any): Promise<any> {
+    if (options.keyFile) {
+        const keyPath = path.resolve(process.cwd(), options.keyFile);
+        if (await fs.pathExists(keyPath)) {
+            return await fs.readJson(keyPath);
+        }
+    }
+    const hex = options.key;
+    if (hex) {
+        return { privateKey: hex, publicKey: "", algorithm: "Ed25519" };
+    }
+    throw new Error("Either --key or --key-file must be provided.");
 }
 
 // --- Form Operations ---
@@ -71,16 +86,28 @@ transport
     .option("--key <hex>", "Your Private Key (Hex)")
     .option("--key-file <path>", "Path to private key file")
     .option("--remote <url>", "API URL")
+    .option("--vc <path>", "Path to your Access Pass VC file")
     .action(async (options) => {
         try {
             const privateKeyHex = await loadPrivateKey(options);
+
+            let vcData: any;
+            if (options.vc) {
+                const vcPath = path.resolve(process.cwd(), options.vc);
+                if (await fs.pathExists(vcPath)) {
+                    vcData = await fs.readJson(vcPath);
+                } else {
+                    console.warn(`Warning: VC file not found at ${vcPath}`);
+                }
+            }
 
             await sendMessage({
                 did: options.did,
                 message: options.message,
                 senderDid: options.sender,
                 privateKeyHex: privateKeyHex,
-                remote: options.remote
+                remote: options.remote,
+                vc: vcData
             });
         } catch (e: any) {
             console.error(`Error: ${e.message}`);
@@ -151,7 +178,7 @@ program
     });
 
 // --- Admin Operations ---
-import { addUser } from "./admin";
+import { addUser, issueAccessPass } from "./admin";
 
 const admin = program.command("admin").description("Administrative operations");
 
@@ -180,6 +207,46 @@ admin
         }
     });
 
+admin
+    .command("issue-pass")
+    .description("Issue an Access Pass VC to a user")
+    .requiredOption("--user-did <did>", "DID of the user to grant access")
+    .option("--scope <scope>", "Access scope (e.g. post, admin)", "post")
+    .requiredOption("--admin-did <did>", "Your Admin DID (Issuer)")
+    .option("--key-file <path>", "Path to your Admin Private Key file (Hybrid supported)")
+    .option("--key <hex>", "Admin Private Key (Hex, Ed25519 only)")
+    .option("--out <path>", "Output file for the VC", "access-pass.json")
+    .action(async (options) => {
+        try {
+            const adminKeyData = await loadKeyData(options);
+
+            // Check if it's hybrid or classic
+            let finalKeys: any;
+            if (adminKeyData.ed25519 && adminKeyData.pqc) {
+                finalKeys = adminKeyData;
+            } else {
+                // Wrap classic key as hybrid for the signer (PQC will be a dummy or we need to handle it)
+                // For now, let's require hybrid for this command or generate a temp PQC (not ideal)
+                // Better: Update issueAccessPass to handle classic.
+                finalKeys = {
+                    ed25519: { privateKey: adminKeyData.privateKey, publicKey: adminKeyData.publicKey },
+                    pqc: null // We'll handle this in admin.ts
+                };
+            }
+
+            const vc = await issueAccessPass(finalKeys, options.adminDid, options.userDid, options.scope);
+
+            const outPath = path.resolve(process.cwd(), options.out);
+            await fs.writeJson(outPath, vc, { spaces: 2 });
+            console.log(`✅ Access Pass VC issued and saved to ${outPath}`);
+            console.log(`User DID: ${options.userDid}`);
+            console.log(`Scope: ${options.scope}`);
+        } catch (e: any) {
+            console.error(`Error: ${e.message}`);
+            process.exit(1);
+        }
+    });
+
 // --- Folio Management ---
 program
     .command("init [directory]")
@@ -198,7 +265,7 @@ program
 
 // --- DID Operations ---
 import { resolveDidDocument, encodeDidKey } from "../core/did";
-import { bytesToHex } from "../core/encoding";
+import { bytesToHex, hexToBytes } from "../core/encoding";
 import { initWasm, ed25519GenerateKeyPair } from "../core/wasm_core";
 
 const didCmd = program.command("did").description("DID operations");
@@ -224,16 +291,50 @@ didCmd
     .command("create")
     .description("Create a new DID")
     .option("-m, --method <method>", "DID method (key, web)", "key")
+    .option("--hybrid", "Generate a hybrid (Ed25519 + ML-DSA-44) key pair")
     .option("--save <alias>", "Save the private key with an alias")
     .action(async (options) => {
         if (options.method === "key") {
             await initWasm();
-            const { privateKey, publicKey } = ed25519GenerateKeyPair();
-            const did = encodeDidKey(publicKey, "ed25519");
+
+            let keyData: any;
+            let did: string;
+
+            if (options.hybrid) {
+                const { generateHybridKeys } = await import("../core/vc");
+                const hybrid = await generateHybridKeys();
+                did = encodeDidKey(hexToBytes(hybrid.ed25519.publicKey), "ed25519");
+                keyData = {
+                    did,
+                    method: "key",
+                    algorithm: "hybrid-eddsa-mldsa",
+                    created: new Date().toISOString(),
+                    ed25519: hybrid.ed25519,
+                    pqc: hybrid.pqc,
+                    // Backward compatibility
+                    publicKey: hybrid.ed25519.publicKey,
+                    privateKey: hybrid.ed25519.privateKey
+                };
+            } else {
+                const { privateKey, publicKey } = ed25519GenerateKeyPair();
+                did = encodeDidKey(publicKey, "ed25519");
+                keyData = {
+                    did,
+                    method: "key",
+                    algorithm: "Ed25519",
+                    created: new Date().toISOString(),
+                    publicKey: bytesToHex(publicKey),
+                    privateKey: bytesToHex(privateKey)
+                };
+            }
 
             console.log(`DID: ${did}`);
-            console.log(`Public Key (Hex): ${bytesToHex(publicKey)}`);
-            console.log(`Private Key (Hex): ${bytesToHex(privateKey)}`);
+            if (options.hybrid) {
+                console.log(`Ed25519 Public Key: ${keyData.ed25519.publicKey}`);
+                console.log(`ML-DSA-44 Public Key: ${keyData.pqc.publicKey}`);
+            } else {
+                console.log(`Public Key (Hex): ${keyData.publicKey}`);
+            }
 
             if (options.save) {
                 const folioDir = path.resolve(process.cwd(), program.opts().folio);
@@ -241,20 +342,12 @@ didCmd
                 await fs.ensureDir(keysDir, { mode: 0o700 });
                 const keyFile = path.join(keysDir, `${options.save}.json`);
 
-                // Do not overwrite existing keys without warning (for now just fail)
                 if (await fs.pathExists(keyFile)) {
                     console.error(`Error: Key alias '${options.save}' already exists.`);
                     process.exit(1);
                 }
 
-                await fs.writeJson(keyFile, {
-                    did,
-                    method: "key",
-                    algorithm: "Ed25519",
-                    created: new Date().toISOString(),
-                    publicKey: bytesToHex(publicKey),
-                    privateKey: bytesToHex(privateKey)
-                }, { spaces: 2, mode: 0o600 });
+                await fs.writeJson(keyFile, keyData, { spaces: 2, mode: 0o600 });
                 console.log(`✅ Key saved to ${keyFile}`);
             }
         } else {
