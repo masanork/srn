@@ -90,6 +90,9 @@ ai_generated: true
     <a href="./papers/web-a-folio.html" class="nav-item compact">
     <span class="icon">💼</span><span class="label">Web/A Folio</span>
     </a>
+    <a href="./papers/folio-key-management-architecture.html" class="nav-item compact">
+    <span class="icon">🔑</span><span class="label">Key Management</span>
+    </a>
     <a href="./papers/web-a-post-architecture.html" class="nav-item compact">
     <span class="icon">📮</span><span class="label">Web/A Post</span>
     </a>
@@ -123,6 +126,9 @@ ai_generated: true
     </a>
     <a href="./papers/web-a-folio.ja.html" class="nav-item compact">
     <span class="icon">💼</span><span class="label">Web/A Folio 構想</span>
+    </a>
+    <a href="./papers/folio-key-management-architecture.ja.html" class="nav-item compact">
+    <span class="icon">🔑</span><span class="label">鍵管理と信頼の基点</span>
     </a>
     <a href="./papers/web-a-post-architecture.ja.html" class="nav-item compact">
     <span class="icon">📮</span><span class="label">Web/A Post 構想</span>
