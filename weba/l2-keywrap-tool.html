@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>Web/A L2 Keywrap Tool</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+</style>
+    
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="">
+    <main>
+        
+        <div class="weba-form-container">
+            <div id="weba-l2-keywrap-tool" class="no-print" style="margin-top: 1rem; padding: 1.25rem; border: 1px solid #cbd5f5; border-radius: 10px; background: #f8fafc;"><div style="font-weight: 600; margin-bottom: 0.5rem;">Passkey Key Wrap Package Generator</div><div style="display: grid; gap: 0.75rem; max-width: 720px;"><label><p>Recipient X25519 Private Key (base64url)</p><input id="kwp-recipient-sk" type="text" class="form-input" placeholder="base64url(secret_key)"></label><label><p>Credential ID (base64url)</p><input id="kwp-credential-id" type="text" class="form-input" placeholder="base64url(credential_id)"></label><label><p>PRF Salt (base64url)</p><div style="display:flex; gap:0.5rem;"><input id="kwp-prf-salt" type="text" class="form-input" placeholder="base64url(salt)" style="flex:1;"><button id="kwp-generate-salt" type="button" class="secondary">Generate</button></div></label><label><p>AAD (base64url, optional)</p><input id="kwp-aad" type="text" class="form-input" placeholder="base64url(layer1_ref)"></label><label><p>Key ID (kid)</p><input id="kwp-kid" type="text" class="form-input" placeholder="issuer#passkey-1"></label><div style="display:flex; gap:0.5rem; align-items:center;"><button id="kwp-wrap" type="button" class="primary">Wrap Key</button><div id="kwp-status" style="color:#64748b;">Ready.</div></div><pre id="kwp-output" style="background:#0f172a;color:#e2e8f0;padding:1rem;border-radius:8px;overflow:auto;font-size:0.85rem;min-height:140px;"></pre></div></div><div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            
+            <div style="flex:1"></div>
+            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
+    
+        </div>
+            
+
+            <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記入内容（データ）の確認" data-i18n-en="Review Form Data">記入内容（データ）の確認</span>
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                        </div>
+                    </details>
+                    
+        <details style="margin-top: 0.5rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAFormTemplate"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2025-12-30T06:34:04.602Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/weba/l2-keywrap-tool",
+    "name": "Web/A L2 Keywrap Tool",
+    "contentDigest": "3bbad1b88df26573ff6194adb5df06a3ddd963e9b13312f76a558a67a8f4cd7a"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767076426997-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T06:34:04.602Z",
+      "proofValue": "z3bX8fqF4Dhf8kbFHJses2sATPg2BrsHCh9wjnGwzWmA8VRi9mML5zB4p6NsQ3bTbd3aDyK7uvQzASQm8eSmaEsfL"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767076426997-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T06:34:04.602Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+            </div>
+        </details>
+    
+                </div>
+            </footer>
+        </div>
+        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[],"tables":{},"masterData":{}}</script>
+        
+        
+        <script src="./assets/form-bundle.js"></script>
+    
+    </main>
+</body>
+</html>

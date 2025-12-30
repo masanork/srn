@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>医療費集計フォーム</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+</style>
+    
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="">
+    <main>
+        
+        <div class="weba-form-container">
+            <div class="tabs-nav"><button class="tab-btn active" onclick="switchTab(this, 'tab-1')">詳細</button><div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1;">
+            
+            <div style="flex:1"></div>
+            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
+    
+        </div></div>
+        <div class="form-row">
+            <label class="form-label">支払った医療費の金額計</label>
+            <input type="text" readonly class="form-input" data-json-path="total_paid" data-formula="SUM(amount)" style="background:#f9f9f9; ">
+        </div>
+        <div class="form-row">
+            <label class="form-label">補填される金額計</label>
+            <input type="text" readonly class="form-input" data-json-path="total_comp" data-formula="SUM(comp)" style="background:#f9f9f9; ">
+        </div><div id="tab-1" class="tab-content active" data-tab-title="詳細"><div class="form-row vertical"><div class="table-wrapper"><table class="data-table dynamic" id="tbl_details" data-table-key="details"><tbody><tr><th>No</th><th>医療を受けた人</th><th>病院・薬局などの名称</th><th>診療・治療</th><th>医薬品購入</th><th>介護保険サービス</th><th>その他の医療費</th><th>支払った医療費の金額</th><th>左のうち、補填される金額</th><th>支払年月日</th><th class="row-action-cell"></th></tr><tr class="template-row"><td><input type="number" readonly class="form-input template-input auto-num" data-base-key="no" data-autonum="true" style="background:transparent; border:none; text-align:center; width:100%; font-weight:bold; cursor:default; "></td><td><input type="text" class="form-input template-input search-input" data-base-key="patient" placeholder="全角10文字以内" style=" " data-suggest-source="column"></td><td><input type="text" class="form-input template-input search-input" data-base-key="place" placeholder="全角20文字以内" style=" " data-suggest-source="column"></td><td><input type="checkbox" class="form-input template-input" data-base-key="cat_med" style="text-align: center;"></td><td><input type="checkbox" class="form-input template-input" data-base-key="cat_drug" style="text-align: center;"></td><td><input type="checkbox" class="form-input template-input" data-base-key="cat_care" style="text-align: center;"></td><td><input type="checkbox" class="form-input template-input" data-base-key="cat_other" style="text-align: center;"></td><td><input type="number" class="form-input template-input" data-base-key="amount" placeholder="半角数字" style="text-align:right;  "></td><td><input type="number" class="form-input template-input" data-base-key="comp" placeholder="半角数字" style="text-align:right;  "></td><td><input type="date" class="form-input template-input" data-base-key="date" style=""></td><td class="row-action-cell"><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" tabindex="-1">×</button></td></tr></tbody></table></div><button type="button" class="add-row-btn" onclick="addTableRow(this, 'details')" data-i18n="add_row">+ 行を追加</button></div></div>
+            
+
+            <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記入内容（データ）の確認" data-i18n-en="Review Form Data">記入内容（データ）の確認</span>
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                        </div>
+                    </details>
+                    
+        <details style="margin-top: 0.5rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAFormTemplate"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2025-12-30T06:34:04.637Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/weba/iryouhi",
+    "name": "医療費集計フォーム",
+    "contentDigest": "bf12c999d9597e769d7e4fd2a3f1be0ddebddc3b087172c56782a4c80dfeb8d2"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767076426997-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T06:34:04.637Z",
+      "proofValue": "z5nia2aPVLF9vuDRPnDyvDdZ8tikgxgto5UcdDRutGCpNiaiNec1FChUuJrT5C6UdC7kEfdqJL92vvNizTiqQupah"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767076426997-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T06:34:04.637Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+            </div>
+        </details>
+    
+                </div>
+            </footer>
+        </div>
+        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[{"key":"total_paid","label":"支払った医療費の金額計","type":"calc"},{"key":"total_comp","label":"補填される金額計","type":"calc"}],"tables":{"details":[{"key":"no","label":"no","type":"autonum"},{"key":"patient","label":"全角10文字以内","type":"text"},{"key":"place","label":"全角20文字以内","type":"text"},{"key":"cat_med","label":"cat_med","type":"checkbox"},{"key":"cat_drug","label":"cat_drug","type":"checkbox"},{"key":"cat_care","label":"cat_care","type":"checkbox"},{"key":"cat_other","label":"cat_other","type":"checkbox"},{"key":"amount","label":"半角数字","type":"number"},{"key":"comp","label":"半角数字","type":"number"},{"key":"date","label":"date","type":"date"}]},"masterData":{}}</script>
+        
+        
+        <script src="./assets/form-bundle.js"></script>
+    
+    </main>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>就労証明書（世田谷区版）</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+</style>
+    
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="">
+    <main>
+        
+        <div class="weba-form-container">
+            <h3>事業所・証明情報</h3>
+        <div class="form-row">
+            <label class="form-label">証明日</label>
+            <input type="date" class="form-input" data-json-path="certificate.date" style="">
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">事業所名</label>
+            <input type="text" class="form-input" data-json-path="employer.name" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">代表者名</label>
+            <input type="text" class="form-input" data-json-path="employer.representative" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">所在地</label>
+            <input type="text" class="form-input" data-json-path="employer.address" value="" placeholder="所在地" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">電話番号</label>
+            <input type="text" class="form-input" data-json-path="employer.phone" value="" placeholder="03-1234-5678" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">担当者名</label>
+            <input type="text" class="form-input" data-json-path="employer.contact_name" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">記載者連絡先</label>
+            <input type="text" class="form-input" data-json-path="employer.contact_phone" value="" placeholder="" style="">
+            
+        </div><hr><h3>就労者情報</h3>
+        <div class="form-row" style="">
+            <label class="form-label">フリガナ</label>
+            <input type="text" class="form-input" data-json-path="employee.kana" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">本人氏名</label>
+            <input type="text" class="form-input" data-json-path="employee.name" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row">
+            <label class="form-label">生年月日</label>
+            <input type="date" class="form-input" data-json-path="employee.birth_date" style="">
+        </div><hr><h3>雇用（予定）期間等</h3>
+        <div class="form-row vertical" style="">
+            <label class="form-label">雇用（予定）期間</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="employment.term" value="無期" > 無期
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="employment.term" value="有期" > 有期
+            </label>
+        <div class="form-row">
+            <label class="form-label">雇用開始日</label>
+            <input type="date" class="form-input" data-json-path="employment.start_date" style="">
+        </div>
+        <div class="form-row">
+            <label class="form-label">雇用終了日（有期の場合）</label>
+            <input type="date" class="form-input" data-json-path="employment.end_date" style="">
+        </div><hr><h3>本人就労先事業所</h3>
+        <div class="form-row" style="">
+            <label class="form-label">名称</label>
+            <input type="text" class="form-input" data-json-path="workplace.name" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">住所</label>
+            <input type="text" class="form-input" data-json-path="workplace.address" value="" placeholder="" style="">
+            
+        </div><hr><input type="text" list="list_employment.industry_2432" class="form-input" data-json-path="employment.industry" placeholder="業種を入力" style=""><datalist id="list_employment.industry_2432"><option value="業種"></option><option value="農業・林業"></option><option value="漁業"></option><option value="鉱業・採石業・砂利採取業"></option><option value="建設業"></option><option value="製造業"></option><option value="電気・ガス・熱供給・水道業"></option><option value="情報通信業"></option><option value="運輸業・郵便業"></option><option value="卸売業・小売業"></option><option value="金融業・保険業"></option><option value="不動産業・物品賃貸業"></option><option value="学術研究・専門・技術サービス業"></option><option value="宿泊業・飲食サービス業"></option><option value="生活関連サービス業・娯楽業"></option><option value="医療・福祉"></option><option value="教育・学習支援業"></option><option value="複合サービス事業"></option><option value="公務"></option><option value="その他"></option></datalist><p>述）</p><input type="text" list="list_employment.type_9872" class="form-input" data-json-path="employment.type" placeholder="雇用形態を入力" style=""><datalist id="list_employment.type_9872"><option value="雇用形態"></option><option value="正社員"></option><option value="パート・アルバイト"></option><option value="派遣社員"></option><option value="契約社員"></option><option value="会計年度任用職員"></option><option value="非常勤・臨時職員"></option><option value="役員"></option><option value="自営業主"></option><option value="自営業専従者"></option><option value="家族従業者"></option><option value="内職"></option><option value="業務委託"></option><option value="その他"></option></datalist><h3>就労時間（固定就労）</h3><div class="form-row vertical"><div class="table-wrapper"><table class="data-table" ><tbody><tr ><td>曜日</td><td>月</td><td>火</td><td>水</td><td>木</td><td>金</td><td>土</td><td>日</td><td>祝日</td><td>週間合計（時間）</td><td>月間合計（時間）</td><td>休憩時間（分）</td></tr><tr ><td>出勤</td><td><input type="checkbox" class="form-input" data-json-path="fixed.mon" style="text-align: center;"></td><td><input type="checkbox" class="form-input" data-json-path="fixed.tue" style="text-align: center;"></td><td><input type="checkbox" class="form-input" data-json-path="fixed.wed" style="text-align: center;"></td><td><input type="checkbox" class="form-input" data-json-path="fixed.thu" style="text-align: center;"></td><td><input type="checkbox" class="form-input" data-json-path="fixed.fri" style="text-align: center;"></td><td><input type="checkbox" class="form-input" data-json-path="fixed.sat" style="text-align: center;"></td><td><input type="checkbox" class="form-input" data-json-path="fixed.sun" style="text-align: center;"></td><td><input type="checkbox" class="form-input" data-json-path="fixed.holiday" style="text-align: center;"></td><td><input type="number" class="form-input" data-json-path="fixed.week_hours"  style="text-align:right;  "></td><td><input type="number" class="form-input" data-json-path="fixed.month_hours"  style="text-align:right;  "></td><td><input type="number" class="form-input" data-json-path="fixed.break_minutes"  style="text-align:right;  "></td></tr></tbody></table></div></div><div class="form-row vertical"><div class="table-wrapper"><table class="data-table" ><tbody><tr ><td>平日開始</td><td>平日終了</td><td>土曜開始</td><td>土曜終了</td><td>日祝開始</td><td>日祝終了</td></tr><tr ><td><input type="text" class="form-input" data-json-path="fixed.weekday_start" placeholder="09:00" style=" "></td><td><input type="text" class="form-input" data-json-path="fixed.weekday_end" placeholder="18:00" style=" "></td><td><input type="text" class="form-input" data-json-path="fixed.sat_start" placeholder="09:00" style=" "></td><td><input type="text" class="form-input" data-json-path="fixed.sat_end" placeholder="18:00" style=" "></td><td><input type="text" class="form-input" data-json-path="fixed.sun_start" placeholder="09:00" style=" "></td><td><input type="text" class="form-input" data-json-path="fixed.sun_end" placeholder="18:00" style=" "></td></tr></tbody></table></div></div><hr><h3>就労時間（変則就労）</h3>
+        <div class="form-row">
+            <label class="form-label">合計時間（時間/月）</label>
+            <input type="number" class="form-input" data-json-path="variable.total_hours" placeholder="" style="">
+            
+        </div>
+        <div class="form-row vertical" style="">
+            <label class="form-label">単位</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="variable.unit" value="月間" > 月間
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="variable.unit" value="週間" > 週間
+            </label>
+        <div class="form-row">
+            <label class="form-label">就労日数（日）</label>
+            <input type="number" class="form-input" data-json-path="variable.work_days" placeholder="" style="">
+            
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">主な就労時間帯・シフト時間帯</label>
+            <input type="text" class="form-input" data-json-path="variable.shift_time" value="" placeholder="例: 09:00-18:00" style="">
+            
+        </div>
+        <div class="form-row">
+            <label class="form-label">休憩時間（分）</label>
+            <input type="number" class="form-input" data-json-path="variable.break_minutes" placeholder="" style="">
+            
+        </div><hr><h3>就労実績（直近3か月）</h3><div class="form-row vertical"><div class="table-wrapper"><table class="data-table dynamic" id="tbl_work_records" data-table-key="work_records"><tbody><tr><th>年月</th><th>日数/月</th><th>時間/月</th><th class="row-action-cell"></th></tr><tr class="template-row"><td><input type="text" class="form-input template-input" data-base-key="ym" placeholder="2025-01" style=" "></td><td><input type="number" class="form-input template-input" data-base-key="days"  style="text-align:right;  "></td><td><input type="number" class="form-input template-input" data-base-key="hours"  style="text-align:right;  "></td><td class="row-action-cell"><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" tabindex="-1">×</button></td></tr></tbody></table></div><button type="button" class="add-row-btn" onclick="addTableRow(this, 'work_records')" data-i18n="add_row">+ 行を追加</button></div><hr><h3>休業等の取得状況</h3>
+        <div class="form-row vertical" style="">
+            <label class="form-label">産前・産後休業</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.maternity" value="取得予定" > 取得予定
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.maternity" value="取得中" > 取得中
+            </label>
+        <div class="form-row">
+            <label class="form-label">産前・産後開始日</label>
+            <input type="date" class="form-input" data-json-path="leave.maternity_start" style="">
+        </div>
+        <div class="form-row">
+            <label class="form-label">産前・産後終了日</label>
+            <input type="date" class="form-input" data-json-path="leave.maternity_end" style="">
+        </div>
+        <div class="form-row vertical" style="">
+            <label class="form-label">育児休業</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.childcare" value="取得予定" > 取得予定
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.childcare" value="取得中" > 取得中
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.childcare" value="取得済み" > 取得済み
+            </label>
+        <div class="form-row">
+            <label class="form-label">育児休業開始日</label>
+            <input type="date" class="form-input" data-json-path="leave.childcare_start" style="">
+        </div>
+        <div class="form-row">
+            <label class="form-label">育児休業終了日</label>
+            <input type="date" class="form-input" data-json-path="leave.childcare_end" style="">
+        </div>
+        <div class="form-row vertical" style="">
+            <label class="form-label">産休・育休以外の休業</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.other" value="取得予定" > 取得予定
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.other" value="取得中" > 取得中
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.other" value="取得済み" > 取得済み
+            </label>
+        <div class="form-row vertical" style="">
+            <label class="form-label">理由</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.other_reason" value="介護休業" > 介護休業
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.other_reason" value="病休" > 病休
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="leave.other_reason" value="その他" > その他
+            </label>
+        <div class="form-row" style="">
+            <label class="form-label">理由（その他）</label>
+            <input type="text" class="form-input" data-json-path="leave.other_reason_detail" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row">
+            <label class="form-label">休業開始日</label>
+            <input type="date" class="form-input" data-json-path="leave.other_start" style="">
+        </div>
+        <div class="form-row">
+            <label class="form-label">休業終了日</label>
+            <input type="date" class="form-input" data-json-path="leave.other_end" style="">
+        </div><hr><h3>復職・短時間勤務</h3>
+        <div class="form-row vertical" style="">
+            <label class="form-label">復職</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="return.to_work" value="復職予定" > 復職予定
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="return.to_work" value="復職済み" > 復職済み
+            </label>
+        <div class="form-row">
+            <label class="form-label">復職（予定）年月日</label>
+            <input type="date" class="form-input" data-json-path="return.date" style="">
+        </div>
+        <div class="form-row vertical" style="">
+            <label class="form-label">育児のための短時間勤務制度</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="shorttime.use" value="取得予定" > 取得予定
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="shorttime.use" value="取得中" > 取得中
+            </label>
+        <div class="form-row">
+            <label class="form-label">期間（開始）</label>
+            <input type="date" class="form-input" data-json-path="shorttime.start" style="">
+        </div>
+        <div class="form-row">
+            <label class="form-label">期間（終了）</label>
+            <input type="date" class="form-input" data-json-path="shorttime.end" style="">
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">主な就労時間帯・シフト時間帯</label>
+            <input type="text" class="form-input" data-json-path="shorttime.shift" value="" placeholder="例: 10:00-16:00" style="">
+            
+        </div><hr><h3>保育士等としての勤務実態</h3>
+        <div class="form-row vertical" style="">
+            <label class="form-label">保育士等としての勤務実態</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="employment.nursery" value="有" > 有
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="employment.nursery" value="有（予定）" > 有（予定）
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="employment.nursery" value="無" > 無
+            </label></div></div><hr><h3>備考欄</h3>
+        <div class="form-row vertical" style="">
+            <label class="form-label">備考</label>
+            <textarea class="form-input" rows="5" data-json-path="notes" placeholder="特記事項があれば記載" style=""></textarea>
+            
+        </div><hr><h3>追加的記載項目</h3>
+        <div class="form-row vertical" style="">
+            <label class="form-label">就労の状況（単身赴任）</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="additional.tanshin" value="有" > 有
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="additional.tanshin" value="無" > 無
+            </label>
+        <div class="form-row">
+            <label class="form-label">期間（開始）</label>
+            <input type="date" class="form-input" data-json-path="additional.tanshin_start" style="">
+        </div>
+        <div class="form-row">
+            <label class="form-label">期間（終了）</label>
+            <input type="date" class="form-input" data-json-path="additional.tanshin_end" style="">
+        </div>
+        <div class="form-row vertical" style="">
+            <label class="form-label">雇用保険加入状況</label>
+            <div class="radio-group" style="padding-left: 10px;">
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="additional.employment_insurance" value="加入" > 加入
+            </label>
+            <label style="display:block; margin-bottom:5px;">
+                <input type="radio" name="additional.employment_insurance" value="非加入" > 非加入
+            </label></div></div>
+        <div class="form-row">
+            <label class="form-label">変更後の就労日数（週）</label>
+            <input type="number" class="form-input" data-json-path="additional.changed_work_days" placeholder="週あたり日数" style="">
+            
+        </div><hr><h3>保護者記入欄</h3>
+        <div class="form-row" style="">
+            <label class="form-label">児童氏名</label>
+            <input type="text" class="form-input" data-json-path="child.name" value="" placeholder="" style="">
+            
+        </div>
+        <div class="form-row">
+            <label class="form-label">生年月日</label>
+            <input type="date" class="form-input" data-json-path="child.birth_date" style="">
+        </div>
+        <div class="form-row" style="">
+            <label class="form-label">住所</label>
+            <input type="text" class="form-input" data-json-path="child.address" value="" placeholder="世田谷区○丁目○番○号" style="">
+            
+        </div><hr><div class="form-row vertical"><div class="table-wrapper"><table class="data-table master" data-master-key="industry"><tbody><tr ><td>業種</td></tr><tr ><td>農業・林業</td></tr><tr ><td>漁業</td></tr><tr ><td>鉱業・採石業・砂利採取業</td></tr><tr ><td>建設業</td></tr><tr ><td>製造業</td></tr><tr ><td>電気・ガス・熱供給・水道業</td></tr><tr ><td>情報通信業</td></tr><tr ><td>運輸業・郵便業</td></tr><tr ><td>卸売業・小売業</td></tr><tr ><td>金融業・保険業</td></tr><tr ><td>不動産業・物品賃貸業</td></tr><tr ><td>学術研究・専門・技術サービス業</td></tr><tr ><td>宿泊業・飲食サービス業</td></tr><tr ><td>生活関連サービス業・娯楽業</td></tr><tr ><td>医療・福祉</td></tr><tr ><td>教育・学習支援業</td></tr><tr ><td>複合サービス事業</td></tr><tr ><td>公務</td></tr><tr ><td>その他</td></tr></tbody></table></div></div><div class="form-row vertical"><div class="table-wrapper"><table class="data-table master" data-master-key="employment_type"><tbody><tr ><td>雇用形態</td></tr><tr ><td>正社員</td></tr><tr ><td>パート・アルバイト</td></tr><tr ><td>派遣社員</td></tr><tr ><td>契約社員</td></tr><tr ><td>会計年度任用職員</td></tr><tr ><td>非常勤・臨時職員</td></tr><tr ><td>役員</td></tr><tr ><td>自営業主</td></tr><tr ><td>自営業専従者</td></tr><tr ><td>家族従業者</td></tr><tr ><td>内職</td></tr><tr ><td>業務委託</td></tr><tr ><td>その他</td></tr></tbody></table></div></div><div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            
+            <div style="flex:1"></div>
+            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
+    
+        </div>
+            
+
+            <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記入内容（データ）の確認" data-i18n-en="Review Form Data">記入内容（データ）の確認</span>
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                        </div>
+                    </details>
+                    
+        <details style="margin-top: 0.5rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAFormTemplate"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2025-12-30T06:33:57.684Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/weba/workcert",
+    "name": "就労証明書（世田谷区版）",
+    "contentDigest": "667eac110cd45e8b72c936044aaf2b25be39160caef934f6bfe940aebe90bec5"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767076426997-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T06:33:57.684Z",
+      "proofValue": "z2trDvi15ntRsftAGDj5VUY2Gc9NJGeANoDrzjNr4dGU8iaPbXjqiVenSpNxNzK2krmGXwUQFTtaMMUFjHcnZn1Ek"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767076426997-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T06:33:57.684Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+            </div>
+        </details>
+    
+                </div>
+            </footer>
+        </div>
+        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[{"key":"certificate.date","label":"証明日","type":"date"},{"key":"employer.name","label":"事業所名","type":"text"},{"key":"employer.representative","label":"代表者名","type":"text"},{"key":"employer.address","label":"所在地","type":"text"},{"key":"employer.phone","label":"電話番号","type":"text"},{"key":"employer.contact_name","label":"担当者名","type":"text"},{"key":"employer.contact_phone","label":"記載者連絡先","type":"text"},{"key":"employee.kana","label":"フリガナ","type":"text"},{"key":"employee.name","label":"本人氏名","type":"text"},{"key":"employee.birth_date","label":"生年月日","type":"date"},{"key":"employment.term","label":"雇用（予定）期間","type":"radio"},{"key":"employment.start_date","label":"雇用開始日","type":"date"},{"key":"employment.end_date","label":"雇用終了日（有期の場合）","type":"date"},{"key":"workplace.name","label":"名称","type":"text"},{"key":"workplace.address","label":"住所","type":"text"},{"key":"employment.industry","label":"業種","type":"datalist"},{"key":"employment.type","label":"雇用の形態","type":"datalist"},{"key":"variable.total_hours","label":"合計時間（時間/月）","type":"number"},{"key":"variable.unit","label":"単位","type":"radio"},{"key":"variable.work_days","label":"就労日数（日）","type":"number"},{"key":"variable.shift_time","label":"主な就労時間帯・シフト時間帯","type":"text"},{"key":"variable.break_minutes","label":"休憩時間（分）","type":"number"},{"key":"leave.maternity","label":"産前・産後休業","type":"radio"},{"key":"leave.maternity_start","label":"産前・産後開始日","type":"date"},{"key":"leave.maternity_end","label":"産前・産後終了日","type":"date"},{"key":"leave.childcare","label":"育児休業","type":"radio"},{"key":"leave.childcare_start","label":"育児休業開始日","type":"date"},{"key":"leave.childcare_end","label":"育児休業終了日","type":"date"},{"key":"leave.other","label":"産休・育休以外の休業","type":"radio"},{"key":"leave.other_reason","label":"理由","type":"radio"},{"key":"leave.other_reason_detail","label":"理由（その他）","type":"text"},{"key":"leave.other_start","label":"休業開始日","type":"date"},{"key":"leave.other_end","label":"休業終了日","type":"date"},{"key":"return.to_work","label":"復職","type":"radio"},{"key":"return.date","label":"復職（予定）年月日","type":"date"},{"key":"shorttime.use","label":"育児のための短時間勤務制度","type":"radio"},{"key":"shorttime.start","label":"期間（開始）","type":"date"},{"key":"shorttime.end","label":"期間（終了）","type":"date"},{"key":"shorttime.shift","label":"主な就労時間帯・シフト時間帯","type":"text"},{"key":"employment.nursery","label":"保育士等としての勤務実態","type":"radio"},{"key":"notes","label":"備考","type":"textarea"},{"key":"additional.tanshin","label":"就労の状況（単身赴任）","type":"radio"},{"key":"additional.tanshin_start","label":"期間（開始）","type":"date"},{"key":"additional.tanshin_end","label":"期間（終了）","type":"date"},{"key":"additional.employment_insurance","label":"雇用保険加入状況","type":"radio"},{"key":"additional.changed_work_days","label":"変更後の就労日数（週）","type":"number"},{"key":"child.name","label":"児童氏名","type":"text"},{"key":"child.birth_date","label":"生年月日","type":"date"},{"key":"child.address","label":"住所","type":"text"}],"tables":{"work_records":[{"key":"ym","label":"2025-01","type":"text"},{"key":"days","label":"days","type":"number"},{"key":"hours","label":"hours","type":"number"}]},"masterData":{"industry":[["業種"],["農業・林業"],["漁業"],["鉱業・採石業・砂利採取業"],["建設業"],["製造業"],["電気・ガス・熱供給・水道業"],["情報通信業"],["運輸業・郵便業"],["卸売業・小売業"],["金融業・保険業"],["不動産業・物品賃貸業"],["学術研究・専門・技術サービス業"],["宿泊業・飲食サービス業"],["生活関連サービス業・娯楽業"],["医療・福祉"],["教育・学習支援業"],["複合サービス事業"],["公務"],["その他"]],"employment_type":[["雇用形態"],["正社員"],["パート・アルバイト"],["派遣社員"],["契約社員"],["会計年度任用職員"],["非常勤・臨時職員"],["役員"],["自営業主"],["自営業専従者"],["家族従業者"],["内職"],["業務委託"],["その他"]]}}</script>
+        
+        
+        <script src="./assets/form-bundle.js"></script>
+    
+    </main>
+</body>
+</html>
