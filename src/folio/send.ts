@@ -113,22 +113,38 @@ export async function sendMessage(options: SendOptions) {
             // OR support posting to the REST endpoint.
             // For now, let's default to localhost if not specified, or parse from endpoint if possible.
             if (inboxService.serviceEndpoint.includes("localhost") || inboxService.serviceEndpoint.includes("127.0.0.1")) {
-                endpoint = "http://127.0.0.1:5001/demo-weba/us-central1/api";
+                endpoint = "http://127.0.0.1:5002/api";
             }
         }
     }
 
     if (!endpoint) {
         // Fallback default
-        endpoint = "http://127.0.0.1:5001/demo-weba/us-central1/api";
+        endpoint = "http://127.0.0.1:5002/api";
         console.warn(`No endpoint found in DID, defaulting to ${endpoint}`);
     }
 
     console.log(`Sending to ${endpoint}...`);
 
     const mutation = `
-        mutation PostMessage($did: ID!, $nonce: String!, $signature: String!, $message: String!) {
-            postMessage(did: $did, nonce: $nonce, signature: $signature, message: $message) {
+        mutation PostMessage(
+            $did: ID!, 
+            $nonce: String!, 
+            $signature: String!, 
+            $senderDid: String!, 
+            $recipientDid: String!, 
+            $hostDid: String!, 
+            $envelope: String!
+        ) {
+            postMessage(
+                did: $did, 
+                nonce: $nonce, 
+                signature: $signature, 
+                senderDid: $senderDid, 
+                recipientDid: $recipientDid, 
+                hostDid: $hostDid, 
+                envelope: $envelope
+            ) {
                 id
             }
         }
@@ -169,12 +185,26 @@ export async function sendMessage(options: SendOptions) {
                 did: options.senderDid,
                 nonce: nonce,
                 signature: authSig,
-                message: messageStr
+                senderDid: options.senderDid,
+                recipientDid: options.did,
+                hostDid: options.did,
+                envelope: messageStr
             }
         })
     });
 
-    const postResult = await postResp.json();
+    // DEBUG LOGGING
+    console.log(`Response Status: ${postResp.status}`);
+    const respText = await postResp.text();
+    // console.log(`Response Body: ${respText.substring(0, 200)}`);
+
+    let postResult;
+    try {
+        postResult = JSON.parse(respText);
+    } catch (e) {
+        throw new Error(`Invalid JSON response (${postResp.status}): ${respText.substring(0, 100)}...`);
+    }
+
     if (postResult.errors) throw new Error(postResult.errors[0].message);
 
     console.log(`Message sent! ID: ${postResult.data.postMessage.id}`);

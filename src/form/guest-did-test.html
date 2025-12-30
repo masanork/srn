@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest DID Test (Improved UX)</title>
+    <script src="https://bundle.run/buffer@6.0.3"></script>
+    <script>
+        window.Buffer = window.buffer.Buffer;
+        window.process = window.process || { version: '', env: {} };
+        window.global = window;
+    </script>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -181,8 +187,8 @@
         </div>
     </div>
 
-    <script src="guest-did.js"></script>
-    <script>
+    <script type="module" src="guest-did.bundle.js"></script>
+    <script type="module">
         let submissionCount = 0;
 
         // Initialize DID selector
@@ -320,6 +326,11 @@
                 resultDiv.innerHTML = '<strong>✓ All Guest DIDs cleared</strong><br>Next submission will create a new one.';
             }
         }
+
+        // Expose functions to global scope for HTML event handlers
+        window.checkInbox = checkInbox;
+        window.checkExisting = checkExisting;
+        window.clearAll = clearAll;
     </script>
 </body>
 

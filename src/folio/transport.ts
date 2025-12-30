@@ -70,7 +70,7 @@ function didToUrl(did: string): string {
 
     // Testing override for srn.example -> Local Emulator
     if (domain === "srn.example") {
-        baseUrl = "http://127.0.0.1:5001/demo-weba/us-central1/didDocument";
+        baseUrl = "http://localhost:5002";
     }
 
     if (pathParts.length === 0) {
