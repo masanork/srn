@@ -182,24 +182,24 @@ weba-folio verify ./MyFolio ./out/presentation.html
 - **Cloud Vendor Lock-In**: Prevented by keeping files portable and readable.
 - **Metadata Leakage**: Mitigated by minimizing index metadata and allowing cache purge.
 
-### 6.2. Messaging and Transport (Production Beta)
-Folio workflows include **submission and reception** of Web/A documents. The
-messaging layer is **transport-agnostic**, with a reference implementation
-using GraphQL and Firebase Functions.
+### 6.2. Messaging and Transport (Ephemeral Data Hub Model)
+Folio messaging is designed around the **"Ephemeral Data Hub"** principle. The 
+Remote Folio (server) is not a permanent archive, but a transient buffer for 
+Verifiable Credentials and Layer 2 encrypted envelopes.
 
-Key features implemented:
-- **VC-based Authorization**: Instead of static database whitelists, the server
-  validates an "Access Pass" VC signed by a trusted administrator. This allows
-  instant, decentralized onboarding.
-- **Capability Delegation**: Users can delegate their "posting rights" to other
-  DIDs (e.g., an AI Agent or a delegate) by issuing a Delegation VC. The server
-  verifies the entire chain (Admin -> User -> Agent) before accepting a payload.
-- **Hybrid PQC signatures**: All VCs and transport signatures support 
-  **ML-DSA-44** alongside Ed25519 to ensure long-term integrity against quantum
-  adversaries.
-- **Portability**: Messages are stored as L2-encrypted envelopes, and authorization
-  is proven via standard Verifiable Credentials, ensuring the Folio can be 
-  migrated between different hosting providers without losing history or authority.
+Key principles for Phase 4 (Production):
+- **User-Centric Master**: The "Master Data" resides in the user's local Folio 
+  (or personal cloud like iCloud/Box). The Remote Folio is just a transit point.
+- **Transient Buffer**: The server provides a "Best Effort" transit area. 
+  Messages and VCs are subject to **strict TTL (Time-to-Live) policies** 
+  (e.g., automatic deletion after 30 days).
+- **Incentive for Sync**: By acknowledging that the server *will* eventually 
+  delete data, users are encouraged to synchronize to their own storage promptly.
+  This model ensures the server remains scalable and minimizes the impact of 
+  potential data breaches.
+- **Robustness over Synchronicity**: Unlike strict POP3 deletion, the hub 
+  allows for multiple sync attempts within the retention window, making it
+  more robust against temporary network or client failures.
 
 ## 7. Identity Assurance: Holder Binding via National ID
 
