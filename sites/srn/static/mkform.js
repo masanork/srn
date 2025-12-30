@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2025-12-30T07:34:39Z';
+window.__WEBA_BUILD_TIME__='2025-12-30T07:41:41Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -5394,7 +5394,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const formVal = editorForm.value.trim();
   const isDefaultEn = formVal === DEFAULT_MARKDOWN_EN.trim();
   const isDefaultJa = formVal === DEFAULT_MARKDOWN_JA.trim();
-  if (!formVal || lang === "ja" && isDefaultEn || lang === "en" && isDefaultJa) {
+  if (!formVal || formVal.length === 0) {
+    console.log("Editor is empty. Loading default sample.");
+    editorForm.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
+  } else if (lang === "ja" && isDefaultEn || lang === "en" && isDefaultJa) {
+    console.log("Switching default sample language match.");
     editorForm.value = lang === "ja" ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
   }
   const encBtn = document.createElement("button");
