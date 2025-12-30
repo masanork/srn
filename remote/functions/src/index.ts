@@ -137,6 +137,18 @@ const typeDefs = `
   type Mutation {
     createGuestDid(credentialId: String!, attestationObject: String!, clientDataJSON: String!, encryptionPublicKeyJwk: String!): GuestDid! 
     addUser(did: ID!, nonce: String!, signature: String!, newDid: String!, role: String): Boolean!
+    guestPostMessage(
+      did: ID!
+      credentialId: String!
+      signature: String!
+      authenticatorData: String!
+      clientDataJSON: String!
+      recipientDid: String!
+      envelope: String!
+      threadId: ID
+      inReplyTo: ID
+      action: String
+    ): Message!
     postMessage(
       did: ID!
       nonce: String!
@@ -429,6 +441,37 @@ const resolvers = {
 
             return { did, expiresAt };
         },
+        guestPostMessage: async (_: any, args: any) => {
+            const { did, credentialId, signature, authenticatorData, clientDataJSON, recipientDid, envelope, threadId, inReplyTo, action } = args;
+
+            // 1. Verify Passkey Auth
+            await verifyPasskey(did, credentialId, signature, authenticatorData, clientDataJSON);
+
+            // 2. Validate Origin/Host (Implicit host is Recipient or Sender, usually Recipient for Guest)
+            // Guest -> Host (Inbox)
+            const senderDid = did;
+            const hostDid = recipientDid; // Guest posts to Host's Inbox
+
+            const db = admin.firestore();
+            const messageId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            const createdAt = new Date().toISOString();
+
+            const message: any = {
+                senderDid,
+                recipientDid,
+                hostDid,
+                envelope,
+                threadId: threadId || messageId,
+                createdAt
+            };
+
+            if (action) message.action = action;
+            if (inReplyTo) message.inReplyTo = inReplyTo;
+
+            await db.collection("inbox").doc(messageId).set(message);
+
+            return { id: messageId, ...message };
+        },
         postMessage: async (_: any, args: any) => {
             const { did, nonce, signature, senderDid, recipientDid, hostDid, envelope, threadId, inReplyTo, action } = args;
 
@@ -436,13 +479,13 @@ const resolvers = {
 
             // Access Control: Strict Mode
             // 1. Check if DID is allowed (if we are restricting usage)
-            // const isGuest = did.includes(":guest:");
-            // if (!isGuest) {
-            //      const userDoc = await admin.firestore().collection("allowed-users").doc(did).get();
-            //      if (!userDoc.exists && !CONFIG.ADMIN_DIDS.includes(did)) {
-            //          throw new Error("Access Denied: DID not registered.");
-            //      }
-            // }
+            const isGuest = did.includes(":guest:");
+            if (!isGuest) {
+                const userDoc = await admin.firestore().collection("allowed-users").doc(did).get();
+                if (!userDoc.exists && !CONFIG.ADMIN_DIDS.includes(did)) {
+                    throw new Error("Access Denied: DID not registered.");
+                }
+            }
 
             // Relaxed Validation for Public Inbox usage
             if (did !== senderDid && did !== recipientDid) {
@@ -501,7 +544,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 // Async initialization wrapper for Firebase
 let apolloHandler: any;
 
-export const api = functions.https.onRequest(async (req, res) => {
+export const api = functions.region('asia-northeast1').https.onRequest(async (req, res) => {
     // Ensure WASM is initialized
     if (!wasmReady) {
         try {
@@ -525,7 +568,8 @@ export const api = functions.https.onRequest(async (req, res) => {
  * Serve DID Documents for Guest DIDs
  * URL: /.well-known/did/guest/<id>/did.json
  */
-export const didDocument = functions.https.onRequest(async (req, res) => {
+export const didDocument = functions.region('asia-northeast1').https.onRequest(async (req, res) => {
+    // ... (rest of function remains unchanged)
     // Enable CORS
     res.set("Access-Control-Allow-Origin", "*");
     res.set("Access-Control-Allow-Methods", "GET");
@@ -613,7 +657,8 @@ export const didDocument = functions.https.onRequest(async (req, res) => {
     }
 });
 
-export const cleanupGuestDids = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+export const cleanupGuestDids = functions.region('asia-northeast1').pubsub.schedule('every 24 hours').onRun(async (context) => {
+    // ... (rest of function remains unchanged)
     const db = admin.firestore();
     const now = new Date();
     const snapshot = await db.collection('guest-dids').where('expiresAt', '<', now.toISOString()).get();
@@ -630,4 +675,68 @@ export const cleanupGuestDids = functions.pubsub.schedule('every 24 hours').onRu
 
     await batch.commit();
     console.log(`Deleted ${snapshot.size} expired Guest DIDs`);
+});
+
+/**
+ * Web/A Pre-key Vending Machine (PFS Support)
+ * Provides Tier 3 True PFS by serving one-time use public keys.
+ */
+export const getPreKey = functions.region('asia-northeast1').https.onRequest(async (req, res) => {
+    // ... (rest of function remains unchanged)
+    // Enable CORS
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") {
+        res.status(204).send("");
+        return;
+    }
+
+    const db = admin.firestore();
+
+    try {
+        const result = await db.runTransaction(async (transaction) => {
+            // 1. Find the oldest available pre-key
+            const prekeysRef = db.collection("prekeys");
+            const q = prekeysRef.where("status", "==", "available").orderBy("created_at", "asc").limit(1);
+            const snapshot = await transaction.get(q);
+
+            if (snapshot.empty) {
+                return null;
+            }
+
+            const doc = snapshot.docs[0];
+            const data = doc.data();
+
+            // 2. Mark as consumed atomically
+            transaction.update(doc.ref, {
+                status: "consumed",
+                consumed_at: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            return {
+                kid: doc.id,
+                recipient_x25519: data.pub_key,
+                recipient_pqc: data.pqc_pub_key
+            };
+        });
+
+        if (!result) {
+            res.status(503).json({ error: "No pre-keys available in vault" });
+            return;
+        }
+
+        res.status(200).json(result);
+    } catch (e: any) {
+        console.error("PFS Error:", e);
+
+        // Fallback if index is not ready yet
+        if (e.code === 9 && e.details && e.details.includes("index")) {
+            res.status(503).json({ error: "Index building, try again later" });
+            return;
+        }
+
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
