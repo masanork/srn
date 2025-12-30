@@ -6,60 +6,43 @@ import express from "express";
 import cors from "cors";
 import { json } from "body-parser";
 import { initWasm, ed25519Verify } from "./wasm_util";
-// // import { decode } from "cbor-x";
+import { decode } from "cbor-x";
+import { verifyRegistrationResponse, verifyAuthenticationResponse } from '@simplewebauthn/server';
+
+const RP_ID = "localhost"; // TODO: "srn.example" for production
+// Allow both localhost/127.0.0.1 and ports 5001/5002
+const EXPECTED_ORIGINS = [
+    "http://localhost:5002", "http://127.0.0.1:5002",
+    "http://localhost:5001", "http://127.0.0.1:5001",
+    "http://localhost:8081", "http://127.0.0.1:8081",
+    "http://localhost:8081/", "http://127.0.0.1:8081/"
+];
 
 admin.initializeApp();
 
 // Helper to extract Public Key from Attestation Object
-function parsePasskeyPublicKey(attestationObjectBase64: string): any {
-    return { kty: 'EC', crv: 'P-256', x: 'DUMMY', y: 'DUMMY' }; /*
-    const attestationObject = Buffer.from(attestationObjectBase64, 'base64');
-    const decoded = decode(attestationObject);
-    const authData = decoded.authData; // Buffer
+// Helper to convert COSE Key to JWK
+function coseToJwk(cose: Buffer): any {
+    const struct = decode(cose);
+    let x, y;
+    // Handle Map (standard) or Object (config dependent)
+    if (struct instanceof Map) {
+        x = struct.get(-2);
+        y = struct.get(-3);
+    } else {
+        x = (struct as any)[-2];
+        y = (struct as any)[-3];
+    }
 
-    // AuthData Structure:
-    // 32 (RP ID Hash) + 1 (Flags) + 4 (Counter) = 37 bytes
-    // Attested Credential Data starts at 37
-    // AAGUID (16) + CredIdLen (2) + CredId (L) + CoedPubKey (Variable)
-
-    const credentialIdLength = authData.readUInt16BE(37 + 16);
-    const publicKeyBytes = authData.subarray(37 + 16 + 2 + credentialIdLength);
-
-    // Decode COSE Key using cbor-x
-    // Note: cbor-x returns Map for CBOR Maps by default if configure so?
-    // Let's assume defaults behavior aligns with standard or verify.
-    // If it returns object, keys are strings "1", "-1" etc? 
-    // Usually cbor-x returns Object with number keys converted to strings, or Map.
-    // Let's use robust checking.
-
-    // For safety with strictly structured data like this, 
-    // decoding the remaining buffer *should* imply it's the COSE key map.
-
-    const coseKey = decode(publicKeyBytes);
-
-    // Convert COSE to JWK (Assuming ES256 / P-256)
-    // COSE Labels: 1 (kty), 3 (alg), -1 (crv), -2 (x), -3 (y)
-
-    // Handle both Map and Object
-    const get = (key: number) => {
-        if (coseKey instanceof Map) return coseKey.get(key);
-        // @ts-ignore
-        return coseKey[key];
-    };
-
-    const kty = get(1);
-    const alg = get(3);
-    const crv = get(-1);
-    const x = get(-2);
-    const y = get(-3);
+    if (!x || !y) throw new Error("Invalid COSE P-256 key");
 
     return {
-        kty: "EC",
-        crv: "P-256",
+        kty: "EC", crv: "P-256",
         x: Buffer.from(x).toString('base64url'),
         y: Buffer.from(y).toString('base64url')
-    }; */
+    };
 }
+
 
 // Initialize WASM at startup
 let wasmReady = false;
@@ -163,52 +146,139 @@ import * as crypto from "crypto";
 
 // Helper to verify Passkey signature
 async function verifyPasskey(did: string, credentialId: string, signature: string, authenticatorData: string, clientDataJSON: string) {
-    return true; // TEMPORARY BYPASS due to dummy key
+    if (!did) throw new Error("Missing DID");
+    if (!credentialId) throw new Error("Missing Credential ID");
+
+    console.log(`[verifyPasskey] start:`, { did, credentialId });
+
     const db = admin.firestore();
     const guestId = did.split(":").pop();
-    if (!guestId) throw new Error("Invalid DID");
+    if (!guestId) throw new Error("Invalid DID format: missing guest ID part");
 
     const doc = await db.collection("guest-dids").doc(guestId).get();
-    if (!doc.exists) throw new Error("Guest DID not found");
+    if (!doc.exists) throw new Error(`Guest DID ${did} not found in database (guestId: ${guestId})`);
 
     const data = doc.data();
-    if (data?.credentialId !== credentialId) throw new Error("Credential ID mismatch");
-    if (new Date(data?.expiresAt) < new Date()) throw new Error("Guest DID expired");
+    if (!data) throw new Error(`Guest DID ${did} exists but has no data`);
 
-    const jwk = JSON.parse(data?.publicKeyJwk);
-
-    const clientData = Buffer.from(clientDataJSON, 'base64');
-    // const clientDataObj = JSON.parse(clientData.toString());
-    // TODO: Verify challenge from clientDataObj
-
-    const authData = Buffer.from(authenticatorData, 'base64');
-    const clientDataHash = crypto.createHash('sha256').update(clientData).digest();
-    const signatureBase = Buffer.concat([authData, clientDataHash]);
-
-    const publicKey = crypto.createPublicKey({
-        key: jwk,
-        format: 'jwk'
+    console.log(`[verifyPasskey] DB data:`, {
+        hasId: !!data.credentialId,
+        hasKey: !!data.credentialPublicKey,
+        counter: data.counter,
+        dbId: data.credentialId
     });
 
-    const isValid = crypto.verify(
-        'sha256',
-        signatureBase,
-        publicKey,
-        Buffer.from(signature, 'base64')
-    );
+    if (data.credentialId !== credentialId) {
+        throw new Error(`Credential ID mismatch. DB: ${data.credentialId}, Got: ${credentialId}`);
+    }
 
-    if (!isValid) throw new Error("Invalid Passkey signature");
+    // Extract challenge from clientDataJSON
+    const clientDataStr = Buffer.from(clientDataJSON, 'base64').toString('utf-8');
+    const clientData = JSON.parse(clientDataStr);
+    let challenge = clientData.challenge;
+
+    // Handle double-encoding (Base64 string of the challenge string)
+    if (challenge.length > 50) {
+        try {
+            const decoded = Buffer.from(challenge, 'base64').toString('utf-8');
+            if (/^[A-Za-z0-9\-_]+$/.test(decoded)) {
+                challenge = decoded;
+            }
+        } catch (e) { }
+    }
+
+    // Normalize to Base64URL
+    challenge = challenge.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    // Verify challenge existence
+    const challengeDoc = await db.collection("challenges").doc(challenge).get();
+    if (!challengeDoc.exists) {
+        // Debug: List existing challenges for this DID
+        const snapshot = await db.collection("challenges").where("did", "==", did).get();
+        const existing = snapshot.docs.map(d => d.id).join(' | ');
+        throw new Error(`Challenge mismatch. Received: [${challenge}]. Existing in DB: [${existing}]`);
+    }
+
+    const toB64Url = (s: string) => (s || '').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    let verification;
+    try {
+        const authOptions: any = {
+            response: {
+                id: credentialId,
+                rawId: credentialId,
+                type: 'public-key',
+                response: {
+                    clientDataJSON: toB64Url(clientDataJSON),
+                    authenticatorData: toB64Url(authenticatorData),
+                    signature: toB64Url(signature),
+                    userHandle: null
+                },
+                clientExtensionResults: {}
+            },
+            expectedChallenge: challenge,
+            expectedOrigin: EXPECTED_ORIGINS,
+            expectedRPID: RP_ID,
+            credential: {
+                id: data.credentialId,
+                publicKey: data.credentialPublicKey ? new Uint8Array(Buffer.from(data.credentialPublicKey, 'base64')) : new Uint8Array(),
+                counter: (typeof data.counter === 'number') ? data.counter : 0,
+                transports: data.transports || []
+            },
+            requireUserVerification: false,
+        };
+
+        console.log(`[verifyPasskey] calling verifyAuthenticationResponse with options:`, JSON.stringify({
+            ...authOptions,
+            response: { ...authOptions.response, response: { ...authOptions.response.response, authenticatorData: '...', signature: '...' } },
+            credential: { ...authOptions.credential, publicKey: '...' }
+        }));
+
+        verification = await verifyAuthenticationResponse(authOptions);
+    } catch (e: any) {
+        console.error("[verifyPasskey] verifyAuthenticationResponse threw error:", e);
+        // Special check for the "reading 'counter'" error to see if we can locate it
+        if (e.message && e.message.includes('counter')) {
+            console.error("[verifyPasskey] CRITICAL: The 'counter' error occurred. Options state:", {
+                hasAuthenticator: !!(data && data.counter !== undefined),
+                counterValue: data.counter,
+                counterType: typeof data.counter
+            });
+        }
+        throw new Error(`Auth internal error: ${e.message}`);
+    }
+
+    console.log(`[verifyPasskey] verification:`, JSON.stringify(verification));
+
+    if (!verification.verified) {
+        console.error("Passkey verification failed:", verification);
+        throw new Error("Passkey verification failed");
+    }
+
+    if (verification && verification.authenticationInfo) {
+        const newCounter = (verification.authenticationInfo as any).newCounter;
+        if (newCounter !== undefined) {
+            await db.collection("guest-dids").doc(guestId).update({
+                counter: newCounter
+            });
+        }
+    }
+
+    // Consume challenge
+    await db.collection("challenges").doc(challenge).delete();
+
     return true;
 }
+
 
 const resolvers = {
     Query: {
         hello: () => "Web/A Folio Remote Active",
         getChallenge: async (_: any, { did }: { did: string }) => {
-            const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+            const challenge = crypto.randomBytes(32).toString('base64url');
             const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-            await admin.firestore().collection("challenges").doc(nonce).set({ did, expiresAt });
-            return { nonce, expiresAt };
+            await admin.firestore().collection("challenges").doc(challenge).set({ did, expiresAt });
+            return { nonce: challenge, expiresAt };
         },
         inbox: async (_: any, { did, nonce, signature }: any) => {
             await verifyAuth(did, nonce, signature);
@@ -251,17 +321,56 @@ const resolvers = {
         }
     },
     Mutation: {
-        createGuestDid: async (_: any, { credentialId, attestationObject, encryptionPublicKeyJwk }: any) => {
+        createGuestDid: async (_: any, { credentialId, attestationObject, clientDataJSON, encryptionPublicKeyJwk }: any) => {
             const db = admin.firestore();
 
-            // Parse Public Key
-            let publicKeyJwk;
-            try {
-                publicKeyJwk = parsePasskeyPublicKey(attestationObject);
-            } catch (e: any) {
-                console.error("Failed to parse attestation:", e);
-                throw new Error(`Invalid attestation: ${e.message}`);
+            // Decode clientDataJSON to extract challenge
+            const clientDataStr = Buffer.from(clientDataJSON, 'base64').toString('utf-8');
+            const clientData = JSON.parse(clientDataStr);
+            const expectedChallenge = clientData.challenge;
+
+            // Helper for Base64 -> Base64URL
+            const toB64Url = (s: string) => s.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+            // Verify using SimpleWebAuthn
+            const verification = await verifyRegistrationResponse({
+                response: {
+                    id: credentialId,
+                    rawId: credentialId,
+                    type: 'public-key',
+                    response: {
+                        attestationObject: toB64Url(attestationObject),
+                        clientDataJSON: toB64Url(clientDataJSON)
+                    }
+                } as any,
+                expectedChallenge: clientData.challenge,
+                expectedOrigin: EXPECTED_ORIGINS,
+                expectedRPID: RP_ID,
+                requireUserVerification: false,
+            } as any);
+
+            if (!verification.verified || !verification.registrationInfo) {
+                console.error("Passkey verification failed", verification);
+                throw new Error("Passkey verification failed");
             }
+
+            const info: any = verification ? verification.registrationInfo : null;
+            if (!info || !info.credential) {
+                console.error("[createGuestDid] registrationInfo.credential is missing", JSON.stringify(verification));
+                throw new Error("Registration info missing from verification response");
+            }
+
+            console.log(`[createGuestDid] registrationInfo credential keys:`, Object.keys(info.credential));
+
+            const credentialPublicKey = info.credential.publicKey;
+            const counter = (typeof info.credential.counter === 'number') ? info.credential.counter : 0;
+
+            if (!credentialPublicKey) {
+                throw new Error("Credential public key not found in verification response");
+            }
+
+            // Extract Public Key as JWK
+            const publicKeyJwk = coseToJwk(Buffer.from(credentialPublicKey));
 
             const guestId = Math.random().toString(36).substring(2, 10);
             const did = `did:web:srn.example:guest:${guestId}`;
@@ -271,9 +380,11 @@ const resolvers = {
                 did,
                 credentialId,
                 publicKeyJwk: JSON.stringify(publicKeyJwk),
+                credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64'),
                 encryptionPublicKeyJwk,
                 createdAt: new Date().toISOString(),
-                expiresAt
+                expiresAt,
+                counter
             });
 
             return { did, expiresAt };

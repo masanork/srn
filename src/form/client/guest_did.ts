@@ -208,7 +208,7 @@ export async function fetchGuestInbox(did: string): Promise<any[]> {
     if (challengeResult.errors) throw new Error(challengeResult.errors[0].message);
     const nonce = challengeResult.data.getChallenge.nonce;
 
-    const challengeBuffer = new TextEncoder().encode(nonce);
+    const challengeBuffer = base64UrlToArrayBuffer(nonce);
 
     const assertion = await navigator.credentials.get({
         publicKey: {
