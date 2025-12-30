@@ -324,7 +324,8 @@ export async function encryptLayer2(
   }
 ): Promise<Layer2Encrypted> {
   await initWasm();
-  const userSk = options?.userSk || (await generateUserKeyPair()).privateKey;
+  const userSk = options?.userSk; // Can be undefined (auto-gen) or Uint8Array (empty means alg:none)
+  const effectiveSk = userSk ?? (await generateUserKeyPair()).privateKey;
   const createdAt = options?.meta?.created_at || new Date().toISOString();
 
   const config = {
@@ -341,7 +342,7 @@ export async function encryptLayer2(
 
   const envelopeJson = wasmBuildL2(
     canonicalJson(payload.layer2_plain),
-    userSk,
+    effectiveSk,
     userKid,
     JSON.stringify(config),
     createdAt

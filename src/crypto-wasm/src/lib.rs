@@ -510,14 +510,22 @@ pub fn build_l2_envelope_wasm(
     
     let weba_version = config.weba_version.clone().unwrap_or_else(|| "0.1".to_string());
     
-    // 1. Sign (using the input string directly to preserve canonicalization)
-    let sig_bytes = ed25519_sign(user_sk, payload_json.as_bytes())?;
-    
-    let l2_sig = Layer2SignatureWasm {
-        alg: "Ed25519".to_string(),
-        kid: user_kid.to_string(),
-        sig: to_b64url(&sig_bytes),
-        created_at: created_at.to_string(),
+    // 1. Sign (or use 'none' if no secret key provided)
+    let l2_sig = if user_sk.is_empty() {
+        Layer2SignatureWasm {
+            alg: "none".to_string(),
+            kid: user_kid.to_string(),
+            sig: "".to_string(),
+            created_at: created_at.to_string(),
+        }
+    } else {
+        let sig_bytes = ed25519_sign(user_sk, payload_json.as_bytes())?;
+        Layer2SignatureWasm {
+            alg: "Ed25519".to_string(),
+            kid: user_kid.to_string(),
+            sig: to_b64url(&sig_bytes),
+            created_at: created_at.to_string(),
+        }
     };
 
     

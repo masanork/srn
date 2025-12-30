@@ -122,7 +122,9 @@ export async function sendGuestMessage(did: string, recipientDid: string, messag
         recipientKey,
         `ref:${Date.now()}`,
         recipientKid,
-        // No userSk provided -> encryptLayer2 generates ephemeral key
+        {
+            userSk: new Uint8Array(0), // Trigger alg: 'none' in WASM
+        }
     );
 
     // 2. Authenticate & Send (API)
