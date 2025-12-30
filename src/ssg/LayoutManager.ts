@@ -51,7 +51,9 @@ export class LayoutManager {
 
                 // Extra output: Report page
                 const reportHtml = formReportLayout(data, content, fontCss, safeFontFamilies, relPath);
-                await fs.writeFile(path.join(distDir, relPath.replace('.md', '.report.html')), reportHtml);
+                const reportPath = path.join(distDir, relPath.replace('.md', '.report.html'));
+                await fs.ensureDir(path.dirname(reportPath));
+                await fs.writeFile(reportPath, reportHtml);
                 break;
 
             case 'blog':
@@ -136,6 +138,22 @@ export class LayoutManager {
                     vc = instanceVc;
                     finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, templateVc, instanceVc, undefined, undefined, relPath);
                 }
+                break;
+
+            case 'redirect':
+                finalHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <link rel="canonical" href="${data.redirect_url}">
+    <meta http-equiv="refresh" content="0; url=${data.redirect_url}">
+</head>
+<body>
+    <p>Redirecting to <a href="${data.redirect_url}">${data.redirect_url}</a>...</p>
+    <script>window.location.href = "${data.redirect_url}";</script>
+</body>
+</html>`;
                 break;
 
             default:

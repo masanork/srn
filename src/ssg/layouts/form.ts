@@ -1,4 +1,5 @@
 import { baseLayout } from './base.js';
+import { getRelativePrefix } from '../utils.js';
 import { parseMarkdown } from '../../form/parser.js';
 
 export interface FormData {
@@ -32,19 +33,19 @@ export function formLayout(
     );
     const l2Config = hasL2Config
         ? {
-              enabled: true,
-              recipient_kid: data.l2_recipient_kid,
-              recipient_x25519: data.l2_recipient_x25519,
-              recipient_pqc: data.l2_recipient_pqc,
-              layer1_ref: layer1Ref,
-              weba_version: data.l2_weba_version || '0.1',
-              default_enabled: data.l2_encrypt_default ?? true,
-              user_kid: data.l2_user_kid || 'user#sig-1',
-              campaign_id: data.l2_campaign_id,
-              key_policy: data.l2_key_policy,
-              prekey_url: data.l2_prekey_url || config?.l2_defaults?.prekey_url,
-              epoch_registry_url: data.l2_epoch_registry_url || config?.l2_defaults?.epoch_registry_url,
-          }
+            enabled: true,
+            recipient_kid: data.l2_recipient_kid,
+            recipient_x25519: data.l2_recipient_x25519,
+            recipient_pqc: data.l2_recipient_pqc,
+            layer1_ref: layer1Ref,
+            weba_version: data.l2_weba_version || '0.1',
+            default_enabled: data.l2_encrypt_default ?? true,
+            user_kid: data.l2_user_kid || 'user#sig-1',
+            campaign_id: data.l2_campaign_id,
+            key_policy: data.l2_key_policy,
+            prekey_url: data.l2_prekey_url || config?.l2_defaults?.prekey_url,
+            epoch_registry_url: data.l2_epoch_registry_url || config?.l2_defaults?.epoch_registry_url,
+        }
         : null;
     const l2Keywrap = data.l2_keywrap ? data.l2_keywrap : null;
 
@@ -105,7 +106,7 @@ export function formLayout(
         ${structureScript}
         ${l2ConfigScript}
         ${l2KeywrapScript}
-        <script src="./assets/form-bundle.js"></script>
+        <script src="${getRelativePrefix(relPath)}assets/form-bundle.js"></script>
     `;
 
     return baseLayout({

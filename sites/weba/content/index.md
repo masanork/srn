@@ -1,9 +1,14 @@
 ---
 title: "Web/A Form: ローカルファーストな業務フォーム基盤"
-date: 2025-12-26
-description: "SaaS不要。HTMLファイル1つで完結する、最もシンプルなDX。"
+date: 2025-12-30
+description: "Web/A Form は Sorane (SRN) プロジェクトに統合されました。"
 layout: article
 ---
+
+<div style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 20px; text-align: center;">
+  <strong>お知らせ:</strong> Web/A プロジェクトは Sorane (SRN) に統合・集約されました。<br>
+  ブックマーク等は順次 <a href="/srn/" style="font-weight: bold;">Sorane 公式サイト</a> への変更をお願いいたします。
+</div>
 
 <div class="hero-section" style="background:linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 60px 20px; text-align: center; border-radius: 8px; margin-bottom: 40px;">
   <h1 style="margin-bottom: 20px; font-size: 2.5em;">Web/A Form</h1>
@@ -12,8 +17,8 @@ layout: article
     Markdownで定義し、配布・入力・集計までをローカルファーストで実現します。
   </p>
   <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-    <a href="./maker.html" class="button primary" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Maker を試す</a>
-    <a href="./papers/web-a-form.ja.html" class="button" style="background: white; color: #333; border: 1px solid #ccc; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Whitepaper を読む</a>
+    <a href="/srn/maker.html" class="button primary" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Maker を試す</a>
+    <a href="/srn/papers/web-a-form.ja.html" class="button" style="background: white; color: #333; border: 1px solid #ccc; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Whitepaper を読む</a>
   </div>
 </div>
 
@@ -35,7 +40,7 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>📄 Whitepaper</h3>
     <p>Web/A Form の詳細な仕様、利用シーン、既存の非効率なSaaS依存からの脱却シナリオについて解説します。</p>
-    <a href="./papers/web-a-form.ja.html">詳細を見る →</a>
+    <a href="/srn/papers/web-a-form.ja.html">詳細を見る →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
@@ -47,43 +52,43 @@ Web/A Form は、**「ファイル」**としてのアプリケーションで�
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🛠️ Web/A Maker</h3>
     <p>ブラウザ上で Markdown を記述し、リアルタイムにフォームをプレビュー・生成できるツールです。</p>
-    <a href="./maker.html">Maker を起動 →</a>
+    <a href="/srn/maker.html">Maker を起動 →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🎞️ Web/A Presentation</h3>
     <p>記事として読めて、そのまま全画面スライドになるプレゼン資料です。</p>
-    <a href="./web-a-presentation.ja.html">デモを見る →</a>
+    <a href="/srn/web-a-presentation.ja.html">デモを見る →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🏥 Demo: 医療費集計</h3>
     <p>医療費控除の明細書をイメージした、計算式と動的テーブルを含む実用的なフォーム例です。</p>
-    <a href="./iryouhi.html">デモを開く →</a>
+    <a href="/srn/examples/iryouhi.html">デモを開く →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>👩‍💻 Developer Guide</h3>
     <p>アーキテクチャ詳細、CLIツールの使い方、ソースコードの構成など、開発者向けの情報です。</p>
-    <a href="./guide.html">ガイドを読む →</a>
+    <a href="/srn/guide.html">ガイドを読む →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🤖 AI & Prompts</h3>
     <p>AI を使って既存の Excel 帳票を Web/A Form に変換したり、集まったデータを集計するためのプロンプト集です。</p>
-    <a href="./prompt.html">プロンプト集を見る →</a>
+    <a href="/srn/guide/prompts.html">プロンプト集を見る →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>💼 Web/A Folio</h3>
     <p>データと知能を分離する。個人の履歴と鍵を束ねる「デジタル・ポートフォリオ」構想。</p>
-    <a href="./folio.html">構想を読む →</a>
+    <a href="/srn/papers/web-a-folio.html">構想を読む →</a>
   </div>
 
   <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
     <h3>🔌 Agent Integration</h3>
     <p>Claude Desktop や Cursor から Web/A Folio を操作するための MCP 設定ガイド。</p>
-    <a href="./guide/mcp-setup.html">設定方法を見る →</a>
+    <a href="/srn/guide/mcp-setup.html">設定方法を見る →</a>
   </div>
 
 </div>

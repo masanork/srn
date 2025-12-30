@@ -36,3 +36,10 @@ export function stripLeadingTitleHeading(content: string, title: unknown): strin
     }
     return lines.join('\n');
 }
+
+export function getRelativePrefix(relPath: string | undefined): string {
+    if (!relPath) return '';
+    const normalized = relPath.replace(/\\/g, '/');
+    const depth = normalized.split('/').length - 1;
+    return depth > 0 ? '../'.repeat(depth) : '';
+}

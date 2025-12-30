@@ -6,8 +6,8 @@ This document tracks the high-level development status, architectural decisions,
 
 | Component | Status | Highlights |
 | :--- | :--- | :--- |
-| **SRN (SSG)** | Stable (v2) | Hybrid PQC signatures, Native IVS, C2PA prototype. |
-| **Web/A Form** | Production Ready | L2 Encryption, Passkey (Guest DID) Auth v13. |
+| **SRN (SSG)** | Stable (v2) | Hybrid PQC signatures, Native IVS, Web/A consolidation. |
+| **Web/A Form** | Migrated | Hosted within SRN site; legacy URLs redirected. |
 | **Folio (Client)** | Early Prototype | CLI for sync/send, MCP Server integration. |
 | **Infrastructure**| Beta | Firebase Functions/Hosting, simplewebauthn v13. |
 
