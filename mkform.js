@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2025-12-29T21:57:04Z';
+window.__WEBA_BUILD_TIME__='2025-12-30T00:23:37Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -4419,7 +4419,7 @@ class ReplayGuard {
   }
 }
 
-// node_modules/@noble/hashes/_u64.js
+// node_modules/@noble/hashes/esm/_u64.js
 var U32_MASK64 = /* @__PURE__ */ BigInt(2 ** 32 - 1);
 var _32n = /* @__PURE__ */ BigInt(32);
 function fromBig(n, le = false) {
@@ -4442,28 +4442,23 @@ var rotlSL = (h2, l, s) => l << s | h2 >>> 32 - s;
 var rotlBH = (h2, l, s) => l << s - 32 | h2 >>> 64 - s;
 var rotlBL = (h2, l, s) => h2 << s - 32 | l >>> 64 - s;
 
-// node_modules/@noble/hashes/utils.js
+// node_modules/@noble/hashes/esm/crypto.js
+var crypto2 = typeof globalThis === "object" && "crypto" in globalThis ? globalThis.crypto : undefined;
+
+// node_modules/@noble/hashes/esm/utils.js
 /*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) */
 function isBytes(a) {
   return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array";
 }
-function anumber(n, title = "") {
-  if (!Number.isSafeInteger(n) || n < 0) {
-    const prefix = title && `"${title}" `;
-    throw new Error(`${prefix}expected integer >= 0, got ${n}`);
-  }
+function anumber(n) {
+  if (!Number.isSafeInteger(n) || n < 0)
+    throw new Error("positive integer expected, got " + n);
 }
-function abytes(value, length, title = "") {
-  const bytes = isBytes(value);
-  const len = value?.length;
-  const needsLen = length !== undefined;
-  if (!bytes || needsLen && len !== length) {
-    const prefix = title && `"${title}" `;
-    const ofLen = needsLen ? ` of length ${length}` : "";
-    const got = bytes ? `length=${len}` : `type=${typeof value}`;
-    throw new Error(prefix + "expected Uint8Array" + ofLen + ", got " + got);
-  }
-  return value;
+function abytes(b, ...lengths) {
+  if (!isBytes(b))
+    throw new Error("Uint8Array expected");
+  if (lengths.length > 0 && !lengths.includes(b.length))
+    throw new Error("Uint8Array expected of length " + lengths + ", got length=" + b.length);
 }
 function aexists(instance, checkFinished = true) {
   if (instance.destroyed)
@@ -4472,10 +4467,10 @@ function aexists(instance, checkFinished = true) {
     throw new Error("Hash#digest() has already been called");
 }
 function aoutput(out, instance) {
-  abytes(out, undefined, "digestInto() output");
+  abytes(out);
   const min = instance.outputLen;
   if (out.length < min) {
-    throw new Error('"digestInto() output" expected to be of length >=' + min);
+    throw new Error("digestInto() expects output buffer of length at least " + min);
   }
 }
 function u32(arr) {
@@ -4497,26 +4492,46 @@ function byteSwap32(arr) {
   return arr;
 }
 var swap32IfBE = isLE ? (u2) => u2 : byteSwap32;
-function createHasher(hashCons, info = {}) {
-  const hashC = (msg, opts) => hashCons(opts).update(msg).digest();
-  const tmp = hashCons(undefined);
+function utf8ToBytes(str2) {
+  if (typeof str2 !== "string")
+    throw new Error("string expected");
+  return new Uint8Array(new TextEncoder().encode(str2));
+}
+function toBytes(data) {
+  if (typeof data === "string")
+    data = utf8ToBytes(data);
+  abytes(data);
+  return data;
+}
+class Hash {
+}
+function createHasher(hashCons) {
+  const hashC = (msg) => hashCons().update(toBytes(msg)).digest();
+  const tmp = hashCons();
+  hashC.outputLen = tmp.outputLen;
+  hashC.blockLen = tmp.blockLen;
+  hashC.create = () => hashCons();
+  return hashC;
+}
+function createXOFer(hashCons) {
+  const hashC = (msg, opts) => hashCons(opts).update(toBytes(msg)).digest();
+  const tmp = hashCons({});
   hashC.outputLen = tmp.outputLen;
   hashC.blockLen = tmp.blockLen;
   hashC.create = (opts) => hashCons(opts);
-  Object.assign(hashC, info);
-  return Object.freeze(hashC);
+  return hashC;
 }
 function randomBytes(bytesLength = 32) {
-  const cr = typeof globalThis === "object" ? globalThis.crypto : null;
-  if (typeof cr?.getRandomValues !== "function")
-    throw new Error("crypto.getRandomValues must be defined");
-  return cr.getRandomValues(new Uint8Array(bytesLength));
+  if (crypto2 && typeof crypto2.getRandomValues === "function") {
+    return crypto2.getRandomValues(new Uint8Array(bytesLength));
+  }
+  if (crypto2 && typeof crypto2.randomBytes === "function") {
+    return Uint8Array.from(crypto2.randomBytes(bytesLength));
+  }
+  throw new Error("crypto.getRandomValues must be defined");
 }
-var oidNist = (suffix) => ({
-  oid: Uint8Array.from([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, suffix])
-});
 
-// node_modules/@noble/hashes/sha3.js
+// node_modules/@noble/hashes/esm/sha3.js
 var _0n = BigInt(0);
 var _1n = BigInt(1);
 var _2n = BigInt(2);
@@ -4534,7 +4549,7 @@ for (let round = 0, R2 = _1n, x2 = 1, y2 = 0;round < 24; round++) {
   for (let j2 = 0;j2 < 7; j2++) {
     R2 = (R2 << _1n ^ (R2 >> _7n) * _0x71n) % _256n;
     if (R2 & _2n)
-      t ^= _1n << (_1n << BigInt(j2)) - _1n;
+      t ^= _1n << (_1n << /* @__PURE__ */ BigInt(j2)) - _1n;
   }
   _SHA3_IOTA.push(t);
 }
@@ -4584,25 +4599,20 @@ function keccakP(s, rounds = 24) {
   clean(B2);
 }
 
-class Keccak {
-  state;
-  pos = 0;
-  posOut = 0;
-  finished = false;
-  state32;
-  destroyed = false;
-  blockLen;
-  suffix;
-  outputLen;
-  enableXOF = false;
-  rounds;
+class Keccak extends Hash {
   constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 24) {
+    super();
+    this.pos = 0;
+    this.posOut = 0;
+    this.finished = false;
+    this.destroyed = false;
+    this.enableXOF = false;
     this.blockLen = blockLen;
     this.suffix = suffix;
     this.outputLen = outputLen;
     this.enableXOF = enableXOF;
     this.rounds = rounds;
-    anumber(outputLen, "outputLen");
+    anumber(outputLen);
     if (!(0 < blockLen && blockLen < 200))
       throw new Error("only keccak-f1600 function is supported");
     this.state = new Uint8Array(200);
@@ -4620,6 +4630,7 @@ class Keccak {
   }
   update(data) {
     aexists(this);
+    data = toBytes(data);
     abytes(data);
     const { blockLen, state } = this;
     const len = data.length;
@@ -4685,7 +4696,7 @@ class Keccak {
   }
   _cloneInto(to) {
     const { blockLen, suffix, outputLen, rounds, enableXOF } = this;
-    to ||= new Keccak(blockLen, suffix, outputLen, enableXOF, rounds);
+    to || (to = new Keccak(blockLen, suffix, outputLen, enableXOF, rounds));
     to.state32.set(this.state32);
     to.pos = this.pos;
     to.posOut = this.posOut;
@@ -4698,12 +4709,12 @@ class Keccak {
     return to;
   }
 }
-var genKeccak = (suffix, blockLen, outputLen, info = {}) => createHasher(() => new Keccak(blockLen, suffix, outputLen), info);
-var sha3_256 = /* @__PURE__ */ genKeccak(6, 136, 32, /* @__PURE__ */ oidNist(8));
-var sha3_512 = /* @__PURE__ */ genKeccak(6, 72, 64, /* @__PURE__ */ oidNist(10));
-var genShake = (suffix, blockLen, outputLen, info = {}) => createHasher((opts = {}) => new Keccak(blockLen, suffix, opts.dkLen === undefined ? outputLen : opts.dkLen, true), info);
-var shake128 = /* @__PURE__ */ genShake(31, 168, 16, /* @__PURE__ */ oidNist(11));
-var shake256 = /* @__PURE__ */ genShake(31, 136, 32, /* @__PURE__ */ oidNist(12));
+var gen = (suffix, blockLen, outputLen) => createHasher(() => new Keccak(blockLen, suffix, outputLen));
+var sha3_256 = /* @__PURE__ */ (() => gen(6, 136, 256 / 8))();
+var sha3_512 = /* @__PURE__ */ (() => gen(6, 72, 512 / 8))();
+var genShake = (suffix, blockLen, outputLen) => createXOFer((opts = {}) => new Keccak(blockLen, suffix, opts.dkLen === undefined ? outputLen : opts.dkLen, true));
+var shake128 = /* @__PURE__ */ (() => genShake(31, 168, 128 / 8))();
+var shake256 = /* @__PURE__ */ (() => genShake(31, 136, 256 / 8))();
 
 // node_modules/@noble/curves/abstract/fft.js
 function checkU32(n) {
