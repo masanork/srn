@@ -9,14 +9,17 @@ import { initWasm, ed25519Verify } from "./wasm_util";
 import { decode } from "cbor-x";
 import { verifyRegistrationResponse, verifyAuthenticationResponse } from '@simplewebauthn/server';
 
-const RP_ID = "localhost"; // TODO: "srn.example" for production
-// Allow both localhost/127.0.0.1 and ports 5001/5002
-const EXPECTED_ORIGINS = [
-    "http://localhost:5002", "http://127.0.0.1:5002",
-    "http://localhost:5001", "http://127.0.0.1:5001",
-    "http://localhost:8081", "http://127.0.0.1:8081",
-    "http://localhost:8081/", "http://127.0.0.1:8081/"
-];
+const RP_ID = process.env.RP_ID || "localhost";
+const EXPECTED_ORIGINS = process.env.EXPECTED_ORIGINS
+    ? process.env.EXPECTED_ORIGINS.split(',').map(o => o.trim())
+    : [
+        "http://localhost:5002", "http://127.0.0.1:5002",
+        "http://localhost:5001", "http://127.0.0.1:5001",
+        "http://localhost:8081", "http://127.0.0.1:8081",
+        "http://localhost:8081/", "http://127.0.0.1:8081/"
+    ];
+const GUEST_DID_DOMAIN = process.env.GUEST_DID_DOMAIN || "srn.example";
+const GUEST_DID_EXPIRATION_DAYS = parseInt(process.env.GUEST_DID_EXPIRATION_DAYS || "30");
 
 admin.initializeApp();
 
@@ -373,8 +376,8 @@ const resolvers = {
             const publicKeyJwk = coseToJwk(Buffer.from(credentialPublicKey));
 
             const guestId = Math.random().toString(36).substring(2, 10);
-            const did = `did:web:srn.example:guest:${guestId}`;
-            const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+            const did = `did:web:${GUEST_DID_DOMAIN}:guest:${guestId}`;
+            const expiresAt = new Date(Date.now() + GUEST_DID_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
             await db.collection("guest-dids").doc(guestId).set({
                 did,
