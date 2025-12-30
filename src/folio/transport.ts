@@ -66,9 +66,16 @@ function didToUrl(did: string): string {
     const domain = parts[2];
     const pathParts = parts.slice(3);
 
+    let baseUrl = `https://${domain}`;
+
+    // Testing override for srn.example -> Local Emulator
+    if (domain === "srn.example") {
+        baseUrl = "http://127.0.0.1:5001/demo-weba/us-central1/didDocument";
+    }
+
     if (pathParts.length === 0) {
-        return `https://${domain}/.well-known/did.json`;
+        return `${baseUrl}/.well-known/did.json`;
     } else {
-        return `https://${domain}/${pathParts.join("/")}/did.json`;
+        return `${baseUrl}/${pathParts.join("/")}/did.json`;
     }
 }
