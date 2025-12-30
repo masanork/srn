@@ -33,7 +33,18 @@ Major implementation of the Folio Sync Protocol, enabling secure, portable synch
   * Added `folio sync` command with DID authentication.
   * Implemented `folio transport resolve` for DID document resolution.
   * Created `folio transport show-thread` for message thread visualization.
-  * Added `--mode` option for inbox/outbox/full synchronization (partial).
+  * Added `--mode` option for inbox/outbox/full synchronization.
+  * Completed full-mode sync: fetch both inbox and outbox messages.
+  * Added `sync_source` metadata field to distinguish message direction.
+
+* **Guest DID with Passkey Authentication**:
+  * Implemented `createGuestDid` mutation in Firebase Functions.
+  * Created browser-side Passkey integration for seamless UX.
+  * Guest DIDs expire after 30 days (configurable).
+  * Single checkbox UX: "Receive replies" - no extra dialogs.
+  * Automatic fallback to anonymous submission (form DID) if Passkey fails.
+  * Store credential ID and public key JWK in Firestore.
+  * Documented Guest DID specification in L2E whitepaper.
 
 * **Infrastructure**:
   * Created `remote/` directory structure for Firebase deployment.
