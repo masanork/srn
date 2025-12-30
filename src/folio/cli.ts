@@ -37,6 +37,31 @@ transport
         }
     });
 
+import { sendMessage } from "./send";
+
+transport
+    .command("send")
+    .description("Send an encrypted message to a DID")
+    .requiredOption("--did <did>", "Recipient DID")
+    .requiredOption("--message <text>", "Message text")
+    .requiredOption("--sender <did>", "Your DID")
+    .requiredOption("--key <hex>", "Your Private Key (Hex)")
+    .option("--remote <url>", "API URL")
+    .action(async (options) => {
+        try {
+            await sendMessage({
+                did: options.did,
+                message: options.message,
+                senderDid: options.sender,
+                privateKeyHex: options.key,
+                remote: options.remote
+            });
+        } catch (e: any) {
+            console.error(`Error: ${e.message}`);
+            process.exit(1);
+        }
+    });
+
 import { buildThreadTree, printThreadTree } from "./thread";
 
 transport

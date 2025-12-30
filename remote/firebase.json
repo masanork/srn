@@ -11,6 +11,16 @@
             "firebase.json",
             "**/.*",
             "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "/guest/*/did.json",
+                "function": "didDocument"
+            },
+            {
+                "source": "/api",
+                "function": "api"
+            }
         ]
     },
     "firestore": {

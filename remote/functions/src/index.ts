@@ -293,8 +293,8 @@ export const didDocument = functions.https.onRequest(async (req, res) => {
         return;
     }
 
-    // Parse guest ID from path: /.well-known/did/guest/<id>/did.json
-    const pathMatch = req.path.match(/\/\.well-known\/did\/guest\/([^\/]+)\/did\.json/);
+    // Parse guest ID from path: /guest/<id>/did.json or /.well-known/did/guest/<id>/did.json
+    const pathMatch = req.path.match(/\/(?:\.well-known\/did\/)?guest\/([^\/]+)\/did\.json/);
     if (!pathMatch) {
         res.status(404).json({ error: "Invalid DID Document path" });
         return;
