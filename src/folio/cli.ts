@@ -371,8 +371,11 @@ didCmd
             if (options.hybrid) {
                 console.log(`Ed25519 Public Key: ${keyData.ed25519.publicKey}`);
                 console.log(`ML-DSA-44 Public Key: ${keyData.pqc.publicKey}`);
+                console.log(`Ed25519 Private Key: ${keyData.ed25519.privateKey}`);
+                console.log(`ML-DSA-44 Private Key: ${keyData.pqc.privateKey}`);
             } else {
                 console.log(`Public Key (Hex): ${keyData.publicKey}`);
+                console.log(`Private Key (Hex): ${keyData.privateKey}`);
             }
 
             if (options.save) {
