@@ -66,7 +66,7 @@ Ray Ozzie’s *Groove* envisioned cross-organizational collaboration but lacked 
 
 Web/A Folio and its Transport protocol are not just tools; they are a manifesto for a society where:
 1. **Agency stays with the individual**, who holds the only complete record of their life.
-2. **Trust is decentralized**, verified at the edge by serverless functions and VCs.
+2. **Purpose-Driven Integration**: Data is integrated based on individual needs (context), overcoming the siloes created by organizational boundaries of responsibility.
 3. **Intelligence is interchangeable**, where AI agents assist in routing data based on the "intent" of the document, not just the "address" of the sender.
 
 ## 6. Conclusion: Returning to the Fundamental Data Flow
