@@ -5,7 +5,42 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.2.0 - Secure Folio & Guest DID Integration
+
+**Date:** 2025-12-30
+
+Major security and UX enhancements to Folio, introducing production-ready Strict Mode, Guest DID-based account requests, and regional deployment optimization.
+
+* **Secure by Default**:
+  * **Strict Mode Enforcement**: Enabled mandatory access control for `postMessage`. Only DIDs in `ADMIN_DIDS` or `allowed-users` collection can post messages.
+  * **Admin Controls**: Verified `folio admin add-user` workflow for explicit user onboarding.
+  * **Regional Deployment**: Migrated all Firebase Functions to `asia-northeast1` (Tokyo) for reduced latency and improved security posture.
+  * **Function Consolidation**: Merged `getPreKey` from legacy tools into main remote deployment for unified management.
+
+* **Guest DID Messaging**:
+  * **`guestPostMessage` Mutation**: New GraphQL mutation accepting Passkey (WebAuthn) authentication instead of Ed25519 signatures.
+  * **Browser Integration**: Implemented `sendGuestMessage()` in `src/form/client/guest_did.ts` for encrypted L2 messaging from browsers.
+  * **Account Request Workflow**: Created `join.md` form enabling self-service account requests using Guest DIDs.
+  * **Spam Resistance**: Passkey-based identity creation prevents automated bot submissions.
+
+* **CLI Enhancements**:
+  * **`did:key` Support**: Fixed `folio transport send` to handle `did:key` resolution (implicit mode with local DID document construction).
+  * **Signature Format Fix**: Corrected authentication signature encoding (Hex vs Base64Url) to match remote expectations.
+  * **`--key-file` Option**: Added to `folio sync` command for consistent key management across all commands.
+  * **End-to-End Verification**: Tested complete workflow: `admin add-user` → `transport send` → `sync`.
+
+* **Web/A Form Integration**:
+  * **Interactive Forms**: Created example forms (`party.md`, `join.md`) demonstrating Guest DID submission.
+  * **Onboarding Flow**: Users can now request access via web form → Admin approves via CLI → User gains full messaging rights.
+  * **Dual Identity Support**: Forms support both Guest DID (Passkey) and permanent DID (CLI-generated) submissions.
+
+* **Documentation**:
+  * **Roadmap Updates**: Marked Phase 1 & 2 as completed in both `.agent/tasks/folio_roadmap.md` and `ROADMAP.md`.
+  * **Session Summary**: Created comprehensive deployment log in `.agent/sessions/2025-12-30-folio-deployment.md`.
+  * **Technical Debt**: Documented Phase 2.5 items (browser `did:key` resolution, L2 signature standardization).
+
 ## v2.1.0 - Folio Sync Protocol with DID Authentication
+
 
 **Date:** 2025-12-30
 
