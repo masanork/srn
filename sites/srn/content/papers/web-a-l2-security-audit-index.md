@@ -18,8 +18,10 @@ for fast navigation.
 - [Security Re-Assessment v4](./web-a-l2-security-audit-v4.html)
 - [Security Re-Assessment v5](./web-a-l2-security-audit-v5.html)
 - [Security Re-Assessment v6 (Red Team Analytics)](./web-a-l2-security-audit-v6.html)
+- [Security Re-Assessment v7 (PoC Risk Assessment)](./web-a-l2-security-audit-v7.html)
 
 ### Response & Remediation
+- [Product Team Response (Provisional Response to v6)](./web-a-product-team-response-v6.html)
 - [Product Security Status Report (Red Team Sharing)](./web-a-product-security-status-report.html)
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
 - [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
