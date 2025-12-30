@@ -1,8 +1,8 @@
 
 import { globalSigner } from './signer';
-import { 
-    buildLayer2Envelope, 
-    type L2Config, 
+import {
+    buildLayer2Envelope,
+    type L2Config,
     type Layer2Encrypted,
     fetchEpochRegistry,
     selectEpochKey,
@@ -87,7 +87,7 @@ export class DataManager {
         const data = this.updateJsonLd();
         const w = window as any;
         const formName = (w.generatedJsonStructure && w.generatedJsonStructure.name) || 'Response';
-        
+
         // Try to get template ID from document or use URL
         const templateId = window.location.href.split('#')[0];
 
@@ -106,7 +106,7 @@ export class DataManager {
             let tier: 'high' | 'standard' | 'offline' = 'offline';
 
             // Graduated PFS Logic
-            
+
             // 1. Attempt Tier 3 (Dynamic Pre-key)
             if (l2Config.prekey_url) {
                 try {
@@ -150,11 +150,30 @@ export class DataManager {
 
             this.updateSecurityUI(tier);
 
+            // GUEST DID INTEGRATION
+            let senderDid = l2Config.user_kid;
+            const guestDidCheckbox = document.getElementById('weba-guest-did-opt') as HTMLInputElement | null;
+
+            if (guestDidCheckbox && guestDidCheckbox.checked) {
+                try {
+                    const { getOrCreateGuestDid } = await import('./guest_did');
+                    const { did, isReused } = await getOrCreateGuestDid();
+                    senderDid = did;
+                    console.log(`Using Guest DID: ${did} (Reused: ${isReused})`);
+                } catch (e) {
+                    console.error("Guest DID creation failed:", e);
+                    if (!confirm("Failed to create/retrieve Guest DID for replies. Continue with anonymous submission?")) {
+                        return;
+                    }
+                    // Fallback to anonymous (user_kid from config or form default)
+                }
+            }
+
             try {
                 const envelope = await buildLayer2Envelope({
                     layer2_plain: data,
                     config: encryptionConfig,
-                    user_kid: l2Config.user_kid,
+                    user_kid: senderDid, // Use Guest DID if available
                 });
                 this.downloadHtml('submit', true, { l2Envelope: envelope, stripPlaintext: true });
             } catch (e) {
