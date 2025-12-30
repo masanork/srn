@@ -24,13 +24,13 @@ graph TD
     classDef green fill:#efe,stroke:#333,stroke-width:1px;
     classDef yellow fill:#fffbe6,stroke:#333,stroke-width:1px;
 
-    subgraph Foundry [発行・構築]
-        Maker[Web/A Maker]
-    end
+    %% エンジン
+    Maker[Web/A Maker / SSG]
 
-    subgraph Documents [インターフェース]
+    subgraph Documents [インターフェース / ファイル]
         Form[Web/A Form]
         Doc[Web/A Document / Report]
+        Aggregator[Web/A Aggregator]
     end
 
     subgraph Storage [所有・管理]
@@ -42,20 +42,22 @@ graph TD
     end
 
     %% リレーション
-    Maker -->|1. 生成・署名| Form
-    Maker -->|1. 生成・署名| Doc
+    Maker -->|1. ビルド・署名| Form
+    Maker -->|1. ビルド・署名| Doc
+    Maker -->|1. ビルド・署名| Aggregator
     
-    Form -->|2. 入力・署名・保存| Folio
-    Doc -->|2. 受領・検証・保存| Folio
+    Form -->|2. 入力・署名・送信| Doc
+    Doc -->|3. 受領・検証・保存| Folio
     
-    Folio <-->|3. 配送・委託・同期| Post
-    Post <-->|4. 組織間連携 / 配送| Post2[他の Web/A Post]
+    Folio <-->|4. 配送・委託・同期| Post
+    Post <-->|5. 組織間連携 / 配送| Post2[他の Web/A Post]
     
-    Post -->|5. 到着通知 / 集計| Maker
+    Post -->|6. データ収集・通知| Aggregator
+    Aggregator -->|7. 分析・フィードバック| Maker
 
     %% クラス適用
     class Maker yellow;
-    class Form,Doc blue;
+    class Form,Doc,Aggregator blue;
     class Folio highlight;
     class Post green;
 ```
@@ -67,10 +69,11 @@ graph TD
 - **特徴**: 単一の HTML ファイルに HTML（視覚）、JSON-LD（構造データ）、フォント、署名を封印。
 - **価値**: 50年後もブラウザで「読める」ことと、その瞬間に機械が「検証できる」ことを同時に保証します。
 
-### 3.2. Web/A Maker (Foundry) ― 信頼の鋳造所
-Markdown やテンプレートから、署名済みの Web/A ドキュメントを**生成するツール群**です。
-- **構成**: CLI ツール、ライブラリ、および GUI エディタ。
-- **価値**: 開発者が既存のワークフロー（CI/CD、スクリプト）の中に、容易に「信頼の生成」を組み込めるようにします。
+### 3.2. Web/A Maker & Aggregator (Foundry) ― 信頼の鋳造と分析
+**Sorane SSG (Static Site Generator)** を核とした、ドキュメントのライフサイクルの始点と終点を担うツール群です。
+- **Maker**: テンプレートから、署名済みの Web/A ドキュメントやフォームを生成。
+- **Aggregator**: Post を通じて提出された署名済みデータを収集・解析し、ダッシュボードや統計情報を提供。
+- **価値**: 開発者が既存のワークフローの中に、自律的な「信頼の生成」と「集計・分析」を容易に組み込めるようにします。
 
 ### 3.3. Web/A Form (Interface) ― 対話するドキュメント
 Web/A に「入力」と「秘匿性」の機能を加えた、**対話型のドキュメント**です。

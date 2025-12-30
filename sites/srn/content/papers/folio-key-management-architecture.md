@@ -23,7 +23,7 @@ The European Digital Identity Wallet (EUDIW) Architecture and Reference Framewor
 | :--- | :--- | :--- |
 | **WSCD (Secure Device)** | Hardware-backed security: Secure Element (SE) or TEE. | **WebAuthn / Passkeys**: Uses the device's secure enclave or external security keys. |
 | **WSCA (Secure App)** | A secure application inside the WSCD that handles keys directly. | **No Native App Dependency**: Invokes hardware keys via the standard browser API. |
-| **LoA (Assurance)** | High (High Level of Assurance). Reliance on SE is mandatory. | **Holder Binding**: Links Passkeys to National ID or other VCs for high assurance. |
+| **LoA (Assurance)** | High (High Level of Assurance). Reliance on SE is mandatory. | **Holder Binding**: Links Passkeys to Official Certificates or other VCs for high assurance. |
 
 Because Web/A adheres to the philosophy of "avoiding dependency on specific native apps," we do not directly adopt the EUDIW WSCA model (where the application logic resides on the Secure Element). Instead, we use the **standard WebAuthn API as the primary Trust Anchor**.
 
@@ -45,10 +45,10 @@ Depending on the sensitivity of the data and the use case, Web/A Folio employs t
 *   **Mechanism**: Signed Web/A documents use keys (P-256 / Ed25519) backed by the hardware.
 
 ### Tier 3: Hardware-Bound Security (High Assurance)
-*   **Storage**: Physical National ID Card + Passkey.
+*   **Storage**: Official Certificate (Hardware Token) + Passkey.
 *   **Use Case**: Legally binding procedures, high-value transactions.
-*   **Key Management**: The high-assurance signing certificate of a National ID is used to sign the Tier 2 Passkey (establishing a **Holder Binding** proof: "This hardware key belongs to me").
-*   **Benefit**: Provides legal/physical certainty while avoiding the friction of reading the physical card for every operation.
+*   **Key Management**: The high-assurance signing certificate from an official provider is used to sign the Tier 2 Passkey (establishing a **Holder Binding** proof: "This hardware key belongs to me").
+*   **Benefit**: Provides legal/physical certainty while avoiding the friction of reading physical tokens for every operation.
 
 ---
 

@@ -88,11 +88,10 @@ ai_generated: true
 
 <div class="nav-subheader">Strategy & Technical Specs</div>
 <div class="spec-links-grid">
-<a href="./papers/roadmap.html">Project Roadmap</a>
 <a href="./papers/web-a-l2-market-comparison.html">Competitive Analysis</a>
 <a href="./papers/web-a-l2-encryption.html">L2 Encryption</a>
 <a href="./papers/context-routing-protocol.html">Context Routing</a>
-<a href="./papers/folio-key-management-architecture.html">Key Management</a>
+<a href="./papers/folio-key-management-architecture.html">Key Management & Trust Anchors</a>
 </div>
 </div>
 <div data-lang-ja>
@@ -100,7 +99,6 @@ ai_generated: true
 <span class="icon">🕸️</span><span class="label">エコシステム概観</span>
 <span class="desc">Web/A, Maker, Form, Folio, Post が織りなす、分散型で知的な信頼インフラの全体像。</span>
 </a>
-
 <div class="nav-subheader">コア・プロダクト</div>
 <a href="./papers/web-a.ja.html" class="nav-item compact">
 <span class="icon">📄</span><span class="label">Web/A フォーマット</span>
@@ -117,7 +115,6 @@ ai_generated: true
 
 <div class="nav-subheader">戦略・技術仕様</div>
 <div class="spec-links-grid">
-<a href="./papers/roadmap.ja.html">プロジェクト・ロードマップ</a>
 <a href="./papers/web-a-l2-market-comparison.ja.html">市場競合分析</a>
 <a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
 <a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
@@ -314,13 +311,16 @@ ai_generated: true
 
     /* Nav Cards */
     .nav-links {
-        /* Remove explicit grid here, let direct children handle it */
-    }
-    [data-lang-en], [data-lang-ja] {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 1.25rem;
-        width: 100%;
+    }
+    /* Language container is ignored as physical container, but acts as logic wrapper */
+    [data-lang-en], [data-lang-ja] {
+        display: none !important;
+    }
+    .js-lang-ja [data-lang-ja], .js-lang-en [data-lang-en] {
+        display: contents !important;
     }
     .nav-item {
         display: grid;
@@ -347,12 +347,12 @@ ai_generated: true
         border-color: #bae6fd;
     }
     .nav-item.compact {
-        padding: 0.85rem 1rem;
-        grid-template-columns: 32px 1fr;
-        grid-column-gap: 0.75rem;
+        padding: 0.85rem 0.75rem;
+        grid-template-columns: 28px 1fr;
+        grid-column-gap: 0.65rem;
     }
     .nav-item.compact .icon {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
     }
     .nav-item.compact .label {
         font-size: 0.95rem;
