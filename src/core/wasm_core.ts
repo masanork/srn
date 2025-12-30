@@ -23,6 +23,7 @@ import init, {
     get_padding_target_size as wasm_get_padding,
     build_l2_envelope_wasm as wasm_build_l2,
     decrypt_l2_envelope_wasm as wasm_decrypt_l2,
+    ed25519_public_key_to_x25519_public_key as wasm_ed25519_to_x25519,
 } from "./wasm_bindings/weba_crypto_wasm.js";
 import { WASM_BINARY_B64 } from "./wasm_binary.ts";
 
@@ -288,4 +289,12 @@ export function decryptL2Envelope(
 ): string {
     if (!initialized) throw new Error("WASM not initialized");
     return wasm_decrypt_l2(envelopeJson, recipientSk, pqcSk);
+}
+
+/**
+ * Convert Ed25519 Public Key to X25519 Public Key using WASM.
+ */
+export function ed25519PublicKeyToX25519PublicKey(ed25519Pub: Uint8Array): Uint8Array {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_ed25519_to_x25519(ed25519Pub);
 }

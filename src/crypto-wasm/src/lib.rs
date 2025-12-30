@@ -145,6 +145,19 @@ pub fn ed25519_verify(public_key: &[u8], message: &[u8], signature: &[u8]) -> Re
     Ok(verifying_key.verify(message, &signature).is_ok())
 }
 
+#[wasm_bindgen]
+pub fn ed25519_public_key_to_x25519_public_key(ed25519_pub: &[u8]) -> Result<Vec<u8>, JsValue> {
+    if ed25519_pub.len() != 32 {
+        return Err(JsValue::from_str("Invalid Ed25519 public key length"));
+    }
+    let compressedy = curve25519_dalek::edwards::CompressedEdwardsY::from_slice(ed25519_pub)
+        .map_err(|_| JsValue::from_str("Invalid Ed25519 public key"))?;
+    let point = compressedy.decompress()
+        .ok_or_else(|| JsValue::from_str("Failed to decompress Ed25519 public key"))?;
+    let x_point = point.to_montgomery();
+    Ok(x_point.as_bytes().to_vec())
+}
+
 // P-256 (ECDSA)
 #[wasm_bindgen]
 pub fn p256_generate_keypair() -> Result<Vec<u8>, JsValue> {

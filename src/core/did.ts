@@ -29,6 +29,7 @@ export type DidDocument = {
     id: string;
     verificationMethod?: VerificationMethodEntry[];
     assertionMethod?: Array<string | VerificationMethodEntry>;
+    keyAgreement?: Array<string | VerificationMethodEntry>;
 };
 
 export type DidResolver = (did: string) => Promise<DidDocument | null>;

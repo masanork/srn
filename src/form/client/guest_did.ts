@@ -1,47 +1,91 @@
 import { generateRecipientKeyPair, decryptLayer2, encryptLayer2, fromBase64Url } from "../../core/l2crypto";
-import { initWasm } from "../../core/wasm_core";
+import { initWasm, ed25519PublicKeyToX25519PublicKey } from "../../core/wasm_core";
+import { decodeDidKey, resolveDidDocument, extractPublicKeyBytes, collectVerificationMethods } from "../../core/did";
 
 // Helper to resolve DID and find encryption key (Browser version)
 async function resolveEncryptionKey(did: string): Promise<{ publicKey: Uint8Array, kid: string }> {
     if (did.startsWith("did:key:")) {
-        // Did Key decoding (minimal implementation required here or import from core/did if browser compatible)
-        // For now, assume we communicate with Server DID (did:web) or handle did:key if we have a decoder.
-        // Let's assume did:web for the form scenario (sending TO the host).
-        throw new Error("did:key resolution not fully implemented in browser client yet");
-    }
+        // Decode did:key to get the public key
+        try {
+            const { code, publicKey } = decodeDidKey(did);
 
-    const start = did.startsWith("did:web:") ? did.split(":").slice(2).join("/") : did; // simplified
-    // Real did:web parser
-    const parts = did.split(":");
-    if (parts[1] !== "web") throw new Error("Unsupported DID");
-    const domain = parts[2];
-    const pathParts = parts.slice(3);
-    const url = pathParts.length === 0
-        ? `https://${domain}/.well-known/did.json`
-        : `https://${domain}/${pathParts.join("/")}/did.json`;
+            // Handle X25519 directly (0xec)
+            if (code === 0xec) {
+                return { publicKey, kid: `${did}#${did.split(':').pop()}` };
+            }
 
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error("Failed to fetch DID Doc");
-    const doc = await resp.json();
+            // For Ed25519 keys (0xed), convert to X25519 for encryption
+            if (code === 0xed) {
+                const x25519Pub = ed25519PublicKeyToX25519PublicKey(publicKey);
+                return { publicKey: x25519Pub, kid: `${did}#${did.split(':').pop()}` };
+            }
 
-    // Find X25519 Key
-    let method = null;
-    const keyAgreementId = doc.keyAgreement ? (typeof doc.keyAgreement[0] === 'string' ? doc.keyAgreement[0] : doc.keyAgreement[0].id) : null;
-
-    if (keyAgreementId) {
-        if (doc.verificationMethod) {
-            method = doc.verificationMethod.find((m: any) =>
-                m.id === keyAgreementId || m.id === keyAgreementId.split("#").pop() || m.id.endsWith(keyAgreementId)
-            );
+            // For other key types, we'd need additional handling
+            throw new Error(`Unsupported did:key type (multicodec: 0x${code.toString(16)})`);
+        } catch (e: any) {
+            throw new Error(`Failed to resolve did:key: ${e.message || e}`);
         }
-        if (!method && typeof doc.keyAgreement[0] !== 'string') method = doc.keyAgreement[0];
     }
 
-    if (method && method.publicKeyJwk && method.publicKeyJwk.crv === "X25519") {
-        return {
-            publicKey: fromBase64Url(method.publicKeyJwk.x),
-            kid: method.id
-        };
+    // Use unified DID resolution from core/did
+    const doc = await resolveDidDocument(did, fetch);
+    if (!doc) {
+        throw new Error(`Failed to resolve DID: ${did}`);
+    }
+
+    // Find X25519 Key in keyAgreement
+    if (!doc.keyAgreement || doc.keyAgreement.length === 0) {
+        throw new Error("No keyAgreement found in DID Document");
+    }
+
+    // Get the first keyAgreement reference
+    const keyAgreementRef = doc.keyAgreement[0];
+    let keyAgreementId: string;
+
+    if (typeof keyAgreementRef === 'string') {
+        keyAgreementId = keyAgreementRef;
+    } else if (keyAgreementRef && typeof keyAgreementRef === 'object' && 'id' in keyAgreementRef) {
+        keyAgreementId = keyAgreementRef.id as string;
+    } else {
+        throw new Error("Invalid keyAgreement format in DID Document");
+    }
+
+    // Collect all verification methods
+    const methods = collectVerificationMethods(doc);
+
+    // Find the method by ID (handle both full ID and fragment)
+    let method = methods.get(keyAgreementId);
+    if (!method) {
+        // Try matching by fragment
+        const fragment = keyAgreementId.split('#').pop();
+        if (fragment) {
+            for (const [id, m] of methods.entries()) {
+                if (id.endsWith(`#${fragment}`)) {
+                    method = m;
+                    break;
+                }
+            }
+        }
+    }
+
+    // If still not found, check if keyAgreement[0] is an embedded method
+    if (!method && typeof keyAgreementRef === 'object' && 'publicKeyJwk' in keyAgreementRef) {
+        method = keyAgreementRef as any;
+    }
+
+    if (!method) {
+        throw new Error(`KeyAgreement method not found: ${keyAgreementId}`);
+    }
+
+    // Extract X25519 public key from JWK
+    if (method.publicKeyJwk && typeof method.publicKeyJwk === 'object') {
+        const jwk = method.publicKeyJwk as any;
+        if (jwk.kty === 'OKP' && jwk.crv === 'X25519' && jwk.x) {
+            return {
+                publicKey: fromBase64Url(jwk.x),
+                kid: method.id
+            };
+        }
     }
 
     throw new Error("No X25519 encryption key found in DID Document");
@@ -66,7 +110,7 @@ export async function sendGuestMessage(did: string, recipientDid: string, messag
     // Simple wrapper payload
     const payload = {
         layer2_plain: plainContent,
-        layer2_sig: { alg: "none", kid: "guest-passkey", sig: "", created_at: new Date().toISOString() } // Dummy signature inside
+        layer2_sig: { alg: "none" as const, kid: "guest-passkey", sig: "", created_at: new Date().toISOString() } // Dummy signature inside
     };
 
     console.log("Resolving recipient...", recipientDid);

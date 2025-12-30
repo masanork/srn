@@ -1,8 +1,8 @@
-
 // Client-side execution entry point
 import { initRuntime } from './runtime';
 import { SearchEngine } from './search';
 import { createMlKem768Provider, installBrowserPqcProvider } from './pqc';
+import './guest_did'; // Expose Guest DID functions to window
 
 // Initialize PQC provider immediately
 installBrowserPqcProvider(createMlKem768Provider());
@@ -10,7 +10,7 @@ installBrowserPqcProvider(createMlKem768Provider());
 const search = new SearchEngine();
 (window as any).GlobalSearch = search;
 
-// Expose internal functions required by HTML attributes (onclick, etc.)
+// Expose internal functions required by HTML attributes (onclick, etc.).
 // These will be assigned to window by initRuntime or explicitly here if needed.
 // For now, we just boot the runtime.
 initRuntime();
