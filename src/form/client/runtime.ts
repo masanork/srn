@@ -144,6 +144,46 @@ export function initRuntime() {
         }
     }
 
+    // Inject Guest DID Checkbox (if L2 enabled and Passkey supported)
+    if (l2Config?.enabled && (window as any).PublicKeyCredential) {
+        const submitBtn = document.querySelector('button[onclick*="signAndDownload"]');
+        if (submitBtn && submitBtn.parentElement) {
+            const container = submitBtn.parentElement;
+
+            const guestOptContainer = document.createElement('div');
+            guestOptContainer.className = 'weba-guest-opt no-print';
+            guestOptContainer.style.display = 'flex';
+            guestOptContainer.style.alignItems = 'center';
+            guestOptContainer.style.gap = '6px';
+            guestOptContainer.style.marginRight = '12px'; // Spacing from buttons
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = 'weba-guest-did-opt';
+            checkbox.style.cursor = 'pointer';
+
+            const label = document.createElement('label');
+            label.htmlFor = 'weba-guest-did-opt';
+            label.textContent = '返信を受け取る (Passkey)';
+            label.style.fontSize = '13px';
+            label.style.fontWeight = '500';
+            label.style.color = '#555';
+            label.style.cursor = 'pointer';
+            label.style.userSelect = 'none';
+
+            guestOptContainer.appendChild(checkbox);
+            guestOptContainer.appendChild(label);
+
+            // Insert before the first button (typically Clear button)
+            const firstBtn = container.querySelector('button');
+            if (firstBtn) {
+                container.insertBefore(guestOptContainer, firstBtn);
+            } else {
+                container.appendChild(guestOptContainer);
+            }
+        }
+    }
+
     // Global Input Listener
     let tm: any;
     document.addEventListener('input', (e) => {
