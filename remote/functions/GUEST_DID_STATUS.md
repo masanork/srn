@@ -1,6 +1,16 @@
-# 🚀 Guest DID Security & Stability Report (2025-12-30)
+## � Status: Stable & Production Ready (Experimental Prototype)
 
-## 📌 Status: Stable & Production Ready
+> [!CAUTION]
+> **免責事項 / Disclaimer**
+>
+> 本機能（Guest DID / WebAuthn）は、あくまで**個人的な趣味の範囲で短期間に作成されたプロトタイプ**です。
+> 実用上の品質検証、パフォーマンス試験、および専門家によるセキュリティ監査は一切行われていません。
+>
+> 1. **無保証**: 内容の正確性や安全性について、いかなる保証も行いません。
+> 2. **自己責任**: 本機能の利用により生じた損害やトラブルについて、開発者は一切の責任を負いません。
+> 3. **非商用**: 重要データの管理や商用サービスでの利用は非推奨です。
+>
+> This function is an experimental prototype created for hobby purposes. Use at your own risk.
 
 ### 1. 修正された内容
 *   **SimpleWebAuthn v13 API 同期**:
