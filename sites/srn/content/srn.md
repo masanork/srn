@@ -128,25 +128,20 @@ ai_generated: true
 <span class="desc" data-lang-en>Create verifiable forms visually. (Beta)</span>
 <span class="desc" data-lang-ja>検証可能なフォームをブラウザ上で視覚的に作成。(Beta)</span>
 </a>
-<div data-lang-en>
-<a href="./web-a-presentation.html" class="nav-item">
-<span class="icon">🎞️</span><span class="label">Web/A Presentation</span>
-<span class="desc">Read as article, switch to full-screen slides.</span>
-</a>
-</div>
 <div data-lang-ja>
 <a href="./web-a-presentation.ja.html" class="nav-item">
 <span class="icon">🎞️</span><span class="label">Web/A 紹介デッキ</span>
 <span class="desc">記事として読み、必要に応じてフルスクリーン・スライドでプレゼン。</span>
 </a>
-</div>
-
-<div data-lang-ja>
 <a href="./web-a-tech-presentation.ja.html" class="nav-item">
 <span class="icon">🛡️</span><span class="label">Web/A 技術解説デッキ</span><span class="desc">検証モデルとセキュリティアーキテクチャの技術的深掘り。</span>
 </a>
 </div>
 <div data-lang-en>
+<a href="./web-a-presentation.html" class="nav-item">
+<span class="icon">🎞️</span><span class="label">Web/A Presentation</span>
+<span class="desc">Read as article, switch to full-screen slides.</span>
+</a>
 <a href="./web-a-tech-presentation.html" class="nav-item">
 <span class="icon">🛡️</span><span class="label">Web/A Tech Presentation</span><span class="desc">Deep dive into the verification model and security architecture.</span>
 </a>

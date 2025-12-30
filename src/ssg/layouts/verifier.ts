@@ -1,5 +1,5 @@
-
 import { baseLayout } from './base.js';
+import { getRelativePrefix } from '../utils.js';
 
 export interface VerifierData {
     title: string;
@@ -86,7 +86,7 @@ export function verifierLayout(
             <div id="result-area"></div>
         </div>
 
-        <script src="/assets/verify-bundle.js" type="module"></script>
+        <script src="${getRelativePrefix(relPath)}assets/verify-bundle.js" type="module"></script>
     `;
 
     return baseLayout({

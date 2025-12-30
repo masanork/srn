@@ -130,10 +130,25 @@ layout: form
 - [number:age] Age
 ```
 
-* **Interactive**: Generates a functional HTML form with calculation logic.
-* **Signed Template**: The form structure itself is signed by the issuer (Layer 1).
-* **User Signature**: Users can sign their input using Passkeys (WebAuthn) and download a Verifiable Credential (Layer 2).
-* **Form Maker**: Use the [Web/A Form Maker](./maker.html) to visually design forms and generate Markdown.
+*   **Single-File Runtime**: Generates a self-contained HTML file incorporating all logic, CSS, and structural signatures.
+*   **Layer 2 Encryption (L2E)**: You can encrypt user inputs for specific recipients (issuers/aggregators).
+*   **Form Maker**: Use the [Web/A Form Maker](./maker.html) to visually design forms.
+
+#### 3.1 CLI Usage for Forms
+Manual form generation or batch processing:
+```bash
+bun src/form/cli.ts input.md > output.html
+```
+
+#### 3.2 L2 Encryption Configuration
+Add the following to your Markdown frontmatter to enable confidentiality:
+```yaml
+l2_encrypt: true
+l2_recipient_kid: "issuer#kem-2025"
+l2_recipient_x25519: "<base64url>"
+# l2_recipient_pqc: "<base64url>" # Optional ML-KEM-768 key
+l2_encrypt_default: true
+```
 
 ### 4. Font System (Typography)
 
@@ -142,7 +157,15 @@ SRN allows precise control over font stacking and glyph substitution.
 * **Inline Glyph**: `[font_name:glyph_id]` (e.g., `[ipamjm:MJ000001]`) embeds a specific glyph as SVG.
 * **Auto Lookup**: `[MJ000001]` automatically finds the correct font from the database.
 
-### 5. Verification Tools (CLI & AI)
+### 5. AI-Assisted Migration (Excel to Form)
+
+Sorane supports a semi-automated workflow to digitize legacy Excel forms:
+
+1.  **Extract**: Convert Excel to Markdown using tools like `markitdown`.
+2.  **Map**: Use the [Migration Prompts](./guide/prompts.html) to map entries to Web/A syntax.
+3.  **Generate**: Refine the Markdown and generate the HTML via CLI.
+
+### 6. Verification Tools (CLI & AI)
 
 Sorane provides multiple ways to verify Web/A and VC documents without a browser.
 
