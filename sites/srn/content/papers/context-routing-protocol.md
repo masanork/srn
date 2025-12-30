@@ -69,7 +69,11 @@ Web/A Folio and its Transport protocol are not just tools; they are a manifesto 
 2. **Trust is decentralized**, verified at the edge by serverless functions and VCs.
 3. **Intelligence is interchangeable**, where AI agents assist in routing data based on the "intent" of the document, not just the "address" of the sender.
 
-By embracing an **Ephemeral Hub** and **Context-Aware Routing**, we build a system that is robust, scalable, and above all, respectful of human dignity.
+## 6. Conclusion: Returning to the Fundamental Data Flow
+
+Modern digital ecosystems are often shaped more by economic incentives—such as lock-in through centralization or excessive redundancy for consensus—than by the natural movement of data itself.
+
+Web/A Folio seeks to return to the foundational principles of the early Internet, redefining systems based on the "necessity of flow": where data originates in the context of an individual's life and is delivered toward a specific intent. By combining ephemeral hubs with context-aware routing, we build a system that is robust, scalable, and above all, respectful of human dignity.
 
 ---
 
