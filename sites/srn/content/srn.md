@@ -67,63 +67,63 @@ ai_generated: true
 </div>
 <div class="panel-body nav-links">
 <div data-lang-en>
-    <a href="./papers/web-a-ecosystem.html" class="nav-item primary">
-    <span class="icon">🕸️</span><span class="label">Ecosystem Overview</span>
-    <span class="desc">How Web/A, Maker, Form, Folio, and Post weave together a decentralized trust infrastructure.</span>
-    </a>
+<a href="./papers/web-a-ecosystem.html" class="nav-item primary">
+<span class="icon">🕸️</span><span class="label">Ecosystem Overview</span>
+<span class="desc">How Web/A, Maker, Form, Folio, and Post weave together a decentralized trust infrastructure.</span>
+</a>
 
-    <div class="nav-subheader">Core Components</div>
-    <a href="./papers/web-a.html" class="nav-item compact">
-    <span class="icon">📄</span><span class="label">Web/A Format</span>
-    </a>
-    <a href="./papers/web-a-form.html" class="nav-item compact">
-    <span class="icon">🧾</span><span class="label">Web/A Form</span>
-    </a>
-    <a href="./papers/web-a-folio.html" class="nav-item compact">
-    <span class="icon">💼</span><span class="label">Web/A Folio</span>
-    </a>
-    <a href="./papers/web-a-post-architecture.html" class="nav-item compact">
-    <span class="icon">📮</span><span class="label">Web/A Post</span>
-    </a>
+<div class="nav-subheader">Core Components</div>
+<a href="./papers/web-a.html" class="nav-item compact">
+<span class="icon">📄</span><span class="label">Web/A Format</span>
+</a>
+<a href="./papers/web-a-form.html" class="nav-item compact">
+<span class="icon">🧾</span><span class="label">Web/A Form</span>
+</a>
+<a href="./papers/web-a-folio.html" class="nav-item compact">
+<span class="icon">💼</span><span class="label">Web/A Folio</span>
+</a>
+<a href="./papers/web-a-post-architecture.html" class="nav-item compact">
+<span class="icon">📮</span><span class="label">Web/A Post</span>
+</a>
 
-    <div class="nav-subheader">Strategy & Technical Specs</div>
-    <div class="spec-links-grid">
-        <a href="./papers/roadmap.html">Project Roadmap</a>
-        <a href="./papers/web-a-l2-market-comparison.html">Competitive Analysis</a>
-        <a href="./papers/web-a-l2-encryption.html">L2 Encryption</a>
-        <a href="./papers/context-routing-protocol.html">Context Routing</a>
-        <a href="./papers/folio-key-management-architecture.html">Key Management</a>
-    </div>
+<div class="nav-subheader">Strategy & Technical Specs</div>
+<div class="spec-links-grid">
+<a href="./papers/roadmap.html">Project Roadmap</a>
+<a href="./papers/web-a-l2-market-comparison.html">Competitive Analysis</a>
+<a href="./papers/web-a-l2-encryption.html">L2 Encryption</a>
+<a href="./papers/context-routing-protocol.html">Context Routing</a>
+<a href="./papers/folio-key-management-architecture.html">Key Management</a>
+</div>
 </div>
 <div data-lang-ja>
-    <a href="./papers/web-a-ecosystem.ja.html" class="nav-item primary">
-    <span class="icon">🕸️</span><span class="label">エコシステム概観</span>
-    <span class="desc">Web/A, Maker, Form, Folio, Post が織りなす、分散型で知的な信頼インフラの全体像。</span>
-    </a>
+<a href="./papers/web-a-ecosystem.ja.html" class="nav-item primary">
+<span class="icon">🕸️</span><span class="label">エコシステム概観</span>
+<span class="desc">Web/A, Maker, Form, Folio, Post が織りなす、分散型で知的な信頼インフラの全体像。</span>
+</a>
 
-    <div class="nav-subheader">コア・プロダクト</div>
-    <a href="./papers/web-a.ja.html" class="nav-item compact">
-    <span class="icon">📄</span><span class="label">Web/A フォーマット</span>
-    </a>
-    <a href="./papers/web-a-form.ja.html" class="nav-item compact">
-    <span class="icon">🧾</span><span class="label">Web/A Form</span>
-    </a>
-    <a href="./papers/web-a-folio.ja.html" class="nav-item compact">
-    <span class="icon">💼</span><span class="label">Web/A Folio</span>
-    </a>
-    <a href="./papers/web-a-post-architecture.ja.html" class="nav-item compact">
-    <span class="icon">📮</span><span class="label">Web/A Post</span>
-    </a>
+<div class="nav-subheader">コア・プロダクト</div>
+<a href="./papers/web-a.ja.html" class="nav-item compact">
+<span class="icon">📄</span><span class="label">Web/A フォーマット</span>
+</a>
+<a href="./papers/web-a-form.ja.html" class="nav-item compact">
+<span class="icon">🧾</span><span class="label">Web/A Form</span>
+</a>
+<a href="./papers/web-a-folio.ja.html" class="nav-item compact">
+<span class="icon">💼</span><span class="label">Web/A Folio</span>
+</a>
+<a href="./papers/web-a-post-architecture.ja.html" class="nav-item compact">
+<span class="icon">📮</span><span class="label">Web/A Post</span>
+</a>
 
-    <div class="nav-subheader">戦略・技術仕様</div>
-    <div class="spec-links-grid">
-        <a href="./papers/roadmap.ja.html">プロジェクト・ロードマップ</a>
-        <a href="./papers/web-a-l2-market-comparison.ja.html">市場競合分析</a>
-        <a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
-        <a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
-        <a href="./papers/folio-key-management-architecture.ja.html">鍵管理アーキテクチャ</a>
-        <a href="./guide/prompts.ja.html">AI プロンプト集</a>
-    </div>
+<div class="nav-subheader">戦略・技術仕様</div>
+<div class="spec-links-grid">
+<a href="./papers/roadmap.ja.html">プロジェクト・ロードマップ</a>
+<a href="./papers/web-a-l2-market-comparison.ja.html">市場競合分析</a>
+<a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
+<a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
+<a href="./papers/folio-key-management-architecture.ja.html">鍵管理アーキテクチャ</a>
+<a href="./guide/prompts.ja.html">AI プロンプト集</a>
+</div>
 </div>
 </div>
 </div>
@@ -314,9 +314,13 @@ ai_generated: true
 
     /* Nav Cards */
     .nav-links {
+        /* Remove explicit grid here, let direct children handle it */
+    }
+    [data-lang-en], [data-lang-ja] {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1.5rem;
+        width: 100%;
     }
     .nav-item {
         display: grid;
