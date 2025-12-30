@@ -254,6 +254,80 @@ type Query {
 
 This model significantly lowers the barrier to entry, as individuals without server infrastructure can participate by leveraging their counterparty's Folio Remote.
 
+**Guest DID with Passkey Authentication**
+
+For users without a permanent DID who wish to receive replies, the form host (e.g., SRN) can issue a **Guest DID** authenticated by WebAuthn Passkey.
+
+**Use Cases:**
+1. **Anonymous submission (no replies)**: Use form DID (`did:web:host:forms:form-id`)
+   - Sender identity is the form itself
+   - No reply capability
+   - Suitable for one-way submissions (contact forms, surveys)
+
+2. **Submission with reply support**: Issue guest DID (`did:web:host:guest:<id>`) via Passkey
+   - User authenticates with biometrics
+   - Can retrieve replies from host's Folio
+   - Guest DID expires after a defined period (e.g., 30 days)
+
+**Requirements:**
+- Browser MUST support WebAuthn (Passkey)
+- Non-Passkey devices are NOT supported
+- Host MUST provide Folio Remote for guest inbox storage
+
+**Authentication Flow:**
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Host as Form Host (SRN)
+    participant Recipient
+
+    User->>Browser: Submit form + opt-in for replies
+    Browser->>User: Passkey authentication
+    User->>Browser: Biometric approval
+    Browser->>Host: Create guest DID request (Passkey public key)
+    Host->>Host: Generate did:web:host:guest:<id>
+    Host->>Browser: Return guest DID
+    Browser->>Recipient: Send message (senderDid = guest DID)
+    
+    Note over User,Recipient: Later: Check replies
+    User->>Browser: Check replies
+    Browser->>User: Passkey authentication
+    Browser->>Host: Fetch inbox (authenticated)
+    Host->>Browser: Return replies
+```
+
+**Guest DID Document Example:**
+```json
+{
+  "@context": "https://www.w3.org/ns/did/v1",
+  "id": "did:web:srn.example:guest:abc123",
+  "verificationMethod": [{
+    "id": "did:web:srn.example:guest:abc123#passkey",
+    "type": "JsonWebKey2020",
+    "controller": "did:web:srn.example:guest:abc123",
+    "publicKeyJwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "...",
+      "y": "..."
+    }
+  }],
+  "authentication": ["#passkey"],
+  "service": [{
+    "type": "FolioInbox",
+    "serviceEndpoint": "https://srn.example/api/guest-inbox/abc123"
+  }],
+  "expiresAt": "2025-01-30T00:00:00Z"
+}
+```
+
+**Security Considerations:**
+- Guest DIDs SHOULD have an expiration date
+- Host MUST verify Passkey signature before returning inbox contents
+- Guest DID SHOULD be rate-limited to prevent abuse
+- Host MAY delete guest DIDs and associated messages after expiration
+
 ## 5. Key Management & Hierarchy
 
 To manage keys effectively across many campaigns and forms, Web/A employs a
