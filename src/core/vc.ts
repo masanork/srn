@@ -4,11 +4,11 @@ import {
     ed25519GenerateKeyPair,
     ed25519Sign,
     ed25519Verify,
+    p256Verify,
     mlDsa44GenerateKeyPair,
     mlDsa44Sign,
     mlDsa44Verify
 } from "./wasm_core";
-import { p256 } from '@noble/curves/nist.js';
 import { encode, decode } from 'cbor-x';
 import crypto from 'node:crypto';
 import {
@@ -347,7 +347,7 @@ export async function verifyHybridVC(
             if (pubKeyBytes && sigValue) {
                 const sigBytes = decodeProofValue(sigValue);
                 try {
-                    checks.p256 = p256.verify(sigBytes, payloadBytes, pubKeyBytes);
+                    checks.p256 = p256Verify(pubKeyBytes, payloadBytes, sigBytes);
                 } catch (e) {
                     console.error("P-256 verification error:", e);
                 }
