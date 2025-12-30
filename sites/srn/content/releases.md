@@ -15,6 +15,7 @@ Introduction of Advanced Authorization via Verifiable Credentials (VC), enabling
   * **Hybrid Access Passes**: Implemented "Access Pass" VCs using the `DataIntegrityProof` standard with dual signatures (**Ed25519** and **ML-DSA-44**).
   * **Admin Issuance**: Added `folio admin issue-pass` command to CLI, allowing administrators to grant permissions (e.g., `post`, `admin`) that users can carry.
   * **VC-based Authorization**: Integrated VC verification into the `postMessage` workflow. Users can now gain access by presenting a valid pass, moving beyond static database whitelists.
+  * **Capability Delegation**: Implemented a two-step delegation chain (Admin -> Delegator -> Delegate). Users can now delegate rights to agents or other users via `folio transport delegate`, allowing them to post messages on their behalf while maintaining a verifiable chain of custody.
 
 * **Server-side Security & WASM**:
   * **WASM-Powered Verification**: Migrated remote Firebase Functions to use the official Rust-compiled WebAssembly crypto module. This enables high-performance verification of ML-DSA-44 signatures on the server.

@@ -100,3 +100,20 @@ export async function issueAccessPass(adminKeys: HybridKeys, adminDid: string, u
 
     return vc;
 }
+
+export async function delegateCapability(delegatorKeys: HybridKeys, delegatorDid: string, delegateDid: string, scope: string = "post"): Promise<object> {
+    const subject = {
+        id: delegateDid,
+        "folio:delegate": true,
+        "folio:scope": scope,
+        "folio:on_behalf_of": delegatorDid
+    };
+
+    const vc = await createHybridVC(
+        { credentialSubject: subject },
+        delegatorKeys,
+        delegatorDid
+    );
+
+    return vc;
+}
