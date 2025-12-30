@@ -166,7 +166,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const isDefaultEn = formVal === DEFAULT_MARKDOWN_EN.trim();
     const isDefaultJa = formVal === DEFAULT_MARKDOWN_JA.trim();
 
-    if (!formVal || (lang === 'ja' && isDefaultEn) || (lang === 'en' && isDefaultJa)) {
+    // Force load sample if empty (even if browser tried to restore something weird)
+    if (!formVal || formVal.length === 0) {
+        console.log("Editor is empty. Loading default sample.");
+        editorForm.value = lang === 'ja' ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
+    } else if ((lang === 'ja' && isDefaultEn) || (lang === 'en' && isDefaultJa)) {
+        // Switch language context if it matches the exact OTHER default
+        console.log("Switching default sample language match.");
         editorForm.value = lang === 'ja' ? DEFAULT_MARKDOWN_JA : DEFAULT_MARKDOWN_EN;
     }
 
