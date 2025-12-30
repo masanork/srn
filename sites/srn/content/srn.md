@@ -318,8 +318,8 @@ ai_generated: true
     }
     [data-lang-en], [data-lang-ja] {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
         width: 100%;
     }
     .nav-item {
@@ -347,14 +347,15 @@ ai_generated: true
         border-color: #bae6fd;
     }
     .nav-item.compact {
-        padding: 1rem 1.25rem;
-        grid-template-columns: 40px 1fr;
+        padding: 0.85rem 1rem;
+        grid-template-columns: 32px 1fr;
+        grid-column-gap: 0.75rem;
     }
     .nav-item.compact .icon {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
     .nav-item.compact .label {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .spec-links-grid {
