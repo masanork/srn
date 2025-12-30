@@ -56,9 +56,7 @@ bun install
 
 ### Prepare Fonts (Local Only)
 Fonts are ignored by git. Place `.ttf`/`.otf` in `shared/fonts/`.
-```bash
-bun run db:build
-```
+The build process will automatically subset these fonts.
 
 ### Build
 ```bash

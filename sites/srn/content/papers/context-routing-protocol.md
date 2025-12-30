@@ -29,7 +29,7 @@ Administrative procedures are inherently "long-tail." Many inquiries and process
 Before digitization, individuals managed their identities using a "Clear File"—a folder containing physical bank books, pay stubs, and certificates. They brought this folder to city hall, acting as the **Human Integration Hub**.
 
 Web/A Folio returns to this model. By placing the individual at the center of data integration:
-1. **$O(N)$ Connectivity**: A person links $N$ services. We avoid the exponential cost of $N(N-1)/2$ direct API connections between institutions.
+1. **O(N) Connectivity**: A person links N services. We avoid the exponential cost of `N(N-1)/2` direct API connections between institutions.
 2. **Contextual Freshness**: Private data (Bank) and Public records (City) can be safely merged under the individual's sovereign control, bypassing administrative silos.
 
 ## 3. The Re-invention of Messaging: Beyond SMTP and Chat

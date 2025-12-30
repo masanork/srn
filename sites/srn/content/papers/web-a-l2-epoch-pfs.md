@@ -42,8 +42,8 @@ The following table contrasts SEFS with "True PFS" (e.g., Signal Protocol, TLS 1
 
 ### 3.1. The "Window of Vulnerability"
 
-In True PFS, if an endpoint is compromised at time $T$, messages sent at $T-1$ second are likely safe.
-In SEFS, if the Aggregator is compromised at time $T$, all messages sent from the *start of the current Epoch* up to $T$ are vulnerable.
+In True PFS, if an endpoint is compromised at time `T`, messages sent at `T-1` second are likely safe.
+In SEFS, if the Aggregator is compromised at time `T`, all messages sent from the *start of the current Epoch* up to `T` are vulnerable.
 
 **Mitigation:**
 The risk is linear to the Epoch duration.

@@ -63,4 +63,4 @@ When an Agent has access to a user's Folio, it can pre-fill new forms.
 > 4. If any data is missing, flag it for my review.
 
 ---
-*For more details on integration, see the [MCP Setup Guide](./guide/mcp-setup.html).*
+*For more details on integration, see the [MCP Setup Guide](./mcp-setup.html).*
