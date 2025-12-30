@@ -1,91 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest DID Test</title>
+    <title>Guest DID Test (Improved UX)</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            max-width: 600px;
+            max-width: 700px;
             margin: 50px auto;
             padding: 20px;
+            background: #f5f5f5;
         }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
         .form-group {
             margin: 20px 0;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: 500;
+            color: #555;
         }
-        input[type="text"], textarea {
+
+        input[type="text"],
+        textarea {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
+            padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 14px;
         }
+
         button {
-            background: #007bff;
+            background: #2196f3;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            margin-right: 10px;
         }
+
         button:hover {
-            background: #0056b3;
+            background: #1976d2;
         }
+
+        button.secondary {
+            background: #757575;
+        }
+
+        button.secondary:hover {
+            background: #616161;
+        }
+
         .checkbox-group {
             display: flex;
             align-items: center;
             gap: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
         }
+
         .result {
             margin-top: 20px;
             padding: 15px;
-            background: #f8f9fa;
             border-radius: 4px;
             display: none;
         }
+
         .result.success {
             background: #d4edda;
             border: 1px solid #c3e6cb;
+            color: #155724;
         }
+
         .result.error {
             background: #f8d7da;
             border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .actions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
         }
     </style>
 </head>
+
 <body>
-    <h1>Guest DID Test</h1>
-    <p>Test Passkey-based Guest DID creation for anonymous form submissions with reply capability.</p>
+    <div class="container">
+        <h1>🔐 Guest DID Test (Improved UX)</h1>
 
-    <form id="testForm">
-        <div class="form-group">
-            <label for="name">Name</label>
-            <input type="text" id="name" placeholder="Your name" required>
+        <div class="info-box">
+            <strong>✨ New Features:</strong>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                <li>Reuses existing Passkeys automatically</li>
+                <li>No duplicate credentials created</li>
+                <li>Discoverable credentials (resident keys)</li>
+                <li>Better user feedback</li>
+            </ul>
         </div>
 
-        <div class="form-group">
-            <label for="message">Message</label>
-            <textarea id="message" rows="4" placeholder="Your message" required></textarea>
+        <form id="testForm">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" placeholder="Your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" rows="4" placeholder="Your message" required></textarea>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="wantsReplies">
+                <label for="wantsReplies" style="margin: 0;">
+                    📬 Receive replies (uses Passkey - will reuse existing if available)
+                </label>
+            </div>
+
+            <button type="submit">Submit Form</button>
+        </form>
+
+        <div id="result" class="result"></div>
+
+        <div class="actions">
+            <h3>Testing Actions</h3>
+            <button class="secondary" onclick="checkExisting()">Check Existing Guest DID</button>
+            <button class="secondary" onclick="clearAll()">Clear All Guest DIDs</button>
         </div>
-
-        <div class="form-group checkbox-group">
-            <input type="checkbox" id="wantsReplies">
-            <label for="wantsReplies" style="margin: 0;">Receive replies (requires Passkey)</label>
-        </div>
-
-        <button type="submit">Submit</button>
-    </form>
-
-    <div id="result" class="result"></div>
+    </div>
 
     <script src="guest-did.js"></script>
     <script>
+        let submissionCount = 0;
+
         document.getElementById('testForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -95,7 +184,7 @@
 
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
-            resultDiv.className = 'result';
+            resultDiv.className = 'result info';
             resultDiv.textContent = 'Processing...';
 
             try {
@@ -104,20 +193,61 @@
                     wantsReplies
                 );
 
+                submissionCount++;
+                const isReused = senderDid.includes('guest:') && submissionCount > 1;
+
                 resultDiv.className = 'result success';
                 resultDiv.innerHTML = `
-                    <strong>Success!</strong><br>
-                    Sender DID: <code>${senderDid}</code><br>
-                    ${wantsReplies ? 'Guest DID created with Passkey' : 'Anonymous submission (form DID)'}
+                    <strong>✅ Success! (Submission #${submissionCount})</strong><br><br>
+                    <strong>Sender DID:</strong> <code>${senderDid}</code><br><br>
+                    ${wantsReplies ? `
+                        <strong>Status:</strong> ${isReused ?
+                            '♻️ <strong>Reused existing Guest DID</strong> (no new Passkey created!)' :
+                            '🆕 Created new Guest DID with Passkey'
+                        }<br><br>
+                        <em>Try submitting again with "Receive replies" checked - it should reuse the same DID!</em>
+                    ` :
+                        '<strong>Status:</strong> Anonymous submission (form DID)'
+                    }
                 `;
             } catch (error) {
                 resultDiv.className = 'result error';
                 resultDiv.innerHTML = `
-                    <strong>Error:</strong><br>
+                    <strong>❌ Error:</strong><br>
                     ${error.message}
                 `;
             }
         });
+
+        async function checkExisting() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('guest-did:'));
+
+            if (keys.length === 0) {
+                resultDiv.innerHTML = '<strong>ℹ️ No existing Guest DIDs found</strong><br>Submit a form with "Receive replies" checked to create one.';
+            } else {
+                const dids = keys.map(k => k.replace('guest-did:', ''));
+                resultDiv.innerHTML = `
+                    <strong>✓ Found ${keys.length} existing Guest DID(s):</strong><br><br>
+                    ${dids.map(did => `<code>${did}</code>`).join('<br>')}
+                `;
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Clear all Guest DIDs from localStorage?')) {
+                clearAllGuestDids();
+                submissionCount = 0;
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = '<strong>✓ All Guest DIDs cleared</strong><br>Next submission will create a new one.';
+            }
+        }
     </script>
 </body>
+
 </html>

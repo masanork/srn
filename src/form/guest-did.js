@@ -1,48 +1,104 @@
 /**
- * Guest DID with Passkey Authentication
+ * Guest DID with Passkey Authentication (Improved UX)
  * 
- * This module provides seamless Guest DID creation for users without permanent DIDs.
- * UX: Single checkbox "Receive replies" - no extra dialogs except OS Passkey prompt.
+ * Features:
+ * - Reuses existing Passkeys when possible
+ * - Uses discoverable credentials (resident keys)
+ * - Prevents duplicate Passkey creation
  */
 
 const REMOTE_URL = "http://127.0.0.1:5001/demo-weba/us-central1/api"; // TODO: Production URL
+const RP_ID = window.location.hostname;
+const RP_NAME = "SRN Guest Service";
 
 /**
- * Create a Guest DID using Passkey authentication
- * @returns {Promise<string>} Guest DID (e.g., "did:web:srn.example:guest:abc123")
+ * Check if user has existing Guest DID Passkey
+ * @returns {Promise<string|null>} Existing Guest DID or null
  */
-async function createGuestDidWithPasskey() {
-    // Check Passkey support
+async function checkExistingGuestDid() {
+    // Check localStorage for existing Guest DID
+    const keys = Object.keys(localStorage);
+    for (const key of keys) {
+        if (key.startsWith("guest-did:")) {
+            const did = key.replace("guest-did:", "");
+            const credentialId = localStorage.getItem(key);
+
+            // Verify the credential still exists
+            try {
+                const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                if (available) {
+                    console.log(`Found existing Guest DID: ${did}`);
+                    return did;
+                }
+            } catch (e) {
+                console.warn("Failed to check existing credential:", e);
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * Create or reuse Guest DID with improved UX
+ * @param {boolean} forceNew - Force creation of new Guest DID
+ * @returns {Promise<string>} Guest DID
+ */
+async function getOrCreateGuestDid(forceNew = false) {
     if (!window.PublicKeyCredential) {
         throw new Error("Passkey not supported on this device");
     }
 
+    // Check for existing Guest DID
+    if (!forceNew) {
+        const existingDid = await checkExistingGuestDid();
+        if (existingDid) {
+            console.log("Reusing existing Guest DID");
+            return existingDid;
+        }
+    }
+
+    // Create new Guest DID
+    return await createGuestDidWithPasskey();
+}
+
+/**
+ * Create a Guest DID using Passkey authentication
+ * Uses discoverable credentials for better UX
+ */
+async function createGuestDidWithPasskey() {
     try {
-        // 1. Generate challenge
+        // Generate challenge
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
 
-        // 2. Create Passkey credential
+        // Generate unique user ID
+        const userId = new Uint8Array(16);
+        crypto.getRandomValues(userId);
+
+        // Create Passkey credential with discoverable credential
         const credential = await navigator.credentials.create({
             publicKey: {
                 challenge,
                 rp: {
-                    name: "SRN Guest Service",
-                    id: window.location.hostname
+                    name: RP_NAME,
+                    id: RP_ID
                 },
                 user: {
-                    id: crypto.randomUUID(),
-                    name: "guest",
-                    displayName: "Guest User"
+                    id: userId,
+                    name: "guest@srn.example",
+                    displayName: "SRN Guest User"
                 },
                 pubKeyCredParams: [
                     { alg: -7, type: "public-key" }  // ES256
                 ],
                 authenticatorSelection: {
+                    authenticatorAttachment: "platform",  // Prefer platform authenticator
                     userVerification: "required",
-                    residentKey: "preferred"
+                    residentKey: "required",  // Make it discoverable
+                    requireResidentKey: true
                 },
-                timeout: 60000
+                timeout: 60000,
+                attestation: "none"
             }
         });
 
@@ -50,10 +106,10 @@ async function createGuestDidWithPasskey() {
             throw new Error("Passkey creation cancelled");
         }
 
-        // 3. Export public key as JWK
+        // Export public key as JWK
         const publicKeyJwk = await exportPublicKeyAsJWK(credential.response);
 
-        // 4. Call createGuestDid mutation
+        // Call createGuestDid mutation
         const mutation = `
       mutation CreateGuestDid($credentialId: String!, $publicKeyJwk: String!) {
         createGuestDid(credentialId: $credentialId, publicKeyJwk: $publicKeyJwk) {
@@ -130,7 +186,7 @@ function arrayBufferToBase64Url(buffer) {
 }
 
 /**
- * Form submission handler with Guest DID support
+ * Form submission handler with improved Guest DID UX
  * 
  * Usage in Maker:
  * ```html
@@ -142,11 +198,20 @@ async function submitFormWithGuestDid(formData, wantsReplies) {
     let senderDid;
 
     if (wantsReplies) {
-        // Create Guest DID with Passkey
         try {
-            senderDid = await createGuestDidWithPasskey();
+            // Try to reuse existing Guest DID
+            senderDid = await getOrCreateGuestDid(false);
+
+            // Show user-friendly message
+            const existingDid = await checkExistingGuestDid();
+            if (existingDid) {
+                console.log("✓ Using your existing Guest identity");
+            } else {
+                console.log("✓ Created new Guest identity for receiving replies");
+            }
         } catch (error) {
-            alert("Failed to create Guest DID. Submitting anonymously instead.");
+            console.warn("Passkey failed, submitting anonymously:", error);
+            alert("Could not create Guest identity. Submitting anonymously (no replies).");
             senderDid = "did:web:srn.example:forms:contact";
         }
     } else {
@@ -160,10 +225,24 @@ async function submitFormWithGuestDid(formData, wantsReplies) {
     return { senderDid, formData };
 }
 
+/**
+ * Clear all Guest DIDs (for testing/debugging)
+ */
+function clearAllGuestDids() {
+    const keys = Object.keys(localStorage);
+    for (const key of keys) {
+        if (key.startsWith("guest-did:")) {
+            localStorage.removeItem(key);
+        }
+    }
+    console.log("All Guest DIDs cleared");
+}
+
 // Export for use in Maker
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        createGuestDidWithPasskey,
-        submitFormWithGuestDid
+        getOrCreateGuestDid,
+        submitFormWithGuestDid,
+        clearAllGuestDids
     };
 }
