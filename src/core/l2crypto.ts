@@ -320,7 +320,8 @@ export async function encryptLayer2(
       campaign_id?: string;
       key_policy?: OrgKeyPolicy;
       created_at?: string;
-    }
+    };
+    userKid?: string;
   }
 ): Promise<Layer2Encrypted> {
   await initWasm();
@@ -338,7 +339,7 @@ export async function encryptLayer2(
     campaign_id: options?.meta?.campaign_id,
   };
 
-  const userKid = options?.userSk ? "user#sig-custom" : "user#sig-1"; // Simplified for now
+  const userKid = options?.userKid || (options?.userSk ? "user#sig-custom" : "user#sig-1");
 
   const envelopeJson = wasmBuildL2(
     canonicalJson(payload.layer2_plain),

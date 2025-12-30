@@ -124,6 +124,7 @@ export async function sendGuestMessage(did: string, recipientDid: string, messag
         recipientKid,
         {
             userSk: new Uint8Array(0), // Trigger alg: 'none' in WASM
+            userKid: "guest-passkey",
         }
     );
 

@@ -226,7 +226,9 @@ ai_generated: true
     }
     .vision-links a:hover {
         text-decoration: underline;
-    }    max-width: 850px;
+    }
+    .hero-section {
+        max-width: 850px;
         margin: 0 auto;
     }
     .lead strong {
