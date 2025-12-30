@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.api = void 0;
+exports.didDocument = exports.api = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const server_1 = require("@apollo/server");
@@ -244,5 +244,58 @@ exports.api = functions.https.onRequest(async (req, res) => {
         app.use("/", (0, cors_1.default)(), (0, body_parser_1.json)(), apolloHandler);
     }
     return app(req, res);
+});
+exports.didDocument = functions.https.onRequest(async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") {
+        res.status(204).send("");
+        return;
+    }
+    const pathMatch = req.path.match(/\/\.well-known\/did\/guest\/([^\/]+)\/did\.json/);
+    if (!pathMatch) {
+        res.status(404).json({ error: "Invalid DID Document path" });
+        return;
+    }
+    const guestId = pathMatch[1];
+    const db = admin.firestore();
+    try {
+        const doc = await db.collection("guest-dids").doc(guestId).get();
+        if (!doc.exists) {
+            res.status(404).json({ error: "Guest DID not found" });
+            return;
+        }
+        const data = doc.data();
+        const did = data?.did;
+        const publicKeyJwk = JSON.parse(data?.publicKeyJwk || "{}");
+        const expiresAt = data?.expiresAt;
+        if (new Date(expiresAt) < new Date()) {
+            res.status(410).json({ error: "Guest DID expired" });
+            return;
+        }
+        const didDocument = {
+            "@context": "https://www.w3.org/ns/did/v1",
+            "id": did,
+            "verificationMethod": [{
+                    "id": `${did}#passkey`,
+                    "type": "JsonWebKey2020",
+                    "controller": did,
+                    "publicKeyJwk": publicKeyJwk
+                }],
+            "authentication": [`${did}#passkey`],
+            "service": [{
+                    "type": "FolioInbox",
+                    "serviceEndpoint": `https://srn.example/api/guest-inbox/${guestId}`
+                }],
+            "expiresAt": expiresAt
+        };
+        res.set("Content-Type", "application/did+json");
+        res.status(200).json(didDocument);
+    }
+    catch (error) {
+        console.error("Error serving DID Document:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
 //# sourceMappingURL=index.js.map
