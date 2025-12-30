@@ -9,6 +9,10 @@
 - Keep lists consistent with `-` bullets; indent wrapped lines by two spaces.
 - Leave a blank line after frontmatter and before the next heading.
 
+## Project Status & Roadmap
+- Track high-level progress and milestones in `ROADMAP.md`.
+- See `remote/functions/GUEST_DID_STATUS.md` for specific WebAuthn/Guest DID details.
+
 ## Repo Notes
 - Tests: `bun test --coverage`
 
