@@ -13,7 +13,7 @@ import { initWasm } from "../../core/wasm_core";
  * - Supports L2 Encryption via X25519
  */
 
-const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 const REMOTE_URL = isLocal ? "http://127.0.0.1:5002/api" : "/api";
 const RP_NAME = "SRN Guest Service";
 
