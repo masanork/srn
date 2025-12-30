@@ -109,7 +109,7 @@ ai_generated: true
     <span class="icon">⚖️</span><span class="label">市場競合分析</span>
     <span class="desc">PPAP、Office文書、IRM、SSI等とWeb/Aの比較。</span>
     </a>
-    <a href="./papers/ai-prompts.ja.html" class="nav-item">
+    <a href="./guide/prompts.ja.html" class="nav-item">
     <span class="icon">🤖</span><span class="label">AI プロンプト集</span>
     <span class="desc">Web/A Formの作成やデータ集計をAIで自動化する手法。</span>
     </a>

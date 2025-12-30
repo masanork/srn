@@ -87,8 +87,8 @@ layout: form
 
 ### 3. AI 連携と移行
 
-*   **Excel からの移行**: `markitdown` 等で Excel を Markdown 化し、[移行プロンプト](./guide/prompts.html) を使って Web/A 構文へ変換。
-*   **MCP サーバー**: AI エージェント（Claude/Cursor等）からフォームの解析や自動入力を行うための [MCP設定](./guide/mcp-setup.html) を提供。
+*   **Excel からの移行**: `markitdown` 等で Excel を Markdown 化し、[移行プロンプト](./guide/prompts.ja.html) を使って Web/A 構文へ変換。
+*   **MCP サーバー**: AI エージェント（Claude/Cursor等）からフォームの解析や自動入力を行うための [MCP設定](./guide/mcp-setup.ja.html) を提供。
 
 ## セキュリティと監査性
 
