@@ -280,9 +280,22 @@ export async function verifyHybridVC(
         expectedChallenge?: string;
         requireCreated?: boolean;
         allowLegacyProofs?: boolean;
+        replayGuard?: (nonce: string, threadId?: string) => Promise<boolean>;
     } = {}
 ): Promise<VerificationResult> {
     try {
+        // Enforce Replay Guard if provided (Security Audit v3 Requirement)
+        if (options.replayGuard) {
+            const nonce = vc.credentialSubject?.nonce || vc.nonce;
+            const threadId = vc.credentialSubject?.threadId || vc.threadId;
+            if (nonce || threadId) {
+                const isFresh = await options.replayGuard(nonce || "", threadId);
+                if (!isFresh) {
+                    throw new Error(`Replay detected: nonce="${nonce}", threadId="${threadId}" already processed.`);
+                }
+            }
+        }
+
         // 1. Separate Proofs from Payload
         const proofs = vc.proof;
         if (!Array.isArray(proofs)) throw new Error("VC has no proofs or invalid format.");

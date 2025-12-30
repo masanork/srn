@@ -31,7 +31,7 @@ export function generateHtml(markdown: string): string {
     const { html, jsonStructure } = parseMarkdown(markdown);
     const sourceMd = markdown.replace(/<\/script>/g, '<\\/script>');
     return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${jsonStructure.name || 'Web/A Form'}</title><link rel="icon" href="${FAVICON_DATA_URI}"><style>
-    body{font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;}
+    body{font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;position:relative;min-height:100vh;}
     .form-row{margin-bottom:1rem;}
     .form-label{font-weight:bold;display:block;margin-bottom:0.5rem;}
     .form-input{width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;}
@@ -41,8 +41,20 @@ export function generateHtml(markdown: string): string {
     .tab-btn.active{background:#fff;color:#111827;border-bottom:1px solid #fff;position:relative;top:1px;}
     .tab-content{display:none;animation:fadeIn 0.2s ease-in-out;}
     .tab-content.active{display:block;}
+    .experimental-banner { background:#fef2f2; border:1px solid #ef4444; color:#b91c1c; padding:12px; border-radius:8px; margin-bottom:2rem; font-size:13px; line-height:1.5; }
+    .experimental-tag { background:#ef4444; color:white; padding:2px 6px; border-radius:4px; font-weight:bold; margin-right:8px; }
+    .watermark { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg); font-size:120px; color:rgba(239,68,68,0.08); pointer-events:none; z-index:9999; font-weight:bold; text-transform:uppercase; white-space:nowrap; }
+    @media print { .experimental-banner { border-width:2px; } .watermark { color:rgba(239,68,68,0.15); } }
     @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
-    </style></head><body><div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    </style></head><body>
+    <div class="watermark">EXPERIMENTAL</div>
+    <div class="experimental-banner">
+        <span class="experimental-tag">PILOT PHASE</span>
+        <strong>NOTICE:</strong> This is an experimental document generated for a pilot project.
+        Security mechanisms are currently in prototype phase. Avoid including highly sensitive personal information.
+        Verify the issuer's certificate for authenticity.
+    </div>
+    <div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
 
 /**

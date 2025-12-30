@@ -173,7 +173,7 @@ export class DataManager {
                 const envelope = await buildLayer2Envelope({
                     layer2_plain: data,
                     config: encryptionConfig,
-                    user_kid: senderDid, // Use Guest DID if available
+                    user_kid: senderDid || "anonymous", // Ensure string
                 });
                 this.downloadHtml('submit', true, { l2Envelope: envelope, stripPlaintext: true });
             } catch (e) {
@@ -206,6 +206,26 @@ export class DataManager {
         };
 
         try {
+            // HMP (Human-Machine Parity) consistency check
+            const uiKeys = new Set<string>();
+            document.querySelectorAll('[data-json-path]').forEach((el: any) => uiKeys.add(el.dataset.jsonPath));
+            document.querySelectorAll('[type="radio"]').forEach((el: any) => uiKeys.add(el.name));
+            document.querySelectorAll('table.data-table.dynamic').forEach((el: any) => uiKeys.add(el.dataset.tableKey));
+
+            const ghostFields: string[] = [];
+            const answers = payload.credentialSubject.answers;
+            for (const key in answers) {
+                if (!uiKeys.has(key) && !key.startsWith('@') && key !== 'type' && key !== 'templateId' && key !== 'id') {
+                    ghostFields.push(key);
+                }
+            }
+
+            if (ghostFields.length > 0) {
+                if (!confirm(`WARNING: HMP Variance Detected.\n\nThe following hidden fields will be signed but are not visible in the form UI:\n- ${ghostFields.join('\n- ')}\n\nContinue signing?`)) {
+                    return;
+                }
+            }
+
             const signedVc = await globalSigner.sign(payload);
             this.downloadHtml('submitted', true, { embeddedVc: signedVc });
         } catch (e) {
@@ -320,7 +340,7 @@ export class DataManager {
             title,
             filenameSuffix,
             isFinal,
-            options,
+            ...(options ? { options } : {}),
         });
     }
 
@@ -344,7 +364,7 @@ export class DataManager {
             savedAt,
             formId: this.formId,
             formData: data,
-            l2State: replayNonces ? { replayNonces } : undefined,
+            ...(replayNonces ? { l2State: { replayNonces } } : {}),
         };
     }
 
