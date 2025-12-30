@@ -8,7 +8,11 @@ export const bufferToBase64Url = (buffer: ArrayBuffer): string => {
 };
 
 export const base64UrlToBuffer = (base64: string): ArrayBuffer => {
-    const binary = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+    let b64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) {
+        b64 += '=';
+    }
+    const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);

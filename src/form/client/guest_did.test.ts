@@ -56,7 +56,7 @@ global.navigator = {
 (global as any).window = global;
 (global as any).PublicKeyCredential = class { };
 (global as any).location = { hostname: "localhost" };
-(global as any).btoa = (str: string) => str; // Simple mock
+// (global as any).btoa mock removed to use environment implementation
 
 // Mock fetch
 const fetchMock = mock(async (url, options) => {
@@ -92,7 +92,7 @@ describe("Guest DID Client", () => {
 
         // Assert storage
         expect(localStorageMock.get("guest-did:did:web:srn.example:guest:test")).toBe("mock-credential-id");
-        expect(localStorageMock.get("guest-did:did:web:srn.example:guest:test:privateKey")).toBe("base64url");
+        expect(localStorageMock.get("guest-did:did:web:srn.example:guest:test:privateKey")).toBe("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
     });
 
     test("should reuse existing guest DID", async () => {
@@ -109,6 +109,6 @@ describe("Guest DID Client", () => {
         localStorageMock.set("guest-did:test", "cred-id");
         const msgs = await fetchGuestInbox("test");
         expect(msgs).toEqual([]);
-        expect(fetchMock).toHaveBeenCalledTimes(2); // Challenge + GuestInbox
+        expect(fetchMock).toHaveBeenCalledTimes(3); // WASM fetch + Challenge + GuestInbox
     });
 });
