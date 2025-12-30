@@ -1,3 +1,8 @@
+import { generateRecipientKeyPair, toBase64Url, fromBase64Url } from "../../core/l2crypto";
+import { initWasm } from "../../core/wasm_core";
+
+// ... (existing imports)
+
 /**
  * Guest DID with Passkey Authentication
  * 
@@ -5,6 +10,7 @@
  * - Reuses existing Passkeys when possible
  * - Uses discoverable credentials (resident keys)
  * - Prevents duplicate Passkey creation
+ * - Supports L2 Encryption via X25519
  */
 
 const REMOTE_URL = "http://127.0.0.1:5001/demo-weba/us-central1/api"; // TODO: Production URL
@@ -21,11 +27,8 @@ export interface GuestDidResult {
 async function checkExistingGuestDid(): Promise<string | null> {
     const keys = Object.keys(localStorage);
     for (const key of keys) {
-        if (key.startsWith("guest-did:")) {
+        if (key.startsWith("guest-did:") && !key.includes(":")) { // Strict check to avoid sub-keys
             const did = key.replace("guest-did:", "");
-            // Simply return the first found DID for now.
-            // Ideally we should check if the credential is still valid/available, 
-            // but isUserVerifyingPlatformAuthenticatorAvailable only checks platform capability, not specific credential.
             return did;
         }
     }
@@ -60,6 +63,8 @@ export async function getOrCreateGuestDid(forceNew = false): Promise<GuestDidRes
  */
 async function createGuestDidWithPasskey(): Promise<string> {
     try {
+        await initWasm(); // Ensure WASM is loaded for crypto
+
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
 
@@ -98,9 +103,17 @@ async function createGuestDidWithPasskey(): Promise<string> {
 
         const publicKeyJwk = await exportPublicKeyAsJWK(credential.response as AuthenticatorAttestationResponse);
 
+        // Generate Encryption Key (X25519)
+        const encKeyPair = await generateRecipientKeyPair();
+        const encryptionPublicKeyJwk = {
+            kty: "OKP",
+            crv: "X25519",
+            x: toBase64Url(encKeyPair.publicKey)
+        };
+
         const mutation = `
-      mutation CreateGuestDid($credentialId: String!, $publicKeyJwk: String!) {
-        createGuestDid(credentialId: $credentialId, publicKeyJwk: $publicKeyJwk) {
+      mutation CreateGuestDid($credentialId: String!, $publicKeyJwk: String!, $encryptionPublicKeyJwk: String!) {
+        createGuestDid(credentialId: $credentialId, publicKeyJwk: $publicKeyJwk, encryptionPublicKeyJwk: $encryptionPublicKeyJwk) {
           did
           expiresAt
         }
@@ -114,7 +127,8 @@ async function createGuestDidWithPasskey(): Promise<string> {
                 query: mutation,
                 variables: {
                     credentialId: credential.id,
-                    publicKeyJwk: JSON.stringify(publicKeyJwk)
+                    publicKeyJwk: JSON.stringify(publicKeyJwk),
+                    encryptionPublicKeyJwk: JSON.stringify(encryptionPublicKeyJwk)
                 }
             })
         });
@@ -127,6 +141,7 @@ async function createGuestDidWithPasskey(): Promise<string> {
         const { did, expiresAt } = result.data.createGuestDid;
 
         localStorage.setItem(`guest-did:${did}`, credential.id);
+        localStorage.setItem(`guest-did:${did}:privateKey`, toBase64Url(encKeyPair.privateKey));
 
         console.log(`Guest DID created: ${did} (expires: ${expiresAt})`);
         return did;

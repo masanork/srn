@@ -89,7 +89,7 @@ const typeDefs = `
   }
   
   type Mutation {
-    createGuestDid(credentialId: String!, publicKeyJwk: String!): GuestDid! 
+    createGuestDid(credentialId: String!, publicKeyJwk: String!, encryptionPublicKeyJwk: String!): GuestDid! 
     postMessage(
       did: ID!
       nonce: String!
@@ -197,7 +197,7 @@ const resolvers = {
         }
     },
     Mutation: {
-        createGuestDid: async (_: any, { credentialId, publicKeyJwk }: any) => {
+        createGuestDid: async (_: any, { credentialId, publicKeyJwk, encryptionPublicKeyJwk }: any) => {
             const db = admin.firestore();
             const guestId = Math.random().toString(36).substring(2, 10);
             const did = `did:web:srn.example:guest:${guestId}`;
@@ -207,6 +207,7 @@ const resolvers = {
                 did,
                 credentialId,
                 publicKeyJwk,
+                encryptionPublicKeyJwk,
                 createdAt: new Date().toISOString(),
                 expiresAt
             });
@@ -320,17 +321,40 @@ export const didDocument = functions.https.onRequest(async (req, res) => {
             return;
         }
 
+        const encryptionPublicKeyJwkRaw = data?.encryptionPublicKeyJwk;
+
+        const verificationMethod: any[] = [{
+            "id": `${did}#passkey`,
+            "type": "JsonWebKey2020",
+            "controller": did,
+            "publicKeyJwk": publicKeyJwk
+        }];
+
+        const keyAgreement: string[] = [];
+
+        if (encryptionPublicKeyJwkRaw) {
+            try {
+                const encryptionKey = JSON.parse(encryptionPublicKeyJwkRaw);
+                const limitId = `${did}#x25519`;
+                verificationMethod.push({
+                    "id": limitId,
+                    "type": "JsonWebKey2020",
+                    "controller": did,
+                    "publicKeyJwk": encryptionKey
+                });
+                keyAgreement.push(limitId);
+            } catch (e) {
+                console.warn("Failed to parse encryption key", e);
+            }
+        }
+
         // Generate DID Document
         const didDocument = {
             "@context": "https://www.w3.org/ns/did/v1",
             "id": did,
-            "verificationMethod": [{
-                "id": `${did}#passkey`,
-                "type": "JsonWebKey2020",
-                "controller": did,
-                "publicKeyJwk": publicKeyJwk
-            }],
+            "verificationMethod": verificationMethod,
             "authentication": [`${did}#passkey`],
+            "keyAgreement": keyAgreement.length > 0 ? keyAgreement : undefined,
             "service": [{
                 "type": "FolioInbox",
                 "serviceEndpoint": `https://srn.example/api/guest-inbox/${guestId}`
@@ -344,4 +368,23 @@ export const didDocument = functions.https.onRequest(async (req, res) => {
         console.error("Error serving DID Document:", error);
         res.status(500).json({ error: "Internal server error" });
     }
+});
+
+export const cleanupGuestDids = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+    const db = admin.firestore();
+    const now = new Date();
+    const snapshot = await db.collection('guest-dids').where('expiresAt', '<', now.toISOString()).get();
+
+    if (snapshot.empty) {
+        console.log('No expired Guest DIDs found.');
+        return;
+    }
+
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    console.log(`Deleted ${snapshot.size} expired Guest DIDs`);
 });

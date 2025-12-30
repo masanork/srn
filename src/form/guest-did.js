@@ -109,10 +109,21 @@ async function createGuestDidWithPasskey() {
         // Export public key as JWK
         const publicKeyJwk = await exportPublicKeyAsJWK(credential.response);
 
+        // Generate Dummy Encryption Key (X25519) for testing
+        // In real app (guest_did.ts), we generate proper X25519 key pair
+        const dummyPub = new Uint8Array(32);
+        crypto.getRandomValues(dummyPub);
+
+        const encryptionPublicKeyJwk = {
+            kty: "OKP",
+            crv: "X25519",
+            x: arrayBufferToBase64Url(dummyPub)
+        };
+
         // Call createGuestDid mutation
         const mutation = `
-      mutation CreateGuestDid($credentialId: String!, $publicKeyJwk: String!) {
-        createGuestDid(credentialId: $credentialId, publicKeyJwk: $publicKeyJwk) {
+      mutation CreateGuestDid($credentialId: String!, $publicKeyJwk: String!, $encryptionPublicKeyJwk: String!) {
+        createGuestDid(credentialId: $credentialId, publicKeyJwk: $publicKeyJwk, encryptionPublicKeyJwk: $encryptionPublicKeyJwk) {
           did
           expiresAt
         }
@@ -126,7 +137,8 @@ async function createGuestDidWithPasskey() {
                 query: mutation,
                 variables: {
                     credentialId: credential.id,
-                    publicKeyJwk: JSON.stringify(publicKeyJwk)
+                    publicKeyJwk: JSON.stringify(publicKeyJwk),
+                    encryptionPublicKeyJwk: JSON.stringify(encryptionPublicKeyJwk)
                 }
             })
         });
