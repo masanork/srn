@@ -2,7 +2,7 @@
 title: "Whitepaper: Context-Aware Routing and the Ephemeral Data Hub"
 layout: article
 author: "Sorane Project"
-date: 2025-12-30
+date: 2024-12-30
 description: "Redefining digital government, messaging protocols, and data sovereignty in the age of LLMs."
 ai_generated: true
 ---
@@ -79,6 +79,6 @@ Web/A Folio seeks to return to the foundational principles of the early Internet
 
 ## Related Documents
 
-- [Web/A Folio Concept Paper](./web-a-folio.html)
-- [Folio CLI Design Doc](./web-a-folio-cli.html)
-- [Web/A L2 Encryption Specification](./web-a-l2-encryption.html)
+- [Web/A Folio Concept Paper](web-a-folio.html)
+- [Folio CLI Design Doc](web-a-folio-cli.html)
+- [Web/A L2 Encryption Specification](web-a-l2-encryption.html)

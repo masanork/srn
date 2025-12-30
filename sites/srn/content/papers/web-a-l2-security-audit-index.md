@@ -21,6 +21,7 @@ for fast navigation.
 - [Security Re-Assessment v7 (PoC Risk Assessment)](./web-a-l2-security-audit-v7.html)
 
 ### Response & Remediation
+- [Product Team Response (v7 Implementation Plan)](./web-a-product-team-response-v7.html)
 - [Product Team Response (Provisional Response to v6)](./web-a-product-team-response-v6.html)
 - [Product Security Status Report (Red Team Sharing)](./web-a-product-security-status-report.html)
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
