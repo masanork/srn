@@ -79,6 +79,7 @@ const typeDefs = `
     inbox(did: ID!, nonce: String!, signature: String!): [Message!]!
     outbox(did: ID!, nonce: String!, signature: String!): [Message!]!
     threads(did: ID!, nonce: String!, signature: String!): [Thread!]!
+    guestInbox(did: ID!, credentialId: String!, signature: String!, authenticatorData: String!, clientDataJSON: String!): [Message!]!
     hello: String 
   }
   
@@ -104,6 +105,47 @@ const typeDefs = `
     acknowledgeMessage(did: ID!, nonce: String!, signature: String!, id: ID!): Boolean! 
   }
 `;
+
+import * as crypto from "crypto";
+
+// Helper to verify Passkey signature
+async function verifyPasskey(did: string, credentialId: string, signature: string, authenticatorData: string, clientDataJSON: string) {
+    const db = admin.firestore();
+    const guestId = did.split(":").pop();
+    if (!guestId) throw new Error("Invalid DID");
+
+    const doc = await db.collection("guest-dids").doc(guestId).get();
+    if (!doc.exists) throw new Error("Guest DID not found");
+
+    const data = doc.data();
+    if (data?.credentialId !== credentialId) throw new Error("Credential ID mismatch");
+    if (new Date(data?.expiresAt) < new Date()) throw new Error("Guest DID expired");
+
+    const jwk = JSON.parse(data?.publicKeyJwk);
+
+    const clientData = Buffer.from(clientDataJSON, 'base64');
+    // const clientDataObj = JSON.parse(clientData.toString());
+    // TODO: Verify challenge from clientDataObj
+
+    const authData = Buffer.from(authenticatorData, 'base64');
+    const clientDataHash = crypto.createHash('sha256').update(clientData).digest();
+    const signatureBase = Buffer.concat([authData, clientDataHash]);
+
+    const publicKey = crypto.createPublicKey({
+        key: jwk,
+        format: 'jwk'
+    });
+
+    const isValid = crypto.verify(
+        'sha256',
+        signatureBase,
+        publicKey,
+        Buffer.from(signature, 'base64')
+    );
+
+    if (!isValid) throw new Error("Invalid Passkey signature");
+    return true;
+}
 
 const resolvers = {
     Query: {
@@ -145,6 +187,13 @@ const resolvers = {
                 threadId,
                 messages: messages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             }));
+        },
+
+        guestInbox: async (_: any, { did, credentialId, signature, authenticatorData, clientDataJSON }: any) => {
+            await verifyPasskey(did, credentialId, signature, authenticatorData, clientDataJSON);
+            // Fetch messages for Guest DID
+            const snapshot = await admin.firestore().collection("inbox").where("recipientDid", "==", did).get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
     },
     Mutation: {
