@@ -233,8 +233,8 @@ program
 
 // --- DID Operations ---
 import { resolveDidDocument, encodeDidKey } from "../core/did";
-import { ed25519 } from "@noble/curves/ed25519.js";
 import { bytesToHex } from "../core/encoding";
+import { initWasm, ed25519GenerateKeyPair } from "../core/wasm_core";
 
 const didCmd = program.command("did").description("DID operations");
 
@@ -262,8 +262,8 @@ didCmd
     .option("--save <alias>", "Save the private key with an alias")
     .action(async (options) => {
         if (options.method === "key") {
-            const privateKey = ed25519.utils.randomSecretKey();
-            const publicKey = ed25519.getPublicKey(privateKey);
+            await initWasm();
+            const { privateKey, publicKey } = ed25519GenerateKeyPair();
             const did = encodeDidKey(publicKey, "ed25519");
 
             console.log(`DID: ${did}`);
