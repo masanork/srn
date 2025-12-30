@@ -30,6 +30,7 @@ description: Folio Development & Verification Roadmap
 - [x] **VC presentation**: Users present VC during auth to gain access in `postMessage`.
 - [x] **Capability Delegation**: Allow users to delegate posting rights to other DIDs/Agents via `transport delegate`.
 
-## Phase 4: Scalability & Production
-- [ ] **Data Retention Policies**: Automated cleanup of old messages/threads.
+## Phase 4: Scalability & Production (Next)
+- [ ] **Ephemeral Hub & Robust Retention**: Implement server-side TTL (e.g., 30 days) and automated cleanup. Define the server as a transient transit point.
 - [ ] **Thread Visualization**: Enhance CLI/Web UI to show threaded conversations.
+- [ ] **Sync Optimization**: Lightweight delta polling for inbox updates.
