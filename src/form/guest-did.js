@@ -185,6 +185,100 @@ function arrayBufferToBase64Url(buffer) {
         .replace(/=/g, '');
 }
 
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+function base64UrlToArrayBuffer(base64url) {
+    const padding = '='.repeat((4 - base64url.length % 4) % 4);
+    const base64 = (base64url + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray.buffer;
+}
+
+/**
+ * Fetch inbox messages for Guest DID using Passkey authentication
+ * @param {string} did - Guest DID
+ * @returns {Promise<Array>} Messages
+ */
+async function fetchGuestInbox(did) {
+    const credentialId = localStorage.getItem(`guest-did:${did}`);
+    if (!credentialId) throw new Error("Credential ID not found for DID");
+
+    // Get Challenge
+    const challengeResp = await fetch(REMOTE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            query: `query GetChallenge($did: ID!) { getChallenge(did: $did) { nonce } }`,
+            variables: { did }
+        })
+    });
+    const challengeResult = await challengeResp.json();
+    if (challengeResult.errors) throw new Error(challengeResult.errors[0].message);
+    const nonce = challengeResult.data.getChallenge.nonce;
+
+    // Sign with Passkey
+    const challengeBuffer = new TextEncoder().encode(nonce);
+
+    const assertion = await navigator.credentials.get({
+        publicKey: {
+            challenge: challengeBuffer,
+            allowCredentials: [{
+                id: base64UrlToArrayBuffer(credentialId),
+                type: "public-key"
+            }],
+            userVerification: "required"
+        }
+    });
+
+    if (!assertion) throw new Error("Authentication failed");
+
+    // Call guestInbox
+    const query = `
+        query GuestInbox($did: ID!, $credentialId: String!, $signature: String!, $authenticatorData: String!, $clientDataJSON: String!) {
+            guestInbox(did: $did, credentialId: $credentialId, signature: $signature, authenticatorData: $authenticatorData, clientDataJSON: $clientDataJSON) {
+                id
+                senderDid
+                recipientDid
+                envelope
+                createdAt
+            }
+        }
+    `;
+
+    const apiResp = await fetch(REMOTE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            query,
+            variables: {
+                did,
+                credentialId,
+                signature: arrayBufferToBase64(assertion.response.signature),
+                authenticatorData: arrayBufferToBase64(assertion.response.authenticatorData),
+                clientDataJSON: arrayBufferToBase64(assertion.response.clientDataJSON)
+            }
+        })
+    });
+
+    const apiResult = await apiResp.json();
+    if (apiResult.errors) throw new Error(apiResult.errors[0].message);
+
+    return apiResult.data.guestInbox;
+}
+
 /**
  * Form submission handler with improved Guest DID UX
  * 
@@ -243,6 +337,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         getOrCreateGuestDid,
         submitFormWithGuestDid,
-        clearAllGuestDids
+        clearAllGuestDids,
+        fetchGuestInbox
     };
 }

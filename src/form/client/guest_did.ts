@@ -157,6 +157,96 @@ async function exportPublicKeyAsJWK(response: AuthenticatorAttestationResponse):
     };
 }
 
+export async function fetchGuestInbox(did: string): Promise<any[]> {
+    const credentialId = localStorage.getItem(`guest-did:${did}`);
+    if (!credentialId) throw new Error("Credential ID not found for DID");
+
+    // Get Challenge (Nonce)
+    const challengeResp = await fetch(REMOTE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            query: `query GetChallenge($did: ID!) { getChallenge(did: $did) { nonce } }`,
+            variables: { did }
+        })
+    });
+    const challengeResult = await challengeResp.json();
+    if (challengeResult.errors) throw new Error(challengeResult.errors[0].message);
+    const nonce = challengeResult.data.getChallenge.nonce;
+
+    const challengeBuffer = new TextEncoder().encode(nonce);
+
+    const assertion = await navigator.credentials.get({
+        publicKey: {
+            challenge: challengeBuffer,
+            allowCredentials: [{
+                id: base64UrlToArrayBuffer(credentialId),
+                type: "public-key"
+            }],
+            userVerification: "required"
+        }
+    }) as PublicKeyCredential;
+
+    if (!assertion) throw new Error("Authentication failed");
+
+    const response = assertion.response as AuthenticatorAssertionResponse;
+
+    // Call guestInbox
+    const query = `
+        query GuestInbox($did: ID!, $credentialId: String!, $signature: String!, $authenticatorData: String!, $clientDataJSON: String!) {
+            guestInbox(did: $did, credentialId: $credentialId, signature: $signature, authenticatorData: $authenticatorData, clientDataJSON: $clientDataJSON) {
+                id
+                senderDid
+                recipientDid
+                envelope
+                createdAt
+            }
+        }
+    `;
+
+    const apiResp = await fetch(REMOTE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            query,
+            variables: {
+                did,
+                credentialId,
+                signature: arrayBufferToBase64(response.signature),
+                authenticatorData: arrayBufferToBase64(response.authenticatorData),
+                clientDataJSON: arrayBufferToBase64(response.clientDataJSON)
+            }
+        })
+    });
+
+    const apiResult = await apiResp.json();
+    if (apiResult.errors) throw new Error(apiResult.errors[0].message);
+
+    return apiResult.data.guestInbox;
+}
+
+function base64UrlToArrayBuffer(base64url: string): ArrayBuffer {
+    const padding = '='.repeat((4 - base64url.length % 4) % 4);
+    const base64 = (base64url + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray.buffer;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
 function arrayBufferToBase64Url(buffer: Uint8Array): string {
     let binary = '';
     for (let i = 0; i < buffer.length; i++) {

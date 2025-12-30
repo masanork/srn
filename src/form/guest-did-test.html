@@ -165,6 +165,16 @@
         <div id="result" class="result"></div>
 
         <div class="actions">
+            <h3>Inbox Access</h3>
+            <p>Check messages for your Guest DID using Passkey authentication.</p>
+            <div id="inbox-controls" style="margin-bottom: 15px;">
+                <select id="did-selector" style="width: auto; padding: 8px;">
+                    <option value="">Select a Guest DID...</option>
+                </select>
+                <button onclick="checkInbox()">Check Inbox</button>
+            </div>
+            <div id="inbox-result" class="result"></div>
+
             <h3>Testing Actions</h3>
             <button class="secondary" onclick="checkExisting()">Check Existing Guest DID</button>
             <button class="secondary" onclick="clearAll()">Clear All Guest DIDs</button>
@@ -174,6 +184,21 @@
     <script src="guest-did.js"></script>
     <script>
         let submissionCount = 0;
+
+        // Initialize DID selector
+        function updateDidSelector() {
+            const selector = document.getElementById('did-selector');
+            selector.innerHTML = '<option value="">Select a Guest DID...</option>';
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('guest-did:'));
+            keys.forEach(k => {
+                const did = k.replace('guest-did:', '');
+                const opt = document.createElement('option');
+                opt.value = did;
+                opt.textContent = did;
+                selector.appendChild(opt);
+            });
+        }
+        updateDidSelector();
 
         document.getElementById('testForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -210,6 +235,7 @@
                         '<strong>Status:</strong> Anonymous submission (form DID)'
                     }
                 `;
+                updateDidSelector(); // Update selector with new DID
             } catch (error) {
                 resultDiv.className = 'result error';
                 resultDiv.innerHTML = `
@@ -218,6 +244,52 @@
                 `;
             }
         });
+
+        async function checkInbox() {
+            const selector = document.getElementById('did-selector');
+            const did = selector.value;
+            const resultDiv = document.getElementById('inbox-result');
+
+            if (!did) {
+                alert('Please select a Guest DID');
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Authenticating with Passkey...';
+
+            try {
+                const messages = await fetchGuestInbox(did);
+
+                resultDiv.className = 'result success';
+                if (messages.length === 0) {
+                    resultDiv.innerHTML = `
+                        <strong>📬 Inbox (0 messages)</strong><br><br>
+                        <em>No messages found for this Guest DID.</em>
+                    `;
+                } else {
+                    const list = messages.map(m => `
+                        <div style="background: white; padding: 10px; margin: 5px 0; border: 1px solid #ddd;">
+                            <div style="font-size: 12px; color: #666;">${new Date(m.createdAt).toLocaleString()}</div>
+                            <div style="font-weight: bold;">From: ${m.senderDid}</div>
+                            <div>${m.envelope ? '[Encrypted Message]' : JSON.stringify(m.content)}</div>
+                        </div>
+                    `).join('');
+
+                    resultDiv.innerHTML = `
+                        <strong>📬 Inbox (${messages.length} messages)</strong><br><br>
+                        ${list}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Error Checking Inbox:</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
 
         async function checkExisting() {
             const resultDiv = document.getElementById('result');
@@ -241,6 +313,7 @@
             if (confirm('Clear all Guest DIDs from localStorage?')) {
                 clearAllGuestDids();
                 submissionCount = 0;
+                updateDidSelector();
                 const resultDiv = document.getElementById('result');
                 resultDiv.style.display = 'block';
                 resultDiv.className = 'result success';
