@@ -451,12 +451,27 @@ Used by users (humans) or setup agents.
   - Verify signatures on a document.
   - **Output**: JSON report (`valid`, `issuer`, `algorithms`, `warnings[]`).
   - **Exit**: `0` valid, `3` invalid, `1` error.
+- `folio did create`
+  - Generate a new DID and key pair.
+  - **Options**: `--hybrid` (Gen Ed25519 + ML-DSA-44), `--save <name>`.
+  - **Output**: JSON key data to stdout or file.
+- `folio admin issue-pass`
+  - Admin command to issue an Access Pass VC to a user's DID.
+  - **Options**: `--admin-did`, `--user-did`, `--key-file`, `--out`.
+  - **Exit**: `0` on success.
 
 ### 4. Transport & Discovery
 
 - `folio transport resolve <did>`
   - Resolve a DID and output its Web/A transport capabilities.
   - **Output**: JSON containing endpoints, priority, and supported protocols.
+- `folio transport send`
+  - Send an encrypted message to a recipient's Folio inbox.
+  - **Options**: `--did`, `--message`, `--sender`, `--vc <path>`.
+  - **Note**: Supports multiple `--vc` for presenting delegation chains.
+- `folio transport delegate`
+  - Issue a delegation VC to another DID (Agent or peer).
+  - **Options**: `--to <did>`, `--scope`, `--key-file`, `--out`.
 - `folio transport show-thread <thread_id>`
   - Visualize the chronological chain of messages for a given thread.
   - **Output**: Tree or list view to stdout.
@@ -928,7 +943,16 @@ The Folio CLI is not intended to:
 - Validation logic
 - `folio index` (basic full-text or vector index)
 
-### Phase 3: Identity (v0.3)
+### Phase 3: Identity & Authorization (v0.3 - Current)
 
-- Signing + verification
-- JPKI / Passkey prototyping
+- Signing + verification (completed)
+- Hybrid PQC (Ed25519 + ML-DSA-44) support (completed)
+- VC-based Authorization (Access Pass) (completed)
+- Capability Delegation (Admin -> User -> Agent) (completed)
+- JPKI / Passkey prototyping (in progress)
+
+### Phase 4: Scalability & Production (Next)
+
+- Data Retention Policies: Automated cleanup of old messages/threads.
+- Thread Visualization: Enhance CLI/Web UI for conversation trees.
+- Sync optimization: Efficient delta syncing for high-frequency messaging.

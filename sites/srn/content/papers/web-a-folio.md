@@ -115,15 +115,16 @@ MyFolio/
 │   ├── vectors.db
 │   └── knowledge_graph.json
 ├── profile.html       # Basic 4 info. Looks like a "Business Card" or "ID Card" in a browser.
-├── keys/              # Keys for authentication/signing (Public Key Certs). Private keys are often in hardware.
-├── history/           # Past Web/A Forms created/submitted. All viewable as HTML.
-│   ├── 2024-01_workcert.html
-│   └── 2023-03_tax_return.html
-├── certificates/      # Certificates issued by third parties (VC). Viewable as "Awards" or "Diplomas".
-│   ├── degree.html
-│   └── residence.html
-└── inbox/             # Empty forms to be filled/processed
-    └── new_application_form.html
+├── keys/              # Keys for authentication/signing (Public Key Certs).
+│   ├── admin-keys.json # Hybrid keys (Ed25519 + ML-DSA-44)
+│   └── user-keys.json
+├── history/           # Past Web/A Forms created/submitted.
+│   ├── 2024-01-workcert.html
+│   └── 2024-01-workcert.meta.json # Metadata including thread_id, in_reply_to
+├── certificates/      # Verifiable Credentials (VC).
+│   ├── access-pass.json # Admin-issued access pass
+│   └── delegation.json  # Delegation proof for other DIDs
+└── inbox/             # Incoming forms or synchronized messages
 ```
 
 ## 5. Workflow: Agent-Assisted Filling
@@ -181,23 +182,24 @@ weba-folio verify ./MyFolio ./out/presentation.html
 - **Cloud Vendor Lock-In**: Prevented by keeping files portable and readable.
 - **Metadata Leakage**: Mitigated by minimizing index metadata and allowing cache purge.
 
-### 6.2. Messaging and Transport (Draft)
-Folio workflows include **submission and reception** of Web/A documents. A
-messaging layer should remain optional and **transport-agnostic** so each user
-can choose their preferred hosting and deployment model.
+### 6.2. Messaging and Transport (Production Beta)
+Folio workflows include **submission and reception** of Web/A documents. The
+messaging layer is **transport-agnostic**, with a reference implementation
+using GraphQL and Firebase Functions.
 
-Design goals:
-- **Verified-only acceptance**: Use Cloud Functions (or equivalent) to validate
-  VC/DID signatures before accepting a payload. The payload can remain encrypted
-  under L2E to preserve confidentiality.
-- **Spam-aware routing**: Reject unverifiable senders early and record minimal
-  metadata for abuse tracking without exposing plaintext contents.
-- **Portability**: Keep message schemas and storage layout compatible across
-  serverless platforms so users can migrate their Folio later.
-
-If message routing and discovery grow in scope, define those details in a
-dedicated transport paper, while Folio remains focused on user workflows and
-data custody.
+Key features implemented:
+- **VC-based Authorization**: Instead of static database whitelists, the server
+  validates an "Access Pass" VC signed by a trusted administrator. This allows
+  instant, decentralized onboarding.
+- **Capability Delegation**: Users can delegate their "posting rights" to other
+  DIDs (e.g., an AI Agent or a delegate) by issuing a Delegation VC. The server
+  verifies the entire chain (Admin -> User -> Agent) before accepting a payload.
+- **Hybrid PQC signatures**: All VCs and transport signatures support 
+  **ML-DSA-44** alongside Ed25519 to ensure long-term integrity against quantum
+  adversaries.
+- **Portability**: Messages are stored as L2-encrypted envelopes, and authorization
+  is proven via standard Verifiable Credentials, ensuring the Folio can be 
+  migrated between different hosting providers without losing history or authority.
 
 ## 7. Identity Assurance: Holder Binding via National ID
 
