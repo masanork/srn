@@ -21,6 +21,9 @@ Government data linkage is legally and operationally restricted by "Purpose of U
 ### 1.2. The Freshness Gap
 The most critical life events—a sudden drop in income, a medical emergency, or a change in household dynamic—are reflected in real-time in private data (bank accounts, family conversations) and the individual's own mind. By the time this data reaches government databases, it is "past data" (e.g., last year's tax returns), often too late for proactive intervention.
 
+### 1.3. The Long-Tail of Administration and the Limits of Systemization
+Administrative procedures are inherently "long-tail." Many inquiries and processes occur only once a year or once in a lifetime, making the cost of building dedicated systems for each one unjustifiable. However, from the perspective of "intent-based" data flow, these processes share similar structures. The current siloing of transport (delivery networks) for each application (procedure) is highly inefficient. We need a system where data flows over established, general-purpose paths under intelligent, context-aware control.
+
 ## 2. Returning to the "Clear File" Model
 
 Before digitization, individuals managed their identities using a "Clear File"—a folder containing physical bank books, pay stubs, and certificates. They brought this folder to city hall, acting as the **Human Integration Hub**.
