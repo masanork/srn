@@ -13,7 +13,8 @@ import { initWasm } from "../../core/wasm_core";
  * - Supports L2 Encryption via X25519
  */
 
-const REMOTE_URL = "http://127.0.0.1:5002/api"; // Hosting Emulator
+const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const REMOTE_URL = isLocal ? "http://127.0.0.1:5002/api" : "/api";
 const RP_NAME = "SRN Guest Service";
 
 export interface GuestDidResult {
@@ -109,9 +110,9 @@ async function createGuestDidWithPasskey(): Promise<string> {
         function arrayBufferToBase64(buffer: ArrayBuffer): string {
             let binary = '';
             const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
+            const len = bytes.length;
             for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
+                binary += String.fromCharCode(bytes[i]!);
             }
             return btoa(binary);
         }
@@ -303,16 +304,18 @@ function base64UrlToArrayBuffer(base64url: string): ArrayBuffer {
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
     let binary = '';
     const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
+    const len = bytes.length;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]!);
     }
     return window.btoa(binary);
 }
 
 function arrayBufferToBase64Url(buffer: Uint8Array): string {
     let binary = '';
-    for (let i = 0; i < buffer.length; i++) {
-        binary += String.fromCharCode(buffer[i]);
+    const len = buffer.length;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(buffer[i]!);
     }
     return btoa(binary)
         .replace(/\+/g, '-')

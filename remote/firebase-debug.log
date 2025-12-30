@@ -1,0 +1,237 @@
+[debug] [2025-12-30T06:05:01.852Z] ----------------------------------------------------------------------
+[debug] [2025-12-30T06:05:01.854Z] Command:       /opt/homebrew/Caskroom/miniforge/base/envs/dev/bin/node /Users/masanork/.bun/bin/firebase deploy --only functions,hosting --project sorane-7ea46
+[debug] [2025-12-30T06:05:01.854Z] CLI Version:   15.1.0
+[debug] [2025-12-30T06:05:01.854Z] Platform:      darwin
+[debug] [2025-12-30T06:05:01.854Z] Node Version:  v24.4.1
+[debug] [2025-12-30T06:05:01.854Z] Time:          Tue Dec 30 2025 15:05:01 GMT+0900 (Japan Standard Time)
+[debug] [2025-12-30T06:05:01.854Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-30T06:05:02.167Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-30T06:05:02.167Z] > authorizing via signed-in user (masanork@gmail.com)
+[debug] [2025-12-30T06:05:02.167Z] [iam] checking project sorane-7ea46 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-30T06:05:02.167Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:02.167Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:02.167Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions [none]
+[debug] [2025-12-30T06:05:02.168Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions x-goog-quota-user=projects/sorane-7ea46
+[debug] [2025-12-30T06:05:02.168Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-30T06:05:03.032Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions 200
+[debug] [2025-12-30T06:05:03.032Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-30T06:05:03.033Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:03.033Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:03.033Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/sorane-7ea46/serviceAccounts/sorane-7ea46@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-12-30T06:05:03.033Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/sorane-7ea46/serviceAccounts/sorane-7ea46@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-12-30T06:05:04.036Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/sorane-7ea46/serviceAccounts/sorane-7ea46@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-12-30T06:05:04.036Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/sorane-7ea46/serviceAccounts/sorane-7ea46@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-12-30T06:05:04.037Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:04.037Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:04.037Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/sorane-7ea46 [none]
+[debug] [2025-12-30T06:05:04.895Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/sorane-7ea46 200
+[debug] [2025-12-30T06:05:04.895Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/sorane-7ea46 {"projectId":"sorane-7ea46","projectNumber":"493802542778","displayName":"sorane","name":"projects/sorane-7ea46","resources":{"hostingSite":"sorane-7ea46"},"state":"ACTIVE","etag":"1_80205b40-06e4-483e-8deb-43aa8ca13bb9"}
+[info] 
+[info] === Deploying to 'sorane-7ea46'...
+[info] 
+[info] i  deploying functions, hosting 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run build
+[info] ✔  functions: Finished running predeploy script. 
+[debug] [2025-12-30T06:05:05.741Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:05.741Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:05.741Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46 [none]
+[debug] [2025-12-30T06:05:05.929Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46 200
+[debug] [2025-12-30T06:05:05.929Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46 {"projectNumber":"493802542778","projectId":"sorane-7ea46","lifecycleState":"ACTIVE","name":"sorane","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-12-29T12:59:57.522473Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-12-30T06:05:05.933Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:05.933Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:05.933Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/sorane-7ea46/adminSdkConfig [none]
+[debug] [2025-12-30T06:05:06.237Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/sorane-7ea46/adminSdkConfig 200
+[debug] [2025-12-30T06:05:06.238Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/sorane-7ea46/adminSdkConfig {"projectId":"sorane-7ea46","storageBucket":"sorane-7ea46.firebasestorage.app"}
+[debug] [2025-12-30T06:05:06.238Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.238Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.238Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs [none]
+[debug] [2025-12-30T06:05:06.565Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs 200
+[debug] [2025-12-30T06:05:06.565Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs {"configs":[{"name":"projects/sorane-7ea46/configs/guest_did"},{"name":"projects/sorane-7ea46/configs/webauthn"}]}
+[debug] [2025-12-30T06:05:06.565Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.565Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.565Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.565Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.566Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/guest_did/variables [none]
+[debug] [2025-12-30T06:05:06.566Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables [none]
+[debug] [2025-12-30T06:05:06.904Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/guest_did/variables 200
+[debug] [2025-12-30T06:05:06.904Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/guest_did/variables {"variables":[{"name":"projects/sorane-7ea46/configs/guest_did/variables/domain","updateTime":"2025-12-30T06:03:41.500403486Z"}]}
+[debug] [2025-12-30T06:05:06.904Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.904Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.905Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/guest_did/variables/domain [none]
+[debug] [2025-12-30T06:05:06.906Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables 200
+[debug] [2025-12-30T06:05:06.906Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables {"variables":[{"name":"projects/sorane-7ea46/configs/webauthn/variables/rp_id","updateTime":"2025-12-30T06:03:41.419669515Z"},{"name":"projects/sorane-7ea46/configs/webauthn/variables/uv","updateTime":"2025-12-30T06:03:40.358842286Z"}]}
+[debug] [2025-12-30T06:05:06.906Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.906Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.906Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.906Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:06.906Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables/rp_id [none]
+[debug] [2025-12-30T06:05:06.907Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables/uv [none]
+[debug] [2025-12-30T06:05:07.156Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables/uv 200
+[debug] [2025-12-30T06:05:07.156Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables/uv {"name":"projects/sorane-7ea46/configs/webauthn/variables/uv","updateTime":"2025-12-30T06:03:40.358842286Z","text":"true"}
+[debug] [2025-12-30T06:05:07.169Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables/rp_id 200
+[debug] [2025-12-30T06:05:07.169Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/webauthn/variables/rp_id {"name":"projects/sorane-7ea46/configs/webauthn/variables/rp_id","updateTime":"2025-12-30T06:03:41.419669515Z","text":"sorane-7ea46.web.app"}
+[debug] [2025-12-30T06:05:07.192Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/guest_did/variables/domain 200
+[debug] [2025-12-30T06:05:07.192Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/sorane-7ea46/configs/guest_did/variables/domain {"name":"projects/sorane-7ea46/configs/guest_did/variables/domain","updateTime":"2025-12-30T06:03:41.500403486Z","text":"sorane-7ea46.web.app"}
+[debug] [2025-12-30T06:05:07.194Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2025-12-30T06:05:08.053Z] > [functions] package.json contents: {
+  "name": "weba-folio-remote",
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "@apollo/server": "^4.10.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@simplewebauthn/server": "^13.2.2",
+    "as-table": "^1.0.55",
+    "cbor-x": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "graphql": "^16.8.1"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.3.3"
+  },
+  "private": true
+}
+[debug] [2025-12-30T06:05:08.054Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2025-12-30T06:05:08.054Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-12-30T06:05:08.058Z] Found firebase-functions binary at '/Users/masanork/repo/srn/remote/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8251
+
+[info] WASM initialized for Firebase Functions
+
+[debug] [2025-12-30T06:05:08.290Z] Got response from /__/functions.yaml {"endpoints":{"api":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"httpsTrigger":{},"entryPoint":"api"},"didDocument":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"httpsTrigger":{},"entryPoint":"didDocument"},"cleanupGuestDids":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"scheduleTrigger":{"schedule":"every 24 hours","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetryDuration":null,"maxBackoffDuration":null,"minBackoffDuration":null},"timeZone":null},"labels":{},"entryPoint":"cleanupGuestDids"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{},"params":[{"name":"RP_ID","type":"string","default":"localhost"},{"name":"EXPECTED_ORIGINS","type":"list","default":["http://localhost:5002","http://127.0.0.1:5002","http://localhost:5001","http://127.0.0.1:5001","http://localhost:8081","http://127.0.0.1:8081","http://localhost:8081/","http://127.0.0.1:8081/"]},{"name":"GUEST_DID_DOMAIN","type":"string","default":"srn.example"},{"name":"GUEST_DID_EXPIRATION_DAYS","type":"int","default":30},{"name":"REQUIRE_USER_VERIFICATION","type":"boolean","default":false}]}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2025-12-30T06:05:12.312Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-30T06:05:12.312Z] > authorizing via signed-in user (masanork@gmail.com)
+[debug] [2025-12-30T06:05:12.312Z] [iam] checking project sorane-7ea46 for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2025-12-30T06:05:12.312Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:12.312Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:12.312Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions [none]
+[debug] [2025-12-30T06:05:12.312Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions x-goog-quota-user=projects/sorane-7ea46
+[debug] [2025-12-30T06:05:12.312Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-12-30T06:05:12.469Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions 200
+[debug] [2025-12-30T06:05:12.469Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-12-30T06:05:12.470Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:12.470Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:05:12.471Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/sorane-7ea46/instances pageSize=100&pageToken=
+[debug] [2025-12-30T06:05:13.745Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/sorane-7ea46/instances 200
+[debug] [2025-12-30T06:05:13.746Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/sorane-7ea46/instances {}
+[info] i  functions: Created new local file .env.sorane-7ea46 to store param values. We suggest explicitly adding or excluding this file from version control. 
+[info] i  functions: Loaded environment variables from .env.sorane-7ea46. 
+[info] i  functions: Loaded environment variables from .env.sorane-7ea46. 
+[info] i  functions: Writing new parameter values to disk: .env.sorane-7ea46 
+[info] i  functions: preparing functions directory for uploading... 
+[info] i  functions: packaged /Users/masanork/repo/srn/remote/functions (308.19 KB) for uploading 
+[debug] [2025-12-30T06:09:45.140Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:45.140Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:45.140Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/sorane-7ea46/locations/-/functions [none]
+[debug] [2025-12-30T06:09:46.079Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/sorane-7ea46/locations/-/functions 200
+[debug] [2025-12-30T06:09:46.080Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/sorane-7ea46/locations/-/functions {}
+[debug] [2025-12-30T06:09:46.080Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:46.080Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:46.081Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/sorane-7ea46/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2025-12-30T06:09:47.364Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/sorane-7ea46/locations/-/functions 200
+[debug] [2025-12-30T06:09:47.364Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/sorane-7ea46/locations/-/functions {"functions":[{"name":"projects/sorane-7ea46/locations/us-central1/functions/getPreKey","buildConfig":{"build":"projects/493802542778/locations/us-central1/builds/81569ce0-6f8f-4671-8b5c-834e874f1904","runtime":"nodejs20","entryPoint":"getPreKey","source":{"storageSource":{"bucket":"gcf-v2-sources-493802542778-us-central1","object":"getPreKey/function-source.zip","generation":"1767015420373988"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/sorane-7ea46/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-493802542778-us-central1","object":"getPreKey/function-source.zip","generation":"1767015420373988"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/sorane-7ea46/serviceAccounts/493802542778-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/sorane-7ea46/locations/us-central1/services/getprekey","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"sorane-7ea46\",\"storageBucket\":\"sorane-7ea46.firebasestorage.app\"}","GCLOUD_PROJECT":"sorane-7ea46","EVENTARC_CLOUD_EVENT_SOURCE":"projects/sorane-7ea46/locations/us-central1/services/getPreKey","FUNCTION_TARGET":"getPreKey","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://getprekey-52ohvi7c2a-uc.a.run.app","serviceAccountEmail":"493802542778-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"getprekey-00001-jod","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2025-12-29T13:38:37.514048713Z","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"32be69ffc1e4d6c8644551c1e22283745752a731"},"environment":"GEN_2","url":"https://us-central1-sorane-7ea46.cloudfunctions.net/getPreKey","createTime":"2025-12-29T13:37:01.536529443Z","satisfiesPzi":true}]}
+[info] i  functions: ensuring required API cloudscheduler.googleapis.com is enabled... 
+[debug] [2025-12-30T06:09:47.368Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:47.368Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:47.368Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com [none]
+[debug] [2025-12-30T06:09:47.369Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com x-goog-quota-user=projects/493802542778
+[debug] [2025-12-30T06:09:48.812Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com 200
+[debug] [2025-12-30T06:09:48.812Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com [omitted]
+[warn] ⚠  functions: missing required API cloudscheduler.googleapis.com. Enabling now... 
+[debug] [2025-12-30T06:09:48.814Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:48.814Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:48.814Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com:enable [none]
+[debug] [2025-12-30T06:09:48.814Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com:enable x-goog-quota-user=projects/493802542778
+[debug] [2025-12-30T06:09:49.968Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com:enable 200
+[debug] [2025-12-30T06:09:49.968Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/493802542778/services/cloudscheduler.googleapis.com:enable [omitted]
+[debug] [2025-12-30T06:09:59.988Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:59.989Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:09:59.989Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46 [none]
+[debug] [2025-12-30T06:10:01.201Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46 200
+[debug] [2025-12-30T06:10:01.201Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46 {"projectNumber":"493802542778","projectId":"sorane-7ea46","lifecycleState":"ACTIVE","name":"sorane","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-12-29T12:59:57.522473Z"}
+[debug] [2025-12-30T06:10:01.203Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:01.203Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:01.203Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/sorane-7ea46/versions [none]
+[debug] [2025-12-30T06:10:01.203Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/sorane-7ea46/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-12-30T06:10:02.738Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/sorane-7ea46/versions 200
+[debug] [2025-12-30T06:10:02.738Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/sorane-7ea46/versions {"name":"projects/493802542778/sites/sorane-7ea46/versions/31a9030af7b98e39","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-12-30T06:10:02.739Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:02.739Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:02.739Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/sorane-7ea46/billingInfo [none]
+[debug] [2025-12-30T06:10:03.247Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/sorane-7ea46/billingInfo 200
+[debug] [2025-12-30T06:10:03.248Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/sorane-7ea46/billingInfo {"name":"projects/sorane-7ea46/billingInfo","projectId":"sorane-7ea46","billingAccountName":"billingAccounts/01BAE0-E36298-4E269A","billingEnabled":true}
+[debug] [2025-12-30T06:10:03.249Z] [functions] found 2 new HTTP functions, testing setIamPolicy permission...
+[debug] [2025-12-30T06:10:03.250Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:03.250Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:03.250Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions [none]
+[debug] [2025-12-30T06:10:03.250Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions x-goog-quota-user=projects/sorane-7ea46
+[debug] [2025-12-30T06:10:03.250Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions {"permissions":["cloudfunctions.functions.setIamPolicy"]}
+[debug] [2025-12-30T06:10:03.392Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions 200
+[debug] [2025-12-30T06:10:03.392Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sorane-7ea46:testIamPermissions {"permissions":["cloudfunctions.functions.setIamPolicy"]}
+[debug] [2025-12-30T06:10:03.392Z] [functions] found setIamPolicy permission, proceeding with deploy
+[debug] [2025-12-30T06:10:03.393Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:03.393Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:03.393Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v1/projects/sorane-7ea46/locations/us-central1/functions:generateUploadUrl [none]
+[debug] [2025-12-30T06:10:03.393Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/sorane-7ea46/locations/us-central1/functions:generateUploadUrl {}
+[debug] [2025-12-30T06:10:22.369Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v1/projects/sorane-7ea46/locations/us-central1/functions:generateUploadUrl 200
+[debug] [2025-12-30T06:10:22.369Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/sorane-7ea46/locations/us-central1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/uploads-702520013768.us-central1.cloudfunctions.appspot.com/769cf0a5-be00-4402-a0f8-c8a8522eeaf6.zip?GoogleAccessId=service-493802542778@gcf-admin-robot.iam.gserviceaccount.com&Expires=1767076822&Signature=gDGfKNLzUFiaQ4X76M263LXNurSNy0D26nlAnDYU7m9zQNGASKETfbtGjlTpdALRmKs0K1isakXtUleangEQR7oCF8snnuW01kzGbd4e54sRPUyFdCKEtviwYMoHTn%2Fi%2FCaGMFwYeqctDo1OMjywyaA%2FixPgJmMhOK7c6KKI4LXS9UgBh2y2y1uQFfTNBFx%2B8qxYXlWodxnGcyuQQ1EVYLaYljfawTG403lkB0N4eJGSM8PdfSmQg7oiv4XDlT1p98pFw254WIrNxIPhBBiwNrfJ6pyJA7eQFMNNnB8UXkokDDX4Ha09ZtCH4pNMS8LRdlncL7PRGl7Nt5ab0WsaIQ%3D%3D"}
+[debug] [2025-12-30T06:10:22.371Z] >>> [apiv2][query] PUT https://storage.googleapis.com/uploads-702520013768.us-central1.cloudfunctions.appspot.com/769cf0a5-be00-4402-a0f8-c8a8522eeaf6.zip GoogleAccessId=service-493802542778%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1767076822&Signature=gDGfKNLzUFiaQ4X76M263LXNurSNy0D26nlAnDYU7m9zQNGASKETfbtGjlTpdALRmKs0K1isakXtUleangEQR7oCF8snnuW01kzGbd4e54sRPUyFdCKEtviwYMoHTn%2Fi%2FCaGMFwYeqctDo1OMjywyaA%2FixPgJmMhOK7c6KKI4LXS9UgBh2y2y1uQFfTNBFx%2B8qxYXlWodxnGcyuQQ1EVYLaYljfawTG403lkB0N4eJGSM8PdfSmQg7oiv4XDlT1p98pFw254WIrNxIPhBBiwNrfJ6pyJA7eQFMNNnB8UXkokDDX4Ha09ZtCH4pNMS8LRdlncL7PRGl7Nt5ab0WsaIQ%3D%3D
+[debug] [2025-12-30T06:10:22.371Z] >>> [apiv2][body] PUT https://storage.googleapis.com/uploads-702520013768.us-central1.cloudfunctions.appspot.com/769cf0a5-be00-4402-a0f8-c8a8522eeaf6.zip [stream]
+[debug] [2025-12-30T06:10:24.033Z] <<< [apiv2][status] PUT https://storage.googleapis.com/uploads-702520013768.us-central1.cloudfunctions.appspot.com/769cf0a5-be00-4402-a0f8-c8a8522eeaf6.zip 200
+[debug] [2025-12-30T06:10:24.034Z] <<< [apiv2][body] PUT https://storage.googleapis.com/uploads-702520013768.us-central1.cloudfunctions.appspot.com/769cf0a5-be00-4402-a0f8-c8a8522eeaf6.zip [omitted]
+[info] ✔  functions: functions source uploaded successfully 
+[info] i  hosting[sorane-7ea46]: beginning deploy... 
+[info] i  hosting[sorane-7ea46]: found 1 files in public 
+[debug] [2025-12-30T06:10:24.053Z] [hosting] uploading with 200 concurrency
+[debug] [2025-12-30T06:10:24.054Z] [hosting] hash cache [cHVibGlj] not populated
+[debug] [2025-12-30T06:10:24.059Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:24.060Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:24.060Z] [hosting] hash cache [cHVibGlj] stored for 1 files
+[debug] [2025-12-30T06:10:24.061Z] [hosting][hash queue][FINAL] {"max":3,"min":3,"avg":3,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":5}
+[debug] [2025-12-30T06:10:24.061Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/493802542778/sites/sorane-7ea46/versions/31a9030af7b98e39:populateFiles [none]
+[debug] [2025-12-30T06:10:24.061Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/493802542778/sites/sorane-7ea46/versions/31a9030af7b98e39:populateFiles {"files":{"/index.html":"a1e24140c8a498bf06560efc79151f722f4ed56cb68126d3b42e293434fd8cd4"}}
+[debug] [2025-12-30T06:10:25.061Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/493802542778/sites/sorane-7ea46/versions/31a9030af7b98e39:populateFiles 200
+[debug] [2025-12-30T06:10:25.062Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/493802542778/sites/sorane-7ea46/versions/31a9030af7b98e39:populateFiles {"uploadRequiredHashes":["a1e24140c8a498bf06560efc79151f722f4ed56cb68126d3b42e293434fd8cd4"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/sorane-7ea46/versions/31a9030af7b98e39/files"}
+[debug] [2025-12-30T06:10:25.063Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:25.063Z] Checked if tokens are valid: true, expires at: 1767078205468
+[debug] [2025-12-30T06:10:25.063Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/sorane-7ea46/versions/31a9030af7b98e39/files/a1e24140c8a498bf06560efc79151f722f4ed56cb68126d3b42e293434fd8cd4 [none]
+[debug] [2025-12-30T06:10:25.063Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/sorane-7ea46/versions/31a9030af7b98e39/files/a1e24140c8a498bf06560efc79151f722f4ed56cb68126d3b42e293434fd8cd4 [stream]
+[debug] [2025-12-30T06:10:25.065Z] [hosting][populate queue][FINAL] {"max":1004,"min":1004,"avg":1004,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":1006}
+[debug] [2025-12-30T06:10:25.065Z] [hosting] uploads queued: 1
+[debug] [2025-12-30T06:10:26.491Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/sorane-7ea46/versions/31a9030af7b98e39/files/a1e24140c8a498bf06560efc79151f722f4ed56cb68126d3b42e293434fd8cd4 200
+[debug] [2025-12-30T06:10:26.491Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/sorane-7ea46/versions/31a9030af7b98e39/files/a1e24140c8a498bf06560efc79151f722f4ed56cb68126d3b42e293434fd8cd4 [stream]
+[debug] [2025-12-30T06:10:26.492Z] [hosting][upload queue][FINAL] {"max":1430,"min":1430,"avg":1430,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":1430}
+[info] ✔  hosting[sorane-7ea46]: file upload complete 
+[debug] [2025-12-30T06:10:26.493Z] [hosting] deploy completed after 2455ms
+[info] 
+The following functions are found in your project but do not exist in your local source code:
+	getPreKey(us-central1)
+
+If you are renaming a function or changing its region, it is recommended that you create the new function first before deleting the old one to prevent event loss. For more info, visit https://firebase.google.com/docs/functions/manage-functions#modify
+

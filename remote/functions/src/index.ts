@@ -9,17 +9,8 @@ import { initWasm, ed25519Verify } from "./wasm_util";
 import { decode } from "cbor-x";
 import { verifyRegistrationResponse, verifyAuthenticationResponse } from '@simplewebauthn/server';
 
-const RP_ID = process.env.RP_ID || "localhost";
-const EXPECTED_ORIGINS = process.env.EXPECTED_ORIGINS
-    ? process.env.EXPECTED_ORIGINS.split(',').map(o => o.trim())
-    : [
-        "http://localhost:5002", "http://127.0.0.1:5002",
-        "http://localhost:5001", "http://127.0.0.1:5001",
-        "http://localhost:8081", "http://127.0.0.1:8081",
-        "http://localhost:8081/", "http://127.0.0.1:8081/"
-    ];
-const GUEST_DID_DOMAIN = process.env.GUEST_DID_DOMAIN || "srn.example";
-const GUEST_DID_EXPIRATION_DAYS = parseInt(process.env.GUEST_DID_EXPIRATION_DAYS || "30");
+import { CONFIG } from "./config";
+
 
 admin.initializeApp();
 
@@ -220,15 +211,15 @@ async function verifyPasskey(did: string, credentialId: string, signature: strin
                 clientExtensionResults: {}
             },
             expectedChallenge: challenge,
-            expectedOrigin: EXPECTED_ORIGINS,
-            expectedRPID: RP_ID,
+            expectedOrigin: CONFIG.EXPECTED_ORIGINS,
+            expectedRPID: CONFIG.RP_ID,
             credential: {
                 id: data.credentialId,
                 publicKey: data.credentialPublicKey ? new Uint8Array(Buffer.from(data.credentialPublicKey, 'base64')) : new Uint8Array(),
                 counter: (typeof data.counter === 'number') ? data.counter : 0,
                 transports: data.transports || []
             },
-            requireUserVerification: false,
+            requireUserVerification: CONFIG.REQUIRE_USER_VERIFICATION,
         };
 
         console.log(`[verifyPasskey] calling verifyAuthenticationResponse with options:`, JSON.stringify({
@@ -347,9 +338,9 @@ const resolvers = {
                     }
                 } as any,
                 expectedChallenge: clientData.challenge,
-                expectedOrigin: EXPECTED_ORIGINS,
-                expectedRPID: RP_ID,
-                requireUserVerification: false,
+                expectedOrigin: CONFIG.EXPECTED_ORIGINS,
+                expectedRPID: CONFIG.RP_ID,
+                requireUserVerification: CONFIG.REQUIRE_USER_VERIFICATION,
             } as any);
 
             if (!verification.verified || !verification.registrationInfo) {
@@ -376,8 +367,8 @@ const resolvers = {
             const publicKeyJwk = coseToJwk(Buffer.from(credentialPublicKey));
 
             const guestId = Math.random().toString(36).substring(2, 10);
-            const did = `did:web:${GUEST_DID_DOMAIN}:guest:${guestId}`;
-            const expiresAt = new Date(Date.now() + GUEST_DID_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+            const did = `did:web:${CONFIG.GUEST_DID_DOMAIN}:guest:${guestId}`;
+            const expiresAt = new Date(Date.now() + CONFIG.GUEST_DID_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
             await db.collection("guest-dids").doc(guestId).set({
                 did,

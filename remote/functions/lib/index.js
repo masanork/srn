@@ -46,17 +46,7 @@ const body_parser_1 = require("body-parser");
 const wasm_util_1 = require("./wasm_util");
 const cbor_x_1 = require("cbor-x");
 const server_2 = require("@simplewebauthn/server");
-const RP_ID = process.env.RP_ID || "localhost";
-const EXPECTED_ORIGINS = process.env.EXPECTED_ORIGINS
-    ? process.env.EXPECTED_ORIGINS.split(',').map(o => o.trim())
-    : [
-        "http://localhost:5002", "http://127.0.0.1:5002",
-        "http://localhost:5001", "http://127.0.0.1:5001",
-        "http://localhost:8081", "http://127.0.0.1:8081",
-        "http://localhost:8081/", "http://127.0.0.1:8081/"
-    ];
-const GUEST_DID_DOMAIN = process.env.GUEST_DID_DOMAIN || "srn.example";
-const GUEST_DID_EXPIRATION_DAYS = parseInt(process.env.GUEST_DID_EXPIRATION_DAYS || "30");
+const config_1 = require("./config");
 admin.initializeApp();
 function coseToJwk(cose) {
     const struct = (0, cbor_x_1.decode)(cose);
@@ -234,15 +224,15 @@ async function verifyPasskey(did, credentialId, signature, authenticatorData, cl
                 clientExtensionResults: {}
             },
             expectedChallenge: challenge,
-            expectedOrigin: EXPECTED_ORIGINS,
-            expectedRPID: RP_ID,
+            expectedOrigin: config_1.CONFIG.EXPECTED_ORIGINS,
+            expectedRPID: config_1.CONFIG.RP_ID,
             credential: {
                 id: data.credentialId,
                 publicKey: data.credentialPublicKey ? new Uint8Array(Buffer.from(data.credentialPublicKey, 'base64')) : new Uint8Array(),
                 counter: (typeof data.counter === 'number') ? data.counter : 0,
                 transports: data.transports || []
             },
-            requireUserVerification: false,
+            requireUserVerification: config_1.CONFIG.REQUIRE_USER_VERIFICATION,
         };
         console.log(`[verifyPasskey] calling verifyAuthenticationResponse with options:`, JSON.stringify({
             ...authOptions,
@@ -344,9 +334,9 @@ const resolvers = {
                     }
                 },
                 expectedChallenge: clientData.challenge,
-                expectedOrigin: EXPECTED_ORIGINS,
-                expectedRPID: RP_ID,
-                requireUserVerification: false,
+                expectedOrigin: config_1.CONFIG.EXPECTED_ORIGINS,
+                expectedRPID: config_1.CONFIG.RP_ID,
+                requireUserVerification: config_1.CONFIG.REQUIRE_USER_VERIFICATION,
             });
             if (!verification.verified || !verification.registrationInfo) {
                 console.error("Passkey verification failed", verification);
@@ -365,8 +355,8 @@ const resolvers = {
             }
             const publicKeyJwk = coseToJwk(Buffer.from(credentialPublicKey));
             const guestId = Math.random().toString(36).substring(2, 10);
-            const did = `did:web:${GUEST_DID_DOMAIN}:guest:${guestId}`;
-            const expiresAt = new Date(Date.now() + GUEST_DID_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+            const did = `did:web:${config_1.CONFIG.GUEST_DID_DOMAIN}:guest:${guestId}`;
+            const expiresAt = new Date(Date.now() + config_1.CONFIG.GUEST_DID_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
             await db.collection("guest-dids").doc(guestId).set({
                 did,
                 credentialId,

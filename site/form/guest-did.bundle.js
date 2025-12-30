@@ -719,7 +719,8 @@ async function decryptLayer2(envelope, recipientPrivateKey, options) {
 }
 
 // src/form/client/guest_did.ts
-var REMOTE_URL = "http://127.0.0.1:5002/api";
+var isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+var REMOTE_URL = isLocal ? "http://127.0.0.1:5002/api" : "/api";
 var RP_NAME = "SRN Guest Service";
 async function checkExistingGuestDid() {
   const count = localStorage.length;
@@ -753,7 +754,7 @@ async function createGuestDidWithPasskey() {
     let arrayBufferToBase64 = function(buffer) {
       let binary = "";
       const bytes = new Uint8Array(buffer);
-      const len = bytes.byteLength;
+      const len = bytes.length;
       for (let i = 0;i < len; i++) {
         binary += String.fromCharCode(bytes[i]);
       }
@@ -929,14 +930,16 @@ function base64UrlToArrayBuffer(base64url) {
 function arrayBufferToBase64(buffer) {
   let binary = "";
   const bytes = new Uint8Array(buffer);
-  for (let i = 0;i < bytes.length; i++) {
+  const len = bytes.length;
+  for (let i = 0;i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
   return window.btoa(binary);
 }
 function arrayBufferToBase64Url(buffer) {
   let binary = "";
-  for (let i = 0;i < buffer.length; i++) {
+  const len = buffer.length;
+  for (let i = 0;i < len; i++) {
     binary += String.fromCharCode(buffer[i]);
   }
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
