@@ -47,6 +47,8 @@ initWasm().then(() => {
     console.error("Failed to initialize WASM:", err);
 });
 
+import { decodeDidKey } from "./did_key";
+
 // --- DID Utils ---
 function didToUrl(did: string): string {
     const parts = did.split(":");
@@ -58,6 +60,14 @@ function didToUrl(did: string): string {
 }
 
 async function resolvePublicKey(did: string): Promise<Uint8Array> {
+    if (did.startsWith("did:key:")) {
+        try {
+            return decodeDidKey(did);
+        } catch (e: any) {
+            throw new Error(`Failed to decode did:key: ${e.message}`);
+        }
+    }
+
     if (did === "did:web:example.com:user123") {
         return Buffer.from("416a3212dc5421d1a77217aa4831fe7097c23ac716e7f985166d9b155c2c9143", "hex");
     }
@@ -70,7 +80,6 @@ async function resolvePublicKey(did: string): Promise<Uint8Array> {
 }
 
 async function verifyAuth(did: string, nonce: string, signature: string) {
-    return true; // TEMPORARY BYPASS
     if (!wasmReady) throw new Error("WASM not ready");
 
     const db = admin.firestore();
@@ -78,10 +87,17 @@ async function verifyAuth(did: string, nonce: string, signature: string) {
     if (!challengeDoc.exists) throw new Error("Invalid or expired nonce");
     const data = challengeDoc.data();
     if (data?.did !== did) throw new Error("Nonce mismatch");
+
+    // Auto-extend expiry for active usage? No, one-time use usually.
+    // For now simple verify.
+
     const publicKey = await resolvePublicKey(did);
     const isValid = ed25519Verify(publicKey, Buffer.from(nonce, "utf-8"), Buffer.from(signature, "hex"));
-    if (!isValid) throw new Error("Invalid signature");
+
+    // Always delete challenge to prevent replay
     await db.collection("challenges").doc(nonce).delete();
+
+    if (!isValid) throw new Error("Invalid signature");
 }
 
 const typeDefs = `
@@ -120,6 +136,7 @@ const typeDefs = `
   
   type Mutation {
     createGuestDid(credentialId: String!, attestationObject: String!, clientDataJSON: String!, encryptionPublicKeyJwk: String!): GuestDid! 
+    addUser(did: ID!, nonce: String!, signature: String!, newDid: String!, role: String): Boolean!
     postMessage(
       did: ID!
       nonce: String!
@@ -315,7 +332,36 @@ const resolvers = {
         }
     },
     Mutation: {
+        // ... (other mutations)
+
+        addUser: async (_: any, { did, nonce, signature, newDid, role }: any) => {
+            // 1. Verify Requestor
+            await verifyAuth(did, nonce, signature);
+
+            // 2. Authorization Check (Is Requestor an Admin?)
+            if (!CONFIG.ADMIN_DIDS.includes(did)) {
+                // Check if it's a "grant" chain? For now, strict config-based admin only.
+                throw new Error("Unauthorized: Only admins can add users");
+            }
+
+            const db = admin.firestore();
+            await db.collection("allowed-users").doc(newDid).set({
+                did: newDid,
+                role: role || "user",
+                addedBy: did,
+                createdAt: new Date().toISOString()
+            });
+
+            return true;
+        },
+
         createGuestDid: async (_: any, { credentialId, attestationObject, clientDataJSON, encryptionPublicKeyJwk }: any) => {
+            // NOTE: Guest DIDs are currently "ephemeral" and self-registered via WebAuthn.
+            // If we want to restrict this, we would need an "invite code" or similar mechanism
+            // embedded in the clientData or attestation.
+            // For now, we leave Guest DID creation OPEN (as it's for guests),
+            // but persistent "User" account creation via `addUser` is restricted.
+
             const db = admin.firestore();
 
             // Decode clientDataJSON to extract challenge
@@ -387,6 +433,16 @@ const resolvers = {
             const { did, nonce, signature, senderDid, recipientDid, hostDid, envelope, threadId, inReplyTo, action } = args;
 
             await verifyAuth(did, nonce, signature);
+
+            // Access Control: Strict Mode
+            // 1. Check if DID is allowed (if we are restricting usage)
+            // const isGuest = did.includes(":guest:");
+            // if (!isGuest) {
+            //      const userDoc = await admin.firestore().collection("allowed-users").doc(did).get();
+            //      if (!userDoc.exists && !CONFIG.ADMIN_DIDS.includes(did)) {
+            //          throw new Error("Access Denied: DID not registered.");
+            //      }
+            // }
 
             // Relaxed Validation for Public Inbox usage
             if (did !== senderDid && did !== recipientDid) {

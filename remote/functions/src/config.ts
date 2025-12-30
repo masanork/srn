@@ -13,10 +13,13 @@ const guestDomainParam = defineString("GUEST_DID_DOMAIN", { default: "srn.exampl
 const expirationDaysParam = defineInt("GUEST_DID_EXPIRATION_DAYS", { default: 30 });
 const uvParam = defineBoolean("REQUIRE_USER_VERIFICATION", { default: false });
 
+const adminDidsParam = defineList("ADMIN_DIDS", { default: [] });
+
 export const CONFIG = {
     get RP_ID() { return rpIdParam.value(); },
     get EXPECTED_ORIGINS() { return originsParam.value(); },
     get GUEST_DID_DOMAIN() { return guestDomainParam.value(); },
     get GUEST_DID_EXPIRATION_DAYS() { return expirationDaysParam.value(); },
-    get REQUIRE_USER_VERIFICATION() { return uvParam.value(); }
+    get REQUIRE_USER_VERIFICATION() { return uvParam.value(); },
+    get ADMIN_DIDS() { return adminDidsParam.value(); }
 };
