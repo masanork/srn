@@ -2,6 +2,29 @@ export function normalizeText(value?: string) {
     return value ?? '';
 }
 
+export function formatDateWareki(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr; // Return as is if invalid date
+
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+
+    const format = (era: string, year: number) => {
+        const yStr = year === 1 ? '元' : year.toString();
+        return `${era}${yStr}年${m}月${d}日`;
+    };
+
+    if (y > 2019 || (y === 2019 && m >= 5)) return format('令和', y - 2018);
+    if (y > 1989 || (y === 1989 && m >= 1 && d >= 8)) return format('平成', y - 1988);
+    if (y > 1926 || (y === 1926 && m >= 12 && d >= 25)) return format('昭和', y - 1925);
+    if (y > 1912 || (y === 1912 && m >= 7 && d >= 30)) return format('大正', y - 1911);
+    if (y >= 1868) return format('明治', y - 1867);
+
+    return `${y}年${m}月${d}日`; // Fallback to seireki with kanji suffix
+}
+
 export function normalizeDomicile(domiciles?: string[]) {
     if (!domiciles || domiciles.length === 0) {
         return { honseki: '', hittosha: '' };

@@ -1,5 +1,5 @@
 
-import { normalizeText, normalizeDomicile, normalizeRemarks, getRowHeights } from './Logic.ts';
+import { normalizeText, normalizeDomicile, normalizeRemarks, getRowHeights, formatDateWareki } from './Logic.ts';
 
 const rowHeights = getRowHeights();
 const rowHeight = (rowNumber: number) => rowHeights[rowNumber - 1] ?? 18;
@@ -32,23 +32,23 @@ export function renderPersonRows(item: any, index: number, startRow: number) {
         </tr>
         <tr style="height: ${rowHeight(startRow + 2)}px;">
             <td class="cell label-cell" colspan="6">${labelHtml('住民となった年月日')}</td>
-            <td class="cell value-cell" colspan="10"${fieldAttr(`credentialSubject.member[${index}].becameResidentDate`)}>${normalizeText(item.becameResidentDate)}</td>
+            <td class="cell value-cell" colspan="10"${fieldAttr(`credentialSubject.member[${index}].becameResidentDate`)}>${formatDateWareki(item.becameResidentDate)}</td>
         </tr>
         <tr style="height: ${rowHeight(startRow + 3)}px;">
             <td class="cell label-cell" colspan="5">${labelHtml('旧氏の振り仮名')}</td>
             <td class="cell value-cell" colspan="18"${fieldAttr(`credentialSubject.member[${index}].maidenKana`)}>${normalizeText(item.maidenKana)}</td>
             <td class="cell label-cell" colspan="6">${labelHtml('住所を定めた年月日')}</td>
-            <td class="cell value-cell" colspan="10"${fieldAttr(`credentialSubject.member[${index}].addressSetDate`)}>${normalizeText(item.addressSetDate)}</td>
+            <td class="cell value-cell" colspan="10"${fieldAttr(`credentialSubject.member[${index}].addressSetDate`)}>${formatDateWareki(item.addressSetDate)}</td>
         </tr>
         <tr style="height: ${rowHeight(startRow + 4)}px;">
             <td class="cell label-cell" colspan="5">${labelHtml('旧氏')}</td>
             <td class="cell value-cell" colspan="18"${fieldAttr(`credentialSubject.member[${index}].maidenName`)}>${normalizeText(item.maidenName)}</td>
             <td class="cell label-cell" colspan="6">${labelHtml('届出日')}</td>
-            <td class="cell value-cell" colspan="10"${fieldAttr(`credentialSubject.member[${index}].notificationDate`)}>${normalizeText(item.notificationDate)}</td>
+            <td class="cell value-cell" colspan="10"${fieldAttr(`credentialSubject.member[${index}].notificationDate`)}>${formatDateWareki(item.notificationDate)}</td>
         </tr>
         <tr style="height: ${rowHeight(startRow + 5)}px;">
             <td class="cell label-cell" colspan="5">${labelHtml('生年月日')}</td>
-            <td class="cell value-cell" colspan="8"${fieldAttr(`credentialSubject.member[${index}].birthDate`)}>${normalizeText(item.birthDate)}</td>
+            <td class="cell value-cell" colspan="8"${fieldAttr(`credentialSubject.member[${index}].birthDate`)}>${formatDateWareki(item.birthDate)}</td>
             <td class="cell label-cell" colspan="2">${labelHtml('性別')}</td>
             <td class="cell value-cell" colspan="2"${fieldAttr(`credentialSubject.member[${index}].gender`)}>${normalizeText(item.gender)}</td>
             <td class="cell label-cell" colspan="2">${labelHtml('続柄')}</td>

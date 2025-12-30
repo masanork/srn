@@ -106,7 +106,7 @@ export function formLayout(
         ${structureScript}
         ${l2ConfigScript}
         ${l2KeywrapScript}
-        <script src="${getRelativePrefix(relPath)}assets/form-bundle.js"></script>
+        <script src="${getRelativePrefix(relPath)}assets/form-bundle.js" type="module"></script>
     `;
 
     return baseLayout({

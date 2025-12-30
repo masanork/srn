@@ -1,6 +1,6 @@
 import { baseLayout } from './base.js';
 import { decode } from 'cbor-x';
-import { prepareSubject, normalizeText, normalizeDomicile, getRowHeights } from './juminhyo/Logic.ts';
+import { prepareSubject, normalizeText, normalizeDomicile, getRowHeights, formatDateWareki } from './juminhyo/Logic.ts';
 import { tableHeaderRows, renderPersonRows } from './juminhyo/Template.ts';
 
 export interface JuminhyoItem {
@@ -82,7 +82,7 @@ export function juminhyoLayout(
 ) {
     const subject = prepareSubject(data);
     const lang = (data.lang || 'ja').toString();
-    
+
     // --- SD-CWT Disclosure Logic (Simplified for refactoring) ---
     let disclosures: any = null;
     if (binaryVc && sdDisclosures) {
@@ -159,7 +159,7 @@ export function juminhyoLayout(
                 <div class="footer-section">
                     <div class="cert-text">
                         この写しは、世帯全員の住民票の原本と相違ないことを証明する。
-                        <div class="issue-date-line" style="margin-top: 1rem;">${normalizeText(subject.issueDate)}</div>
+                        <div class="issue-date-line" style="margin-top: 1rem;">${formatDateWareki(subject.issueDate)}</div>
                     </div>
                     <div class="issuer-line">
                         <div class="issuer-name-block" style="text-align: right; font-size: 1rem; font-weight: bold;">
