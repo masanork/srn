@@ -25,12 +25,16 @@ export interface GuestDidResult {
  * Check if user has existing Guest DID Passkey
  */
 async function checkExistingGuestDid(): Promise<string | null> {
-    const keys = Object.keys(localStorage);
-    for (const key of keys) {
-        if (key.startsWith("guest-did:") && !key.includes(":")) { // Strict check to avoid sub-keys
-            const did = key.replace("guest-did:", "");
-            return did;
-        }
+    const count = localStorage.length;
+    for (let i = 0; i < count; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith("guest-did:")) continue;
+
+        // Skip sub-keys (privateKey)
+        if (key.endsWith(":privateKey")) continue;
+
+        const did = key.replace("guest-did:", "");
+        return did;
     }
     return null;
 }
