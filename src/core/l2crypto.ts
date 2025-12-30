@@ -111,6 +111,10 @@ export type Layer2Encrypted = {
     aad: string;        // base64url(aad_json)
   };
   meta: {
+    id?: string; // did:content:sha256:<payload_hash>
+    thread_id?: string; // Root message ID
+    in_reply_to?: string; // Parent message DID
+    action?: string; // e.g., 'submit', 'approve', 'reject', 'comment'
     created_at: string;
     nonce: string; // base64url
     campaign_id?: string;
@@ -183,20 +187,20 @@ export async function generateEpochKeys(
   for (let i = 0; i < durationDays; i++) {
     const current = new Date(start);
     current.setUTCDate(start.getUTCDate() + i);
-    
+
     // YYYY-MM-DD
-    const kid = current.toISOString().split("T")[0];
-    
+    const kid = current.toISOString().split("T")[0]!;
+
     // Start of day UTC
     current.setUTCHours(0, 0, 0, 0);
     const validFrom = current.toISOString();
-    
+
     // End of day UTC
     current.setUTCHours(23, 59, 59, 999);
     const validUntil = current.toISOString();
 
     const kp = await x25519GenerateKeyPair();
-    
+
     keys.push({
       kid,
       publicKey: toBase64Url(kp.publicKey),

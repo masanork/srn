@@ -22,6 +22,10 @@ for fast navigation.
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
 - [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
 - [Offline Pre-Key Server Plan (Draft)](./web-a-l2-prekey-server-plan.html)
+- [Tech Lead Response: Web/A Folio Transport Threat
+  Analysis](./web-a-folio-transport-tech-lead-response.html)
+- [Legal Risk Report: Hosting Web/A Folio Transport For Internal
+  Use](./web-a-folio-transport-legal-risk-report.html)
 
 ### Reference Papers
 - [Graduated Forward Secrecy (Final Architecture)](./web-a-l2-graduated-pfs.html)
@@ -31,4 +35,5 @@ for fast navigation.
 - [Market Comparison](./web-a-l2-market-comparison.html)
 
 ### Transport Assessment
-- [Red Team Report: Web/A Folio Transport Threat Analysis](./web-a-folio-transport-red-team-report.html)
+- [Red Team Report: Web/A Folio Transport Threat
+  Analysis](./web-a-folio-transport-red-team-report.html)

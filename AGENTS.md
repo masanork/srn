@@ -38,3 +38,7 @@
 - Use semantic versioning (Major.Minor.Patch) based on the impact of changes.
 - Ensure the release note entry includes the date and a categorized list of improvements.
 
+## Documentation & Localization
+- For technical specifications and design notes, **prioritize updating the English version (`.md`)** during active development to reduce token consumption and maintain a single source of truth.
+- Update the Japanese version (`.ja.md`) intermittently or at major milestones (e.g., when a feature is finalized or ready for public review).
+- Ensure critical changes to data structures or protocols are reflected in both versions before a release.
