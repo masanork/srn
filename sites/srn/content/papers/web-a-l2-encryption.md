@@ -221,7 +221,7 @@ When an agent or client prepares a reply, it MUST resolve the destination endpoi
 
 Unlike SMTP, where the recipient MUST operate their own mail server, Web/A Folio supports a **shared server model**:
 
-- **Either party** (sender or recipient) can host the Folio Remote (e.g., Firebase).
+- **Either party** (sender or recipient) can host the **Web/A Post** (e.g., Firebase).
 - The hosting party's server acts as the **conversation hub**.
 - Both parties `sync` messages from this shared location.
 
@@ -252,7 +252,7 @@ type Query {
 }
 ```
 
-This model significantly lowers the barrier to entry, as individuals without server infrastructure can participate by leveraging their counterparty's Folio Remote.
+This model significantly lowers the barrier to entry, as individuals without server infrastructure can participate by leveraging their counterparty's Web/A Post.
 
 **Guest DID with Passkey Authentication**
 
@@ -272,7 +272,7 @@ For users without a permanent DID who wish to receive replies, the form host (e.
 **Requirements:**
 - Browser MUST support WebAuthn (Passkey)
 - Non-Passkey devices are NOT supported
-- Host MUST provide Folio Remote for guest inbox storage
+- Host MUST provide Web/A Post for guest inbox storage
 
 **Authentication Flow:**
 ```mermaid

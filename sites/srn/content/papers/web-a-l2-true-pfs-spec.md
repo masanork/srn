@@ -38,7 +38,7 @@ The administrator maintains a local SQLite or JSON database mapping `kid` to `pr
 ## 4. Operational Flow
 
 ### 4.1. Key Replenishment (Local Admin)
-1. Generate $N$ (e.g., 1000) X25519 key pairs.
+1. Generate N (e.g., 1000) X25519 key pairs.
 2. Store `(kid, private_key)` in the local secure vault.
 3. Generate an SQL `INSERT` script for the `(kid, pub_key)` pairs.
 4. Execute `wrangler d1 execute` to upload public keys to Cloudflare.

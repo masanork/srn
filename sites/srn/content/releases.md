@@ -372,7 +372,7 @@ Complete implementation of the Trust Architecture and Verification system.
 * **Documentation**:
   * Added [Developer Guide](./guide.html).
   * Added [PQC Verification Usage](./tech-verification.html).
-* **Samples**: Added [Koseki Certificate Sample](./koseki.html).
+* **Samples**: Added [Residence Certificate Sample](./juminhyo.html).
 
 ## v0.9.0 - Hybrid Post-Quantum VC
 

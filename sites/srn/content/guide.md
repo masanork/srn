@@ -26,20 +26,18 @@ The two core pillars:
 ```text
 srn/
 ├── shared/           # Shared assets (fonts, schemas, base CSS)
-│   ├── fonts/        # Raw font files (*.ttf, *.otf)
-│   └── schemas/      # JSON schemas
-├── sites/srn/        # Source content (site specific)
-│   ├── content/      # Markdown files (*.md)
-│   ├── static/       # Static assets (images, css)
-│   └── data/         # System data (keys, DB) - *Do not commit keys!*
+├── sites/            # Multi-tenant site source
+│   └── srn/
+│       ├── config.yaml
+│       ├── content/      # Markdown files (*.md)
+│       └── static/       # Static assets (images, css, pdf)
 ├── dist/srn/         # Generated output (git-ignored)
-├── src/              # Build scripts (TypeScript)
-│   ├── core/         # Crypto, VC, shared utils
+├── src/              # Source code
+│   ├── core/         # Crypto, VC, font engine, shared utils
 │   ├── ssg/          # Build pipeline, layouts, identity manager
 │   ├── form/         # Web/A Form runtime
-│   ├── tools/        # Local utilities
 │   └── bin/          # CLI entrypoints
-└── mjq/              # Submodule: Glyph Database (SQLite)
+└── tests/            # Integration and unit tests
 ```
 
 ## Getting Started
@@ -59,12 +57,8 @@ bun install
 
 ### Initial Setup
 
-Before the first build, a Glyph Database must be generated for font analysis.
-
-```bash
-# Initialize SQLite database from source font definitions (IVS/SVS)
-bun run db:build
-```
+No complex database setup is required. Proprietary fonts are ignored by git. Place your `.ttf` or `.otf` files in `shared/fonts/`.
+The build process will automatically analyze and subset fonts per page.
 
 ### Building the Site
 
@@ -154,8 +148,8 @@ l2_encrypt_default: true
 
 SRN allows precise control over font stacking and glyph substitution.
 
-* **Inline Glyph**: `[font_name:glyph_id]` (e.g., `[ipamjm:MJ000001]`) embeds a specific glyph as SVG.
-* **Auto Lookup**: `[MJ000001]` automatically finds the correct font from the database.
+* **Inline Glyph**: `[font_name:glyph_id]` (e.g., `[ipamjm:MJ000001]`) embeds a specific glyph as SVG from the specified font.
+* **Auto Lookup**: Native characters and IVS sequences are automatically detected and subsetted.
 
 ### 5. AI-Assisted Migration (Excel to Form)
 
@@ -218,8 +212,8 @@ bun test --coverage
 
 ## Troubleshooting
 
-* **Missing Glyphs**: Run `bun run db:build` to refresh the glyph database, then rebuild the site.
-* **Build Errors**: Ensure `bun run db:build` was successful.
+* **Missing Glyphs**: Ensure the correct font files are in `shared/fonts/` and specified in the frontmatter or `config.yaml`.
+* **Build Errors**: Check your Markdown syntax and configuration.
 * **Signature Invalid**: If `sites/srn/data/root-key.json` was deleted, all previous signatures become invalid (Trust on First Use reset).
 
 ---

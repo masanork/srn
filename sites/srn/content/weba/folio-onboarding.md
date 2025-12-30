@@ -5,13 +5,13 @@ draft: false
 tags: ["guide", "folio", "admin"]
 ---
 
-# Web/A Folio Onboarding & Administration Guide
+# Web/A Post Onboarding & Administration Guide
 
-This document outlines the process for setting up a new Web/A Folio remote environment, configuring initial administrative access, and managing user onboarding.
+This document outlines the process for setting up a new **Web/A Post** (relay) environment, configuring initial administrative access, and managing user onboarding.
 
 ## 1. Initial Setup (Administrator)
 
-To deploy a private or managed Folio instance, you must configure the initial administrative authority during deployment.
+To deploy a private or managed **Web/A Post** instance, you must configure the initial administrative authority during deployment.
 
 ### A. Generate Admin DID
 
@@ -30,7 +30,7 @@ DID: did:key:z6Mkh1...
 
 **Keep this file safe!** It is the only key capable of adding new users if strict mode is enabled.
 
-### B. Configure & Deploy Remote
+### B. Configure & Deploy Web/A Post
 
 Set the `ADMIN_DIDS` configuration parameter when deploying the Firebase Functions.
 

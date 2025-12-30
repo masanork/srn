@@ -26,17 +26,18 @@ Sorane (空音) は、**「精密なタイポグラフィ」**と**「耐量子�
 ```text
 srn/
 ├── shared/           # 共有アセット（フォント、スキーマ、共通CSS）
-├── sites/srn/        # サイト固有のソースコンテンツ
-│   ├── content/      # Markdownファイル (*.md)
-│   ├── static/       # 静的アセット (images, css)
-│   └── data/         # システムデータ (鍵, DB) - *鍵はコミット禁止!*
+├── sites/            # 各サイトのソース（マルチテナント構成）
+│   └── srn/
+│       ├── config.yaml
+│       ├── content/      # Markdownファイル (*.md)
+│       └── static/       # 静的アセット (images, css, pdf)
 ├── dist/srn/         # 生成された出力（git-ignore）
-├── src/              # ビルドスクリプト (TypeScript)
-│   ├── core/         # 暗号、VC、共有ユーティリティ
-│   ├── ssg/          # ビルドパイプライン、レイアウト
+├── src/              # ソースコード
+│   ├── core/         # 暗号、VC、フォントエンジン、共有ユーティリティ
+│   ├── ssg/          # ビルドパイプライン、レイアウト、Identity管理
 │   ├── form/         # Web/A Form 実行時ロジック
-│   └── bin/          # CLI エントリーポイント
-└── mjq/              # 外字・異体字データベース (SQLite)
+│   └── bin/          # 各種 CLI エントリーポイント
+└── tests/            # 統合テスト・各種ユニットテスト
 ```
 
 ## 開発の始め方
@@ -47,11 +48,10 @@ srn/
 bun install
 ```
 
-### 2. 初期セットアップ（文字DB構築）
+### 2. フォントの準備
 
-```bash
-bun run db:build
-```
+プロプライエタリなフォントはリポジトリに含まれていません。`.ttf` または `.otf` ファイルを `shared/fonts/` に配置してください。
+（デフォルトでは Noto Sans JP 等が期待されます。設定は `sites/srn/config.yaml` で変更可能です）
 
 ### 3. ビルドと実行
 

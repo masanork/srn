@@ -97,11 +97,11 @@ In accordance with the philosophy of Web/A Form, every file stored in the Folio 
 
 ## 3. Philosophy: From API Integration to Person-Centric Integration
 
-The idea that "connecting systems via APIs will solve everything" often hits a wall in reality. If $N$ services try to interconnect, the number of connections explodes to $N \times (N-1) / 2$, and the costs of contracts, specification adjustments, and maintenance increase exponentially (the impossibility of full-mesh connection).
+The idea that "connecting systems via APIs will solve everything" often hits a wall in reality. If N services try to interconnect, the number of connections explodes to `N × (N-1) / 2`, and the costs of contracts, specification adjustments, and maintenance increase exponentially (the impossibility of full-mesh connection).
 
 Web/A Folio proposes an **architecture where the "Person (User)" acts as the hub of data integration**.
 
-1.  **$O(N)$ Connection Cost**: All services only need to output data to the "Person (Folio)" and receive data from the Person. Direct service-to-service integration becomes unnecessary.
+1.  **O(N) Connection Cost**: All services only need to output data to the "Person (Folio)" and receive data from the Person. Direct service-to-service integration becomes unnecessary.
 2.  **restoration of Responsibility and Consent**: In API integration, data flows automatically in the background, making user involvement tenuous. In the Folio model, data always passes through the "Person's" hands, and is passed to the other party only after the person has checked the contents and signed (consented).
 3.  **AI Readiness**: The cost for AI to learn proprietary APIs of each company is high. However, the skill of "reading HTML documents in a Folio" is universal. By using human-facing interfaces (readable documents) directly as AI input, the barrier to introducing AI agents can be drastically lowered.
 
@@ -184,12 +184,12 @@ weba-folio verify ./MyFolio ./out/presentation.html
 
 ### 6.2. Messaging and Transport (Ephemeral Data Hub Model)
 Folio messaging is designed around the **"Ephemeral Data Hub"** principle. The 
-Remote Folio (server) is not a permanent archive, but a transient buffer for 
+**Web/A Post** (server/relay) is not a permanent archive, but a transient buffer for 
 Verifiable Credentials and Layer 2 encrypted envelopes.
 
 Key principles for Phase 4 (Production):
 - **User-Centric Master**: The "Master Data" resides in the user's local Folio 
-  (or personal cloud like iCloud/Box). The Remote Folio is just a transit point.
+  (or personal cloud like iCloud/Box). Web/A Post is just a transit point.
 - **Transient Buffer**: The server provides a "Best Effort" transit area. 
   Messages and VCs are subject to **strict TTL (Time-to-Live) policies** 
   (e.g., automatic deletion after 30 days).

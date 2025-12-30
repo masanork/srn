@@ -67,52 +67,73 @@ ai_generated: true
 </div>
 <div class="panel-body nav-links">
 <div data-lang-en>
-    <a href="./papers/web-a.html" class="nav-item">
-    <span class="icon">📄</span><span class="label">Web/A: Archival Web</span>
-    <span class="desc">A portable, machine-readable alternative to PDF/A and XML.</span>
+    <a href="./papers/roadmap.html" class="nav-item primary-roadmap">
+    <span class="icon">🧭</span><span class="label">Project Roadmap</span>
+    <span class="desc">Phased evolution toward loosely-coupled trust.</span>
     </a>
-    <a href="./papers/web-a-form.html" class="nav-item">
-    <span class="icon">🧾</span><span class="label">Web/A Form</span>
-    <span class="desc">File-first forms for low-frequency workflows.</span>
+
+    <div class="nav-subheader">Landscape & Strategy</div>
+    <a href="./papers/web-a-ecosystem.html" class="nav-item compact">
+    <span class="icon">🕸️</span><span class="label">Ecosystem Overview</span>
     </a>
-    <a href="./papers/web-a-folio.html" class="nav-item">
-    <span class="icon">💼</span><span class="label">Web/A Folio</span>
-    <span class="desc">Concept: The Personal Data Container.</span>
-    </a>
-    <a href="./papers/web-a-l2-encryption.html" class="nav-item">
-    <span class="icon">🔐</span><span class="label">Web/A L2 Encryption</span>
-    <span class="desc">Confidential, recipient-only submission envelopes.</span>
-    </a>
-    <a href="./papers/web-a-l2-market-comparison.html" class="nav-item">
+    <a href="./papers/web-a-l2-market-comparison.html" class="nav-item compact">
     <span class="icon">⚖️</span><span class="label">Competitive Analysis</span>
-    <span class="desc">Web/A vs PPAP, Office, IRM, and SSI.</span>
     </a>
+
+    <div class="nav-subheader">Core Architectures</div>
+    <a href="./papers/web-a.html" class="nav-item compact">
+    <span class="icon">📄</span><span class="label">Web/A Format</span>
+    </a>
+    <a href="./papers/web-a-form.html" class="nav-item compact">
+    <span class="icon">🧾</span><span class="label">Web/A Form</span>
+    </a>
+    <a href="./papers/web-a-folio.html" class="nav-item compact">
+    <span class="icon">💼</span><span class="label">Web/A Folio</span>
+    </a>
+    <a href="./papers/web-a-post-architecture.html" class="nav-item compact">
+    <span class="icon">📮</span><span class="label">Web/A Post</span>
+    </a>
+
+    <div class="nav-subheader">Advanced Components</div>
+    <div class="spec-links-grid">
+        <a href="./papers/web-a-l2-encryption.html">L2 Encryption</a>
+        <a href="./papers/context-routing-protocol.html">Context Routing</a>
+    </div>
 </div>
 <div data-lang-ja>
-    <a href="./papers/web-a.ja.html" class="nav-item">
-    <span class="icon">📄</span><span class="label">Web/A: アーカイブ品質のWeb</span>
-    <span class="desc">PDF/AやXMLに代わる、ポータブルでマシン可読なアーカイブ形式。</span>
+    <a href="./papers/roadmap.ja.html" class="nav-item primary-roadmap">
+    <span class="icon">🧭</span><span class="label">プロジェクト・ロードマップ</span>
+    <span class="desc">疎結合な信頼の社会実装に向けた、段階的な発展計画。</span>
     </a>
-    <a href="./papers/web-a-form.ja.html" class="nav-item">
-    <span class="icon">🧾</span><span class="label">Web/A Form 概説</span>
-    <span class="desc">システム間連携を容易にする、ファイルベースの検証可能フォーム。</span>
+
+    <div class="nav-subheader">展望と戦略</div>
+    <a href="./papers/web-a-ecosystem.ja.html" class="nav-item compact">
+    <span class="icon">🕸️</span><span class="label">エコシステム概観</span>
     </a>
-    <a href="./papers/web-a-folio.ja.html" class="nav-item">
-    <span class="icon">💼</span><span class="label">Web/A Folio 構想</span>
-    <span class="desc">個人が自身の「証拠」を保持し持ち運ぶためのデータコンテナの概念。</span>
-    </a>
-    <a href="./papers/web-a-l2-encryption.ja.html" class="nav-item">
-    <span class="icon">🔐</span><span class="label">Web/A L2 暗号化</span>
-    <span class="desc">受信者のみが復号可能な、機密性の高い提出エンベロープ。</span>
-    </a>
-    <a href="./papers/web-a-l2-market-comparison.ja.html" class="nav-item">
+    <a href="./papers/web-a-l2-market-comparison.ja.html" class="nav-item compact">
     <span class="icon">⚖️</span><span class="label">市場競合分析</span>
-    <span class="desc">PPAP、Office文書、IRM、SSI等とWeb/Aの比較。</span>
     </a>
-    <a href="./guide/prompts.ja.html" class="nav-item">
-    <span class="icon">🤖</span><span class="label">AI プロンプト集</span>
-    <span class="desc">Web/A Formの作成やデータ集計をAIで自動化する手法。</span>
+
+    <div class="nav-subheader">コア・アーキテクチャ</div>
+    <a href="./papers/web-a.ja.html" class="nav-item compact">
+    <span class="icon">📄</span><span class="label">Web/A フォーマット</span>
     </a>
+    <a href="./papers/web-a-form.ja.html" class="nav-item compact">
+    <span class="icon">🧾</span><span class="label">Web/A Form 概説</span>
+    </a>
+    <a href="./papers/web-a-folio.ja.html" class="nav-item compact">
+    <span class="icon">💼</span><span class="label">Web/A Folio 構想</span>
+    </a>
+    <a href="./papers/web-a-post-architecture.ja.html" class="nav-item compact">
+    <span class="icon">📮</span><span class="label">Web/A Post 構想</span>
+    </a>
+
+    <div class="nav-subheader">技術仕様・構成要素</div>
+    <div class="spec-links-grid">
+        <a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
+        <a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
+        <a href="./guide/prompts.ja.html">AI プロンプト集</a>
+    </div>
 </div>
 </div>
 </div>
@@ -256,6 +277,27 @@ ai_generated: true
         display: inline-block;
     }
 
+    .nav-subheader {
+        grid-column: 1 / -1;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .nav-subheader::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border-color);
+        opacity: 0.5;
+    }
+
     /* Spec List (Features) */
     .spec-list {
         display: grid;
@@ -298,6 +340,7 @@ ai_generated: true
         box-shadow: var(--panel-shadow);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
+        text-decoration: none;
     }
     .nav-item:hover {
         transform: translateY(-4px);
@@ -308,8 +351,43 @@ ai_generated: true
         background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
         border-color: #bae6fd;
     }
-    .nav-item.primary:hover {
-        background: #fff;
+    .nav-item.primary-roadmap {
+        grid-column: 1 / -1;
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border-color: #fde68a;
+    }
+    .nav-item.compact {
+        padding: 1rem 1.25rem;
+        grid-template-columns: 40px 1fr;
+    }
+    .nav-item.compact .icon {
+        font-size: 1.5rem;
+    }
+    .nav-item.compact .label {
+        font-size: 1rem;
+    }
+
+    .spec-links-grid {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    .spec-links-grid a {
+        font-size: 0.85rem;
+        color: var(--accent-color);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 2rem;
+        transition: all 0.2s;
+    }
+    .spec-links-grid a:hover {
+        background: var(--accent-color);
+        color: #fff;
+        border-color: var(--accent-color);
     }
 
     .nav-item .icon {
