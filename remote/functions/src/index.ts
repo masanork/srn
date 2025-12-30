@@ -227,3 +227,72 @@ export const api = functions.https.onRequest(async (req, res) => {
     }
     return app(req, res);
 });
+
+/**
+ * Serve DID Documents for Guest DIDs
+ * URL: /.well-known/did/guest/<id>/did.json
+ */
+export const didDocument = functions.https.onRequest(async (req, res) => {
+    // Enable CORS
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") {
+        res.status(204).send("");
+        return;
+    }
+
+    // Parse guest ID from path: /.well-known/did/guest/<id>/did.json
+    const pathMatch = req.path.match(/\/\.well-known\/did\/guest\/([^\/]+)\/did\.json/);
+    if (!pathMatch) {
+        res.status(404).json({ error: "Invalid DID Document path" });
+        return;
+    }
+
+    const guestId = pathMatch[1];
+    const db = admin.firestore();
+
+    try {
+        const doc = await db.collection("guest-dids").doc(guestId).get();
+        if (!doc.exists) {
+            res.status(404).json({ error: "Guest DID not found" });
+            return;
+        }
+
+        const data = doc.data();
+        const did = data?.did;
+        const publicKeyJwk = JSON.parse(data?.publicKeyJwk || "{}");
+        const expiresAt = data?.expiresAt;
+
+        // Check expiration
+        if (new Date(expiresAt) < new Date()) {
+            res.status(410).json({ error: "Guest DID expired" });
+            return;
+        }
+
+        // Generate DID Document
+        const didDocument = {
+            "@context": "https://www.w3.org/ns/did/v1",
+            "id": did,
+            "verificationMethod": [{
+                "id": `${did}#passkey`,
+                "type": "JsonWebKey2020",
+                "controller": did,
+                "publicKeyJwk": publicKeyJwk
+            }],
+            "authentication": [`${did}#passkey`],
+            "service": [{
+                "type": "FolioInbox",
+                "serviceEndpoint": `https://srn.example/api/guest-inbox/${guestId}`
+            }],
+            "expiresAt": expiresAt
+        };
+
+        res.set("Content-Type", "application/did+json");
+        res.status(200).json(didDocument);
+    } catch (error: any) {
+        console.error("Error serving DID Document:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
