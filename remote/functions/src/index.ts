@@ -82,7 +82,13 @@ const typeDefs = `
     hello: String 
   }
   
-  type Mutation { 
+  type GuestDid {
+    did: ID!
+    expiresAt: String!
+  }
+  
+  type Mutation {
+    createGuestDid(credentialId: String!, publicKeyJwk: String!): GuestDid! 
     postMessage(
       did: ID!
       nonce: String!
@@ -142,6 +148,22 @@ const resolvers = {
         }
     },
     Mutation: {
+        createGuestDid: async (_: any, { credentialId, publicKeyJwk }: any) => {
+            const db = admin.firestore();
+            const guestId = Math.random().toString(36).substring(2, 10);
+            const did = `did:web:srn.example:guest:${guestId}`;
+            const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+            await db.collection("guest-dids").doc(guestId).set({
+                did,
+                credentialId,
+                publicKeyJwk,
+                createdAt: new Date().toISOString(),
+                expiresAt
+            });
+
+            return { did, expiresAt };
+        },
         postMessage: async (_: any, args: any) => {
             const { did, nonce, signature, senderDid, recipientDid, hostDid, envelope, threadId, inReplyTo, action } = args;
 
