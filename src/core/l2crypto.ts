@@ -1,7 +1,5 @@
-import { randomBytes } from "node:crypto";
-import { createCipheriv, createDecipheriv } from "node:crypto";
 import canonicalize from "canonicalize";
-import * as fs from "node:fs";
+import { bytesToBase64Url, base64UrlToBytes } from "./encoding";
 import {
   initWasm,
   constantTimeEqual,
@@ -38,12 +36,15 @@ export class JsonFileReplayStore implements ReplayStore {
   }
 
   private load() {
-    if (fs.existsSync(this.file)) {
+    if (typeof process !== 'undefined' && process.versions && process.versions.node) {
       try {
-        const data = fs.readFileSync(this.file, "utf-8");
-        const list = JSON.parse(data);
-        if (Array.isArray(list)) {
-          this.nonces = new Set(list);
+        const fs = require('node:fs');
+        if (fs.existsSync(this.file)) {
+          const data = fs.readFileSync(this.file, "utf-8");
+          const list = JSON.parse(data);
+          if (Array.isArray(list)) {
+            this.nonces = new Set(list);
+          }
         }
       } catch (e) {
         console.error("Failed to load replay store:", e);
@@ -52,10 +53,13 @@ export class JsonFileReplayStore implements ReplayStore {
   }
 
   private save() {
-    try {
-      fs.writeFileSync(this.file, JSON.stringify(Array.from(this.nonces)), "utf-8");
-    } catch (e) {
-      console.error("Failed to save replay store:", e);
+    if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+      try {
+        const fs = require('node:fs');
+        fs.writeFileSync(this.file, JSON.stringify(Array.from(this.nonces)), "utf-8");
+      } catch (e) {
+        console.error("Failed to save replay store:", e);
+      }
     }
   }
 
@@ -77,7 +81,7 @@ export class JsonFileReplayStore implements ReplayStore {
 const WEBA_VERSION = "0.1";
 
 export type Layer2Signature = {
-  alg: "Ed25519";
+  alg: "Ed25519" | "none"; // 'none' for Guest DID with Passkey auth
   kid: string;
   sig: string; // base64url
   created_at: string;
@@ -124,11 +128,11 @@ export type Layer2Encrypted = {
 
 // Utilities
 export function toBase64Url(buf: Uint8Array): string {
-  return Buffer.from(buf).toString("base64url");
+  return bytesToBase64Url(buf);
 }
 
 export function fromBase64Url(str: string): Uint8Array {
-  return Buffer.from(str, "base64url");
+  return base64UrlToBytes(str);
 }
 
 export function canonicalJson(obj: any): string {
@@ -218,7 +222,7 @@ export async function deriveOrgRootKey(params: { srnInstanceKey: Uint8Array; org
     domain: "weba-l2/org-root",
     org_id: params.orgId,
   });
-  const info = Buffer.from(context, "utf-8");
+  const info = new TextEncoder().encode(context);
   const rootKey = hkdfSha256(params.srnInstanceKey, undefined, info, 32);
   return rootKey;
 }
@@ -247,7 +251,7 @@ export async function deriveOrgX25519KeyPair(params: {
     key_policy: policy,
     layer1_ref: policy === "campaign+layer1" ? params.layer1Ref : undefined,
   });
-  const info = Buffer.from(context, "utf-8");
+  const info = new TextEncoder().encode(context);
   const seed = hkdfSha256(params.orgRootKey, undefined, info, 32);
   const publicKey = x25519GetPublicKey(seed);
   return { publicKey, privateKey: seed, keyPolicy: policy };

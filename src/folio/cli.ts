@@ -8,6 +8,29 @@ program
     .version("0.1.0")
     .option("-f, --folio <dir>", "Path to the Folio directory", ".");
 
+// Helper to resolve private key from options
+async function loadPrivateKey(options: any): Promise<string> {
+    let privateKeyHex = options.key;
+    if (options.keyFile) {
+        const keyPath = path.resolve(process.cwd(), options.keyFile);
+        if (await fs.pathExists(keyPath)) {
+            const keyData = await fs.readJson(keyPath);
+            if (keyData.privateKey) {
+                privateKeyHex = keyData.privateKey;
+            } else {
+                throw new Error("Key file does not contain 'privateKey' field.");
+            }
+        } else {
+            throw new Error(`Key file not found: ${keyPath}`);
+        }
+    }
+
+    if (!privateKeyHex) {
+        throw new Error("Either --key or --key-file must be provided.");
+    }
+    return privateKeyHex;
+}
+
 // --- Form Operations ---
 const form = program.command("form").description("Form operations (parse, fill, validate)");
 
@@ -50,24 +73,7 @@ transport
     .option("--remote <url>", "API URL")
     .action(async (options) => {
         try {
-            let privateKeyHex = options.key;
-            if (options.keyFile) {
-                const keyPath = path.resolve(process.cwd(), options.keyFile);
-                if (await fs.pathExists(keyPath)) {
-                    const keyData = await fs.readJson(keyPath);
-                    if (keyData.privateKey) {
-                        privateKeyHex = keyData.privateKey;
-                    } else {
-                        throw new Error("Key file does not contain 'privateKey' field.");
-                    }
-                } else {
-                    throw new Error(`Key file not found: ${keyPath}`);
-                }
-            }
-
-            if (!privateKeyHex) {
-                throw new Error("Either --key or --key-file must be provided.");
-            }
+            const privateKeyHex = await loadPrivateKey(options);
 
             await sendMessage({
                 did: options.did,
@@ -128,34 +134,15 @@ program
         const folioDir = path.resolve(process.cwd(), program.opts().folio);
         const remoteUrl = options.remote;
         const did = options.did;
-        let privateKey = options.key;
         const mode = options.mode;
-
-        if (options.keyFile) {
-            const keyPath = path.resolve(process.cwd(), options.keyFile);
-            if (await fs.pathExists(keyPath)) {
-                const keyData = await fs.readJson(keyPath);
-                if (keyData.privateKey) {
-                    privateKey = keyData.privateKey;
-                } else {
-                    throw new Error("Key file does not contain 'privateKey' field.");
-                }
-            } else {
-                throw new Error(`Key file not found: ${keyPath}`);
-            }
-        }
 
         if (!remoteUrl || !did) {
             console.error("Error: --remote and --did are required for sync.");
             process.exit(1);
         }
 
-        if (!privateKey) {
-            console.error("Error: --key or --key-file is required for authentication.");
-            process.exit(1);
-        }
-
         try {
+            const privateKey = await loadPrivateKey(options);
             await syncFolio({ folioDir, remoteUrl, did, privateKey, mode });
         } catch (e: any) {
             console.error(`Error: ${e.message}`);
@@ -179,29 +166,7 @@ admin
     .option("--key-file <path>", "Path to Admin Private Key file")
     .action(async (options) => {
         try {
-            let adminKey = options.key;
-            if (options.keyFile) {
-                const keyPath = path.resolve(process.cwd(), options.keyFile);
-                if (await fs.pathExists(keyPath)) {
-                    const keyData = await fs.readJson(keyPath);
-                    if (keyData.privateKey) {
-                        adminKey = keyData.privateKey;
-                        // Use key's DID if not explicitly provided (optional convenience)
-                        if (!options.adminDid && keyData.did) {
-                            // This part is tricky because commander already validated requiredOption
-                            // But useful if we make admin-did optional in future
-                        }
-                    } else {
-                        throw new Error("Key file does not contain 'privateKey'.");
-                    }
-                } else {
-                    throw new Error(`Key file not found: ${keyPath}`);
-                }
-            }
-
-            if (!adminKey) {
-                throw new Error("Either --key or --key-file must be provided for admin authentication.");
-            }
+            const adminKey = await loadPrivateKey(options);
 
             await addUser({
                 remoteUrl: options.remote,
