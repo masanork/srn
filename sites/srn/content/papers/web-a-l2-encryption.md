@@ -217,6 +217,43 @@ When an agent or client prepares a reply, it MUST resolve the destination endpoi
 - A sidecar file `history/<message-id>.meta.json` stores `reply_to`, `thread_id`, `in_reply_to`, and `action`.
 - AI Agents use these links to reconstruct the conversation history as logical threads.
 
+**Shared Server Model (vs. SMTP)**
+
+Unlike SMTP, where the recipient MUST operate their own mail server, Web/A Folio supports a **shared server model**:
+
+- **Either party** (sender or recipient) can host the Folio Remote (e.g., Firebase).
+- The hosting party's server acts as the **conversation hub**.
+- Both parties `sync` messages from this shared location.
+
+**Use Cases:**
+1. **Recipient-hosted (SMTP-like)**: Applicant (CLI-only) → Government (Firebase)
+2. **Sender-hosted (Novel)**: Individual (CLI-only) ← Corporation (Firebase)
+3. **Third-party broker**: Individual A ↔ Broker (Firebase) ↔ Individual B
+
+**Data Model:**
+```json
+{
+  "senderDid": "did:web:sender.example",
+  "recipientDid": "did:web:recipient.example",
+  "hostDid": "did:web:host.example",
+  "envelope": "...",
+  "meta": { "id": "...", "thread_id": "..." }
+}
+```
+
+**Invariant:** `hostDid` MUST equal either `senderDid` OR `recipientDid`.
+
+**GraphQL Extensions:**
+```graphql
+type Query {
+  inbox(did: ID!, ...): [Message!]!    # Messages TO this DID
+  outbox(did: ID!, ...): [Message!]!   # Messages FROM this DID (not yet received)
+  threads(did: ID!, ...): [Thread!]!   # All threads involving this DID
+}
+```
+
+This model significantly lowers the barrier to entry, as individuals without server infrastructure can participate by leveraging their counterparty's Folio Remote.
+
 ## 5. Key Management & Hierarchy
 
 To manage keys effectively across many campaigns and forms, Web/A employs a
