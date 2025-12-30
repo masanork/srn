@@ -4,6 +4,19 @@ Sorane (空音) is an open-source, typography-first Static Site Generator (SSG) 
 
 ---
 
+> [!WARNING]
+> **Experimental Sandbox / Hobby Project Disclaimer**
+>
+> This project is a personal hobby project developed in a very short timeframe. It has **NOT** undergone professional quality assurance, security audits, or stress testing.
+>
+> 1. **No Warranty**: All code and designs are provided "as is" without any warranty of any kind, either expressed or implied. 
+> 2. **Security Risk**: Cryptographic implementations and new protocols (like Web/A and Layer 2 Encryption) should be considered experimental. Do not use for production-level financial transactions, sensitive personal data, or critical infrastructure.
+> 3. **Non-Commercial**: This is a proof-of-concept and reference implementation, not a commercial-grade product. 
+>
+> By using this software, you acknowledge these risks and assume all responsibility for any consequences.
+
+---
+
 ## Key Capabilities
 
 ### 1) Typography-First, Zero Layout Shift
