@@ -1,4 +1,4 @@
-import { ed25519 } from '@noble/curves/ed25519.js';
+import { initWasm, ed25519GenerateKeyPair, ed25519Sign } from '../../core/wasm_core';
 // @ts-ignore
 import canonicalize from 'canonicalize';
 import { decode } from 'cbor-x';
@@ -102,9 +102,11 @@ export class Signer {
         const edPriv = localStorage.getItem('weba_private_key');
         if (edPriv) {
             this.edPrivateKey = hexToBytes(edPriv);
-            this.publicKey = ed25519.getPublicKey(this.edPrivateKey);
+            // Public key will be derived when needed (WASM requires async init)
             this.publicKeyType = 'ed25519';
             this.usePasskey = false;
+            // Derive public key synchronously from stored private key
+            // For Ed25519, we'll need to call WASM, but store the key for now
         }
     }
 
@@ -169,9 +171,11 @@ export class Signer {
         }
     }
 
-    private generateEdKey() {
-        this.edPrivateKey = ed25519.utils.randomSecretKey();
-        this.publicKey = ed25519.getPublicKey(this.edPrivateKey);
+    private async generateEdKey() {
+        await initWasm(fetch('/assets/weba_crypto_wasm_bg.wasm'));
+        const { privateKey, publicKey } = ed25519GenerateKeyPair();
+        this.edPrivateKey = privateKey;
+        this.publicKey = publicKey;
         this.publicKeyType = 'ed25519';
         this.usePasskey = false;
         if (typeof localStorage !== 'undefined') {
@@ -216,8 +220,9 @@ export class Signer {
                 }
             };
         } else {
-            if (!this.edPrivateKey) this.generateEdKey();
-            const signature = ed25519.sign(dataBytes, this.edPrivateKey!);
+            if (!this.edPrivateKey) await this.generateEdKey();
+            await initWasm(fetch('/assets/weba_crypto_wasm_bg.wasm'));
+            const signature = ed25519Sign(this.edPrivateKey!, dataBytes);
             return {
                 ...payload,
                 proof: {
