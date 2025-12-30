@@ -24,13 +24,13 @@ graph TD
     classDef green fill:#efe,stroke:#333,stroke-width:1px;
     classDef yellow fill:#fffbe6,stroke:#333,stroke-width:1px;
 
-    subgraph Foundry [Foundry / Issuance]
-        Maker[Web/A Maker]
-    end
+    %% The Engine
+    Maker[Web/A Maker / SSG]
 
-    subgraph Documents [Interfaces]
+    subgraph Documents [Interfaces / Files]
         Form[Web/A Form]
         Doc[Web/A Document / Report]
+        Aggregator[Web/A Aggregator]
     end
 
     subgraph Storage [Ownership / Storage]
@@ -42,20 +42,22 @@ graph TD
     end
 
     %% Relations
-    Maker -->|1. Generate & Sign| Form
-    Maker -->|1. Generate & Sign| Doc
+    Maker -->|1. Build & Sign| Form
+    Maker -->|1. Build & Sign| Doc
+    Maker -->|1. Build & Sign| Aggregator
     
-    Form -->|2. Fill, Sign & Save| Folio
-    Doc -->|2. Receive, Verify & Save| Folio
+    Form -->|2. Fill, Sign & Submit| Doc
+    Doc -->|3. Receive, Verify & Save| Folio
     
-    Folio <-->|3. Deliver, Delegate & Sync| Post
-    Post <-->|4. Federation / Delivery| Post2[Another Web/A Post]
+    Folio <-->|4. Deliver, Delegate & Sync| Post
+    Post <-->|5. Federation / Delivery| Post2[Another Web/A Post]
     
-    Post -->|5. Notifications / Aggregation| Maker
+    Post -->|6. Data Collection| Aggregator
+    Aggregator -->|7. Analysis & Feedback| Maker
 
     %% Apply Classes
     class Maker yellow;
-    class Form,Doc blue;
+    class Form,Doc,Aggregator blue;
     class Folio highlight;
     class Post green;
 ```
@@ -67,10 +69,11 @@ The foundation for everything: an **"Archive-Quality" document format**.
 - **Features**: A single HTML file that encapsulates HTML (view), JSON-LD (structured data), fonts, and signatures.
 - **Value**: Ensures that a document can be "read" by a browser 50 years from now while being simultaneously "verifiable" by a machine.
 
-### 3.2. Web/A Maker (Foundry) — The Mint of Trust
-A suite of tools designed to **generate signed Web/A documents** from Markdown and templates.
-- **Composition**: CLI tools, libraries, and GUI editors.
-- **Value**: Enables developers to easily bake "trust generation" into existing workflows like CI/CD and automated scripts.
+### 3.2. Web/A Maker & Aggregator (Foundry) — The Mint and Intelligence of Trust
+A suite of tools powered by the **Sorane SSG (Static Site Generator)** designed to handle the beginning and end of the document lifecycle.
+- **Maker**: Generates signed Web/A documents/forms from templates.
+- **Aggregator**: Collects and analyzes signed data submitted via Post, providing dashboards and insights.
+- **Value**: Enables developers to bake automated "trust generation" and "trust analysis" into existing workflows.
 
 ### 3.3. Web/A Form (Interface) — The Interactive Document
 An **interactive document** that adds "input" and "confidentiality" capabilities to the Web/A format.
