@@ -1,5 +1,163 @@
-import { generateRecipientKeyPair, decryptLayer2 } from "../../core/l2crypto";
+import { generateRecipientKeyPair, decryptLayer2, encryptLayer2, fromBase64Url } from "../../core/l2crypto";
 import { initWasm } from "../../core/wasm_core";
+
+// Helper to resolve DID and find encryption key (Browser version)
+async function resolveEncryptionKey(did: string): Promise<{ publicKey: Uint8Array, kid: string }> {
+    if (did.startsWith("did:key:")) {
+        // Did Key decoding (minimal implementation required here or import from core/did if browser compatible)
+        // For now, assume we communicate with Server DID (did:web) or handle did:key if we have a decoder.
+        // Let's assume did:web for the form scenario (sending TO the host).
+        throw new Error("did:key resolution not fully implemented in browser client yet");
+    }
+
+    const start = did.startsWith("did:web:") ? did.split(":").slice(2).join("/") : did; // simplified
+    // Real did:web parser
+    const parts = did.split(":");
+    if (parts[1] !== "web") throw new Error("Unsupported DID");
+    const domain = parts[2];
+    const pathParts = parts.slice(3);
+    const url = pathParts.length === 0
+        ? `https://${domain}/.well-known/did.json`
+        : `https://${domain}/${pathParts.join("/")}/did.json`;
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("Failed to fetch DID Doc");
+    const doc = await resp.json();
+
+    // Find X25519 Key
+    let method = null;
+    const keyAgreementId = doc.keyAgreement ? (typeof doc.keyAgreement[0] === 'string' ? doc.keyAgreement[0] : doc.keyAgreement[0].id) : null;
+
+    if (keyAgreementId) {
+        if (doc.verificationMethod) {
+            method = doc.verificationMethod.find((m: any) =>
+                m.id === keyAgreementId || m.id === keyAgreementId.split("#").pop() || m.id.endsWith(keyAgreementId)
+            );
+        }
+        if (!method && typeof doc.keyAgreement[0] !== 'string') method = doc.keyAgreement[0];
+    }
+
+    if (method && method.publicKeyJwk && method.publicKeyJwk.crv === "X25519") {
+        return {
+            publicKey: fromBase64Url(method.publicKeyJwk.x),
+            kid: method.id
+        };
+    }
+
+    throw new Error("No X25519 encryption key found in DID Document");
+}
+
+export async function sendGuestMessage(did: string, recipientDid: string, messageText: string): Promise<any> {
+    await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+
+    const credentialId = localStorage.getItem(`guest-did:${did}`);
+    if (!credentialId) throw new Error("Credential ID not found for DID");
+
+    // 1. Prepare Content & Encrypt (L2)
+    const plainContent = {
+        type: "https://schema.org/Message",
+        ext: {
+            "com.example.rsvp": { attending: true, count: 1 } // Example extension
+        },
+        text: messageText,
+        timestamp: new Date().toISOString()
+    };
+
+    // Simple wrapper payload
+    const payload = {
+        layer2_plain: plainContent,
+        layer2_sig: { alg: "none", kid: "guest-passkey", sig: "", created_at: new Date().toISOString() } // Dummy signature inside
+    };
+
+    console.log("Resolving recipient...", recipientDid);
+    const { publicKey: recipientKey, kid: recipientKid } = await resolveEncryptionKey(recipientDid);
+
+    console.log("Encrypting...", recipientKid);
+    const encrypted = await encryptLayer2(
+        payload,
+        recipientKey,
+        `ref:${Date.now()}`,
+        recipientKid,
+        // No userSk provided -> encryptLayer2 generates ephemeral key
+    );
+
+    // 2. Authenticate & Send (API)
+    // Get Challenge
+    const challengeResp = await fetch(REMOTE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            query: `query GetChallenge($did: ID!) { getChallenge(did: $did) { nonce } }`,
+            variables: { did }
+        })
+    });
+    const challengeResult = await challengeResp.json();
+    if (challengeResult.errors) throw new Error(challengeResult.errors[0].message);
+    const nonce = challengeResult.data.getChallenge.nonce;
+    const challengeBuffer = base64UrlToArrayBuffer(nonce);
+
+    // Sign with Passkey
+    console.log("Requesting Passkey signature...");
+    const assertion = await navigator.credentials.get({
+        publicKey: {
+            challenge: challengeBuffer,
+            allowCredentials: [{
+                id: base64UrlToArrayBuffer(credentialId),
+                type: "public-key"
+            }],
+            userVerification: "required"
+        }
+    }) as PublicKeyCredential;
+    if (!assertion) throw new Error("Authentication failed");
+    const response = assertion.response as AuthenticatorAssertionResponse;
+
+    const mutation = `
+        mutation GuestPostMessage(
+            $did: ID!, 
+            $credentialId: String!, 
+            $signature: String!, 
+            $authenticatorData: String!, 
+            $clientDataJSON: String!,
+            $recipientDid: String!,
+            $envelope: String!
+        ) {
+            guestPostMessage(
+                did: $did, 
+                credentialId: $credentialId, 
+                signature: $signature, 
+                authenticatorData: $authenticatorData, 
+                clientDataJSON: $clientDataJSON,
+                recipientDid: $recipientDid,
+                envelope: $envelope
+            ) {
+                id
+            }
+        }
+    `;
+
+    const apiResp = await fetch(REMOTE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            query: mutation,
+            variables: {
+                did,
+                credentialId,
+                signature: arrayBufferToBase64(response.signature),
+                authenticatorData: arrayBufferToBase64(response.authenticatorData),
+                clientDataJSON: arrayBufferToBase64(response.clientDataJSON),
+                recipientDid,
+                envelope: JSON.stringify(encrypted)
+            }
+        })
+    });
+
+    const apiResult = await apiResp.json();
+    if (apiResult.errors) throw new Error(apiResult.errors[0].message);
+
+    console.log("Guest Message Sent!", apiResult.data.guestPostMessage.id);
+    return apiResult.data.guestPostMessage;
+}
 
 // ... (existing imports)
 
@@ -327,9 +485,16 @@ function arrayBufferToBase64Url(buffer: Uint8Array): string {
 if (typeof window !== 'undefined') {
     (window as any).getOrCreateGuestDid = getOrCreateGuestDid;
     (window as any).fetchGuestInbox = fetchGuestInbox;
+    (window as any).sendGuestMessage = sendGuestMessage;
 
-    (window as any).submitFormWithGuestDid = async (formData: any, wantsReplies: boolean) => {
+    (window as any).submitFormWithGuestDid = async (formData: any, wantsReplies: boolean, recipientDid: string) => {
         const { did, isReused } = await getOrCreateGuestDid(false);
+        const messageText = JSON.stringify(formData);
+
+        // Use provided recipient or default
+        const targetDid = recipientDid || "did:web:srn.example"; // Default fallback
+
+        await sendGuestMessage(did, targetDid, messageText);
         return { senderDid: did };
     };
 

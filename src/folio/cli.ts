@@ -122,16 +122,36 @@ program
     .option("--remote <url>", "Remote Inbox GraphQL URL")
     .option("--did <did>", "Your DID for authentication")
     .option("--key <hex>", "Private key for signing")
+    .option("--key-file <path>", "Path to private key file")
     .option("--mode <mode>", "Sync mode: inbox, outbox, or full", "inbox")
     .action(async (options) => {
         const folioDir = path.resolve(process.cwd(), program.opts().folio);
         const remoteUrl = options.remote;
         const did = options.did;
-        const privateKey = options.key;
+        let privateKey = options.key;
         const mode = options.mode;
+
+        if (options.keyFile) {
+            const keyPath = path.resolve(process.cwd(), options.keyFile);
+            if (await fs.pathExists(keyPath)) {
+                const keyData = await fs.readJson(keyPath);
+                if (keyData.privateKey) {
+                    privateKey = keyData.privateKey;
+                } else {
+                    throw new Error("Key file does not contain 'privateKey' field.");
+                }
+            } else {
+                throw new Error(`Key file not found: ${keyPath}`);
+            }
+        }
 
         if (!remoteUrl || !did) {
             console.error("Error: --remote and --did are required for sync.");
+            process.exit(1);
+        }
+
+        if (!privateKey) {
+            console.error("Error: --key or --key-file is required for authentication.");
             process.exit(1);
         }
 

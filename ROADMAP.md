@@ -7,9 +7,10 @@ This document tracks the high-level development status, architectural decisions,
 | Component | Status | Highlights |
 | :--- | :--- | :--- |
 | **SRN (SSG)** | Stable (v2) | Hybrid PQC signatures, Native IVS, Web/A consolidation. |
-| **Web/A Form** | Migrated | Hosted within SRN site; legacy URLs redirected. |
-| **Folio (Client)** | Early Prototype | CLI for sync/send, MCP Server integration. |
-| **Infrastructure**| Beta | Firebase Functions/Hosting, simplewebauthn v13. |
+| **Web/A Form** | Production | Hosted within SRN site; Guest DID submission enabled. |
+| **Folio (Client)** | Beta | CLI for sync/send/admin, MCP Server, `did:key` support. |
+| **Folio (Remote)** | Production | Firebase Functions (asia-northeast1), Strict Mode, Guest DID. |
+| **Infrastructure**| Production | Firebase Functions/Hosting, simplewebauthn v13. |
 
 ---
 
@@ -17,11 +18,14 @@ This document tracks the high-level development status, architectural decisions,
 
 ### 1. Identity & Credentials (High Priority)
 - [x] **Guest DID (Passkeys)**: Native WebAuthn integration for identity-less users.
+- [x] **Guest DID Messaging**: `guestPostMessage` mutation for Passkey-authenticated submissions.
 - [ ] **Passkey-based VC Binding**: Linking W3C Verifiable Credentials to hardware keys.
 - [ ] **Revocation List v2**: High-performance bitstring revocation for municipality-scale DIDs.
 
 ### 2. Folio: The Personal Data Container
-- [ ] **Guest DID Integration**: CLI support for managing and syncing Guest DID inboxes.
+- [x] **Secure Remote Deployment**: Deployed to `asia-northeast1` with Strict Mode enabled.
+- [x] **Admin Onboarding Flow**: `join.md` form for self-service account requests.
+- [x] **End-to-End Verification**: Tested `admin add-user` → `transport send` → `sync` workflow.
 - [ ] **Key Rotation**: Automated rotation for Delegate Keys within the Folio.
 - [ ] **Cross-Device Sync**: Secure migration protocol for Folio folders.
 

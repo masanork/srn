@@ -11,14 +11,30 @@ export interface ResolveResult {
     did: string;
     endpoints: TransportCapability[];
     document?: any;
+    implicit?: boolean;
 }
 
 /**
- * Resolves a DID (currently supports did:web) and extracts Web/A transport capabilities.
+ * Resolves a DID (supports did:web and did:key) and extracts Web/A transport capabilities.
  */
 export async function resolveTransport(did: string): Promise<ResolveResult> {
+    // 1. Handle did:key (Implicit Resolution)
+    if (did.startsWith("did:key:")) {
+        // did:key typically doesn't have a service endpoint in the traditional sense
+        // unless resolved via a universal resolver.
+        // For Folio prototype, we treat did:key as valid but without explicit endpoints
+        // unless we want to assume a default router/relay.
+        // FOR NOW: Return implicit success so transport send doesn't block.
+        // The actual endpoint usage depends on the caller knowing a relay/server URL (via --remote).
+        return {
+            did,
+            endpoints: [], // No explicit endpoints in did:key string
+            implicit: true
+        };
+    }
+
     if (!did.startsWith("did:web:")) {
-        throw new Error(`Unsupported DID method: ${did}. Only did:web is supported in this prototype.`);
+        throw new Error(`Unsupported DID method: ${did}. Only did:web and did:key are supported.`);
     }
 
     const url = didToUrl(did);
