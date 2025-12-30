@@ -9,6 +9,9 @@ import init, {
     ed25519_generate_keypair as wasm_ed25519_gen,
     ed25519_sign as wasm_ed25519_sign,
     ed25519_verify as wasm_ed25519_verify,
+    p256_generate_keypair as wasm_p256_gen,
+    p256_sign as wasm_p256_sign,
+    p256_verify as wasm_p256_verify,
     ml_kem_768_generate_keypair as wasm_ml_kem_gen,
     ml_kem_768_encapsulate as wasm_ml_kem_enc,
     ml_kem_768_decapsulate as wasm_ml_kem_dec,
@@ -146,6 +149,35 @@ export function ed25519Sign(privateKey: Uint8Array, message: Uint8Array): Uint8A
 export function ed25519Verify(publicKey: Uint8Array, message: Uint8Array, signature: Uint8Array): boolean {
     if (!initialized) throw new Error("WASM not initialized");
     return wasm_ed25519_verify(publicKey, message, signature);
+}
+
+/**
+ * P-256 (ECDSA) Key Pair generation using WASM.
+ * Returns { privateKey: 32 bytes, publicKey: 65 bytes (uncompressed) }
+ */
+export function p256GenerateKeyPair(): { privateKey: Uint8Array; publicKey: Uint8Array } {
+    if (!initialized) throw new Error("WASM not initialized");
+    const bytes = wasm_p256_gen();
+    return {
+        privateKey: bytes.slice(0, 32),
+        publicKey: bytes.slice(32, 97),
+    };
+}
+
+/**
+ * P-256 (ECDSA) Signing using WASM.
+ */
+export function p256Sign(privateKey: Uint8Array, message: Uint8Array): Uint8Array {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_p256_sign(privateKey, message);
+}
+
+/**
+ * P-256 (ECDSA) Verification using WASM.
+ */
+export function p256Verify(publicKey: Uint8Array, message: Uint8Array, signature: Uint8Array): boolean {
+    if (!initialized) throw new Error("WASM not initialized");
+    return wasm_p256_verify(publicKey, message, signature);
 }
 
 /**

@@ -35,7 +35,7 @@ pub fn constant_time_equal(a: &[u8], b: &[u8]) -> bool {
 
 #[wasm_bindgen]
 pub fn get_version() -> String {
-    "Web/A Crypto WASM v0.1.5 (AES-GCM + X25519 + Ed25519 + ML-KEM-768 + ML-DSA-44 + SHA256/HKDF)".to_string()
+    "Web/A Crypto WASM v0.1.6 (AES-GCM + X25519 + Ed25519 + P-256 + ML-KEM-768 + ML-DSA-44 + SHA256/HKDF)".to_string()
 }
 
 #[wasm_bindgen]
@@ -143,6 +143,52 @@ pub fn ed25519_verify(public_key: &[u8], message: &[u8], signature: &[u8]) -> Re
     let signature = EdSignature::from_bytes(&sig_bytes);
     
     Ok(verifying_key.verify(message, &signature).is_ok())
+}
+
+// P-256 (ECDSA)
+#[wasm_bindgen]
+pub fn p256_generate_keypair() -> Result<Vec<u8>, JsValue> {
+    use p256::SecretKey;
+    
+    let mut rng = thread_rng();
+    let secret_key = SecretKey::random(&mut rng);
+    let public_key = secret_key.public_key();
+    
+    // Secret key: 32 bytes, Public key: 65 bytes (uncompressed)
+    let mut out = Vec::with_capacity(32 + 65);
+    out.extend_from_slice(&secret_key.to_bytes());
+    out.extend_from_slice(&public_key.to_sec1_bytes());
+    Ok(out)
+}
+
+#[wasm_bindgen]
+pub fn p256_sign(private_key: &[u8], message: &[u8]) -> Result<Vec<u8>, JsValue> {
+    use p256::{SecretKey, ecdsa::{SigningKey, signature::Signer}};
+    
+    if private_key.len() != 32 {
+        return Err(JsValue::from_str("Invalid private key length"));
+    }
+    
+    let secret = SecretKey::from_bytes(private_key.into())
+        .map_err(|_| JsValue::from_str("Invalid private key"))?;
+    let signing_key = SigningKey::from(&secret);
+    
+    let signature: p256::ecdsa::Signature = signing_key.sign(message);
+    Ok(signature.to_bytes().to_vec())
+}
+
+#[wasm_bindgen]
+pub fn p256_verify(public_key: &[u8], message: &[u8], signature: &[u8]) -> Result<bool, JsValue> {
+    use p256::{PublicKey, ecdsa::{VerifyingKey, Signature, signature::Verifier}};
+    
+    let public = PublicKey::from_sec1_bytes(public_key)
+        .map_err(|_| JsValue::from_str("Invalid public key"))?;
+    let verifying_key = VerifyingKey::from(&public);
+    
+    let sig = Signature::from_bytes(signature.into())
+        .map_err(|_| JsValue::from_str("Invalid signature"))?;
+    
+    Ok(verifying_key.verify(message, &sig).is_ok())
 }
 
 // ML-KEM-768
