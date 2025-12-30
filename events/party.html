@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>Year-End Party RSVP</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+</style>
+    
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="">
+    <main>
+        
+        <div class="weba-form-container">
+            <p>Welcome! This is a **Web/A Form** demo. You can submit your RSVP without creating an account. Your identity will be verified securely using your device&#039;s Passkey (TouchID / FaceID).</p><h3>Your Details</h3><p>**Name**:</p><input type="text" id="name" class="weba-input" placeholder="Your Name" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;"><p>**Will you attend?**:</p><select id="attendance" class="weba-input" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;"><option value="yes">Yes, I'll be there! 🍻</option><option value="online">Joining Online 💻</option><option value="no">Sorry, can't make it 😢</option></select><p>**Message**:</p><textarea id="message" class="weba-input" placeholder="Any dietary restrictions or comments?" style="width: 100%; padding: 8px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; min-height: 80px;"></textarea><h3>Submission</h3><p>**Host DID**:</p><input type="text" id="recipient" class="weba-input" value="did:web:srn.example" style="width: 100%; font-family: monospace; font-size: 0.9em; color: #666; margin-bottom: 10px;"><div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;"><button id="submit-btn" class="weba-btn" style="background: #2563eb; color: white; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 8px;"><span>🔒</span> Sign & Submit with Passkey</button><div id="status-msg" style="margin-top: 10px; font-size: 0.9rem;"></div></div><script><p>document.getElementById(&#039;submit-btn&#039;).addEventListener(&#039;click&#039;, async () =&gt; {</p><p>const btn = document.getElementById(&#039;submit-btn&#039;);</p><p>const status = document.getElementById(&#039;status-msg&#039;);</p><p>if (!document.getElementById(&#039;name&#039;).value) {</p><p>alert(&quot;Please enter your name.&quot;);</p><p>return;</p><p>}</p><p>try {</p><p>btn.disabled = true;</p><p>const originalText = btn.innerText;</p><p>btn.innerText = &quot;🔐 Verifying Passkey...&quot;;</p><p>status.innerText = &quot;Requesting biometric authentication...&quot;;</p><p>status.style.color = &quot;#666&quot;;</p><p>const name = document.getElementById(&#039;name&#039;).value;</p><p>const attendance = document.getElementById(&#039;attendance&#039;).value;</p><p>const msg = document.getElementById(&#039;message&#039;).value;</p><p>const recipient = document.getElementById(&#039;recipient&#039;).value;</p><p>const formData = {</p><p>type: &quot;RSVP&quot;,</p><p>name,</p><p>attendance,</p><p>message: msg,</p><p>timestamp: new Date().toISOString()</p><p>};</p><p>// Submit using Guest DID</p><p>const result = await window.submitFormWithGuestDid(formData, false, recipient);</p><p>status.style.color = &quot;green&quot;;</p><p>status.innerHTML = `&lt;strong&gt;✓ Sent Successfully!&lt;/strong&gt;&lt;br&gt;Sender: &lt;code&gt;${result.senderDid}&lt;/code&gt;`;</p><p>btn.innerText = &quot;✓ Sent&quot;;</p><p>btn.style.background = &quot;#059669&quot;;</p><p>} catch (e) {</p><p>console.error(e);</p><p>status.style.color = &quot;red&quot;;</p><p>status.innerText = &quot;Error: &quot; + e.message;</p><p>btn.disabled = false;</p><p>btn.innerText = &quot;Try Again&quot;;</p><p>}</p><p>});</p></script><div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            
+            <div style="flex:1"></div>
+            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
+    
+        </div>
+            
+
+            <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記入内容（データ）の確認" data-i18n-en="Review Form Data">記入内容（データ）の確認</span>
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                        </div>
+                    </details>
+                    
+        <details style="margin-top: 0.5rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAFormTemplate"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2025-12-30T11:28:51.681Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/events/party",
+    "name": "Year-End Party RSVP",
+    "contentDigest": "4a75482c31154e818475e45a675db695c88ad7c728fd7b0b279abb55de867816"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767094125255-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T11:28:51.681Z",
+      "proofValue": "z4uEPTaW5EKJCneepLM9p2ut4fbZjk5NZ29KLowtG1pYTruWSNpGaMU8DhgDAxj4DSg8w8o9o3UYZRMUgvPtzXC2c"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767094125255-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T11:28:51.681Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+            </div>
+        </details>
+    
+                </div>
+            </footer>
+        </div>
+        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[],"tables":{},"masterData":{}}</script>
+        
+        
+        <script src="../assets/form-bundle.js" type="module"></script>
+    
+    </main>
+</body>
+</html>

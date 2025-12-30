@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>Join Secure Folio</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+</style>
+    
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="">
+    <main>
+        
+        <div class="weba-form-container">
+            <p>This Folio instance operates in **Secure Mode**. To exchange messages, your DID must be explicitly allowed by the administrator.</p><p>Please submit your access request below. You will use a temporary **Guest Passkey** to sign this request securely.</p><h3>Applicant Information</h3><p>**Display Name**:</p><input type="text" id="name" class="weba-input" placeholder="e.g. Alice Smith" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px;"><p>**Your DID**:</p><div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;"><p>Generate this on your machine using &lt;code&gt;folio init&lt;/code&gt; or &lt;code&gt;folio did create&lt;/code&gt;.</p></div><input type="text" id="did" class="weba-input" placeholder="did:key:z..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace;"><p>**Reason / Introduction**:</p><textarea id="reason" class="weba-input" placeholder="e.g. I am a new team member needing read/write access." style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; min-height: 80px;"></textarea><h3>Submission</h3><p>**Administrator DID (Host)**:</p><input type="text" id="recipient" class="weba-input" value="did:web:srn.example" readonly style="width: 100%; background: #f5f5f5; border: none; color: #666; font-family: monospace; font-size: 0.9em; margin-bottom: 10px;"><div style="margin-top: 1.5rem; padding: 1.5rem; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;"><p style="margin-top: 0; font-size: 0.9rem; color: #0369a1;"><strong>🔒 Security Check:</strong> We will create a temporary Guest ID on this device using your biometric passkey to sign this request.</p><button id="submit-btn" class="weba-btn" style="background: #0284c7; color: white; padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center;"><span>⚡️</span> Sign & Submit Request</button><div id="status-msg" style="margin-top: 15px; font-size: 0.9rem; text-align: center; min-height: 1.2em;"></div></div><script><p>document.getElementById(&#039;submit-btn&#039;).addEventListener(&#039;click&#039;, async () =&gt; {</p><p>const btn = document.getElementById(&#039;submit-btn&#039;);</p><p>const status = document.getElementById(&#039;status-msg&#039;);</p><p>// Validation</p><p>const name = document.getElementById(&#039;name&#039;).value.trim();</p><p>const candidateDid = document.getElementById(&#039;did&#039;).value.trim();</p><p>const reason = document.getElementById(&#039;reason&#039;).value.trim();</p><p>if (!name || !candidateDid) {</p><p>alert(&quot;Please enter your Name and DID.&quot;);</p><p>return;</p><p>}</p><p>if (!candidateDid.startsWith(&quot;did:&quot;)) {</p><p>alert(&quot;Invalid DID format. It must start with &#039;did:&#039;.&quot;);</p><p>return;</p><p>}</p><p>try {</p><p>btn.disabled = true;</p><p>const originalText = btn.innerHTML;</p><p>btn.innerHTML = &quot;&lt;span&gt;🔐&lt;/span&gt; Verifying Passkey...&quot;;</p><p>status.innerText = &quot;Please confirm with TouchID / FaceID...&quot;;</p><p>status.style.color = &quot;#666&quot;;</p><p>const recipient = document.getElementById(&#039;recipient&#039;).value;</p><p>const formData = {</p><p>type: &quot;AccountRequest&quot;,</p><p>name,</p><p>candidateDid,</p><p>reason,</p><p>timestamp: new Date().toISOString()</p><p>};</p><p>// Submit using Guest DID</p><p>const result = await window.submitFormWithGuestDid(formData, false, recipient);</p><p>status.style.color = &quot;#059669&quot;;</p><p>status.innerHTML = `</p><div style="padding: 10px; background: #dcfce7; border-radius: 6px; border: 1px solid #86efac;"><strong>✓ Request Sent!</strong><br><span style="font-size: 0.85em">Reference ID: <code>${result.id}</code></span><br><span style="font-size: 0.85em">Guest Signer: <code>${result.senderDid.substring(0, 20)}...</code></span></div><p style="margin-top:10px; color: #333;">The administrator has been notified. Please wait for approval.</p><p>`;</p><p>btn.innerHTML = &quot;✓ Request Submitted&quot;;</p><p>btn.style.background = &quot;#059669&quot;;</p><p>} catch (e) {</p><p>console.error(e);</p><p>status.style.color = &quot;#dc2626&quot;;</p><p>status.innerText = &quot;Error: &quot; + e.message;</p><p>btn.disabled = false;</p><p>btn.innerHTML = &quot;&lt;span&gt;⚠️&lt;/span&gt; Try Again&quot;;</p><p>}</p><p>});</p></script><div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            
+            <div style="flex:1"></div>
+            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
+    
+        </div>
+            
+
+            <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記入内容（データ）の確認" data-i18n-en="Review Form Data">記入内容（データ）の確認</span>
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                        </div>
+                    </details>
+                    
+        <details style="margin-top: 0.5rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAFormTemplate"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2025-12-30T11:28:45.565Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/join",
+    "name": "Join Secure Folio",
+    "contentDigest": "69d9bdf80665c7663cf12a696dacdec7ed39c1c9e73e025a554ad9b831857c2f"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767094125255-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T11:28:45.565Z",
+      "proofValue": "z5kmrj55FNLR1HBFBYLNaoTGA2KdLAYfarrQCK741GQPgkuMZq7CYuuXHJk71Dub15fgaRcuwuaAgJxoLnv8kntXq"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767094125255-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2025-12-30T11:28:45.565Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+            </div>
+        </details>
+    
+                </div>
+            </footer>
+        </div>
+        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[],"tables":{},"masterData":{}}</script>
+        
+        
+        <script src="assets/form-bundle.js" type="module"></script>
+    
+    </main>
+</body>
+</html>
