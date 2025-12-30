@@ -8,7 +8,7 @@ import { json } from "body-parser";
 import { initWasm, ed25519Verify } from "./wasm_util";
 import { decode } from "cbor-x";
 import { verifyRegistrationResponse, verifyAuthenticationResponse } from '@simplewebauthn/server';
-import { verifyFolioVC } from "./vc_util";
+import { verifyFolioVC, verifyDelegationChain } from "./vc_util";
 
 import { CONFIG } from "./config";
 
@@ -155,6 +155,7 @@ const typeDefs = `
       nonce: String!
       signature: String!
       vc: String
+      vcs: [String]
       senderDid: String!
       recipientDid: String!
       hostDid: String!
@@ -488,14 +489,19 @@ const resolvers = {
 
                 if (!userDoc.exists && !isStaticAdmin) {
                     // Try VC-based auth
-                    if (args.vc) {
+                    const vcsToVerify = args.vcs ? args.vcs.map((v: string) => JSON.parse(v)) : (args.vc ? [JSON.parse(args.vc)] : []);
+
+                    if (vcsToVerify.length > 0) {
                         try {
-                            const vcData = JSON.parse(args.vc);
-                            const result = await verifyFolioVC(vcData, { trustedIssuerDids: CONFIG.ADMIN_DIDS });
-                            if (result.isValid && result.credentialSubject?.id === did && result.credentialSubject?.["folio:access"]) {
-                                console.log(`✅ Authorized via VC for ${did}`);
+                            const chainResult = await verifyDelegationChain(vcsToVerify, did, CONFIG.ADMIN_DIDS);
+                            if (chainResult.authorizedAs) {
+                                console.log(`✅ Authorized as ${chainResult.authorizedAs} via VC/Delegation (Requestor: ${did})`);
+                                // Ensure the request is either for themselves OR they are acting as the sender
+                                if (chainResult.authorizedAs !== did && chainResult.authorizedAs !== senderDid) {
+                                    throw new Error(`Access Denied: VC covers ${chainResult.authorizedAs}, but request is for ${senderDid}`);
+                                }
                             } else {
-                                throw new Error("Access Denied: Invalid or unauthorized VC.");
+                                throw new Error("Access Denied: No valid or authorized VC/Chain found.");
                             }
                         } catch (ve: any) {
                             throw new Error(`Access Denied: VC verification failed: ${ve.message}`);

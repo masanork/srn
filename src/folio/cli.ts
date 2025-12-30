@@ -86,16 +86,16 @@ transport
     .option("--key <hex>", "Your Private Key (Hex)")
     .option("--key-file <path>", "Path to private key file")
     .option("--remote <url>", "API URL")
-    .option("--vc <path>", "Path to your Access Pass VC file")
+    .option("--vc <path>", "Path to VC file(s) (can be specified multiple times)", (val, memo) => { memo.push(val); return memo; }, [] as string[])
     .action(async (options) => {
         try {
             const privateKeyHex = await loadPrivateKey(options);
 
-            let vcData: any;
-            if (options.vc) {
-                const vcPath = path.resolve(process.cwd(), options.vc);
+            const vcsData: any[] = [];
+            for (const vcPathStr of (options.vc || [])) {
+                const vcPath = path.resolve(process.cwd(), vcPathStr);
                 if (await fs.pathExists(vcPath)) {
-                    vcData = await fs.readJson(vcPath);
+                    vcsData.push(await fs.readJson(vcPath));
                 } else {
                     console.warn(`Warning: VC file not found at ${vcPath}`);
                 }
@@ -107,8 +107,47 @@ transport
                 senderDid: options.sender,
                 privateKeyHex: privateKeyHex,
                 remote: options.remote,
-                vc: vcData
+                vcs: vcsData
             });
+        } catch (e: any) {
+            console.error(`Error: ${e.message}`);
+            process.exit(1);
+        }
+    });
+
+import { delegateCapability } from "./admin";
+
+transport
+    .command("delegate")
+    .description("Delegate capabilities to another DID")
+    .requiredOption("--to <did>", "DID of the delegate")
+    .option("--scope <scope>", "Access scope (e.g. post)", "post")
+    .option("--key-file <path>", "Path to your Private Key file")
+    .option("--key <hex>", "Your Private Key (Hex)")
+    .option("--out <path>", "Output file for the delegation VC", "delegation.json")
+    .action(async (options) => {
+        try {
+            const myKeyData = await loadKeyData(options);
+
+            // Handle hybrid vs classic
+            let finalKeys: any;
+            if (myKeyData.ed25519 && myKeyData.pqc) {
+                finalKeys = myKeyData;
+            } else {
+                finalKeys = {
+                    ed25519: { privateKey: myKeyData.privateKey, publicKey: myKeyData.publicKey },
+                    pqc: null
+                };
+            }
+
+            const myDid = myKeyData.did || (options.key ? "did:key:..." : "unknown");
+            // Better: use encodeDidKey if did not in keyData
+
+            const vc = await delegateCapability(finalKeys, myDid, options.to, options.scope);
+
+            const outPath = path.resolve(process.cwd(), options.out);
+            await fs.writeJson(outPath, vc, { spaces: 2 });
+            console.log(`✅ Capability delegated to ${options.to} and saved to ${outPath}`);
         } catch (e: any) {
             console.error(`Error: ${e.message}`);
             process.exit(1);
