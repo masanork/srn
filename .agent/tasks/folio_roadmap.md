@@ -19,11 +19,11 @@ description: Folio Development & Verification Roadmap
 - [x] **Web/A Form Integration**: Embedded Guest DID submission into Markdown Forms (RSVP, Join Request).
 - [x] **Account Request Flow**: Created `join.md` for self-service account requests.
 
-## Phase 2.5: Polish & Refactor (Next)
-- [ ] **CLI Cleanup**: Normalize CLI options (ensure `--key-file` works everywhere).
-- [ ] **Browser DID Resolution**: Implement proper `did:key` resolution in Browser Client (currently blocked/mocked).
-- [ ] **L2 Signature Standard**: Clean up the "Dummy Signature" hack for Guest DIDs (define proper `ES256` or `Passkey` signature type for L2 envelopes).
-- [ ] **Dependency Management**: Ensure `l2crypto.ts` (fs dependency) doesn't break Browser builds.
+## Phase 2.5: Polish & Refactor (Completed 2025-12-30)
+- [x] **CLI Cleanup**: Normalize CLI options (ensure `--key-file` works everywhere).
+- [x] **Browser DID Resolution**: Implemented `did:key` (Ed25519) to X25519 conversion in WASM for browser-side encryption.
+- [x] **L2 Signature Standard**: Cleaned up the "Dummy Signature" hack. Added formal `alg: "none"` support in WASM/L2 for Guest DIDs.
+- [x] **Browser Compatibility**: リファクタリング「l2crypto.ts」を環境非依存化。
 
 ## Phase 3: Advanced Authorization (VC)
 - [ ] **VC issuance**: Admin issues "Access Pass" VC instead of DB whitelist.
