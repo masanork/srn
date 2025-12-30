@@ -5,6 +5,42 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.1.0 - Folio Sync Protocol with DID Authentication
+
+**Date:** 2025-12-30
+
+Major implementation of the Folio Sync Protocol, enabling secure, portable synchronization of Web/A messages using GraphQL and DID-based authentication. Introduces the "shared server model" as an alternative to SMTP.
+
+* **Folio Sync Protocol**:
+  * Implemented GraphQL-based synchronization API (`inbox`, `outbox`, `threads` queries).
+  * Added challenge-response DID authentication using Ed25519 signatures.
+  * Created `postMessage` mutation with `hostDid` invariant validation.
+  * Implemented message acknowledgment and deletion workflow.
+
+* **Shared Server Model**:
+  * Documented SMTP alternative where either sender or recipient can host.
+  * Added invariant: `hostDid` must equal `senderDid` OR `recipientDid`.
+  * Enabled three hosting patterns: recipient-hosted, sender-hosted, third-party broker.
+  * Updated L2E specification with shared server model details.
+
+* **Firebase Functions Backend**:
+  * Deployed Apollo Server for GraphQL API.
+  * Integrated Firestore for message persistence.
+  * Implemented Node.js crypto fallback for Ed25519 verification.
+  * Added Firebase emulator configuration for local development.
+
+* **Folio CLI Extensions**:
+  * Added `folio sync` command with DID authentication.
+  * Implemented `folio transport resolve` for DID document resolution.
+  * Created `folio transport show-thread` for message thread visualization.
+  * Added `--mode` option for inbox/outbox/full synchronization (partial).
+
+* **Infrastructure**:
+  * Created `remote/` directory structure for Firebase deployment.
+  * Added WASM bindings to Firebase Functions for crypto operations.
+  * Implemented thread tree building and printing utilities.
+  * Added Firestore rules and indexes configuration.
+
 ## v2.0.1 - Web/A Messaging Extension Notes
 
 **Date:** 2025-12-29

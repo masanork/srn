@@ -7,6 +7,7 @@ export interface SyncOptions {
     remoteUrl: string;
     did: string;
     privateKey?: string; // Hex string
+    mode?: "inbox" | "outbox" | "full"; // Default: inbox
 }
 
 async function getAuth(remoteUrl: string, did: string, privateKey: string) {
