@@ -8,6 +8,7 @@ import { json } from "body-parser";
 import { initWasm, ed25519Verify } from "./wasm_util";
 import { decode } from "cbor-x";
 import { verifyRegistrationResponse, verifyAuthenticationResponse } from '@simplewebauthn/server';
+import { verifyFolioVC } from "./vc_util";
 
 import { CONFIG } from "./config";
 
@@ -153,6 +154,7 @@ const typeDefs = `
       did: ID!
       nonce: String!
       signature: String!
+      vc: String
       senderDid: String!
       recipientDid: String!
       hostDid: String!
@@ -482,8 +484,25 @@ const resolvers = {
             const isGuest = did.includes(":guest:");
             if (!isGuest) {
                 const userDoc = await admin.firestore().collection("allowed-users").doc(did).get();
-                if (!userDoc.exists && !CONFIG.ADMIN_DIDS.includes(did)) {
-                    throw new Error("Access Denied: DID not registered.");
+                const isStaticAdmin = CONFIG.ADMIN_DIDS.includes(did);
+
+                if (!userDoc.exists && !isStaticAdmin) {
+                    // Try VC-based auth
+                    if (args.vc) {
+                        try {
+                            const vcData = JSON.parse(args.vc);
+                            const result = await verifyFolioVC(vcData, { trustedIssuerDids: CONFIG.ADMIN_DIDS });
+                            if (result.isValid && result.credentialSubject?.id === did && result.credentialSubject?.["folio:access"]) {
+                                console.log(`✅ Authorized via VC for ${did}`);
+                            } else {
+                                throw new Error("Access Denied: Invalid or unauthorized VC.");
+                            }
+                        } catch (ve: any) {
+                            throw new Error(`Access Denied: VC verification failed: ${ve.message}`);
+                        }
+                    } else {
+                        throw new Error("Access Denied: DID not registered and no valid VC provided.");
+                    }
                 }
             }
 

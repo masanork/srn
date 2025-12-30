@@ -25,9 +25,9 @@ description: Folio Development & Verification Roadmap
 - [x] **L2 Signature Standard**: Cleaned up the "Dummy Signature" hack. Added formal `alg: "none"` support in WASM/L2 for Guest DIDs.
 - [x] **Browser Compatibility**: リファクタリング「l2crypto.ts」を環境非依存化。
 
-## Phase 3: Advanced Authorization (VC)
-- [ ] **VC issuance**: Admin issues "Access Pass" VC instead of DB whitelist.
-- [ ] **VC presentation**: Users present VC during auth to gain access.
+## Phase 3: Advanced Authorization (VC) (In Progress 2025-12-30)
+- [x] **VC issuance**: Admin issues "Access Pass" VC instead of DB whitelist via `admin issue-pass`.
+- [x] **VC presentation**: Users present VC during auth to gain access in `postMessage`. (Completed 2025-12-30)
 - [ ] **Capability Delegation**: Allow users to delegate posting rights to other DIDs/Agents.
 
 ## Phase 4: Scalability & Production
