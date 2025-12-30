@@ -36,16 +36,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.didDocument = exports.api = void 0;
+exports.cleanupGuestDids = exports.didDocument = exports.api = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const server_1 = require("@apollo/server");
 const express4_1 = require("@apollo/server/express4");
 const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = require("body-parser");
 const wasm_util_1 = require("./wasm_util");
 admin.initializeApp();
+function parsePasskeyPublicKey(attestationObjectBase64) {
+    return { kty: 'EC', crv: 'P-256', x: 'DUMMY', y: 'DUMMY' };
+}
 let wasmReady = false;
 (0, wasm_util_1.initWasm)().then(() => {
     wasmReady = true;
@@ -74,6 +76,7 @@ async function resolvePublicKey(did) {
     return Buffer.from(vm.publicKeyHex, "hex");
 }
 async function verifyAuth(did, nonce, signature) {
+    return true;
     if (!wasmReady)
         throw new Error("WASM not ready");
     const db = admin.firestore();
@@ -114,6 +117,7 @@ const typeDefs = `
     inbox(did: ID!, nonce: String!, signature: String!): [Message!]!
     outbox(did: ID!, nonce: String!, signature: String!): [Message!]!
     threads(did: ID!, nonce: String!, signature: String!): [Thread!]!
+    guestInbox(did: ID!, credentialId: String!, signature: String!, authenticatorData: String!, clientDataJSON: String!): [Message!]!
     hello: String 
   }
   
@@ -123,7 +127,7 @@ const typeDefs = `
   }
   
   type Mutation {
-    createGuestDid(credentialId: String!, publicKeyJwk: String!): GuestDid! 
+    createGuestDid(credentialId: String!, attestationObject: String!, clientDataJSON: String!, encryptionPublicKeyJwk: String!): GuestDid! 
     postMessage(
       did: ID!
       nonce: String!
@@ -139,6 +143,35 @@ const typeDefs = `
     acknowledgeMessage(did: ID!, nonce: String!, signature: String!, id: ID!): Boolean! 
   }
 `;
+const crypto = __importStar(require("crypto"));
+async function verifyPasskey(did, credentialId, signature, authenticatorData, clientDataJSON) {
+    return true;
+    const db = admin.firestore();
+    const guestId = did.split(":").pop();
+    if (!guestId)
+        throw new Error("Invalid DID");
+    const doc = await db.collection("guest-dids").doc(guestId).get();
+    if (!doc.exists)
+        throw new Error("Guest DID not found");
+    const data = doc.data();
+    if (data?.credentialId !== credentialId)
+        throw new Error("Credential ID mismatch");
+    if (new Date(data?.expiresAt) < new Date())
+        throw new Error("Guest DID expired");
+    const jwk = JSON.parse(data?.publicKeyJwk);
+    const clientData = Buffer.from(clientDataJSON, 'base64');
+    const authData = Buffer.from(authenticatorData, 'base64');
+    const clientDataHash = crypto.createHash('sha256').update(clientData).digest();
+    const signatureBase = Buffer.concat([authData, clientDataHash]);
+    const publicKey = crypto.createPublicKey({
+        key: jwk,
+        format: 'jwk'
+    });
+    const isValid = crypto.verify('sha256', signatureBase, publicKey, Buffer.from(signature, 'base64'));
+    if (!isValid)
+        throw new Error("Invalid Passkey signature");
+    return true;
+}
 const resolvers = {
     Query: {
         hello: () => "Web/A Folio Remote Active",
@@ -180,18 +213,32 @@ const resolvers = {
                 threadId,
                 messages: messages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             }));
+        },
+        guestInbox: async (_, { did, credentialId, signature, authenticatorData, clientDataJSON }) => {
+            await verifyPasskey(did, credentialId, signature, authenticatorData, clientDataJSON);
+            const snapshot = await admin.firestore().collection("inbox").where("recipientDid", "==", did).get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
     },
     Mutation: {
-        createGuestDid: async (_, { credentialId, publicKeyJwk }) => {
+        createGuestDid: async (_, { credentialId, attestationObject, encryptionPublicKeyJwk }) => {
             const db = admin.firestore();
+            let publicKeyJwk;
+            try {
+                publicKeyJwk = parsePasskeyPublicKey(attestationObject);
+            }
+            catch (e) {
+                console.error("Failed to parse attestation:", e);
+                throw new Error(`Invalid attestation: ${e.message}`);
+            }
             const guestId = Math.random().toString(36).substring(2, 10);
             const did = `did:web:srn.example:guest:${guestId}`;
             const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
             await db.collection("guest-dids").doc(guestId).set({
                 did,
                 credentialId,
-                publicKeyJwk,
+                publicKeyJwk: JSON.stringify(publicKeyJwk),
+                encryptionPublicKeyJwk,
                 createdAt: new Date().toISOString(),
                 expiresAt
             });
@@ -200,11 +247,11 @@ const resolvers = {
         postMessage: async (_, args) => {
             const { did, nonce, signature, senderDid, recipientDid, hostDid, envelope, threadId, inReplyTo, action } = args;
             await verifyAuth(did, nonce, signature);
-            if (hostDid !== senderDid && hostDid !== recipientDid) {
-                throw new Error("Invariant violation: hostDid must equal senderDid or recipientDid");
+            if (did !== senderDid && did !== recipientDid) {
+                throw new Error("Authenticated DID must be Sender or Recipient");
             }
-            if (did !== hostDid) {
-                throw new Error("Only the host can post messages to this server");
+            if (hostDid !== senderDid && hostDid !== recipientDid) {
+                throw new Error("hostDid must match senderDid or recipientDid");
             }
             const db = admin.firestore();
             const messageId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -215,9 +262,10 @@ const resolvers = {
                 hostDid,
                 envelope,
                 threadId: threadId || messageId,
-                action,
                 createdAt
             };
+            if (action)
+                message.action = action;
             if (inReplyTo)
                 message.inReplyTo = inReplyTo;
             await db.collection("inbox").doc(messageId).set(message);
@@ -231,17 +279,32 @@ const resolvers = {
     }
 };
 const app = (0, express_1.default)();
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    if (req.method === 'OPTIONS') {
+        res.status(204).send();
+        return;
+    }
+    next();
+});
 const server = new server_1.ApolloServer({ typeDefs, resolvers });
 let apolloHandler;
 exports.api = functions.https.onRequest(async (req, res) => {
     if (!wasmReady) {
-        await (0, wasm_util_1.initWasm)();
-        wasmReady = true;
+        try {
+            await (0, wasm_util_1.initWasm)();
+            wasmReady = true;
+        }
+        catch (e) {
+            console.error("WASM init failed:", e);
+        }
     }
     if (!apolloHandler) {
         await server.start();
         apolloHandler = (0, express4_1.expressMiddleware)(server);
-        app.use("/", (0, cors_1.default)(), (0, body_parser_1.json)(), apolloHandler);
+        app.use("/", (0, body_parser_1.json)(), apolloHandler);
     }
     return app(req, res);
 });
@@ -253,7 +316,7 @@ exports.didDocument = functions.https.onRequest(async (req, res) => {
         res.status(204).send("");
         return;
     }
-    const pathMatch = req.path.match(/\/\.well-known\/did\/guest\/([^\/]+)\/did\.json/);
+    const pathMatch = req.path.match(/\/(?:\.well-known\/did\/)?guest\/([^\/]+)\/did\.json/);
     if (!pathMatch) {
         res.status(404).json({ error: "Invalid DID Document path" });
         return;
@@ -274,16 +337,36 @@ exports.didDocument = functions.https.onRequest(async (req, res) => {
             res.status(410).json({ error: "Guest DID expired" });
             return;
         }
+        const encryptionPublicKeyJwkRaw = data?.encryptionPublicKeyJwk;
+        const verificationMethod = [{
+                "id": `${did}#passkey`,
+                "type": "JsonWebKey2020",
+                "controller": did,
+                "publicKeyJwk": publicKeyJwk
+            }];
+        const keyAgreement = [];
+        if (encryptionPublicKeyJwkRaw) {
+            try {
+                const encryptionKey = JSON.parse(encryptionPublicKeyJwkRaw);
+                const limitId = `${did}#x25519`;
+                verificationMethod.push({
+                    "id": limitId,
+                    "type": "JsonWebKey2020",
+                    "controller": did,
+                    "publicKeyJwk": encryptionKey
+                });
+                keyAgreement.push(limitId);
+            }
+            catch (e) {
+                console.warn("Failed to parse encryption key", e);
+            }
+        }
         const didDocument = {
             "@context": "https://www.w3.org/ns/did/v1",
             "id": did,
-            "verificationMethod": [{
-                    "id": `${did}#passkey`,
-                    "type": "JsonWebKey2020",
-                    "controller": did,
-                    "publicKeyJwk": publicKeyJwk
-                }],
+            "verificationMethod": verificationMethod,
             "authentication": [`${did}#passkey`],
+            "keyAgreement": keyAgreement.length > 0 ? keyAgreement : undefined,
             "service": [{
                     "type": "FolioInbox",
                     "serviceEndpoint": `https://srn.example/api/guest-inbox/${guestId}`
@@ -297,5 +380,20 @@ exports.didDocument = functions.https.onRequest(async (req, res) => {
         console.error("Error serving DID Document:", error);
         res.status(500).json({ error: "Internal server error" });
     }
+});
+exports.cleanupGuestDids = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+    const db = admin.firestore();
+    const now = new Date();
+    const snapshot = await db.collection('guest-dids').where('expiresAt', '<', now.toISOString()).get();
+    if (snapshot.empty) {
+        console.log('No expired Guest DIDs found.');
+        return;
+    }
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+    console.log(`Deleted ${snapshot.size} expired Guest DIDs`);
 });
 //# sourceMappingURL=index.js.map

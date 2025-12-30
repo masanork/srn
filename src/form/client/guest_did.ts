@@ -1,4 +1,4 @@
-import { generateRecipientKeyPair, toBase64Url, fromBase64Url } from "../../core/l2crypto";
+import { generateRecipientKeyPair, decryptLayer2 } from "../../core/l2crypto";
 import { initWasm } from "../../core/wasm_core";
 
 // ... (existing imports)
@@ -13,7 +13,7 @@ import { initWasm } from "../../core/wasm_core";
  * - Supports L2 Encryption via X25519
  */
 
-const REMOTE_URL = "http://127.0.0.1:5001/demo-weba/us-central1/api"; // TODO: Production URL
+const REMOTE_URL = "http://127.0.0.1:5002/api"; // Hosting Emulator
 const RP_NAME = "SRN Guest Service";
 
 export interface GuestDidResult {
@@ -67,7 +67,7 @@ export async function getOrCreateGuestDid(forceNew = false): Promise<GuestDidRes
  */
 async function createGuestDidWithPasskey(): Promise<string> {
     try {
-        await initWasm(); // Ensure WASM is loaded for crypto
+        await initWasm(fetch("weba_crypto_wasm_bg.wasm")); // Ensure WASM is loaded for crypto
 
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
@@ -105,19 +105,32 @@ async function createGuestDidWithPasskey(): Promise<string> {
             throw new Error("Passkey creation cancelled");
         }
 
-        const publicKeyJwk = await exportPublicKeyAsJWK(credential.response as AuthenticatorAttestationResponse);
+        // Helper for standard Base64
+        function arrayBufferToBase64(buffer: ArrayBuffer): string {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        // ...
+
+        // const publicKeyJwk = await exportPublicKeyAsJWK(credential.response as AuthenticatorAttestationResponse);
 
         // Generate Encryption Key (X25519)
         const encKeyPair = await generateRecipientKeyPair();
         const encryptionPublicKeyJwk = {
             kty: "OKP",
             crv: "X25519",
-            x: toBase64Url(encKeyPair.publicKey)
+            x: arrayBufferToBase64Url(encKeyPair.publicKey)
         };
 
         const mutation = `
-      mutation CreateGuestDid($credentialId: String!, $publicKeyJwk: String!, $encryptionPublicKeyJwk: String!) {
-        createGuestDid(credentialId: $credentialId, publicKeyJwk: $publicKeyJwk, encryptionPublicKeyJwk: $encryptionPublicKeyJwk) {
+      mutation CreateGuestDid($credentialId: String!, $attestationObject: String!, $clientDataJSON: String!, $encryptionPublicKeyJwk: String!) {
+        createGuestDid(credentialId: $credentialId, attestationObject: $attestationObject, clientDataJSON: $clientDataJSON, encryptionPublicKeyJwk: $encryptionPublicKeyJwk) {
           did
           expiresAt
         }
@@ -131,7 +144,8 @@ async function createGuestDidWithPasskey(): Promise<string> {
                 query: mutation,
                 variables: {
                     credentialId: credential.id,
-                    publicKeyJwk: JSON.stringify(publicKeyJwk),
+                    attestationObject: arrayBufferToBase64((credential.response as AuthenticatorAttestationResponse).attestationObject),
+                    clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
                     encryptionPublicKeyJwk: JSON.stringify(encryptionPublicKeyJwk)
                 }
             })
@@ -145,7 +159,7 @@ async function createGuestDidWithPasskey(): Promise<string> {
         const { did, expiresAt } = result.data.createGuestDid;
 
         localStorage.setItem(`guest-did:${did}`, credential.id);
-        localStorage.setItem(`guest-did:${did}:privateKey`, toBase64Url(encKeyPair.privateKey));
+        localStorage.setItem(`guest-did:${did}:privateKey`, arrayBufferToBase64Url(encKeyPair.privateKey));
 
         console.log(`Guest DID created: ${did} (expires: ${expiresAt})`);
         return did;
@@ -177,6 +191,7 @@ async function exportPublicKeyAsJWK(response: AuthenticatorAttestationResponse):
 }
 
 export async function fetchGuestInbox(did: string): Promise<any[]> {
+    await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
     const credentialId = localStorage.getItem(`guest-did:${did}`);
     if (!credentialId) throw new Error("Credential ID not found for DID");
 
@@ -241,7 +256,35 @@ export async function fetchGuestInbox(did: string): Promise<any[]> {
     const apiResult = await apiResp.json();
     if (apiResult.errors) throw new Error(apiResult.errors[0].message);
 
-    return apiResult.data.guestInbox;
+    const messages = apiResult.data.guestInbox;
+
+    // Decrypt messages if private key is available
+    const privateKeyB64 = localStorage.getItem(`guest-did:${did}:privateKey`);
+    if (privateKeyB64) {
+        const privateKey = new Uint8Array(base64UrlToArrayBuffer(privateKeyB64));
+        for (const msg of messages) {
+            if (msg.envelope) {
+                try {
+                    const encrypted = JSON.parse(msg.envelope);
+                    // Decrypt using L2 Encryption
+                    const decryptedPayload = await decryptLayer2(encrypted, privateKey);
+
+                    // Extract plain content if struct matches
+                    if (decryptedPayload.layer2_plain) {
+                        msg.content = decryptedPayload.layer2_plain;
+                    } else {
+                        msg.content = decryptedPayload;
+                    }
+                    delete msg.envelope; // Clear encrypted data on success
+                } catch (e) {
+                    console.error("Failed to decrypt:", e);
+                    msg.content = { text: "[Decryption Failed: " + (e as Error).message + "]" };
+                }
+            }
+        }
+    }
+
+    return messages;
 }
 
 function base64UrlToArrayBuffer(base64url: string): ArrayBuffer {
@@ -275,4 +318,24 @@ function arrayBufferToBase64Url(buffer: Uint8Array): string {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
+}
+
+// Expose to window for browser usage
+if (typeof window !== 'undefined') {
+    (window as any).getOrCreateGuestDid = getOrCreateGuestDid;
+    (window as any).fetchGuestInbox = fetchGuestInbox;
+
+    (window as any).submitFormWithGuestDid = async (formData: any, wantsReplies: boolean) => {
+        const { did, isReused } = await getOrCreateGuestDid(false);
+        return { senderDid: did };
+    };
+
+    (window as any).clearAllGuestDids = () => {
+        const keys = Object.keys(localStorage);
+        for (const key of keys) {
+            if (key.startsWith("guest-did:")) {
+                localStorage.removeItem(key);
+            }
+        }
+    };
 }

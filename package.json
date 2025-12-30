@@ -24,7 +24,7 @@
     "weba-verify": "bun src/bin/weba-verify.ts",
     "folio": "bun src/folio/cli.ts",
     "remote:build": "npm --prefix remote/functions run build",
-    "remote:deploy": "firebase --project=weba-folio-remote deploy --only functions"
+    "remote:deploy": "cd remote && firebase --project=weba-folio-remote deploy --only functions,hosting,firestore"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

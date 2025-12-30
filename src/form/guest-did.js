@@ -7,8 +7,9 @@
  * - Prevents duplicate Passkey creation
  */
 
-const REMOTE_URL = "http://127.0.0.1:5001/demo-weba/us-central1/api"; // TODO: Production URL
-const RP_ID = window.location.hostname;
+const REMOTE_URL = "http://localhost:5002/api"; // Via Hosting Emulator
+// const REMOTE_URL = "http://127.0.0.1:5001/weba-folio-remote/us-central1/api";
+// const RP_ID = window.location.hostname; // Let browser determine RP ID
 const RP_NAME = "SRN Guest Service";
 
 /**
@@ -81,7 +82,7 @@ async function createGuestDidWithPasskey() {
                 challenge,
                 rp: {
                     name: RP_NAME,
-                    id: RP_ID
+                    // id: RP_ID
                 },
                 user: {
                     id: userId,
@@ -106,9 +107,6 @@ async function createGuestDidWithPasskey() {
             throw new Error("Passkey creation cancelled");
         }
 
-        // Export public key as JWK
-        const publicKeyJwk = await exportPublicKeyAsJWK(credential.response);
-
         // Generate Dummy Encryption Key (X25519) for testing
         // In real app (guest_did.ts), we generate proper X25519 key pair
         const dummyPub = new Uint8Array(32);
@@ -122,8 +120,8 @@ async function createGuestDidWithPasskey() {
 
         // Call createGuestDid mutation
         const mutation = `
-      mutation CreateGuestDid($credentialId: String!, $publicKeyJwk: String!, $encryptionPublicKeyJwk: String!) {
-        createGuestDid(credentialId: $credentialId, publicKeyJwk: $publicKeyJwk, encryptionPublicKeyJwk: $encryptionPublicKeyJwk) {
+      mutation CreateGuestDid($credentialId: String!, $attestationObject: String!, $clientDataJSON: String!, $encryptionPublicKeyJwk: String!) {
+        createGuestDid(credentialId: $credentialId, attestationObject: $attestationObject, clientDataJSON: $clientDataJSON, encryptionPublicKeyJwk: $encryptionPublicKeyJwk) {
           did
           expiresAt
         }
@@ -137,7 +135,8 @@ async function createGuestDidWithPasskey() {
                 query: mutation,
                 variables: {
                     credentialId: credential.id,
-                    publicKeyJwk: JSON.stringify(publicKeyJwk),
+                    attestationObject: arrayBufferToBase64(credential.response.attestationObject),
+                    clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
                     encryptionPublicKeyJwk: JSON.stringify(encryptionPublicKeyJwk)
                 }
             })
@@ -345,6 +344,7 @@ function clearAllGuestDids() {
 }
 
 // Export for use in Maker
+// Export for use in Maker
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         getOrCreateGuestDid,
@@ -352,4 +352,9 @@ if (typeof module !== 'undefined' && module.exports) {
         clearAllGuestDids,
         fetchGuestInbox
     };
+} else if (typeof window !== 'undefined') {
+    window.getOrCreateGuestDid = getOrCreateGuestDid;
+    window.submitFormWithGuestDid = submitFormWithGuestDid;
+    window.clearAllGuestDids = clearAllGuestDids;
+    window.fetchGuestInbox = fetchGuestInbox;
 }
