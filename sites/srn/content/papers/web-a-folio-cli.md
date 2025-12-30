@@ -452,6 +452,15 @@ Used by users (humans) or setup agents.
   - **Output**: JSON report (`valid`, `issuer`, `algorithms`, `warnings[]`).
   - **Exit**: `0` valid, `3` invalid, `1` error.
 
+### 4. Transport & Discovery
+
+- `folio transport resolve <did>`
+  - Resolve a DID and output its Web/A transport capabilities.
+  - **Output**: JSON containing endpoints, priority, and supported protocols.
+- `folio transport show-thread <thread_id>`
+  - Visualize the chronological chain of messages for a given thread.
+  - **Output**: Tree or list view to stdout.
+
 ### 4. MCP Server (Agent Integration)
 
 Provide native Model Context Protocol (MCP) support so the CLI can act as an MCP

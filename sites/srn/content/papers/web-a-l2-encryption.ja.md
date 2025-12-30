@@ -71,6 +71,10 @@ Web/A プロトコルはステートレスであるため、攻撃者が有効�
     /* ... 鍵カプセル化データ、暗号文、AAD ... */
   },
   "meta": {
+    "id": "did:content:sha256:...",         // メッセージ内容のハッシュ
+    "thread_id": "did:content:sha256:...",  // スレッド開始メッセージのID
+    "in_reply_to": "did:content:sha256:...",// 直前のメッセージのID
+    "action": "submit",                     // submit, approve, comment, reject 等
     "nonce": "base64...",
     "created_at": "2025-12-29T..."
   }
@@ -111,10 +115,18 @@ L2E で受領した回答に対する返信を定義するため、`meta.reply_t
 - 送信者は `reply_to.broker` を指定した場合、ブローカーによる
   `forwarded_by` 追記を許容する。
 
-**Folio への保存先**
+**スレッド管理とメッセージ ID**
+- 各メッセージは自分自身を識別する **`meta.id`** を持つ。推奨される計算式は `did:content:sha256:<Hash of Layer2Payload>` である。
+- **`meta.thread_id`**: スレッド（一連のやり取り）の起点となる最初のメッセージ ID。
+- **`meta.in_reply_to`**: 直接の返信先となる親メッセージの ID。
+- **`meta.action`**: メッセージの意図を定義する（例: `submit`（申請）, `approve`（承認）, `reject`（却下）, `comment`（補足））。これらによりエージェントはワークフローの進行状況を把握する。
+- `did:content:<hash>` 形式を採用することで、中央サーバーなしでメッセージの一意性と参照を保証する。
+
+**Folio への保存先とスレッド一覧**
 - Folio では返信メタデータを `history/` 内のメッセージ記録に保持する。
 - メッセージ本文とは別に、`history/<message-id>.meta.json` に
-  `reply_to` と `forwarded_by` を保存し、スレッド管理と紐付ける。
+  `reply_to`、`id`、`thread_id`、`in_reply_to`、`action` および `forwarded_by` を保存する。
+- AI エージェントは `thread_id` でグループ化し、`in_reply_to` を辿ることで、送信履歴を論理的なスレッドとして復元し、`action` に基づいて現在の状況を提示する。
 
 ---
 

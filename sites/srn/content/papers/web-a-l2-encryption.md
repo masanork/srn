@@ -169,6 +169,10 @@ type Layer2Encrypted = {
     aad: string;        // base64url(aad_json)
   };
   meta: {
+    id?: string;         // did:content:sha256:<payload_hash>
+    thread_id?: string;  // Root message ID of the thread
+    in_reply_to?: string;// Parent message ID
+    action?: string;     // e.g., 'submit', 'approve', 'reject', 'comment'
     created_at: string;
     nonce: string;
     campaign_id?: string;
@@ -179,6 +183,39 @@ type Layer2Encrypted = {
 **Compatibility checks**
 - `layer2.enc` MUST be `"HPKE-v1"` for newly created envelopes.
 - Decryptors MUST reject any other `layer2.enc` value.
+
+### 4.3. Reply Metadata and Routing
+
+To enable responses to Web/A documents, we define a standard for `meta.reply_to` and threading. This covers destination resolution (via DID), encryption, and storage placement.
+
+**Mandatory reply_to fields**
+- `reply_to.did`: The DID of the reply recipient (Mandatory).
+- `reply_to.endpoint`: The delivery endpoint for the reply (Mandatory).
+- `reply_to.broker`: Optional DID of an intermediary broker.
+
+**DID Resolution for Replies**
+1. Use `reply_to.endpoint` if provided.
+2. If missing, resolve `reply_to.did` and retrieve its DID Document.
+3. Search for a service with `type: "weba-reply"` and use its `serviceEndpoint`.
+4. For `did:web`, retrieve the document over HTTPS.
+5. If multiple entries exist, prioritize the one with the lowest `priority` value.
+
+**Message ID and Threading**
+- Each message SHOULD have a **`meta.id`** (Recommended format: `did:content:sha256:<Hash of Layer2Payload>`).
+- **`meta.thread_id`**: The ID of the initial message that started the conversation.
+- **`meta.in_reply_to`**: The ID of the direct parent message being replied to.
+- **`meta.action`**: Defines the intent of the message (e.g., `submit`, `approve`, `reject`, `comment`, `close`, `finalize`).
+- Each message SHOULD include the parent message ID (`in_reply_to`) in its **signature scope** (Layer 2 plaintext) to ensure a cryptographic chain of context.
+
+**Reply Endpoint Resolution Priority**
+When an agent or client prepares a reply, it MUST resolve the destination endpoint using the following priority:
+1.  **Explicit Reply-To**: Use the `meta.reply_to.endpoint` from the most recent received message in the thread.
+2.  **Thread Root**: If (1) is missing, use the endpoint from the thread's root message (`thread_id`).
+3.  **DID Service**: If still unresolved, resolve the recipient's DID and look for a service with `type: "weba-reply"`.
+4.  **Fallback**: Fail the operation if no endpoint is discoverable.
+- Reply metadata and thread indices are stored in the Folio `history/` directory.
+- A sidecar file `history/<message-id>.meta.json` stores `reply_to`, `thread_id`, `in_reply_to`, and `action`.
+- AI Agents use these links to reconstruct the conversation history as logical threads.
 
 ## 5. Key Management & Hierarchy
 
