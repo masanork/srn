@@ -1,10 +1,15 @@
-import { describe, expect, test, afterEach } from "bun:test";
+import { describe, expect, test, beforeEach, afterEach } from "bun:test";
 import { ReplayGuard, JsonFileReplayStore } from "../src/core/l2crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
 describe("ReplayGuard with JsonFileReplayStore", () => {
     const testFile = path.resolve("work/test-replay-store.json");
+
+    beforeEach(() => {
+        const dir = path.dirname(testFile);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    });
 
     afterEach(() => {
         if (fs.existsSync(testFile)) fs.unlinkSync(testFile);
