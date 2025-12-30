@@ -5,6 +5,29 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.4.0 - Red Team Guardrails & Compliance
+
+**Date:** 2025-12-31
+
+Implementation of critical guardrails and safety features requested by the Red Team to mitigate risks during the pilot phase.
+
+* **UI Guardrails & Visual Safety**:
+  * **Experimental Banners**: Injected persistent warning banners into the Form Maker UI (both editor and preview panes) to communicate the tool's prototype status.
+  * **Automated Document Marking**: Implemented "EXPERIMENTAL" watermark and "PILOT PHASE" banner injection for all generated Web/A HTML documents, ensuring visibility across print and digital views.
+  * **Risk Awareness**: Banners include direct links to the pilot phase risk assessment and implementation plan.
+
+* **Data Integrity (Human-Machine Parity)**:
+  * **HMP Check (Ghost Field Detection)**: Implemented a sign-time consistency check that compares the visible UI fields with the underlying JSON structure. The tool now warns users if "ghost fields" (data not visible to the human) are being included in the signature.
+
+* **Security Logic Hardening**:
+  * **Mandatory Replay Guard**: Hardened the Verifiable Credential (VC) verification logic in `src/core/vc.ts` to require a `replayGuard` implementation.
+  * **Aggregator Protection**: The Aggregator Browser now utilizes a `LocalStorageReplayStore` to automatically reject duplicate submissions of the same L2 encrypted message.
+
+* **Documentation & Compliance**:
+  * **Product Team Response**: Published the formal [Product Team Response to Red Team (v7)](./papers/web-a-product-team-response-v7.html) outlining the remediation strategy.
+  * **Roadmap Refinement**: Re-aligned the internal roadmap to prioritize safety boundaries over feature expansion for initial PoC deployments.
+
+
 ## v2.3.0 - Verifiable Credential Authorization
 
 **Date:** 2025-12-30

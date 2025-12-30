@@ -93,6 +93,12 @@ ai_generated: true
 <a href="./papers/context-routing-protocol.html">Context Routing</a>
 <a href="./papers/folio-key-management-architecture.html">Key Management & Trust Anchors</a>
 </div>
+
+<div class="nav-subheader">Safety & Audit</div>
+<div class="spec-links-grid">
+<a href="./papers/web-a-product-team-response-v7.html">Red Team Response (v7)</a>
+<a href="./papers/red-team-remediation-report-v1.html">Remediation Report (v2.4.0)</a>
+</div>
 </div>
 <div data-lang-ja>
 <a href="./papers/web-a-ecosystem.ja.html" class="nav-item primary">
@@ -119,6 +125,12 @@ ai_generated: true
 <a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
 <a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
 <a href="./papers/folio-key-management-architecture.ja.html">鍵管理アーキテクチャ</a>
+</div>
+
+<div class="nav-subheader">安全保障・監査対応</div>
+<div class="spec-links-grid">
+<a href="./papers/web-a-product-team-response-v7.ja.html">Red Team 指摘への回答 (v7)</a>
+<a href="./papers/red-team-remediation-report-v1.ja.html">対策完了報告書 (v2.4.0)</a>
 <a href="./guide/prompts.ja.html">AI プロンプト集</a>
 </div>
 </div>

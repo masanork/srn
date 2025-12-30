@@ -12,6 +12,7 @@ for fast navigation.
 ## Related Security Audit Materials
 
 ### Primary Reports
+- [Red Team Evaluation v8 (PoC Approval & Advice)](./web-a-l2-security-audit-v8.html)
 - [Security Audit v1](./web-a-l2-security-audit.html)
 - [Security Audit v2](./web-a-l2-security-audit-v2.html)
 - [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
@@ -21,6 +22,7 @@ for fast navigation.
 - [Security Re-Assessment v7 (PoC Risk Assessment)](./web-a-l2-security-audit-v7.html)
 
 ### Response & Remediation
+- [Remediation Report (v2.4.0 Guardrails & Compliance)](./red-team-remediation-report-v1.html)
 - [Product Team Response (v7 Implementation Plan)](./web-a-product-team-response-v7.html)
 - [Product Team Response (Provisional Response to v6)](./web-a-product-team-response-v6.html)
 - [Product Security Status Report (Red Team Sharing)](./web-a-product-security-status-report.html)
