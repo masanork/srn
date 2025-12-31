@@ -2,7 +2,7 @@
 title: "Web/A Post デプロイメント戦略・アーキテクチャ比較"
 layout: article
 author: "Sorane Project Strategy Team"
-date: 2025-01-01
+date: 2025-12-31
 description: "Web/A Postの実装におけるプラットフォーム選定。Cloudflare, Supabase, Firebase, 国内IaaSの比較と、AI親和性・コスト・データ主権に基づく推奨構成。"
 ai_generated: true
 ---
