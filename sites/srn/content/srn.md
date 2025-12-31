@@ -166,7 +166,7 @@ ai_generated: true
     <span data-lang-ja>更新履歴 ＆ バージョン情報。</span>
 </span>
 </a>
-<a href="./governance.html" class="nav-item primary">
+<a href="./governance.html" class="nav-item">
 <span class="icon">⚖️</span><span class="label">Governance & Audit Reports</span>
 <span class="desc">
     <span data-lang-en>Security assessments, risk evaluations, and task force activities.</span>
