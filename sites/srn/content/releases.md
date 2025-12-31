@@ -5,6 +5,22 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.5.0 - Web/A Post & Governance Restructuring
+
+**Date:** 2025-12-31
+
+Implementation of the **Web/A Post** prototype (Intelligent Postal Hub) and major restructuring of governance documentation.
+
+*   **Web/A Post (Prototype)**:
+    *   **Intelligent Postal Hub**: Implemented the core logic for a rule-based message router (`IPostalHub`) that acts as a user's digital agent ("PBX for Identity").
+    *   **Server Architecture**: Created a **Hono**-based server implementation (`src/post/server-hono.ts`) compatible with both Bun (Local/VPS) and Cloudflare Workers (Edge).
+    *   **Storage Abstraction**: Defined `IPostalStorage` interface and implemented `LocalFileStorage` for file-based persistence, ensuring portability across cloud providers (Cloudflare D1, Firebase Firestore, Supabase).
+    *   **Deployment Strategy**: Published [Web/A Post Deployment Strategy](./papers/web-a-post-deployment-strategy.html) comparing Cloudflare, Supabase, and VPS options with a focus on data sovereignty and AI affinity.
+
+*   **Governance & Documentation**:
+    *   **Governance Index**: Restructured the [Governance & Audit Reports](./governance.html) page from a blog-style list to a curated, categorized index (Strategic Analysis, Security Audits, Product Response, Risk & Legal).
+    *   **Transparency**: Standardized the display of "SIMULATION NOTICE" across all governance documents to clearly distinguish role-play artifacts from real-world legal documents.
+
 ## v2.4.0 - Red Team Guardrails & Compliance
 
 **Date:** 2025-12-31

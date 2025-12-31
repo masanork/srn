@@ -1,4 +1,5 @@
-import { IPostalHub, PostalEnvelope, PostalResult, PostRole, PostalRule } from './types.js';
+import type { IPostalHub, PostalEnvelope, PostalResult, PostRole, PostalRule, PostalAction } from './types.js';
+import type { IPostalStorage } from './storage/types.js';
 
 /**
  * Web/A Postal Hub Implementation
@@ -8,7 +9,7 @@ export class PostalHub implements IPostalHub {
     private rules: PostalRule[] = [];
     private roleMap: Map<string, PostRole> = new Map();
 
-    constructor() {
+    constructor(private storage?: IPostalStorage) {
         // Default deny-all or safe-defaults can be set here
     }
 
@@ -66,7 +67,9 @@ export class PostalHub implements IPostalHub {
         switch (action.type) {
             case 'store':
                 console.log(`[PostalHub] Storing envelope in folder: ${action.folder}`);
-                // TODO: Implement actual storage logic
+                if (this.storage) {
+                    await this.storage.saveEnvelope(action.folder, envelope);
+                }
                 return { accepted: true, actionTaken: `stored:${action.folder}` };
 
             case 'forward':
