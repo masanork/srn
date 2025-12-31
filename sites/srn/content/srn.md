@@ -61,17 +61,8 @@ ai_generated: true
 </div>
 
 <div class="panel">
-<div class="panel-header">
-    <span data-lang-en>DISCUSSION PAPERS</span>
-    <span data-lang-ja>ディスカッション・ペーパー</span>
-</div>
 <div class="panel-body nav-links">
 <div data-lang-en>
-<a href="./papers/web-a-ecosystem.html" class="nav-item primary">
-<span class="icon">🕸️</span><span class="label">Ecosystem Overview</span>
-<span class="desc">How Web/A, Maker, Form, Folio, and Post weave together a decentralized trust infrastructure.</span>
-</a>
-
 <div class="nav-subheader">Core Components</div>
 <a href="./papers/web-a.html" class="nav-item compact">
 <span class="icon">📄</span><span class="label">Web/A Format</span>
@@ -88,23 +79,15 @@ ai_generated: true
 
 <div class="nav-subheader">Strategy & Technical Specs</div>
 <div class="spec-links-grid">
+<a href="./papers/web-a-ecosystem.html" style="font-weight:bold; border-color:var(--accent-color);">🕸️ Ecosystem Overview</a>
 <a href="./papers/web-a-l2-market-comparison.html">Competitive Analysis</a>
 <a href="./papers/web-a-l2-encryption.html">L2 Encryption</a>
 <a href="./papers/context-routing-protocol.html">Context Routing</a>
 <a href="./papers/folio-key-management-architecture.html">Key Management & Trust Anchors</a>
-</div>
-
-<div class="nav-subheader">Safety & Audit</div>
-<div class="spec-links-grid">
-<a href="./papers/web-a-product-team-response-v7.html">Red Team Response (v7)</a>
-<a href="./papers/red-team-remediation-report-v1.html">Remediation Report (v2.4.0)</a>
+<a href="./guide/prompts.ja.html">AI Prompt Collection (Draft)</a>
 </div>
 </div>
 <div data-lang-ja>
-<a href="./papers/web-a-ecosystem.ja.html" class="nav-item primary">
-<span class="icon">🕸️</span><span class="label">エコシステム概観</span>
-<span class="desc">Web/A, Maker, Form, Folio, Post が織りなす、分散型で知的な信頼インフラの全体像。</span>
-</a>
 <div class="nav-subheader">コア・プロダクト</div>
 <a href="./papers/web-a.ja.html" class="nav-item compact">
 <span class="icon">📄</span><span class="label">Web/A フォーマット</span>
@@ -121,16 +104,11 @@ ai_generated: true
 
 <div class="nav-subheader">戦略・技術仕様</div>
 <div class="spec-links-grid">
+<a href="./papers/web-a-ecosystem.ja.html" style="font-weight:bold; border-color:var(--accent-color);">🕸️ エコシステム概観</a>
 <a href="./papers/web-a-l2-market-comparison.ja.html">市場競合分析</a>
 <a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
 <a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
 <a href="./papers/folio-key-management-architecture.ja.html">鍵管理アーキテクチャ</a>
-</div>
-
-<div class="nav-subheader">安全保障・監査対応</div>
-<div class="spec-links-grid">
-<a href="./papers/web-a-product-team-response-v7.ja.html">Red Team 指摘への回答 (v7)</a>
-<a href="./papers/red-team-remediation-report-v1.ja.html">対策完了報告書 (v2.4.0)</a>
 <a href="./guide/prompts.ja.html">AI プロンプト集</a>
 </div>
 </div>
@@ -143,10 +121,12 @@ ai_generated: true
     <span data-lang-ja>モジュール ＆ ナビゲーション</span>
 </div>
 <div class="panel-body nav-links">
-<a href="./maker.html" class="nav-item primary">
+<a href="./maker.html" class="nav-item">
 <span class="icon">📝</span><span class="label">Web/A Form Maker</span>
-<span class="desc" data-lang-en>Create verifiable forms visually. (Beta)</span>
-<span class="desc" data-lang-ja>検証可能なフォームをブラウザ上で視覚的に作成。(Beta)</span>
+<span class="desc">
+    <span data-lang-en>Create verifiable forms visually. (Beta)</span>
+    <span data-lang-ja>検証可能なフォームをブラウザ上で視覚的に作成。(Beta)</span>
+</span>
 </a>
 <div data-lang-ja>
 <a href="./web-a-presentation.ja.html" class="nav-item">
@@ -154,7 +134,8 @@ ai_generated: true
 <span class="desc">記事として読み、必要に応じてフルスクリーン・スライドでプレゼン。</span>
 </a>
 <a href="./web-a-tech-presentation.ja.html" class="nav-item">
-<span class="icon">🛡️</span><span class="label">Web/A 技術解説デッキ</span><span class="desc">検証モデルとセキュリティアーキテクチャの技術的深掘り。</span>
+<span class="icon">🛡️</span><span class="label">Web/A 技術解説デッキ</span>
+<span class="desc">検証モデルとセキュリティアーキテクチャの技術的深掘り。</span>
 </a>
 </div>
 <div data-lang-en>
@@ -163,24 +144,31 @@ ai_generated: true
 <span class="desc">Read as article, switch to full-screen slides.</span>
 </a>
 <a href="./web-a-tech-presentation.html" class="nav-item">
-<span class="icon">🛡️</span><span class="label">Web/A Tech Presentation</span><span class="desc">Deep dive into the verification model and security architecture.</span>
+<span class="icon">🛡️</span><span class="label">Web/A Tech Presentation</span>
+<span class="desc">Deep dive into the verification model and security architecture.</span>
 </a>
 </div>
 
 <a href="./guide.html" class="nav-item">
 <span class="icon">📖</span><span class="label">Developer Guide</span>
-<span data-lang-en class="desc">System architecture & Usage manual.</span>
-<span data-lang-ja class="desc">開発者向けのシステム構成解説 ＆ 利用マニュアル。</span>
+<span class="desc">
+    <span data-lang-en>System architecture & Usage manual.</span>
+    <span data-lang-ja>開発者向けのシステム構成解説 ＆ 利用マニュアル。</span>
+</span>
 </a>
 <a href="./releases.html" class="nav-item">
 <span class="icon">🔖</span><span class="label">Release History</span>
-<span data-lang-en class="desc">Changelog & versions.</span>
-<span data-lang-ja class="desc">更新履歴 ＆ バージョン情報。</span>
+<span class="desc">
+    <span data-lang-en>Changelog & versions.</span>
+    <span data-lang-ja>更新履歴 ＆ バージョン情報。</span>
+</span>
 </a>
 <a href="https://github.com/masanork/srn" class="nav-item">
 <span class="icon">🐙</span><span class="label">Source Code</span>
-<span data-lang-en class="desc">Sorane engine on GitHub.</span>
-<span data-lang-ja class="desc">Soraneエンジンのソースコード（GitHub）。</span>
+<span class="desc">
+    <span data-lang-en>Sorane engine on GitHub.</span>
+    <span data-lang-ja>Soraneエンジンのソースコード（GitHub）。</span>
+</span>
 </a>
 </div>
 </div>
@@ -324,7 +312,7 @@ ai_generated: true
     /* Nav Cards */
     .nav-links {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 1.25rem;
     }
     /* Language container is ignored as physical container, but acts as logic wrapper */
@@ -355,8 +343,7 @@ ai_generated: true
     }
     .nav-item.primary {
         grid-column: 1 / -1;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border-color: #bae6fd;
+        border-color: var(--accent-color);
     }
     .nav-item.compact {
         padding: 0.85rem 0.75rem;
@@ -364,6 +351,7 @@ ai_generated: true
         grid-column-gap: 0.65rem;
     }
     .nav-item.compact .icon {
+        grid-row: 1;
         font-size: 1.15rem;
     }
     .nav-item.compact .label {

@@ -9,6 +9,9 @@ ai_generated: true
 
 本検証プロジェクト（Sorane: 空音）は、高精度なタイポグラフィとポスト量子暗号（PQC）を組み合わせたデータ基盤について、実装レベルの課題を整理するための試行的な取り組みである。本稿は、公的な証明書等をVCとして発行する際の実務的な論点を、実際のコード（本PoC）を通じて洗い出したメモであり、今後の具体的なシステム要件を検討する上での「技術的な叩き台」として作成したものである。
 
+**最新のステータス (2025-12-31):**
+Red Team によるセキュリティ・アセスメント（v1～v7）を経て、パイロット運用に向けたガードレール（v2.4.0）の実装を完了した。詳細は [Web/A Security Audit Index](./papers/web-a-l2-security-audit-index.html) および [Red Team Evaluation v8 (PoC Approval)](./papers/web-a-l2-security-audit-v8.ja.html) を参照のこと。
+
 ---
 
 ## Purpose and Scope of this PoC
