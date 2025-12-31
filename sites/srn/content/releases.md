@@ -5,6 +5,28 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.6.0 - Strategy Pivot: Signed Resource Network
+
+**Date:** 2025-12-31
+
+A strategic turning point for the project, redefining SRN as the **"Signed Resource Network"** and pivoting development focus towards pragmatism ("Worse is Better") and User Experience based on critical AI analyses.
+
+*   **Global Rebranding Strategy**:
+    *   **Signed Resource Network**: Officially proposed redefining the SRN acronym to **"Signed Resource Network"**. This emphasizes the objective fact of cryptographic provenance (Web/A Signatures) over subjective claims of "Security" or abstract "Semantics".
+    *   **Identity**: Positioned "Sorane" as the reference toolchain for creating and verifying these Signed Resources.
+
+*   **Strategic Pivot ("Worse is Better")**:
+    *   **AI Risk Synthesis**: Integrated critical analysis reports from **Gemini 3 DeepResearch** and **ChatGPT (o1)** into the governance repository, acknowledging risks like "WS-Deathstar" (complexity) and "Middlebox Death" (opaque encryption).
+    *   **Pragmatism First**: Shifted architectural priority from strict Semantic Web correctness to **"Minimum Viable Context"** and **"Onion Routing"** (unencrypted routing headers) to ensure cloud cacheability and ease of adoption.
+
+*   **Adoption-Driven UX Overhaul**:
+    *   **Web/A Form UX Audit**: Completed a comprehensive [UX Audit](./governance/web-a-form-ux-audit.html) to transform the form experience from "digital paper" to "mobile-first application".
+    *   **The "Trojan Horse"**: Prioritized "Input Intelligence" (autofill, rich widgets) and "Mobile Experience" to drive adoption through pure utility, masking the underlying cryptographic complexity.
+
+*   **Governance & Documentation**:
+    *   **AI Analysis Reports**: Published high-level analysis papers in `governance/` covering the potential and risks of the Web/A architecture.
+    *   **Committee Response**: Documented the Governance Committee's "Conditional Approval" of the pivot, establishing guardrails for the new pragmatic direction.
+
 ## v2.5.0 - Web/A Post & Governance Restructuring
 
 **Date:** 2025-12-31
