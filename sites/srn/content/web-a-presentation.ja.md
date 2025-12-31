@@ -44,17 +44,16 @@ ai_generated: true
 
 <div class="slide-split">
 <div>
-<h2>Web/Aの3層モデル</h2>
+<h2>Web/Aの4層モデル</h2>
 <ul>
-  <li><strong>Layer 1:</strong> Signed Content（不変の真正データ）</li>
-  <li><strong>Layer 2:</strong> Confidential Payload（機密性の高い入力データ）</li>
-  <li><strong>Layer 3:</strong> Presentation（可変のレイアウト・UI）</li>
+  <li><strong>Layer 1:</strong> Template（規約・意味論）</li>
+  <li><strong>Layer 2:</strong> Data（事実・エビデンス）</li>
+  <li><strong>Layer 3:</strong> Context（管理・配送属性）</li>
+  <li><strong>Layer 4:</strong> Presentation（視覚的表示・UI）</li>
 </ul>
 </div>
 <div class="presentation-figure">
-<svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="weba-structure-title weba-structure-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
-  <title id="weba-structure-title">Web/A 文書構造</title>
-  <desc id="weba-structure-desc">Web/AのHTMLファイルには3層がある。Layer 3は将来のために更新できるプレゼンテーション（CSS/フォント）。Layer 2は利用者の回答・同意をPasskeyで署名した層で、Layer 1への参照を含む。Layer 1は発行者署名の原本で、人間可読HTMLと機械可読JSON-LDが対応付けられ、発行者署名で保護される。</desc>
+<svg width="600" height="420" viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
@@ -63,41 +62,46 @@ ai_generated: true
       <path d="M0,0 L0,6 L9,3 z" fill="#6366F1" />
     </marker>
   </defs>
-  <rect width="600" height="460" fill="#F8FAFC"/>
-  <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
-  <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
+  <rect width="600" height="420" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="360" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+  <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A ドキュメント (.html)</text>
 
-  <!-- Layer 3: Presentation -->
-  <rect x="60" y="70" width="480" height="50" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
-  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Layer 3: Portable Presentation (View)</text>
-  <text x="75" y="110" font-family="system-ui" font-size="10" fill="#64748B">CSS・フォント等（将来の互換性のために差し替え可能）</text>
+  <!-- Layer 4: Presentation -->
+  <rect x="60" y="70" width="480" height="40" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="90" font-family="system-ui" font-size="11" font-weight="700" fill="#475569">Layer 4: Presentation (UI / View)</text>
+  <text x="75" y="103" font-family="system-ui" font-size="9" fill="#64748B">CSS、フォント、表示ロジック</text>
 
-  <!-- Layer 2: User Signed -->
-  <rect x="60" y="130" width="480" height="80" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
-  <text x="75" y="155" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: User-Signed Context (回答・事実の入力)</text>
-  <text x="75" y="175" font-family="system-ui" font-size="11" fill="#065F46">利用者の回答・合意データ</text>
-  <text x="75" y="190" font-family="system-ui" font-size="11" fill="#065F46">Passkey 等による利用者署名 (VP)</text>
+  <!-- Layer 3: Context -->
+  <rect x="60" y="115" width="480" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="75" y="132" font-family="system-ui" font-size="11" font-weight="700" fill="#92400E">Layer 3: Context (Metadata / Routing)</text>
+  <text x="75" y="145" font-family="system-ui" font-size="9" fill="#92400E">配送タグ、有効期限、Nonce、ポリシー参照</text>
+
+  <!-- Layer 2: Data -->
+  <rect x="60" y="165" width="480" height="65" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="185" font-family="system-ui" font-size="11" font-weight="700" fill="#047857">Layer 2: Data (Facts / Records)</text>
+  <text x="75" y="202" font-family="system-ui" font-size="9" fill="#065F46">暗号化ペイロード、利用者署名 (VP)</text>
+
   <!-- Link to Layer 1 -->
-  <path d="M300 210V220" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M300 230V240" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <!-- Layer 1: Issuer Signed -->
-  <rect x="60" y="220" width="480" height="150" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
-  <text x="75" y="245" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: Issuer-Signed Core (原本・テンプレート)</text>
+  <!-- Layer 1: Template -->
+  <rect x="60" y="240" width="480" height="130" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="265" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA">Layer 1: Template (Definition / Core)</text>
 
-  <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">人間可読レイヤー</text>
-  <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / セマンティック構造</text>
+  <rect x="80" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">人間用（可読）</text>
+  <text x="90" y="312" font-family="system-ui" font-size="9" fill="#64748B">HTML / テンプレート</text>
 
   <!-- Semantic Mapping -->
-  <path d="M280 290H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
-  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">Mapping</text>
+  <path d="M280 302H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
+  <text x="300" y="297" font-family="system-ui" font-size="8" fill="#6366F1" text-anchor="middle" font-weight="bold">等価</text>
 
-  <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">機械可読レイヤー</text>
-  <text x="330" y="300" font-family="system-ui" font-size="11" fill="#64748B">JSON-LD / ロジック</text>
+  <rect x="320" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">マシン用（定義）</text>
+  <text x="330" y="312" font-family="system-ui" font-size="9" fill="#64748B">JSON-LD / ロジック</text>
 
-  <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
-  <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + PQC (耐量子)</text>
+  <rect x="80" y="335" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="352" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + PQC (耐量子)</text>
 </svg>
 </div>
 </div>
@@ -131,7 +135,7 @@ ai_generated: true
 ## Web/A L2 Encryption
 
 - 送信時に**受領者（Issuer）限定でデータを暗号化**
-- Layer 1（原本）に関連付けられた認証付き暗号 (AAD)
+- Layer 1（テンプレート）への参照を含む認証付き暗号 (AAD)
 - Passkeyファーストのシームレスな体験
 
 ---

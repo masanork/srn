@@ -11,12 +11,13 @@ ai_generated: true
 
 [English version (英語版)](./web-a.html)
 
-**日付:** 2025年12月27日
+**日付:** 2025年12月31日
 
 ### 更新履歴
-- **2025-12-24**: 初版発行 (v1.0)
+- **2024-12-24**: 初版発行 (v1.0)
 - **2025-12-27**: インタラクティブ・フォーム対応のため「3層トラスト・アーキテクチャ」へ拡張 (v1.1)
-- **2025-12-29**: Layer 2 Encryption (L2E) による機密性保護の定義を追加 (v1.2)
+- **2025-12-29**: Layer 2 Encryption (L2E) による機密性保護と配送プロトコル拡張を定義 (v1.2)
+- **2025-12-31**: トラストモデルを「4層アーキテクチャ」へ昇華。Context層の分離と呼称の適正化 (v1.3)
 
 ## 1. 概要
 本稿では、アーカイブ品質のWeb文書仕様である **Web/A** を提案する。長期の視覚的保存には PDF/A が広く利用されているが、PDF/A は構造や意味の抽出が困難な「データのサイロ」になりがちである。Web/A は、HTML5、CSS、JSON-LD といった標準的な Web 技術を活用し、人間と機械の両方が普遍的に読み取ることができ、単一ファイルとしてポータブルで、かつ暗号的に検証可能なフォーマットを実現する。
@@ -83,7 +84,7 @@ Web/A は、すべての Web コンテンツを置き換えるものではない
 
 ### 4.3. 拡張ユースケース：Web/A Form（入力と記録の統合）
 Web/A は「読むため」の文書だけでなく、「入力するため」のアプリケーションとしても機能する。これが **Web/A Form** である。
-後述する「3層トラスト・アーキテクチャ」により、発行者が提供する「正しい設問とロジック（Layer 1）」に対し、利用者が「署名付きの回答（Layer 2）」を付加することで、双方の真正性が担保された一連の文書レコードが完成する。
+後述する「4層トラスト・アーキテクチャ」により、発行者が提供する「正しい設問とロジック（Layer 1）」に対し、利用者が「署名付きの回答（Layer 2）」を付加することで、双方の真正性が担保された一連の文書レコードが完成する。
 
 ---
 
@@ -107,24 +108,28 @@ PDF/A-1a/1b のように、用途に応じた厳格さのレベルを定義す�
 
 ## 6. 技術構築モデル
 
-### 6.1. 3層トラスト・アーキテクチャ (The 3-Layer Trust Architecture)
-静的なアーカイブ文書とインタラクティブなフォームを統一的に扱うため、Web/A は階層化された **3層トラスト・アーキテクチャ** を定義する。これにより、「発行者の意図」と「利用者の回答」を暗号学的に分離しつつ、プレゼンテーション層でシームレスに統合することを可能にする。
+### 6.1. 4層トラスト・アーキテクチャ (The 4-Layer Trust Architecture)
+静的なアーカイブ文書からインタラクティブなフォーム、広域な配送プロトコルまでを統一的に扱うため、Web/A は階層化された **4層トラスト・アーキテクチャ** を定義する。
 
-1.  **Layer 1: 発行者署名コア (Issuer-Signed Core / The "Law")**
-    *   **内容**: 文書の基本構造、セマンティック・データ（JSON-LD）、および静的なテキストや設問。フォームにおいては「テンプレート」に相当する。
-    *   **署名者**: **発行者 (Issuer)**。
-    *   **信頼**: 公権力や組織によって確立された、不変の「真実」または「設問」を表す。
-    *   **成果物**: コアとなる HTML/JSON-LD を対象とした VC または埋め込み署名。
+1.  **Layer 1: テンプレート (The Template)**
+    *   **役割**: 文書の器、設問、および意味論の定義。
+    *   **内容**: HTMLテンプレート、JSON-LDスキーマ、バリデーションロジック。
+    *   **署名者**: **発行者 (Issuer)**。公権力や組織による「定義された事実の器」を保証する。
 
-2.  **Layer 2: 利用者署名コンテキスト (User-Signed Context / The "Fact")**
-    *   **内容**: Layer 1 に対する利用者の入力、回答、または同意。閲覧専用文書の場合は空であるか、受領確認メタデータ等が含まれる。
-    *   **署名者**: **利用者 (User/Subject)**。Passkey やローカル鍵を使用。
-    *   **信頼**: 利用者による特定の具体化や合意を表す。Layer 1 のハッシュ（Digest）を含めることで、「どの設問に対する回答か」を暗号学的に紐付ける。
-    *   **成果物**: Layer 1 をラップまたは参照する VP (Verifiable Presentation) または VC。
+2.  **Layer 2: データ (The Data)**
+    *   **役割**: 具体的な事実の記録。
+    *   **内容**: 利用者による回答、入力、合意した事実。L2E (Layer 2 Encryption) により暗号化され得る。
+    *   **署名者**: **利用者 (User/Subject)**。Layer 1 のハッシュを含めることで、どの設問に対する回答かを紐付ける。
 
-3.  **Layer 3: ポータブル・プレゼンテーション (Portable Presentation / The "View")**
-    *   **内容**: Layer 1 と 2 を統合して可視化するために必要な CSS、フォント、および最小限のレンダリング・ロジック（JavaScript）。
-    *   **役割**: **進化的保守 (Evolutionary Adaptation)**。署名されたデータ層とは異なり、このレイヤーは原本の改ざんを伴わずに将来のデバイス環境に合わせて更新（長期検証 LTV）が可能である。
+3.  **Layer 3: コンテキスト (The Context) ※新設**
+    *   **役割**: 流通・管理属性の定義。
+    *   **内容**: 配送タグ (Transport Tag)、有効期限、リプレイガード用 Nonce、ポリシー参照。
+    *   **特性**: 暗号化された Layer 2 を復号することなく、中継サーバー（Web/A Post）が適切にルーティングや一時検証を行うためのメタデータを分離する。
+
+4.  **Layer 4: プレゼンテーション (The Presentation)**
+    *   **役割**: 視覚的表現とユーザー体験。
+    *   **内容**: CSS、フォント、最小限のレンダリング・ロジック（JavaScript）。
+    *   **特性**: 署名されたデータ・コンテキスト層とは疎結合であり、原本性を損なわずに将来のデバイス環境に合わせてUIをアップデートできる。
 
 ### 6.2. 人間と機械の同一性 (Human-Machine Parity : HMP) 
 生成ツール（Sorane等）は、JSON-LD と HTML が乖離しないことを保証する責任を持つ：
@@ -132,10 +137,10 @@ PDF/A-1a/1b のように、用途に応じた厳格さのレベルを定義す�
 - **生成ツール宣言**: C2PA マニフェストを埋め込み、「このツールが同一性を持って生成した」ことを署名付きで記録する。
 
 ### 6.3. Web/A の文書構造と信頼の連鎖
-Web/A の堅牢性は、これら三つのレイヤーの厳格な分離と紐付けによって担保される。
+Web/A の堅牢性は、これら四つのレイヤーの厳格な分離と紐付けによって担保される。
 
 <div align="center">
-<svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+<svg width="600" height="420" viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
@@ -144,41 +149,46 @@ Web/A の堅牢性は、これら三つのレイヤーの厳格な分離と紐�
       <path d="M0,0 L0,6 L9,3 z" fill="#6366F1" />
     </marker>
   </defs>
-  <rect width="600" height="460" fill="#F8FAFC"/>
-  <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+  <rect width="600" height="420" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="360" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
   <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
 
-  <!-- Layer 3: Presentation -->
-  <rect x="60" y="70" width="480" height="50" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
-  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Layer 3: Portable Presentation (View)</text>
-  <text x="75" y="110" font-family="system-ui" font-size="10" fill="#64748B">CSS・フォント等（将来のブラウザ対応のため更新可能）</text>
+  <!-- Layer 4: Presentation -->
+  <rect x="60" y="70" width="480" height="40" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="90" font-family="system-ui" font-size="11" font-weight="700" fill="#475569">Layer 4: Presentation (View / UI)</text>
+  <text x="75" y="103" font-family="system-ui" font-size="9" fill="#64748B">CSS、フォント、最小限のJS</text>
 
-  <!-- Layer 2: User Signed -->
-  <rect x="60" y="130" width="480" height="80" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
-  <text x="75" y="155" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: User-Signed Context (利用者による事実の入力)</text>
-  <text x="75" y="175" font-family="system-ui" font-size="11" fill="#065F46">利用者の回答・同意データ</text>
-  <text x="75" y="190" font-family="system-ui" font-size="11" fill="#065F46">Passkey 等による利用者署名 (VP)</text>
+  <!-- Layer 3: Context -->
+  <rect x="60" y="115" width="480" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="75" y="132" font-family="system-ui" font-size="11" font-weight="700" fill="#92400E">Layer 3: Context (Metadata / Routing)</text>
+  <text x="75" y="145" font-family="system-ui" font-size="9" fill="#92400E">配送タグ、有効期限、Nonce、ポリシー参照</text>
+
+  <!-- Layer 2: Data -->
+  <rect x="60" y="165" width="480" height="65" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="185" font-family="system-ui" font-size="11" font-weight="700" fill="#047857">Layer 2: Data (Evidence / Fact)</text>
+  <text x="75" y="202" font-family="system-ui" font-size="9" fill="#065F46">暗号化ペイロード、利用者署名</text>
+
   <!-- Link to Layer 1 -->
-  <path d="M300 210V220" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M300 230V240" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <!-- Layer 1: Issuer Signed -->
-  <rect x="60" y="220" width="480" height="150" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
-  <text x="75" y="245" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: Issuer-Signed Core (発行者による原本・テンプレート)</text>
+  <!-- Layer 1: Template -->
+  <rect x="60" y="240" width="480" height="130" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="265" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA">Layer 1: Template (Definition / Schema)</text>
 
-  <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">人間可読レイヤー</text>
-  <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / セマンティック構造</text>
+  <rect x="80" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">人間用（可読）</text>
+  <text x="90" y="312" font-family="system-ui" font-size="9" fill="#64748B">HTML / テンプレート</text>
 
   <!-- Semantic Mapping -->
-  <path d="M280 290H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
-  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">Mapping</text>
+  <path d="M280 302H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
+  <text x="300" y="297" font-family="system-ui" font-size="8" fill="#6366F1" text-anchor="middle" font-weight="bold">等価</text>
 
-  <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">機械可読レイヤー</text>
-  <text x="330" y="300" font-family="system-ui" font-size="11" fill="#64748B">JSON-LD / ロジック</text>
+  <rect x="320" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">マシン用（定義）</text>
+  <text x="330" y="312" font-family="system-ui" font-size="9" fill="#64748B">JSON-LD / ロジック</text>
 
-  <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
-  <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + ML-DSA-44 (耐量子)</text>
+  <rect x="80" y="335" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="352" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + PQC</text>
 </svg>
 </div>
 

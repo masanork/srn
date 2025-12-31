@@ -8,14 +8,13 @@ ai_generated: true
 
 [日本語版 (Japanese version)](./web-a.ja.html)
 
-**Date:** December 27, 2025
+**Date:** December 31, 2025
 
 ### Revision History
-- **2025-12-24**: Initial Draft (v1.0)
-- **2025-12-27**: Expanded to 3-Layer Trust Architecture to support interactive forms (v1.1)
-- **2025-12-29**: Added definition of confidentiality protection via Layer 2 Encryption (L2E) (v1.2)
-- **2025-12-29**: Added Messaging/Transport extension principles for submissions (v1.3)
-- **2025-12-29**: Expanded transport principles for multi-hop routing (v1.4)
+- **2024-12-24**: Initial Draft (v1.0)
+- **2025-12-27**: Expanded into a 3-Layer Trust Architecture to support interactive forms (v1.1)
+- **2025-12-29**: Defined L2 Encryption (L2E) and Messaging/Transport extensions (v1.2)
+- **2025-12-31**: Transitioned to the "4-Layer Architecture" for improved context separation (v1.3)
 
 ## 1. Abstract
 This paper proposes **Web/A**, a specification for archival-grade web documents. While PDF/A is widely used for long-term visual preservation, it often becomes a "data silo" where structure and semantic meaning are difficult to extract. Web/A leverages standard web technologies—HTML5, CSS, and JSON-LD—to create a format that is universally readable by humans and machines, portable as a single file, and digitally verifiable.
@@ -103,37 +102,41 @@ Similar to PDF/A-1a or 1b, Web/A defines levels of technical rigor:
 
 ---
 
-## 6. Technical Architecture
+## 6. Technical Architecture Model
 
-### 6.1. The 3-Layer Trust Architecture
-To unify the handling of static archives and interactive forms, Web/A defines a hierarchical **3-Layer Trust Architecture**. This ensures that the "Issuer's Intent" and the "User's Response" are cryptographically distinct yet seamlessly integrated for presentation.
+### 6.1. The 4-Layer Trust Architecture
+To uniformly handle static documents, interactive forms, and wide-area distribution protocols, Web/A defines a hierarchical **4-Layer Trust Architecture**.
 
-1.  **Layer 1: Issuer-Signed Core (The "Law")**
-    *   **Content**: The fundamental structure, semantic data (JSON-LD), and static text/questions of the document. For a form, this is the "Template".
-    *   **Signer**: The **Issuer**.
-    *   **Trust**: Represents the immutable "Truth" or "Question" established by the authority.
-    *   **Artifact**: A detached VC or embedded signature covering the core HTML/JSON-LD.
+1.  **Layer 1: The Template**
+    *   **Role**: Definition of the document structure, questions, and semantics.
+    *   **Content**: HTML templates, JSON-LD schemas, and validation logic.
+    *   **Signer**: **Issuer**. Guarantees the "vessel of defined facts."
 
-2.  **Layer 2: User-Signed Context (The "Fact")**
-    *   **Content**: User inputs, answers, or agreements that reference Layer 1. For read-only documents, this layer may be empty or contain "Acknowledgement" metadata.
-    *   **Signer**: The **User (Subject)** via Passkey or local keys.
-    *   **Trust**: Represents the user's specific instantiation or agreement. It includes a cryptographic digest of Layer 1, binding the "Answer" to the specific "Question".
-    *   **Artifact**: A VP or VC that wraps or references Layer 1.
+2.  **Layer 2: The Data**
+    *   **Role**: Record of concrete facts.
+    *   **Content**: User answers, inputs, and agreed-upon facts. Can be encrypted via L2E (Layer 2 Encryption).
+    *   **Signer**: **User/Subject**. Includes a hash of Layer 1 to bind the data to the specific template.
 
-3.  **Layer 3: Portable Presentation (The "View")**
-    *   **Content**: CSS, Fonts, and minimal rendering logic (JavaScript) required to visualize Layers 1 and 2.
-    *   **Role**: **Evolutionary Adaptation**. Unlike the signed layers, this layer can be updated by custodians (Long-Term Validation) to ensure readability on future devices without breaking the cryptographic integrity of the data.
+3.  **Layer 3: The Context (New)**
+    *   **Role**: Attribution for distribution and management.
+    *   **Content**: Transport Tags, expiration dates, Replay-Guard Nonces, and policy references.
+    *   **特性**: Disconnects metadata from Layer 2, allowing intermediaries (Web/A Post) to route or validate without decrypting the payload.
 
-### 6.2. Human-Machine Parity (HMP) Guarantee
-The generator tool (e.g., Sorane) is responsible for ensuring that the JSON-LD and HTML do not diverge. This is guaranteed via:
-- **Static Synchronization**: The HTML is "baked" from the same data source as the JSON-LD.
-- **Generator Claims**: Embedding a **C2PA-style manifest** into the document. This manifest contains a hash of the transformation logic and a synchronized assertion.
+4.  **Layer 4: The Presentation**
+    *   **Role**: Visual expression and user experience.
+    *   **Content**: CSS, fonts, and minimal rendering logic (JavaScript).
+    *   **特性**: Loosely coupled from the signed data/context layers, allowing UI updates for future devices without compromising original integrity.
 
-### 6.3. Web/A Document Structure and Trust Chain
-The robustness of Web/A lies in the strict separation and binding between these three layers.
+### 6.2. Human-Machine Parity (HMP)
+Generation tools (such as Sorane) are responsible for ensuring that JSON-LD and HTML do not diverge:
+- **Static Synchronization**: HTML is baked simultaneously from the same data source as JSON-LD.
+- **Tool Declaration**: Embeds a C2PA manifest with a signed declaration that the tool generated both layers with parity.
+
+### 6.3. Document Structure & Chain of Trust
+The robustness of Web/A is guaranteed by the strict separation and binding of these four layers.
 
 <div align="center">
-<svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+<svg width="600" height="420" viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
@@ -142,41 +145,46 @@ The robustness of Web/A lies in the strict separation and binding between these 
       <path d="M0,0 L0,6 L9,3 z" fill="#6366F1" />
     </marker>
   </defs>
-  <rect width="600" height="460" fill="#F8FAFC"/>
-  <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+  <rect width="600" height="420" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="360" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
   <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
 
-  <!-- Layer 3: Presentation -->
-  <rect x="60" y="70" width="480" height="50" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
-  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Layer 3: Portable Presentation (View)</text>
-  <text x="75" y="110" font-family="system-ui" font-size="10" fill="#64748B">CSS, Fonts (Replaceable for Future Compatibility)</text>
+  <!-- Layer 4: Presentation -->
+  <rect x="60" y="70" width="480" height="40" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="90" font-family="system-ui" font-size="11" font-weight="700" fill="#475569">Layer 4: Presentation (View / UI)</text>
+  <text x="75" y="103" font-family="system-ui" font-size="9" fill="#64748B">CSS, Fonts, minimal JS</text>
 
-  <!-- Layer 2: User Signed -->
-  <rect x="60" y="130" width="480" height="80" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
-  <text x="75" y="155" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: User-Signed Context (Input/Fact)</text>
-  <text x="75" y="175" font-family="system-ui" font-size="11" fill="#065F46">User Answers / Agreement</text>
-  <text x="75" y="190" font-family="system-ui" font-size="11" fill="#065F46">Passkey Signature (VP)</text>
+  <!-- Layer 3: Context -->
+  <rect x="60" y="115" width="480" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="75" y="132" font-family="system-ui" font-size="11" font-weight="700" fill="#92400E">Layer 3: Context (Metadata / Routing)</text>
+  <text x="75" y="145" font-family="system-ui" font-size="9" fill="#92400E">Transport Tag, Expiry, Nonce, Policy Ref</text>
+
+  <!-- Layer 2: Data -->
+  <rect x="60" y="165" width="480" height="65" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="185" font-family="system-ui" font-size="11" font-weight="700" fill="#047857">Layer 2: Data (Evidence / Fact)</text>
+  <text x="75" y="202" font-family="system-ui" font-size="9" fill="#065F46">Encrypted payload, User Signature</text>
+
   <!-- Link to Layer 1 -->
-  <path d="M300 210V220" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M300 230V240" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <!-- Layer 1: Issuer Signed -->
-  <rect x="60" y="220" width="480" height="150" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
-  <text x="75" y="245" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: Issuer-Signed Core (Template/Law)</text>
+  <!-- Layer 1: Template -->
+  <rect x="60" y="240" width="480" height="130" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="265" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA">Layer 1: Template (Definition / Schema)</text>
 
-  <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Human Readable</text>
-  <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / Questions</text>
+  <rect x="80" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">Human Readable</text>
+  <text x="90" y="312" font-family="system-ui" font-size="9" fill="#64748B">HTML / Template</text>
 
   <!-- Semantic Mapping -->
-  <path d="M280 290H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
-  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">Mapping</text>
+  <path d="M280 302H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
+  <text x="300" y="297" font-family="system-ui" font-size="8" fill="#6366F1" text-anchor="middle" font-weight="bold">Bound</text>
 
-  <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Machine Readable</text>
-  <text x="330" y="300" font-family="system-ui" font-size="11" fill="#64748B">JSON-LD / Logic</text>
+  <rect x="320" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">Machine Readable</text>
+  <text x="330" y="312" font-family="system-ui" font-size="9" fill="#64748B">JSON-LD / Logic</text>
 
-  <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
-  <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">Issuer Signature: Ed25519 + PQC</text>
+  <rect x="80" y="335" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="352" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA" text-anchor="middle">Issuer Signature: Ed25519 + PQC</text>
 </svg>
 </div>
 

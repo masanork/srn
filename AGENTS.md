@@ -42,6 +42,12 @@
 - Use semantic versioning (Major.Minor.Patch) based on the impact of changes.
 - Ensure the release note entry includes the date and a categorized list of improvements.
 
+## Document Staging & Quality Control
+- **Draft Status**: All new, in-review, or in-progress documents MUST include `draft: true` in their frontmatter.
+- **Staging Rule**: Do not add links to draft documents on main dashboards until they are finalized.
+- **Document Stating Process**: New conceptual papers must undergo a "Stating Process" where the core hypothesis is refined through dialogue with the **Red Team**.
+- **Red Team Engagement**: Proactively seek feedback from the Red Team (security/architectural reviewers) before finalizing state transitions in technical papers.
+
 ## Documentation & Localization
 - For technical specifications and design notes, **prioritize updating the English version (`.md`)** during active development to reduce token consumption and maintain a single source of truth.
 - Update the Japanese version (`.ja.md`) intermittently or at major milestones (e.g., when a feature is finalized or ready for public review).

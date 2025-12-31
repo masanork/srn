@@ -128,24 +128,25 @@ ai_generated: true
     <span data-lang-ja>検証可能なフォームをブラウザ上で視覚的に作成。(Beta)</span>
 </span>
 </a>
+
 <div data-lang-ja>
 <a href="./web-a-presentation.ja.html" class="nav-item">
-<span class="icon">🎞️</span><span class="label">Web/A 紹介デッキ</span>
-<span class="desc">記事として読み、必要に応じてフルスクリーン・スライドでプレゼン。</span>
+<span class="icon">📽️</span><span class="label">Web/A について</span>
+<span class="desc">Web/A の概要とビジョン。</span>
 </a>
 <a href="./web-a-tech-presentation.ja.html" class="nav-item">
-<span class="icon">🛡️</span><span class="label">Web/A 技術解説デッキ</span>
-<span class="desc">検証モデルとセキュリティアーキテクチャの技術的深掘り。</span>
+<span class="icon">🛡️</span><span class="label">Web/A 技術解説</span>
+<span class="desc">検証モデルとセキュリティアーキテクチャ。</span>
 </a>
 </div>
 <div data-lang-en>
 <a href="./web-a-presentation.html" class="nav-item">
-<span class="icon">🎞️</span><span class="label">Web/A Presentation</span>
-<span class="desc">Read as article, switch to full-screen slides.</span>
+<span class="icon">📽️</span><span class="label">About Web/A</span>
+<span class="desc">Web/A Overview & Vision.</span>
 </a>
 <a href="./web-a-tech-presentation.html" class="nav-item">
-<span class="icon">🛡️</span><span class="label">Web/A Tech Presentation</span>
-<span class="desc">Deep dive into the verification model and security architecture.</span>
+<span class="icon">🛡️</span><span class="label">Web/A Tech Deep Dive</span>
+<span class="desc">Security & Verification Model.</span>
 </a>
 </div>
 
@@ -353,6 +354,7 @@ ai_generated: true
     .nav-item.compact .icon {
         grid-row: 1;
         font-size: 1.15rem;
+        font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     }
     .nav-item.compact .label {
         font-size: 0.95rem;
@@ -387,6 +389,7 @@ ai_generated: true
         display: flex;
         justify-content: center;
         align-items: center;
+        font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     }
     .nav-item .label {
         font-weight: 700;

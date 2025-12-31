@@ -140,18 +140,19 @@ ai_generated: true
 
 <div class="slide-section">
 <div class="slide-kicker">コア・アーキテクチャ</div>
-<h2>3レイヤー信頼モデル</h2>
+<h2>4レイヤー信頼モデル</h2>
 <div class="slide-divider"></div>
 <div class="slide-split">
 <div>
 <ul>
-  <li><strong>Layer 1</strong>：発行者が署名したテンプレート（法/規約）</li>
-  <li><strong>Layer 2</strong>：ユーザーの回答 ＋ 暗号化（事実）</li>
-  <li><strong>Layer 3</strong>：プレゼンテーションとレイアウト（ビュー）</li>
+  <li><strong>Layer 1: The Template</strong> — 規約・設問・スキーマの定義</li>
+  <li><strong>Layer 2: The Data</strong> — ユーザーによる具体的な事実・証跡データ</li>
+  <li><strong>Layer 3: The Context</strong> — メタデータ・配送制御・バリデーション属性</li>
+  <li><strong>Layer 4: The Presentation</strong> — UI・フォント・表示ロジック</li>
 </ul>
 </div>
 <div class="presentation-figure">
-<svg width="600" height="460" viewBox="0 0 600 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+<svg width="600" height="420" viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
@@ -160,41 +161,46 @@ ai_generated: true
       <path d="M0,0 L0,6 L9,3 z" fill="#6366F1" />
     </marker>
   </defs>
-  <rect width="600" height="460" fill="#F8FAFC"/>
-  <rect x="40" y="30" width="520" height="400" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+  <rect width="600" height="420" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="360" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
   <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A ドキュメント (.html)</text>
 
-  <!-- Layer 3: Presentation -->
-  <rect x="60" y="70" width="480" height="50" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
-  <text x="75" y="95" font-family="system-ui" font-size="13" font-weight="700" fill="#475569">Layer 3: プレゼンテーション（ビュー）</text>
-  <text x="75" y="110" font-family="system-ui" font-size="10" fill="#64748B">CSS、フォント（将来の互換性のために差し替え可能）</text>
+  <!-- Layer 4: Presentation -->
+  <rect x="60" y="70" width="480" height="40" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="90" font-family="system-ui" font-size="11" font-weight="700" fill="#475569">Layer 4: Presentation (View / UI)</text>
+  <text x="75" y="103" font-family="system-ui" font-size="9" fill="#64748B">CSS、フォント、最小限のJS</text>
 
-  <!-- Layer 2: User Signed -->
-  <rect x="60" y="130" width="480" height="80" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
-  <text x="75" y="155" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2: ユーザー署名済みコンテキスト</text>
-  <text x="75" y="175" font-family="system-ui" font-size="11" fill="#065F46">ユーザーの回答 / 合意内容</text>
-  <text x="75" y="190" font-family="system-ui" font-size="11" fill="#065F46">Passkey署名 (VP)</text>
+  <!-- Layer 3: Context -->
+  <rect x="60" y="115" width="480" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="75" y="132" font-family="system-ui" font-size="11" font-weight="700" fill="#92400E">Layer 3: Context (Metadata / Routing)</text>
+  <text x="75" y="145" font-family="system-ui" font-size="9" fill="#92400E">配送タグ、有効期限、Nonce、ポリシー参照</text>
+
+  <!-- Layer 2: Data -->
+  <rect x="60" y="165" width="480" height="65" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="185" font-family="system-ui" font-size="11" font-weight="700" fill="#047857">Layer 2: Data (Evidence / Result)</text>
+  <text x="75" y="202" font-family="system-ui" font-size="9" fill="#065F46">暗号化ペイロード、署名済み事実記録</text>
+
   <!-- Link to Layer 1 -->
-  <path d="M300 210V220" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M300 230V240" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <!-- Layer 1: Issuer Signed -->
-  <rect x="60" y="220" width="480" height="150" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
-  <text x="75" y="245" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1: 発行者署名済みコア（テンプレート）</text>
+  <!-- Layer 1: Template -->
+  <rect x="60" y="240" width="480" height="130" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="265" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA">Layer 1: Template (Definition / Schema)</text>
 
-  <rect x="80" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="90" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">人間用（可読）</text>
-  <text x="90" y="300" font-family="system-ui" font-size="11" fill="#64748B">HTML / 設問内容</text>
+  <rect x="80" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">人間用（可読）</text>
+  <text x="90" y="312" font-family="system-ui" font-size="9" fill="#64748B">HTML / テンプレート</text>
 
   <!-- Semantic Mapping -->
-  <path d="M280 290H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
-  <text x="300" y="285" font-family="system-ui" font-size="9" fill="#6366F1" text-anchor="middle" font-weight="bold">マッピング</text>
+  <path d="M280 302H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
+  <text x="300" y="297" font-family="system-ui" font-size="8" fill="#6366F1" text-anchor="middle" font-weight="bold">等価</text>
 
-  <rect x="320" y="260" width="200" height="60" rx="4" fill="white" stroke="#6366F1"/>
-  <text x="330" y="280" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">マシン用（構造データ）</text>
-  <text x="330" y="300" font-family="system-ui" font-size="11" fill="#64748B">JSON-LD / ロジック</text>
+  <rect x="320" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">マシン用（定義）</text>
+  <text x="330" y="312" font-family="system-ui" font-size="9" fill="#64748B">JSON-LD / ロジック</text>
 
-  <rect x="80" y="330" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
-  <text x="300" y="347" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + PQC</text>
+  <rect x="80" y="335" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="352" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA" text-anchor="middle">発行者署名: Ed25519 + PQC</text>
 </svg>
 </div>
 </div>
@@ -267,33 +273,53 @@ ai_generated: true
 <div class="slide-kicker">L2 暗号化</div>
 <h2>アーキテクチャ概要</h2>
 <div class="slide-divider"></div>
+
 ```mermaid
-flowchart LR
+flowchart TD
     User["ユーザー入力"] --> Plain["L2 平文"]
-    Plain --> Sign["署名者 (Ed25519)"]
-    Sign --> Signed["L2 ペイロード (署名済み)"]
-    Signed --> Encrypt["暗号化 (HPKE X25519)"]
-    Encrypt --> Envelope["L2 暗号化エンベロープ"]
     
     subgraph browser ["ブラウザ（クライアント）"]
-        User
-        Plain
-        Sign
-        Signed
-        Encrypt
+        Plain --> Sign["署名者 (Ed25519)"]
+        Sign --> Signed["L2 署名済みペイロード"]
+        Signed --> Encrypt["暗号化 (HPKE / WASM)"]
     end
     
-    Envelope --> Storage["ストレージ・配送"]
-    Storage --> Decrypt["復号器"]
-    Decrypt --> Verify["署名検証器"]
-    Verify --> Data["検証済みデータ"]
-
+    Encrypt --> Envelope["L2 暗号化エンベロープ"]
+    
+    Envelope --> Storage["配送 (Local / WebA Post)"]
+    
     subgraph aggregator ["アグリゲータ（発行者）"]
-        Decrypt
-        Verify
-        Data
+        Storage --> Decrypt["復号器 (Strict Replay Check)"]
+        Decrypt --> Verify["署名検証器"]
+        Verify --> Data["検証済みデータ"]
     end
 ```
+
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">エコシステム</div>
+<h2>Web/A 5つの構成要素</h2>
+<div class="slide-divider"></div>
+
+```mermaid
+graph TD
+    Maker[Web/A Maker] -->|1. 鋳造| Form[Web/A Form]
+    Maker -->|1. 鋳造| Doc[Web/A Doc]
+    
+    Form -->|2. 入力・署名| Doc
+    Doc -->|3. 保管| Folio[Web/A Folio]
+    
+    Folio <-->|4. 配送| Post[Web/A Post]
+    Post -->|5. 収集| Aggregator[Aggregator]
+```
+<ul>
+  <li><strong>Foundry (Maker/Aggregator)</strong>：信頼の生成と集計</li>
+  <li><strong>Interface (Form/Doc)</strong>：人間と機械が等価に扱える容器</li>
+  <li><strong>Infrastructure (Folio/Post)</strong>：主権的な「所有」と「配送」</li>
+</ul>
 </div>
 
 ---
@@ -302,6 +328,7 @@ flowchart LR
 <div class="slide-kicker">L2 暗号化</div>
 <h2>階層的鍵導出</h2>
 <div class="slide-divider"></div>
+
 ```mermaid
 flowchart TD
     Instance["SRN マスター鍵"] -->|HKDF| Root["組織ルート鍵"]
@@ -325,6 +352,7 @@ flowchart TD
 <div class="slide-kicker">L2 暗号化</div>
 <h2>WebAuthn PRF による復号</h2>
 <div class="slide-divider"></div>
+
 ```mermaid
 sequenceDiagram
     participant User as ユーザー
@@ -339,6 +367,7 @@ sequenceDiagram
     Browser->>Browser: L2 エンベロープを復号
     Browser->>User: 平文データを表示
 ```
+
 </div>
 
 ---
@@ -347,6 +376,7 @@ sequenceDiagram
 <div class="slide-kicker">暗号化</div>
 <h2>L2 エンベロープのライフサイクル</h2>
 <div class="slide-divider"></div>
+
 ```mermaid
 sequenceDiagram
   participant User as ユーザー
@@ -358,6 +388,7 @@ sequenceDiagram
   Browser->>Issuer: エンベロープを送信
   Issuer->>Issuer: 復号 ＋ 検証
 ```
+
 </div>
 
 ---
@@ -367,18 +398,20 @@ sequenceDiagram
 <h2>リプレイ保護</h2>
 <div class="slide-divider"></div>
 <ul>
-  <li>エンベロープ毎に nonce を保存・照合</li>
-  <li>CLI: JsonFileReplayStore</li>
-  <li>ブラウザ: LocalStorageReplayStore</li>
+  <li>エンベロープ毎に nonce を保存し、厳格に重複をチェック</li>
+  <li><strong>Security Audit v3 要件</strong>：復号時のリプレイガードを必須化</li>
+  <li>CLI: JsonFileReplayStore / ブラウザ: LocalStorageReplayStore</li>
 </ul>
 
 <div class="presentation-figure">
+
 ```mermaid
 flowchart TB
   S[エンベロープ] --> N{既知の nonce?}
   N -- No --> A[受理 ＋ 保存]
   N -- Yes --> R[拒絶]
 ```
+
 </div>
 </div>
 
@@ -396,11 +429,24 @@ flowchart TB
 ---
 
 <div class="slide-card">
-<h2>WASM 暗号モジュールへの移行</h2>
+<h2>WASM 暗号モジュールの完遂</h2>
 <ul>
-  <li>Ed25519 / X25519 / ML-KEM / AES-GCM を Rust/WASM で実装</li>
-  <li>JSエンジンによる実行タイミングの差異を低減</li>
-  <li>バインディングレイヤーが現在の主なレビュー対象</li>
+  <li>Ed25519 / X25519 / ML-KEM / ML-DSA / AES-GCM / SHA2 を WASM 化</li>
+  <li><strong>ブラウザ側の JS 依存を排除</strong>：性能向上とサイドチャネル攻撃耐性</li>
+  <li>サイドローディング可能な独立した暗号コアとしての検証を完了</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">安全性</div>
+<h2>パイロット運用における安全ガイド</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>利用者向けガイドの公開</strong>：リスクと責任境界の明文化</li>
+  <li><strong>人的サポート体制</strong>：技術的限界を運用（バックアップ等）で補完</li>
+  <li><strong>実験的機能の明示</strong>：HMPの実証を通じた段階的な信頼獲得</li>
 </ul>
 </div>
 
@@ -478,6 +524,7 @@ flowchart TB
 <div class="slide-kicker">Folio内部構造</div>
 <h2>提出用バンドル</h2>
 <div class="slide-divider"></div>
+
 ```mermaid
 graph TD
     B[提出用バンドル] --> M[Manifest.json]
@@ -489,6 +536,7 @@ graph TD
     M -->|署名済み| S[Manifest.sig]
     R -->|全ファイルをカバー| B
 ```
+
 </div>
 
 ---
@@ -497,6 +545,7 @@ graph TD
 <div class="slide-kicker">Folio CLI</div>
 <h2>ツールキット・アーキテクチャ</h2>
 <div class="slide-divider"></div>
+
 ```mermaid
 graph TD
     MD[Form.markdown] -->|parse| Schema[Schema.json]
@@ -504,6 +553,7 @@ graph TD
     MD -->|validate| Result[検証結果]
     Key[Passkey] -->|sign| Signed[署名済みHTML]
 ```
+
 </div>
 
 ---
@@ -530,6 +580,19 @@ rules:
   <li>エージェントがWeb/Aを読み取り、検証し、要約できる</li>
   <li>構造化データが安全な自動化を可能にする</li>
   <li>人間が最終的な信頼のアンカーとして残り続ける</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">AI 連携</div>
+<h2>Bring Your Own AI Agent (BYOA)</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>MCP (Model Context Protocol) 対応</strong>：エージェントが Folio に直接アクセス</li>
+  <li><strong>検証済みのコンテキスト</strong>：AI が「正しい証拠」に基づいて推論・対話を遂行</li>
+  <li><strong>個別のエージェント選択</strong>：特定のプラットフォームに縛られない自由なAI活用</li>
 </ul>
 </div>
 
@@ -693,15 +756,17 @@ rules:
 <div class="slide-kicker">タイムライン</div>
 <h2>エンジニアリングの進捗</h2>
 <div class="slide-divider"></div>
+
 ```mermaid
 flowchart LR
-  A[L2 実現可能性調査] --> B[暗号化フォーム実装]
-  B --> C[ReplayGuard ＋ ストレージ]
-  C --> D[バケットパディング]
-  D --> E[WASM 暗号モジュール移行]
-  E --> F[レッドチーム再評価]
-  F --> G[Pre-Key サーバ設計案]
+  A[L2 実現可能性] --> B[暗号化フォーム]
+  B --> C[ReplayGuard 強化]
+  C --> D[WASM 移行完遂]
+  D --> E[Red Team 評価 v8]
+  E --> F[安全ガイド公開]
+  F --> G[広域運用に向けた設計]
 ```
+
 </div>
 
 ---
@@ -711,6 +776,7 @@ flowchart LR
 <h2>反復的なフィードバックループ</h2>
 <div class="slide-divider"></div>
 <div class="presentation-figure">
+
 ```mermaid
 sequenceDiagram
   participant Dev as Web/A チーム
@@ -722,6 +788,7 @@ sequenceDiagram
   RT->>Dev: 再評価 (v3)
   Dev->>Spec: ハードニング・メモ
 ```
+
 </div>
 </div>
 
@@ -744,16 +811,16 @@ sequenceDiagram
   <text x="80" y="198" font-family="system-ui" font-size="11" fill="#334155">現在のSRNスコープ</text>
 
   <rect x="280" y="72" width="200" height="210" rx="12" fill="#ECFDF5" stroke="#10B981"/>
-  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2</text>
-  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">機密データ</text>
+  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2 + 3</text>
+  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">機密データと配送属性</text>
   <text x="300" y="158" font-family="system-ui" font-size="11" fill="#334155">L2 暗号化</text>
-  <text x="300" y="178" font-family="system-ui" font-size="11" fill="#334155">リプレイ保護</text>
-  <text x="300" y="198" font-family="system-ui" font-size="11" fill="#334155">選択的アクセス</text>
+  <text x="300" y="178" font-family="system-ui" font-size="11" fill="#334155">リプレイガード (L3)</text>
+  <text x="300" y="198" font-family="system-ui" font-size="11" fill="#334155">選択的アクセス制御</text>
 
   <rect x="500" y="72" width="200" height="210" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
-  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Layer 3</text>
-  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">本人確認・認可</text>
-  <text x="520" y="158" font-family="system-ui" font-size="11" fill="#334155">検証可能な提示 (VP)</text>
+  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Layer 4</text>
+  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">ID 連携と認証提示</text>
+  <text x="520" y="158" font-family="system-ui" font-size="11" fill="#334155">検証可能提示 (VP)</text>
   <text x="520" y="178" font-family="system-ui" font-size="11" fill="#334155">ホルダー・バインディング</text>
   <text x="520" y="198" font-family="system-ui" font-size="11" fill="#334155">将来の拡張スコープ</text>
 </svg>

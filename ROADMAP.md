@@ -2,12 +2,12 @@
 
 This document tracks the high-level development status, architectural decisions, and future milestones for the Sorane (SRN) ecosystem.
 
-## 🚀 Current Status (2025-12-30)
+## 🚀 Current Status (2025-12-31)
 
 | Component | Status | Highlights |
 | :--- | :--- | :--- |
-| **SRN (SSG)** | Stable (v2) | Hybrid PQC signatures, Native IVS, Web/A consolidation. |
-| **Web/A Form** | Production | Hosted within SRN site; Guest DID submission enabled. |
+| **SRN (SSG)** | Stable (v2) | Hybrid PQC signatures, Native IVS, **4-Layer Trust Model**. |
+| **Web/A Form** | Production | **L2 Encryption** enabled; **Document Stating Process** introduced. |
 | **Folio (Client)** | Beta | CLI for sync/send/admin, VC-enabled transport, Hybrid DIDs. |
 | **Folio (Remote)** | Production | Firebase Functions (WASM enabled), VC-based Authorization. |
 | **Infrastructure**| Production | Firebase Functions/Hosting, Rust/WASM Cryptography. |
@@ -41,6 +41,7 @@ This document tracks the high-level development status, architectural decisions,
 - [x] **Hybrid DIDs**: Dual-key (Ed25519 + ML-DSA-44) implementation in Folio.
 - [ ] **Binary COSE VCs**: Optimizing for size and mobile transport.
 - [ ] **C2PA Maturity**: Formalizing the font provenance manifest (SRNC).
+- [ ] **Quality Control**: Implementing the formal **Document Stating Process** with Red Team feedback loops.
 
 ---
 
@@ -51,4 +52,4 @@ This document tracks the high-level development status, architectural decisions,
 - **User Agency**: The Folio (data container) belongs to the user, not the server.
 
 ---
-*Last Updated: 2025-12-30*
+*Last Updated: 2025-12-31*
