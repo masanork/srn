@@ -3,7 +3,7 @@ title: "Design: Web/A Layer 2 Hybrid HPKE Context (X25519 + ML-KEM-768)"
 layout: article
 author: "Web/A Project"
 date: 2025-01-05
-status: draft
+status: reference
 ---
 
 This design document specifies the hybrid KEM context and HPKE key schedule

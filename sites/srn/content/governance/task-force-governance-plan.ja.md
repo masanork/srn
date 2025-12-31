@@ -4,7 +4,6 @@ title: "草案：Web/A 信頼統治タスクフォース（Security & Legal Task
 layout: article
 author: "プロジェクト・ストラテジー・チーム"
 date: 2025-12-31
-draft: true
 ai_generated: true
 ---
 

@@ -3,7 +3,6 @@ title: "Governance Committee Feedback on AI Risk Analysis (v1)"
 layout: article
 date: 2025-12-31
 description: "Review of the Product Team's pivot strategy in response to Gemini 3 and ChatGPT risk reports."
-draft: true
 ai_generated: true
 ---
 

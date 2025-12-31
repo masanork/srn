@@ -3,7 +3,6 @@ title: "Trial Calculation: API Economy vs. Document Economy - Structural Change 
 layout: article
 author: "Sorane Project Strategy Team"
 date: 2025-12-31
-draft: true
 ai_generated: true
 ---
 
