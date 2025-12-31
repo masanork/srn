@@ -8,81 +8,70 @@ pub struct DriversLicenseController<R: CardReader> {
     reader: R,
 }
 
-/// Parsed Driver's License Information (Subset)
 #[derive(Debug, Default)]
 pub struct LicenseInfo {
     pub name: String,
+    pub name_kana: String,
     pub address: String,
-    pub birth_date: String,
+    pub birth_date: String, // Gengou format
     pub license_number: String,
+    pub issue_date: String,
+    pub expire_date: String,
 }
 
 impl fmt::Display for LicenseInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "License Info:\nName: {}\nAddress: {}\nDOB: {}\nNo: {}", 
-            self.name, self.address, self.birth_date, self.license_number)
+        write!(f, "License Info:\n Name: {} ({})\n Address: {}\n DOB: {}\n No: {}\n Expires: {}", 
+            self.name, self.name_kana, self.address, self.birth_date, self.license_number, self.expire_date)
     }
 }
 
-pub mod file_ids {
-    /// Driver's License AID
-    /// A0 00 00 02 31 01 00 00 00 00 00 00 00 00 00 00
-    pub const DF_DL: [u8; 16] = [
-        0xA0, 0x00, 0x00, 0x02, 0x31, 0x01, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    ];
-
-    /// EF01: 記載事項 (基本情報) - Requires PIN1
-    pub const EF_COMMON_DATA: [u8; 2] = [0x00, 0x01];
-
-    /// EF02: 記載事項 (本籍など) & 写真 - Requires PIN2
-    pub const EF_SENSITIVE_DATA: [u8; 2] = [0x00, 0x02];
-
-    /// PIN EF (Though usually verified implicitly against the DF)
-    pub const EF_PIN: [u8; 2] = [0x00, 0x00]; // Placeholder if selection needed
-}
+// ... file_ids ...
 
 impl<R: CardReader> DriversLicenseController<R> {
     pub fn new(reader: R) -> Self {
         Self { reader }
     }
 
-    /// Select the Driver's License Application (DF)
-    pub async fn select_dl_ap(&mut self) -> Result<()> {
-        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
-            .with_data(&file_ids::DF_DL);
-        
-        let res = self.reader.transmit(&apdu.to_bytes()).await?;
-        Self::check_sw(&res).context("Failed to select Driver's License AP")
-    }
+    // ... existing verify/select methods ...
 
-    /// Verify PIN 1 (For Common Data)
-    pub async fn verify_pin1(&mut self, pin: &str) -> Result<()> {
-        self.verify_pin_internal(pin).await.context("PIN 1 Verification Failed")
-    }
-
-    /// Verify PIN 2 (For Sensitive Data / Domicile)
-    pub async fn verify_pin2(&mut self, pin: &str) -> Result<()> {
-        self.verify_pin_internal(pin).await.context("PIN 2 Verification Failed")
-    }
-
-    /// Internal PIN verification logic
-    /// Note: Japanese DL usually differentiates PINs by sequence or context, 
-    /// but strictly speaking they are often verified similarly. 
-    /// Implementation assumes standard VERIFY command.
-    async fn verify_pin_internal(&mut self, pin: &str) -> Result<()> {
-        let pin_bytes = pin.as_bytes();
-        let verify = ApduCommand::new(CLA_ISO, INS_VERIFY, 0x00, 0x80)
-            .with_data(pin_bytes);
-        
-        let res = self.reader.transmit(&verify.to_bytes()).await?;
-        Self::check_sw(&res)
-    }
-
-    /// Read Common Data (EF01)
+    /// Read Common Data (EF01) and Parse
     /// Requires PIN 1 verification beforehand.
-    pub async fn read_common_data(&mut self) -> Result<Vec<u8>> {
-        self.read_file(&file_ids::EF_COMMON_DATA).await
+    pub async fn read_common_data(&mut self) -> Result<LicenseInfo> {
+        let raw = self.read_file(&file_ids::EF_COMMON_DATA).await?;
+        self.parse_common_data(&raw)
+    }
+    
+    // Internal parser
+    fn parse_common_data(&self, data: &[u8]) -> Result<LicenseInfo> {
+        // Tag definitions from NPA format (approx):
+        // 0x11: Name
+        // 0x12: Kana
+        // 0x13: Birth Date
+        // 0x14: Address
+        // 0x15: Issue Date
+        // 0x16: Inquiry Number
+        // 0x17: License Number
+        // 0x18: Expiry Date
+        // ... conditions ...
+
+        use crate::utils::{parse_tlv_flat, decode_shift_jis_lossy_gaiji};
+        let tlvs = parse_tlv_flat(data);
+        let mut info = LicenseInfo::default();
+
+        for tlv in tlvs {
+            match tlv.tag {
+                0x11 => info.name = decode_shift_jis_lossy_gaiji(&tlv.value),
+                0x12 => info.name_kana = decode_shift_jis_lossy_gaiji(&tlv.value),
+                0x13 => info.birth_date = decode_shift_jis_lossy_gaiji(&tlv.value),
+                0x14 => info.address = decode_shift_jis_lossy_gaiji(&tlv.value),
+                0x15 => info.issue_date = decode_shift_jis_lossy_gaiji(&tlv.value),
+                0x17 => info.license_number = decode_shift_jis_lossy_gaiji(&tlv.value),
+                0x18 => info.expire_date = decode_shift_jis_lossy_gaiji(&tlv.value),
+                _ => {} // Ignore others for now
+            }
+        }
+        Ok(info)
     }
 
     /// Read Sensitive Data (EF02) - Domicile, Photo

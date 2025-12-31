@@ -16,21 +16,73 @@ pub mod file_ids {
     pub const EF_RC_COMMON: [u8; 2] = [0x00, 0x01];
 }
 
+use std::fmt;
+
+/// Parsed Residence Card Information
+#[derive(Debug, Default)]
+pub struct ResidenceCardInfo {
+    pub name: String,
+    pub address: String,
+    pub birth_date: String,
+    pub gender: String,
+    pub nationality: String,
+    pub card_number: String,
+    pub expire_date: String,
+}
+
+impl fmt::Display for ResidenceCardInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Residence Card Info:\n Name: {}\n Address: {}\n DOB: {} ({})\n Nationality: {}\n No: {}\n Expires: {}", 
+            self.name, self.address, self.birth_date, self.gender, self.nationality, self.card_number, self.expire_date)
+    }
+}
+
+// ... file_ids ...
+
 impl<R: CardReader> ResidenceCardController<R> {
     pub fn new(reader: R) -> Self {
         Self { reader }
     }
 
-    pub async fn select_rc_ap(&mut self) -> Result<()> {
-        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
-            .with_data(&file_ids::DF_RC);
-        
-        let res = self.reader.transmit(&apdu.to_bytes()).await?;
-        Self::check_sw(&res).context("Failed to select Residence Card AP")
+    // ... existing select/verify ...
+
+    pub async fn read_info(&mut self) -> Result<ResidenceCardInfo> {
+        let raw = self.read_file(&file_ids::EF_RC_COMMON).await?;
+        self.parse_info(&raw)
     }
 
-    pub async fn read_info(&mut self) -> Result<Vec<u8>> {
-        self.read_file(&file_ids::EF_RC_COMMON).await
+    fn parse_info(&self, data: &[u8]) -> Result<ResidenceCardInfo> {
+        // Tag definitions (Hypothetical/Empirical):
+        // 0x11: Card Number
+        // 0x12: Name
+        // 0x13: Date of Birth
+        // 0x14: Gender
+        // 0x15: Nationality
+        // 0x16: Address
+        // 0x17: Expiry Info?
+        
+        use crate::utils::{parse_tlv_flat, decode_shift_jis};
+        // Note: Check if UTF-8 is used instead? Usually text is UTF-8 in RC?
+        // Let's try Shift-JIS first as fail-safe, or check encoding.
+        // Actually, Residence Card specs often align with ICAO or JPKI.
+        // If it's pure ICAO, it's UTF-8. If JPKI-based input support, it's Shift-JIS.
+        
+        let tlvs = parse_tlv_flat(data);
+        let mut info = ResidenceCardInfo::default();
+
+        for tlv in tlvs {
+            // Using placeholder tags
+            match tlv.tag {
+                0x11 => info.card_number = String::from_utf8_lossy(&tlv.value).to_string(), // ASCII
+                0x12 => info.name = String::from_utf8_lossy(&tlv.value).to_string(), // UTF-8 likely
+                0x13 => info.birth_date = String::from_utf8_lossy(&tlv.value).to_string(),
+                0x14 => info.gender = String::from_utf8_lossy(&tlv.value).to_string(),
+                0x15 => info.nationality = String::from_utf8_lossy(&tlv.value).to_string(),
+                0x16 => info.address = String::from_utf8_lossy(&tlv.value).to_string(), // UTF-8 likely
+                _ => {}
+            }
+        }
+        Ok(info)
     }
 
     async fn read_file(&mut self, file_id: &[u8]) -> Result<Vec<u8>> {

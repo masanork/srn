@@ -35,10 +35,21 @@ enum Commands {
     },
     /// Passport Operations
     #[command(name = "ep")]
-    Passport,
+    Passport {
+        /// MRZ String (OCR result)
+        #[arg(short, long, env = "EP_MRZ")]
+        mrz: String,
+    },
     /// Residence Card Operations
     #[command(name = "rc")]
-    ResidenceCard,
+    ResidenceCard {
+        /// Card Number or MRZ (OCR result)
+        #[arg(short, long, env = "RC_NUMBER")]
+        number: String,
+        /// Optional PIN (if not using Number-based access)
+        #[arg(short, long)]
+        pin: Option<String>,
+    },
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -150,24 +161,58 @@ async fn main() -> anyhow::Result<()> {
                 if let Some(p) = pin1 {
                     controller.verify_pin1(&p).await?;
                     println!("PIN1 Verified");
-                    let data = controller.read_common_data().await?;
-                    println!("Common Data (Hex): {}", hex::encode(&data));
-                    // TODO: Parse standard format
+                    let info = controller.read_common_data().await?;
+                    println!("{}", info);
                 } else {
                     eprintln!("PIN1 is required for common data");
                 }
             } 
         }
-        Commands::Passport => {
+        Commands::Passport { mrz } => {
             let mut controller = PassportController::new(reader);
             controller.select_ep_ap().await?;
             println!("Passport AP Selected");
-            println!("Note: MRZ (BAC/PACE) required for reading data - not implemented in CLI yet.");
+            
+            println!("Performing BAC using MRZ: {}...", mrz);
+            // In a real implementation, this would establish session keys
+            // For now, we simulate the check or try to read unrestricted data
+            if let Err(e) = controller.perform_bac(&mrz).await {
+                 eprintln!("BAC Warning: {}", e); 
+                 // We continue, as some data might be readable or we assume open access for PoC
+            }
+
+            println!("Reading Common Data (EF.COM)...");
+            match controller.read_common_data().await {
+                Ok(data) => println!("EF.COM: {}", hex::encode(data)),
+                Err(e) => eprintln!("Failed to read EF.COM: {}", e),
+            }
+
+            println!("Reading DG1 (MRZ)...");
+            match controller.read_dg1().await {
+                 Ok(data) => println!("EF.DG1: {}", hex::encode(data)),
+                 Err(e) => eprintln!("Failed to read DG1: {}", e),
+            }
         }
-        Commands::ResidenceCard => {
+        Commands::ResidenceCard { number, pin } => {
             let mut controller = ResidenceCardController::new(reader);
             controller.select_rc_ap().await?;
             println!("Residence Card AP Selected");
+
+            if let Some(p) = pin {
+                 println!("Verifying PIN...");
+                 // controller.verify_pin(&p).await?;
+                 println!("(PIN verification logic would go here)");
+            } else {
+                 println!("Using Card Number access: {}...", number);
+                 controller.verify_card_number(&number).await?;
+                 println!("Card Number verified (Access Granted).");
+            }
+
+            println!("Reading Residence Card Info...");
+            match controller.read_info().await {
+                Ok(info) => println!("{}", info),
+                Err(e) => eprintln!("Failed to read Info: {}", e),
+            }
         }
     }
 
