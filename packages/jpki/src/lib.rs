@@ -1,6 +1,7 @@
 pub mod apdu;
 pub mod crypto;
 pub mod jpki;
+pub mod drivers_license;
 pub mod reader;
 pub mod transport;
 

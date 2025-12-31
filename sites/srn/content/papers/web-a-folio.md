@@ -211,7 +211,8 @@ To bridge this gap without the complexity of full-scale government ID "VC-ificat
 3.  **Binding Proof**: Store this signature as a "Binding VC" in the Folio. This proof states: "The holder of this national ID credential has authorized this specific PassKey."
 4.  **Presentation**: When presenting any other certificate (e.g., a degree or a residence permit), the user signs the presentation (VP) with the PassKey and includes the Binding Proof.
 
-This architecture enables **indirect identity proof**: daily operations are completed with simple biometric authentication (PassKey), while the signature chain provides a cryptographic link back to the government-issued identity without needing to store the full government ID in the Folio.
+Daily operations are seamlessly completed with biometric authentication (Touch ID/Face ID). However, this does not mean Web/A Folio itself functions as a legal identity document.
+Strict identity verification (KYC) must remain the domain of legally mandated identity verification methods (e.g., My Number Card, Driver's License, Passport). The role of Web/A Folio is to provide **verifiable proof that the submitted documents were sent from a device under the user's control, with the user's explicit intent**, maintained through the cryptographic trust chain.
 
 ## 8. Why Not "Wallet"?
 
