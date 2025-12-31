@@ -7,21 +7,23 @@ description: "Targeted IssuanceとFIDO鍵バインドを採用した、プライ
 ai_generated: true
 ---
 
-# Web/A + VPによる行政証明書提示ツール仕様案 (Draft v2)
+# Web/A + VP Administrative Certificate Presentation Tool Specification (Draft v2.1)
 
 **Status:** APPROVED (PoC Phase)
+**Date:** 2026-01-01
 
-## 1. 目的
+## 1. Overview
+A technical specification for a tool that reads public personal authentication (JPKI) and other IC card data (Driver's License, Residence Card, Passport) using a native bridge app, converts them into Verifiable Presentations (VP), and presents them online.
 
-本仕様は、以下を目的とする。
-
-- マイナンバーカード保有者が **自らに紐づく行政証明書類（住民票、課税証明書等）を第三者に提示していること** を機械的に検証可能な形で証明・配布可能にすること。
-- 提示物を **Web/A (Web Archive) 単一ファイル** として完結させ、専用アプリ（Wallet）を強制せずにブラウザのみで検証可能にすること。
-- ゼロ知識証明（ZKP）等の高度な暗号技術を必須とせず、**現行の公開鍵暗号基盤（PKI）の延長線上で実装可能** な「Targeted Issuance（宛先限定発行）」モデルを採用し、プライバシーと相互運用性を両立する。
+## 2. Supported Documents (Scope)
+1.  **My Number Card (JPKI)**: Identity verification (4 attributes) & Electronic signature.
+2.  **Driver's License (DL)**: Verify driving eligibility and identity.
+3.  **Residence Card (RC)**: Verify residency status and period of stay.
+4.  **Passport (EP)**: Global identity verification (ICAO compliant).
 
 ---
 
-## 2. 設計原則（Privacy & Trust）
+## 3. 設計原則（Privacy & Trust）
 
 本仕様では、ZKPを用いずに名寄せ防止（Unlinkability）を実現するため、**「1回の提示につき、1つの固有なWeb/Aを発行する（Targeted Issuance）」** モデルを基本とする。
 

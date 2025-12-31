@@ -1,7 +1,7 @@
 pub mod model;
 
 use wasm_bindgen::prelude::*;
-use jpki::{JpkiController, WebUsbReader};
+use civ::{JpkiController, WebUsbReader};
 
 #[wasm_bindgen]
 pub fn greet() -> String {
