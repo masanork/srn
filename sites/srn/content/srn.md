@@ -1,5 +1,5 @@
 ---
-title: "Sorane (空音): Typography-First SSG"
+title: "Sorane: Signed Resource Network"
 layout: width
 font: 
   - Serif
@@ -9,11 +9,11 @@ ai_generated: true
 
 
 
-# Sorane (空音): Typography-First SSG
+# Sorane (空音): Signed Resource Network
 
 <div class="hero-section">
 <div class="logo-area font-logo">空音</div>
-<p class="lead">SORANE (空音): The Reference Implementation for <br><strong>Precision Typography</strong> & <strong>Long-term Authenticiy</strong>.</p>
+<p class="lead">SORANE (空音): The Trust Infrastructure for <br><strong>Signed Resource Network</strong> & <strong>Verifiable Data</strong>.</p>
 </div>
 
 <div class="vision-banner">
@@ -35,26 +35,26 @@ ai_generated: true
 <div class="dashboard-grid">
 <div class="panel">
 <div class="panel-header">
-    <span data-lang-en>CORE PHILOSOPHY</span>
-    <span data-lang-ja>基本理念</span>
+    <span data-lang-en>CORE VALUE PROPOSITION</span>
+    <span data-lang-ja>コア・バリュー</span>
 </div>
 <div class="panel-body">
 <ul class="spec-list">
-<li><strong>Zero Layout Shift (CLS 0)</strong>
-    <span data-lang-en>Subsetting fonts per page ensures content renders immediately with correct glyphs. No FOUT/FOIT.</span>
-    <span data-lang-ja>フォントをページ毎にサブセット化し、常に正しい字体で即座にレンダリング。レイアウト崩れを防ぎます。</span>
+<li><strong>Verifiable Ownership</strong>
+    <span data-lang-en>Cryptographic signatures prove origin and integrity. No central server required.</span>
+    <span data-lang-ja>暗号署名により、発行元と完全性を証明。中央集権サーバーに依存しません。</span>
 </li>
-<li><strong>Zero Request Overhead</strong>
-    <span data-lang-en>Fonts are embedded as Base64 Data URIs. No external font requests. Offline ready.</span>
-    <span data-lang-ja>フォントをBase64で埋め込み。外部リクエスト不要で、オフラインでも完全な表示を維持。</span>
+<li><strong>Portable Trust</strong>
+    <span data-lang-en>Data, logic, and view are bundled in one HTML file. Works offline and lasts forever.</span>
+    <span data-lang-ja>データ、ロジック、表示を単一のHTMLに封入。オフラインでも動作し、永続します。</span>
 </li>
-<li><strong>AI-First Workflows</strong>
-    <span data-lang-en>Documents are structured for agents to read, fill, and summarize end-to-end.</span>
-    <span data-lang-ja>AIエージェントによる読み取り、自動入力、要約を前提とした構造化ドキュメント。</span>
+<li><strong>Privacy by Design (L2E)</strong>
+    <span data-lang-en>Layer 2 Encryption (HPKE) ensures only the recipient can view the payload.</span>
+    <span data-lang-ja>HPKEによるL2暗号化。意図した受信者だけが内容を復号・閲覧可能です。</span>
 </li>
-<li><strong>Future-Proof Auth</strong>
-    <span data-lang-en>Built-in Post-Quantum Cryptography (ML-DSA-44) support for document signing.</span>
-    <span data-lang-ja>耐量子暗号 (ML-DSA-44) を標準サポート。長期的な真正性を保証。</span>
+<li><strong>AI-Native Context</strong>
+    <span data-lang-en>Structured JSON-LD + Semantic HTML for perfect AI agent interoperability.</span>
+    <span data-lang-ja>構造化JSON-LDと意味論的HTMLにより、AIエージェントとの完全な相互運用性を実現。</span>
 </li>
 </ul>
 </div>
@@ -63,55 +63,58 @@ ai_generated: true
 <div class="panel">
 <div class="panel-body nav-links">
 <div data-lang-en>
-<div class="nav-subheader">Core Components</div>
-<a href="./papers/web-a.html" class="nav-item compact">
-<span class="icon">📄</span><span class="label">Web/A Format</span>
+<div class="nav-subheader"> The Trust Stack (Protocol Suite)</div>
+<a href="./papers/web-a.html" class="nav-item">
+<span class="icon">📄</span> <span class="label">Web/A Format</span>
+<span class="desc">The Verifiable Document Standard (HTML + JSON-LD).</span>
 </a>
-<a href="./papers/web-a-form.html" class="nav-item compact">
-<span class="icon">🧾</span><span class="label">Web/A Form</span>
+<a href="./papers/web-a-form.html" class="nav-item">
+<span class="icon">🧾</span> <span class="label">Web/A Form</span>
+<span class="desc">Signed Input Interface & L2 Encryption.</span>
 </a>
-<a href="./papers/web-a-folio.html" class="nav-item compact">
-<span class="icon">💼</span><span class="label">Web/A Folio</span>
+<a href="./papers/web-a-folio.html" class="nav-item">
+<span class="icon">💼</span> <span class="label">Web/A Folio</span>
+<span class="desc">The "Browser Wallet" & Key Management.</span>
 </a>
-<a href="./papers/web-a-post-architecture.html" class="nav-item compact">
-<span class="icon">📮</span><span class="label">Web/A Post</span>
+<a href="./papers/web-a-post-architecture.html" class="nav-item">
+<span class="icon">📮</span> <span class="label">Web/A Post</span>
+<span class="desc">Decentralized Delivery & Routing Protocol.</span>
 </a>
 
-<div class="nav-subheader">Strategy & Technical Specs</div>
+<div class="nav-subheader">Strategic Resources</div>
 <div class="spec-links-grid">
-<a href="./papers/web-a-ecosystem.html" style="font-weight:bold; border-color:var(--accent-color);">🕸️ Ecosystem Overview</a>
-<a href="./governance.html" style="font-weight:bold; color:var(--highlight);">⚖️ Governance & Audits</a>
-<a href="./papers/web-a-l2-market-comparison.html">Competitive Analysis</a>
-<a href="./papers/web-a-l2-encryption.html">L2 Encryption</a>
-<a href="./papers/context-routing-protocol.html">Context Routing</a>
-<a href="./papers/folio-key-management-architecture.html">Key Management & Trust Anchors</a>
-<a href="./guide/prompts.ja.html">AI Prompt Collection (Draft)</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Governance & Audits</a>
+<a href="./papers/api-economy-vs-document-economy.html">📊 API vs Document Economy</a>
+<a href="./papers/web-a-l2-security-audit-v8.html">🛡️ L2 Security Audit (v8)</a>
+<a href="./papers/web-a-vp-generator-spec.html">🆔 VP Generator Spec (Gov)</a>
 </div>
 </div>
+
 <div data-lang-ja>
-<div class="nav-subheader">コア・プロダクト</div>
-<a href="./papers/web-a.ja.html" class="nav-item compact">
-<span class="icon">📄</span><span class="label">Web/A フォーマット</span>
+<div class="nav-subheader">SRN トラスト・スタック (構成要素)</div>
+<a href="./papers/web-a.ja.html" class="nav-item">
+<span class="icon">📄</span> <span class="label">Web/A Format</span>
+<span class="desc">検証可能なドキュメント規格 (HTML + JSON-LD)。</span>
 </a>
-<a href="./papers/web-a-form.ja.html" class="nav-item compact">
-<span class="icon">🧾</span><span class="label">Web/A Form</span>
+<a href="./papers/web-a-form.ja.html" class="nav-item">
+<span class="icon">🧾</span> <span class="label">Web/A Form</span>
+<span class="desc">署名付き入力インターフェース ＆ L2暗号化。</span>
 </a>
-<a href="./papers/web-a-folio.ja.html" class="nav-item compact">
-<span class="icon">💼</span><span class="label">Web/A Folio</span>
+<a href="./papers/web-a-folio.ja.html" class="nav-item">
+<span class="icon">💼</span> <span class="label">Web/A Folio</span>
+<span class="desc">ブラウザウォレット ＆ 鍵管理アーキテクチャ。</span>
 </a>
-<a href="./papers/web-a-post-architecture.ja.html" class="nav-item compact">
-<span class="icon">📮</span><span class="label">Web/A Post</span>
+<a href="./papers/web-a-post-architecture.ja.html" class="nav-item">
+<span class="icon">📮</span> <span class="label">Web/A Post</span>
+<span class="desc">分散型配送 ＆ ルーティングプロトコル。</span>
 </a>
 
-<div class="nav-subheader">戦略・技術仕様</div>
+<div class="nav-subheader">戦略・重要資料</div>
 <div class="spec-links-grid">
-<a href="./papers/web-a-ecosystem.ja.html" style="font-weight:bold; border-color:var(--accent-color);">🕸️ エコシステム概観</a>
-<a href="./governance.html" style="font-weight:bold; color:var(--highlight);">⚖️ ガバナンス ＆ 監査報告</a>
-<a href="./papers/web-a-l2-market-comparison.ja.html">市場競合分析</a>
-<a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
-<a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
-<a href="./papers/folio-key-management-architecture.ja.html">鍵管理アーキテクチャ</a>
-<a href="./guide/prompts.ja.html">AI プロンプト集</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ ガバナンス ＆ 監査報告</a>
+<a href="./papers/api-economy-vs-document-economy.ja.html">📊 試算：API経済 vs 書類経済</a>
+<a href="./governance/web-a-l2-security-audit-v8.ja.html">🛡️ L2 セキュリティ監査 (v8)</a>
+<a href="./papers/web-a-vp-generator-spec.html">🆔 行政証明書提示ツール仕様</a>
 </div>
 </div>
 </div>
