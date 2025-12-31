@@ -56,10 +56,35 @@ pub const INS_COMPUTE_DIGITAL_SIGNATURE: u8 = 0x2A;
 
 // File IDs (DF/EF)
 pub mod file_ids {
-    pub const DF_JPKI: [u8; 7] = [0xD3, 0x92, 0xF0, 0x00, 0x26, 0x01, 0x00];
+    /// JPKI Application AID
+    /// D3 92 F0 00 26 01 00 00 00 01
+    pub const DF_JPKI: [u8; 10] = [
+        0xD3, 0x92, 0xF0, 0x00, 0x26, 0x01, 0x00, 0x00, 0x00, 0x01
+    ];
+
+    /// Card Surface Input Support Application AID
+    /// D3 92 10 00 31 00 01 01 04 08
+    pub const DF_INPUT_SUPPORT: [u8; 10] = [
+        0xD3, 0x92, 0x10, 0x00, 0x31, 0x00, 0x01, 0x01, 0x04, 0x08
+    ];
+
+    /// Authentication PIN EF
     pub const EF_AUTH_PIN: [u8; 2] = [0x00, 0x18];
+
+    /// Signing PIN EF
     pub const EF_SIGN_PIN: [u8; 2] = [0x00, 0x1B];
+
+    /// Card Surface Input Support PIN EF
+    pub const EF_INPUT_SUPPORT_PIN: [u8; 2] = [0x00, 0x11];
+
+    /// My Number EF (under Input Support AP)
     pub const EF_MYNUMBER: [u8; 2] = [0x00, 0x01];
+
+    /// Attributes EF (Basic 4 Info: Name, Address, DOB, Gender) (under Input Support AP)
+    pub const EF_ATTRIBUTES: [u8; 2] = [0x00, 0x02];
+
+    /// User Authentication Certificate EF
+    pub const EF_CERT_AUTH: [u8; 2] = [0x00, 0x0A];
 }
 
 #[cfg(test)]

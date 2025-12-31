@@ -36,6 +36,18 @@ enum Commands {
         /// Data to sign (string)
         #[arg(short, long)]
         data: String,
+    },
+    /// Read My Number (Individual Number)
+    Mynumber {
+        /// PIN (4 digits for Card Surface Input Support)
+        #[arg(short, long, env = "JPKI_PIN")]
+        pin: String,
+    },
+    /// Read Card Attributes (Basic 4 Info: Name, Address, DOB, Gender)
+    Card {
+        /// PIN (4 digits for Card Surface Input Support)
+        #[arg(short, long, env = "JPKI_PIN")]
+        pin: String,
     }
 }
 
@@ -50,14 +62,15 @@ async fn main() -> anyhow::Result<()> {
     println!("Connected to reader: {}", reader_name);
 
     let mut controller = JpkiController::new(reader);
-    controller.select_jpki_ap().await?;
-    println!("JPKI AP Selected");
 
     match cli.command {
         Commands::Info => {
+            controller.select_jpki_ap().await?;
+            println!("JPKI AP Selected");
             println!("Card is ready.");
         }
         Commands::Cert { type_, output } => {
+            controller.select_jpki_ap().await?;
             if type_ != "auth" {
                 eprintln!("Only 'auth' certificate is supported in this version.");
                 return Ok(());
@@ -73,6 +86,7 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         Commands::Sign { pin, data } => {
+            controller.select_jpki_ap().await?;
             let ef_pin = [0x00, 0x18]; // Auth PIN EF
             println!("Verifying PIN...");
             controller.verify_pin(&ef_pin, &pin).await?;
@@ -80,6 +94,17 @@ async fn main() -> anyhow::Result<()> {
 
             let signature = controller.compute_signature(data.as_bytes()).await?;
             println!("Signature: {}", hex::encode(signature));
+        }
+        Commands::Mynumber { pin } => {
+            println!("Reading My Number...");
+            // select_input_support_ap is called inside read_mynumber
+            let my_number = controller.read_mynumber(&pin).await?;
+            println!("My Number: {}", my_number);
+        }
+        Commands::Card { pin } => {
+            println!("Reading Card Attributes...");
+            let info = controller.read_attributes(&pin).await?;
+            println!("{}", info);
         }
     }
 
