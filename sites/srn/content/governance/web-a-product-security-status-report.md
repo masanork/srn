@@ -7,6 +7,8 @@ description: "Summary of current considerations and technical challenges regardi
 ai_generated: true
 ---
 
+> **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.
+
 ## 1. Objective
 
 The purpose of this report is to share the current security consideration status for Web/A L2 encryption and the Folio ecosystem with the Red Team, and to organize the discussion points for future detailed audits (v6 and beyond).

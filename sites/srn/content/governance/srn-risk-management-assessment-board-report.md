@@ -6,6 +6,8 @@ date: 2025-01-15
 status: draft
 ---
 
+> **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.
+
 ## 報告の目的と対象
 
 本報告は、`web-a-l2-security-audit-index` に集約された一連の

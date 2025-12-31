@@ -17,6 +17,7 @@ export interface BlogData {
     description?: string;
     profileUrl?: string;
     featuredCount?: number;
+    folder?: string;
 }
 
 export function blogLayout(
@@ -36,6 +37,11 @@ export function blogLayout(
         item.path !== 'index.html'
     );
 
+    // If a specific folder is defined in the parent page, filter by that folder
+    if (data.folder) {
+        articles = articles.filter(item => item.path.startsWith(data.folder + '/'));
+    }
+
     let latestArticleHtml = '';
 
     if (latestArticleContent && latestArticleData) {
@@ -44,12 +50,17 @@ export function blogLayout(
 
         const d = latestArticleData;
 
-        // Fix relative links in the content if the article is in a subfolder (like papers/)
-        // This ensures links work when the article is displayed in the root blog stream
+        // Fix relative links in the content if the article is in a subfolder
+        // This ensures links work when the article is displayed in the root blog stream or a sub-folder blog
         let fixedContent = latestArticleContent;
-        if (d.path.startsWith('papers/')) {
-            // Use regex to avoid replaceAll if TS target is old
-            fixedContent = latestArticleContent.replace(/href="\.\//g, 'href="./papers/');
+        const subFolder = d.path.includes('/') ? d.path.substring(0, d.path.lastIndexOf('/')) : '';
+
+        if (subFolder) {
+            // If the blog page is in the same folder, no fix needed (simpler heuristic)
+            const currentFolder = relPath.includes('/') ? relPath.substring(0, relPath.lastIndexOf('/')) : '';
+            if (currentFolder !== subFolder) {
+                fixedContent = latestArticleContent.replace(/href="\.\//g, `href="./${subFolder}/`);
+            }
         }
 
         // Reconstruct the article view (similar to articleLayout but simplified for stream)

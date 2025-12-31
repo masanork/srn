@@ -6,6 +6,8 @@ date: 2025-12-30
 ai_generated: true
 ---
 
+> **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.
+
 This response acknowledges the Red Team report on the Web/A Folio transport concept.
 Our priority is to absorb the findings as a protective barrier while the team is
 mid-implementation. We will not advance production scope until explicit security

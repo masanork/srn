@@ -7,6 +7,8 @@ description: "Evaluating the validity of Web/A PoC deployment compared to legacy
 ai_generated: true
 ---
 
+> **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.
+
 ## 1. Audit Perspective: Endorsement of Relative Security Improvement
 
 The Red Team has carefully considered the inquiry from the Product Team regarding the "relative superiority over current vulnerable practices (PPAP, plaintext email, etc.)."

@@ -892,7 +892,7 @@ sequenceDiagram
   <li><a href="./papers/web-a.html">Web/A Whitepaper</a></li>
   <li><a href="./papers/web-a-l2-encryption.html">Web/A L2 Encryption</a></li>
   <li><a href="./papers/web-a-folio.html">Web/A Folio Concept</a></li>
-  <li><a href="./papers/web-a-l2-security-audit-v3.html">Re-Assessment v3</a></li>
+  <li><a href="./governance/web-a-l2-security-audit-v3.html">Re-Assessment v3</a></li>
 </ul>
 </div>
 

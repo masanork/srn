@@ -1,5 +1,5 @@
 ---
-title: "Trial Calculation: API Economy vs. Document Economy - The Connectivity Revolution"
+title: "Trial Calculation: API Economy vs. Document Economy - Structural Change in Connectivity Costs"
 layout: article
 author: "Sorane Project Strategy Team"
 date: 2025-12-31
@@ -7,68 +7,106 @@ draft: true
 ai_generated: true
 ---
 
-## 1. Executive Summary
+> **SIMULATION NOTICE:** This document (calculation, comparison, analysis) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or economic forecast by any official entity.
 
-In contemporary digital transformation, the primary bottleneck is "connectivity cost." This paper compares the current prevailing **API Economy (API Integration Model)** with the **Document Economy (Verifiable Document Model)** proposed by Web/A. We provide a simulation to estimate how the costs of connecting global systems shift between these two models.
+## 1. Executive Summary: The Evolutionary Spiral of Data Exchange
 
-## 2. The API Economy Limit: The N^2 Connectivity Explosion
+In modern digitalization, "connectivity cost" remains the primary bottleneck. However, we must not forget history. The transition from the grueling manual coordination of fixed-length files and CSVs to the current **API Economy** was a "Great Liberation" for the information society.
 
-In the API Economy, systems must explicitly define interfaces, manage authentication, and monitor health between every Sourcing System and Consuming System.
+This paper looks back at the historical evolution of data exchange and analyzes why the "Document/Semantic-driven Economy"—which previously failed to go mainstream—is now poised for a resurgence through Web/A, from an economic standpoint.
 
-### 2.1. Estimated Cost Breakdown per Connection
-Establishing and maintaining a secure, cross-organizational API integration typically incurs the following costs:
+## 2. Historical Context: The Three Phases
 
-1.  **Requirements & Design**: Schema mapping, business logic alignment ($10k+)
-2.  **Auth & Security**: Implementation of OAuth, IP whitelisting, key management ($5k+)
-3.  **Development & Verification**: Implementation of API clients/servers, integration testing ($20k+)
-4.  **Ops & Maintenance**: Dependency updates, versioning, downtime response ($5k+/year)
-5.  **Legal & Compliance**: Integration contracts, SLAs, data privacy policies ($5k+)
+### Phase 0: Tight Coupling & Batch Processing (Fixed-length / CSV / EDI)
+Starting in the 1970s, connecting systems required months of negotiation and individual implementation at the binary/byte level.
+- **Characteristics**: Extreme rigidity, expensive leased lines, and batch processing.
+- **Cost**: Astronomical coordination overhead.
 
-**Estimated Total (Year 1): $\approx$ $45k per connection**
+### Phase 0.5: The Spreadsheet Revolution (VisiCalc / 1-2-3 / Excel)
+Before the API Economy took center stage, the true revolution in administrative digitalization was the spreadsheet.
+- **Achievements**: For the first time, office workers—not just specialized engineers—could build their own aggregation and business logic (formulas, macros). This was the "Democratization of Computing" and the root of modern "No-Code" culture.
+- **Challenges**: Data remained localized and locked in silos. It lacked "Verifiability" as official evidence and couldn't support a cross-organizational "Chain of Trust."
 
-### 2.2. The N-to-M Explosion
-As the number of organizations (N) grows, the number of required connections grows exponentially. For 1,000 organizations to exchange data:
-- **Theoretical Connections**: $1,000 \times 1,000 = 1,000,000$ potential paths.
-- **Real-world Solution**: Consolidation into massive Hub platforms.
-    - **Hidden Costs**: Platform rent extraction, loss of data sovereignty, and Single Point of Failure (SPOF) risks.
+### Phase 0.8: The Heavyweight Vision (SOAP / SOA)
+Around 2000, the industry attempted strict standardization for enterprise integration using XML-based SOAP and WSDL.
+- **Achievements**: Established robust integration based on "Contracts (WSDL)" and security standards like WS-Security. A spiritual predecessor to the "Verifiable Trust" Web/A aims for.
+- **Failures**: Overly complex specifications ("XML Hell") and rigid dependency on transport protocols. It proved brittle to change, lost developer support, and was overtaken by the lightweight REST.
 
-## 3. The Document Economy: The N + M Decoupled Model
+### Phase 1: The Victory of the API Economy (REST / JSON)
+Since the 2000s, the API Economy realized "real-time loose coupling" and dramatically improved the Developer Experience (DX).
+- **Achievements**: Standardized connectivity, the explosion of Cloud/Microservices, and interconnected ecosystems.
+- **Current Challenges**: Maintenance costs grow $O(N)$ with every new partner. Excessive reliance on central Hubs leads to loss of data sovereignty.
 
-In the Web/A model, an issuer outputs a "verifiable file," and a verifier checks the file according to "standardized verification rules." Systems never need a direct handshake.
+### Phase 2: Return to the Document Economy (Web/A)
+The ideals that SGML, XML, and the Semantic Web once pursued—leaving a "trail of failed attempts" due to their complexity—are now being redefined with **Verifiable Technologies (DID/VC)** and **AI**.
+- **Inevitability**: Instead of trusting a partner's server, we trust the "evidence" embedded within the document. A world of zero marginal cost where you only "verify," not "connect."
 
-### 3.1. Cost Structure of the Web/A Model
-1.  **Issuance Cost (N)**: Implementing a one-time Web/A export function using the standard SDK.
-2.  **Verification Cost (M)**: Implementing a Web/A reading and verification function. Since browsers and generic libraries handle the heavy lifting, the burden is minimal.
-3.  **Connection Cost**: **$0**. Because the file acts as a "Common Media", no individual handshake is required regardless of who the recipient is.
+## 3. Comparative Simulation: Connecting 1,000 Organizations
 
-## 4. Simulation: Connecting 1,000 Organizations
+Comparing network topologies reveals how costs scale. In the API model, "Connections (Lines)" multiply costs. In the Document model, "Nodes (Points)" remain autonomous.
 
-We estimate the total societal cost to enable mutual data exchange between 1,000 systems.
+<div class="mermaid">
+graph LR
+    subgraph "Phase 1: API Economy (Hub & Spoke)"
+        H((Hub Server))
+        A[Company A] <-->|$$ Cost| H
+        B[Company B] <-->|$$ Cost| H
+        C[Company C] <-->|$$ Cost| H
+        D[Company D] <-->|$$ Cost| H
+        style H fill:#f9f,stroke:#333,stroke-width:2px
+        linkStyle 0,1,2,3 stroke:#f00,stroke-width:2px;
+    end
 
-| Item | **API Economy (P2P/Mesh)** | **Document Economy (Web/A)** |
+    subgraph "Phase 2: Document Economy (Autonomous)"
+        WA[Company A] -->|Publish| DA(Web/A Doc)
+        WB[Company B] -->|Publish| DB(Web/A Doc)
+        WC[Company C] -->|Publish| DC(Web/A Doc)
+        
+        U[User / AI] -.->|Verify| DA
+        U -.->|Verify| DB
+        U -.->|Verify| DC
+        
+        style DA fill:#bbf,stroke:#333
+        style DB fill:#bbf,stroke:#333
+        style DC fill:#bbf,stroke:#333
+        linkStyle 4,5,6 stroke:#0f0,stroke-width:2px;
+    end
+</div>
+
+Total societal cost for enabling data exchange between 1,000 systems.
+
+| Item | **Phase 1: API Economy (Hub Model)** | **Phase 2: Document Economy (Web/A)** |
 | :--- | :--- | :--- |
-| **Connectivity Logic** | Tight Coupling (Per partner) | Loose Coupling (Standard-based) |
-| **Connections / Efforts** | **1,000,000 Units** (Mesh) | **2,000 Units** (Node logic only) |
-| **Total Initial Cost Est.** | **$45 Billion** ($45k × 1M) | **$10 Million** ($5k × 2,000) |
-| **Total Annual Maint.** | $5 Billion ($5k × 1M) | **Near Zero** (Archival permanence) |
-| **AI Readiness** | Per-API fine-tuning/mapping | **Universal across all Web/A docs** |
-| **Final Assessment** | **Impossible (requires Hubs)** | **Feasible & Scalable** |
+| **Nature of Link** | "Line" contract (Auth needed per link) | "Point" autonomy (Verifiable files) |
+| **Total Initial Cost Est.** | **~$20 Million** ($20k × 1,000) | **~$10 Million** ($100k × 1,000) |
+| **Annual Maintenance** | **~$4 Million/year** (Key rotation/Auth) | **Near Zero** (Spec maintenance only) |
+| **AI Compatibility** | Must learn/adapt to individual APIs | **Universal verification logic** |
+| **Scalability** | Limited by Hub capacity | **Infinite (No handshake needed)** |
 
-*Note: Estimates are based on average man-hours for cross-org integrations.*
+*Note: While API Economy significantly improved over Phase 0 through Hub aggregation, the "Hub Rent" and the "Last Mile" cost of individual hub integration remain.*
 
-## 5. The Revolution: Reducing Connectivity Costs to Near Zero
+## 4. Why "Now" for the Document Economy?
 
-This simulation demonstrates that transitioning to decentralized "Loose Coupling Trust" is not merely a technical choice—it is a **strategy to improve digital economic efficiency by a factor of 4,000x**.
+Previous attempts like XML and the Semantic Web failed because cryptographic authenticity (L2 Encryption/PQC) was immature, and the "Intelligent Agents (AI)" to process the data did not yet exist. Web/A's Phase 2 overcomes these past failures through several factors:
 
-### 5.1. Impact of the Document Economy
-By popularizing Web/A as "Self-Describing Evidence," the followings occur:
+1.  **Freedom from Handshakes**: Even if the issuer's server is down, the document's authenticity can be verified locally.
+2.  **Elimination of Switching Costs**: No longer locked into specific SaaS or API providers; systems can be swapped freely as long as they speak the "Common Currency" of Web/A documents.
+3.  **AI-Ready**: Moving from an era where humans read manuals to connect APIs, to an era where AI reads Web/A and automatically configures workflows.
 
-1.  **Long-tail Digitalization**: Low-value transactions (receipts, local permits) that could never justify API costs are suddenly integrated into the digital ecosystem for free.
-2.  **Unleashing AI Agents**: AI agents can process any Web/A file as a trusted data source immediately, without being broken by arbitrary API version updates.
-3.  **Freedom of Modernization**: Organizations can replace their backends at any time; issued records remain verifiable and readable as Web/A assets indefinitely.
+## 5. More Than Cost: Time and Inclusion
+Cost reduction is merely a financial metric. The true transformation of the Document Economy lies in speed and inclusivity.
+
+### 5.1. Dramatic Reduction in Time-to-Value
+API integration typically requires weeks or months of lead time for contract signing, spec coordination, security reviews, and connection testing.
+- **Web/A**: From the moment a document is received (Day 0), AI agents and verification tools can confirm its legitimacy and trigger business processes. It eliminates the "Waiting to Connect" period, capturing business opportunities instantly.
+
+### 5.2. Digitalizing the Long Tail
+Small-scale procedures and infrequent certificates—often left as paper or PDF because their ROI didn't justify API development—can now join the digital ecosystem effortlessly via Web/A.
+- This empowers not just enterprise "backbones" but also SMEs, freelancers, and local government counters to connect seamlessly on the same "Foundation of Trust."
 
 ## 6. Conclusion
 
-The API Economy relies on "Line" connections; their complexity becomes unsustainable as the network expands. The Document Economy relies on "Point" autonomy; it can expand infinitely, much like the universe, as long as a standard exists.
+The API Economy built the "Network Cables" of information. The Document Economy is building the "Currency (Media)" that can carry trust over those cables—or even without them.
 
-Web/A is the infrastructure needed to reclaim the billions currently spent on "integration debt" and redirect them toward **innovation and human experience.**
+While respecting the progress brought by APIs, we must overcome the limits of the "Connectivity Trap" through the verifiable, autonomous documents of Web/A. This is an inevitable return to **"From Connectivity to Autonomy"** in the history of digitalization.
+---

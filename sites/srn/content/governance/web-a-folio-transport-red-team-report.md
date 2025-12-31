@@ -6,6 +6,8 @@ date: 2025-12-30
 ai_generated: true
 ---
 
+> **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.
+
 This report assesses the Web/A Folio transport concept that surfaced after release
 approval. The assessment is grounded in the existing transport statements in the Web/A
 whitepaper and the Web/A Folio paper, not in hypothetical features. The goal is to expose
