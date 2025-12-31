@@ -1,11 +1,13 @@
 #[cfg(not(target_arch = "wasm32"))]
+use std::{thread, time};
+#[cfg(not(target_arch = "wasm32"))]
 use crate::reader::CardReader;
 #[cfg(not(target_arch = "wasm32"))]
 use anyhow::{anyhow, Result};
 #[cfg(not(target_arch = "wasm32"))]
 use async_trait::async_trait;
 #[cfg(not(target_arch = "wasm32"))]
-use pcsc::{Context as PcscContext, Scope, Card, ShareMode, Protocols, MAX_BUFFER_SIZE};
+use pcsc::{Context as PcscContext, Scope, Card, ShareMode, Protocols, MAX_BUFFER_SIZE, Error};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PcscReader {
@@ -34,11 +36,29 @@ impl PcscReader {
             .map_err(|e| anyhow!("Invalid reader name: {}", e))?
             .to_string();
 
-        let card = self.ctx.connect(reader_name, ShareMode::Shared, Protocols::ANY)
-            .map_err(|e| anyhow!("Failed to connect to card: {}", e))?;
+        // Retry logic for card connection
+        // Wait up to 5 seconds for a card to be inserted/recognized
+        let start = time::Instant::now();
+        let timeout = time::Duration::from_secs(5);
 
-        self.card = Some(card);
-        Ok(name_str)
+        loop {
+            match self.ctx.connect(reader_name, ShareMode::Shared, Protocols::ANY) {
+                Ok(card) => {
+                    self.card = Some(card);
+                    return Ok(name_str);
+                },
+                Err(Error::NoSmartcard) | Err(Error::RemovedCard) => {
+                    if start.elapsed() > timeout {
+                         return Err(anyhow!("Card not found in reader '{}'. Please ensure the card is inserted correctly.", name_str));
+                    }
+                    thread::sleep(time::Duration::from_millis(500));
+                    continue;
+                },
+                Err(e) => {
+                     return Err(anyhow!("Failed to connect to card: {}", e));
+                }
+            }
+        }
     }
 }
 

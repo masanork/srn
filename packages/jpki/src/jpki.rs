@@ -7,6 +7,23 @@ pub struct JpkiController<R: CardReader> {
     reader: R,
 }
 
+use std::fmt;
+
+#[derive(Debug, Default)]
+pub struct BasicInfo {
+    pub name: String,
+    pub address: String,
+    pub birth_date: String,
+    pub gender: String,
+}
+
+impl fmt::Display for BasicInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Name: {}\nAddress: {}\nDOB: {}\nGender: {}", 
+            self.name, self.address, self.birth_date, self.gender)
+    }
+}
+
 impl<R: CardReader> JpkiController<R> {
     pub fn new(reader: R) -> Self {
         Self { reader }
@@ -21,8 +38,17 @@ impl<R: CardReader> JpkiController<R> {
         Self::check_sw(&res).context("Failed to select JPKI AP")
     }
 
+    /// Select the Card Surface Input Support Application (DF)
+    pub async fn select_input_support_ap(&mut self) -> Result<()> {
+        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
+            .with_data(&file_ids::DF_INPUT_SUPPORT);
+        
+        let res = self.reader.transmit(&apdu.to_bytes()).await?;
+        Self::check_sw(&res).context("Failed to select Input Support AP")
+    }
+
     /// Verify PIN
-    /// pin_type: Usually 0x0018 (Auth) or 0x001B (Sign)
+    /// pin_type: Usually 0x0018 (Auth) or 0x001B (Sign) or 0x0011 (Input Support)
     /// pin: The pin string (e.g. "1234")
     pub async fn verify_pin(&mut self, pin_ef: &[u8], pin: &str) -> Result<()> {
         // 1. Select PIN EF (Not strictly required by ISO if implicit, but JPKI usually requires VERIFY command direct or after select)
@@ -85,6 +111,168 @@ impl<R: CardReader> JpkiController<R> {
         Self::check_sw(&data)?;
         // Strip SW
         Ok(data[0..data.len()-2].to_vec())
+    }
+
+    /// Read My Number (Individual Number)
+    /// Requires the Input Support PIN (4 digits).
+    pub async fn read_mynumber(&mut self, pin: &str) -> Result<String> {
+        // 1. Select Input Support AP
+        self.select_input_support_ap().await?;
+
+        // 2. Verify PIN
+        self.verify_pin(&file_ids::EF_INPUT_SUPPORT_PIN, pin).await?;
+
+        // 3. Select My Number EF
+        let select_mn = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x02, 0x0C)
+            .with_data(&file_ids::EF_MYNUMBER);
+        let res_sel = self.reader.transmit(&select_mn.to_bytes()).await?;
+        Self::check_sw(&res_sel).context("Failed to select MyNumber EF")?;
+
+        // 4. Read Binary (My Number is 12 digits + 1 byte padding/length usually, or 12 bytes + more.
+        // My Number file content is usually: 12 digits (ASCII/Numeric) + check digit or padding. 
+        // Actually, the EF content follows a TLV or fixed structure.
+        // My Number is 12 digits.
+        let read = ApduCommand::new(CLA_ISO, INS_READ_BINARY, 0x00, 0x00)
+            .with_le(0x00); // Read Max length (256) to be safe against headers/padding
+        
+        let data = self.reader.transmit(&read.to_bytes()).await?;
+        Self::check_sw(&data)?;
+        
+        // The data returned usually contains the My Number directly or in a block.
+        // For My Number EF (0001), the first 12 bytes are the My Number digits.
+        let content = &data[0..data.len()-2];
+        
+        // Scan for 12 consecutive digits
+        for i in 0..=content.len().saturating_sub(12) {
+             let slice = &content[i..i+12];
+             if slice.iter().all(|&b| b.is_ascii_digit()) {
+                 return Ok(String::from_utf8(slice.to_vec()).unwrap());
+             }
+        }
+
+        // Fallback: If scanning failed, check length and return error or partial
+        if content.len() < 12 {
+            return Err(anyhow::anyhow!("MyNumber data too short"));
+        }
+        
+        // Strict try if scan didn't find "pure" digits (maybe they are not digits?)
+        let my_number = String::from_utf8(content[0..12].to_vec())
+            .context("MyNumber is not valid UTF-8/ASCII")?;
+            
+        Ok(my_number)
+    }
+
+    /// Read Basic 4 Information (Name, Address, DOB, Gender)
+    pub async fn read_attributes(&mut self, pin: &str) -> Result<BasicInfo> {
+        // 1. Select Input Support AP
+        self.select_input_support_ap().await?;
+
+        // 2. Verify PIN
+        self.verify_pin(&file_ids::EF_INPUT_SUPPORT_PIN, pin).await?;
+
+        // 3. Select Attributes EF
+        let select_attr = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x02, 0x0C)
+            .with_data(&file_ids::EF_ATTRIBUTES);
+        let res_sel = self.reader.transmit(&select_attr.to_bytes()).await?;
+        Self::check_sw(&res_sel).context("Failed to select Attributes EF")?;
+
+        // 4. Read Binary (Read chunks)
+        // EF0002 can be larger than 256 bytes (Address can be long).
+        // Simple loop to read until end.
+        let mut data = Vec::new();
+        let mut offset: u16 = 0;
+        loop {
+            // P1=Offset High, P2=Offset Low
+            let p1 = (offset >> 8) as u8;
+            let p2 = (offset & 0xFF) as u8;
+            
+            let read = ApduCommand::new(CLA_ISO, INS_READ_BINARY, p1, p2)
+                .with_le(0x00); // Max length (256)
+            
+            let res = self.reader.transmit(&read.to_bytes()).await?;
+            
+            let sw1 = res[res.len() - 2];
+            let sw2 = res[res.len() - 1];
+            
+            // Capture data regardless of SW success if there is payload
+            let chunk = &res[0..res.len()-2];
+            if !chunk.is_empty() {
+                data.extend_from_slice(chunk);
+                offset += chunk.len() as u16;
+            }
+
+            if sw1 == 0x90 && sw2 == 0x00 {
+                if chunk.len() < 256 {
+                    break; // End of file reached (short read)
+                }
+            } else if sw1 == 0x6B {
+                 break; // Offset outside limits
+            } else if sw1 == 0x62 && sw2 == 0x82 {
+                 break; // EOF reached
+            } else {
+                 return Err(anyhow::anyhow!("Read Binary Error: {:02X}{:02X}", sw1, sw2));
+            }
+        }
+
+        Self::parse_basic_info(&data)
+    }
+
+    fn parse_basic_info(data: &[u8]) -> Result<BasicInfo> {
+        let mut info = BasicInfo::default();
+        let mut i = 0;
+        while i < data.len() {
+            // Tag
+            if i + 1 >= data.len() { break; }
+            let tag = ((data[i] as u16) << 8) | (data[i+1] as u16);
+            i += 2;
+
+            // Length (BER-TLV)
+            if i >= data.len() { break; }
+            let mut len = data[i] as usize;
+            i += 1;
+            
+            if len == 0x81 {
+                if i >= data.len() { break; }
+                len = data[i] as usize;
+                i += 1;
+            } else if len == 0x82 {
+                if i + 1 >= data.len() { break; }
+                len = ((data[i] as usize) << 8) | (data[i+1] as usize);
+                i += 2;
+            } else if len > 0x82 {
+                // Unsupported length format for now
+                break;
+            }
+
+            // Handle JPKI Wrapper Tag (DF20 or FF20)
+            // Some cards use FF20 as the outer wrapper
+            if tag == 0xDF20 || tag == 0xFF20 {
+                // Continue to parse content inside
+                continue;
+            }
+
+            // Value
+            if i + len > data.len() { break; }
+            let value = &data[i..i+len];
+            i += len;
+
+            let text = String::from_utf8(value.to_vec()).unwrap_or_default();
+
+            match tag {
+                // Mappings observed from card data:
+                // DF21: Unknown/Binary (Skip)
+                // DF22: Name
+                // DF23: Address
+                // DF24: DOB
+                // DF25: Gender
+                0xDF22 => info.name = text,
+                0xDF23 => info.address = text,
+                0xDF24 => info.birth_date = text,
+                0xDF25 => info.gender = text,
+                _ => {} // Ignore unknown tags
+            }
+        }
+        Ok(info)
     }
 
     fn check_sw(res: &[u8]) -> Result<()> {
