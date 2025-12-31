@@ -5,6 +5,26 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.7.0 - Folio POC v0.1.0: JPKI Integration
+
+**Date:** 2025-12-31
+
+Implementation of the **Folio POC** (Proof of Concept) core functionality, enabling cryptographic interaction with Japanese Public Key Infrastructure (JPKI) cards via both CLI and Browser interfaces. This establishes the physical bridge between "Web/A" digital documents and national identity hardware.
+
+*   **JPKI Core Architecture**:
+    *   **Generic Library**: Extracted JPKI interaction logic into a standalone `packages/jpki` crate, decoupling generic smart card operations (APDU, P-256 Crypto) from Folio-specific domain logic.
+    *   **WASM Controller**: Exposed high-level JPKI operations (PIN verification, Digital Signature generation) to JavaScript via WebAssembly bindings (`WasmJpkiController`).
+    *   **Native & Web Support**: Designed the core to compile for both `wasm32-unknown-unknown` (Browser/Node) and native targets (macOS/Linux/Windows).
+
+*   **Tools & Interfaces**:
+    *   **Folio CLI**: Updated `folio present` to support real hardware interactions using PC/SC. Implemented secure PIN handling via `--pin` argument or `FOLIO_JPKI_PIN` environment variable to prevent accidental card lockouts.
+    *   **Native Diagnostics**: Added a new `jpki` CLI tool (Rust native binary) for lightweight card diagnostics (`info`, `cert`, `sign`), similar to the `myna` command but integrated with the new architecture.
+    *   **Browser Driver**: Implemented `WebUsbCcidDriver` (JavaScript) to enable direct communication between the browser and smart card readers via WebUSB, bypassing the need for native PC/SC bridges in the demo environment.
+
+*   **Security & Safety**:
+    *   **Secure PIN Handling**: Removed all hardcoded PINs from the codebase.
+    *   **Hardware Abstraction**: Standardized the `CardReader` trait to support multiple transports (PC/SC, WebUSB) with a unified interface for the cryptographic core.
+
 ## v2.6.0 - Strategy Pivot: Signed Resource Network
 
 **Date:** 2025-12-31
