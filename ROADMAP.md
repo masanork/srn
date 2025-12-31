@@ -10,26 +10,28 @@ This document tracks the high-level development status, architectural decisions,
 | **Web/A Form** | Production | **L2 Encryption** enabled; **Document Stating Process** introduced. |
 | **Folio (Client)** | Beta | CLI for sync/send/admin, VC-enabled transport, Hybrid DIDs. |
 | **Folio (Remote)** | Production | Firebase Functions (WASM enabled), VC-based Authorization. |
-| **Infrastructure**| Production | Firebase Functions/Hosting, Rust/WASM Cryptography. |
+| **Web/A Post** | **Prototype** | **Intelligent Postal Hub** logic; **Hono**-based server; Storage abstraction. |
+| **Infrastructure**| Production | Firebase Functions (Node), Cloudflare (Edge ready), Rust/WASM Crypto. |
 
 ---
 
 ## 🛠️ Ongoing & Upcoming Milestones
 
-### 1. Identity & Credentials (High Priority)
+### 1. Web/A Post (Intelligent Agent) (Active)
+- [x] **Core Logic**: `PostalHub` with role-based routing (Admin/Member/Guest/Visitor) and rule engine.
+- [x] **Server Architecture**: **Hono** implementation supporting both Bun (Local) and Edge runtimes.
+- [x] **Storage Abstraction**: `IPostalStorage` interface with `LocalFileStorage` implementation.
+- [ ] **Cloud Storage Adapters**: Implement D1 (Cloudflare) and Firestore (Firebase) adapters.
+- [ ] **Client Integration**: Update `folio` CLI to interact with the new Post server (Inbox/Outbox).
+- [ ] **Federation**: Enable server-to-server communication (DID resolution & forwarding).
+
+### 2. Identity & Credentials
 - [x] **Guest DID (Passkeys)**: Native WebAuthn integration for identity-less users.
 - [x] **Guest DID Messaging**: `guestPostMessage` mutation for Passkey-authenticated submissions.
 - [x] **VC-based Authorization**: JCS-based Access Passes for decentralized access control.
 - [x] **Capability Delegation**: Chain of authority (Admin -> User -> Agent) for acting on behalf of others.
 - [ ] **Passkey-based VC Binding**: Linking W3C Verifiable Credentials to hardware keys.
 - [ ] **Revocation List v2**: High-performance bitstring revocation for municipality-scale DIDs.
-
-### 2. Folio: The Personal Data Container
-- [x] **Secure Remote Deployment**: Deployed to `asia-northeast1` with Strict Mode enabled.
-- [x] **Admin Onboarding Flow**: `join.md` form for self-service account requests.
-- [x] **End-to-End Verification**: Tested `admin add-user` → `transport send` → `sync` workflow.
-- [ ] **Key Rotation**: Automated rotation for Delegate Keys within the Folio.
-- [ ] **Cross-Device Sync**: Secure migration protocol for Folio folders.
 
 ### 3. AI & Agent Intelligence (MCP)
 - [x] **Basic Form Tools**: Parse and fill Web/A forms via LLM.
