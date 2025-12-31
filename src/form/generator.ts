@@ -52,7 +52,7 @@ export function generateHtml(markdown: string): string {
         <span class="experimental-tag">PILOT PHASE</span>
         <strong>NOTICE:</strong> This is an experimental document generated for a pilot project.
         Security mechanisms are currently in prototype phase. Avoid including highly sensitive personal information.
-        Verify the issuer's certificate for authenticity.
+        See the <a href="./papers/pilot-safety-guide.ja.html" style="color:#b91c1c; font-weight:bold; text-decoration:underline;">安全ガイド (Safety Guide)</a> for details.
     </div>
     <div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }

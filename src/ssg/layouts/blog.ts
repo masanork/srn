@@ -44,6 +44,14 @@ export function blogLayout(
 
         const d = latestArticleData;
 
+        // Fix relative links in the content if the article is in a subfolder (like papers/)
+        // This ensures links work when the article is displayed in the root blog stream
+        let fixedContent = latestArticleContent;
+        if (d.path.startsWith('papers/')) {
+            // Use regex to avoid replaceAll if TS target is old
+            fixedContent = latestArticleContent.replace(/href="\.\//g, 'href="./papers/');
+        }
+
         // Reconstruct the article view (similar to articleLayout but simplified for stream)
         // We reuse .weba-article class for consistent styling
         latestArticleHtml = `
@@ -57,7 +65,7 @@ export function blogLayout(
                 </div>
             </header>
             <div class="article-body">
-                ${latestArticleContent}
+                ${fixedContent}
             </div>
             
              <div class="article-footer" style="margin-top: 2rem; text-align: right;">
