@@ -1,6 +1,6 @@
 # Sorane (空音 / srn)
 
-Sorane (空音) is an open-source, typography-first Static Site Generator (SSG) and reference implementation for **Web/A**: verifiable, portable HTML documents with long-term authenticity. It combines precision CJK typography, cryptographic signing, and Web/A Form tooling (including Layer 2 encryption).
+Sorane (空音) is the reference implementation for the **Signed Resource Network (SRN)**. It is a typography-first engine for creating verifiable, portable HTML documents with long-term authenticity. It combines precision CJK typography, cryptographic signing, and Web/A Form tooling (including Layer 2 encryption).
 
 ---
 
