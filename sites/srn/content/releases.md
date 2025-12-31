@@ -31,6 +31,17 @@ Implementation of the **Folio POC** (Proof of Concept) core functionality, enabl
 
 A strategic turning point for the project, redefining SRN as the **"Signed Resource Network"** and pivoting development focus towards pragmatism ("Worse is Better") and User Experience based on critical AI analyses.
 
+- **2026-01-01**: **Major Update: CIV (Citizen Identity Verification) Integration**
+    - Renamed and expanded `jpki` package to `civ` to support multiple identity documents.
+    - Added support for **Driver's License (DL)**: AP selection, PIN verification, and Shift-JIS (with Gaiji placeholder) parsing for common data.
+    - Added support for **ePassport (EP)**: AP selection and BAC (Basic Access Control) key derivation logic from MRZ.
+    - Added support for **Residence Card (RC)**: AP selection, card number verification, and basic info parsing.
+    - Updated `civ` CLI tool to support subcommands for all document types (`civ jpki`, `civ dl`, `civ ep`, `civ rc`).
+    - Published `IMPLEMENTATION_STATUS.md` detailing security/verification scope for OSS.
+    - Updated Web/A Folio whitepaper and VP Generator spec to reflect multi-document support scope.
+- **2026-01-01**: **Governance & Branding Update**
+    - Published "SRN Global Rebranding Strategy" (Static Site Generator -> Signed Resource Network).
+
 *   **Global Rebranding Strategy**:
     *   **Signed Resource Network**: Officially proposed redefining the SRN acronym to **"Signed Resource Network"**. This emphasizes the objective fact of cryptographic provenance (Web/A Signatures) over subjective claims of "Security" or abstract "Semantics".
     *   **Identity**: Positioned "Sorane" as the reference toolchain for creating and verifying these Signed Resources.
