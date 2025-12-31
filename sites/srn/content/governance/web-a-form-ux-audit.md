@@ -3,7 +3,6 @@ title: "Web/A Form UX/UI Audit Report (v1)"
 layout: article
 date: 2025-12-31
 description: "Comprehensive audit of Web/A Form's user experience with a focus on mobile adoption and 'Minimum Lovable Product' standards."
-draft: true
 ---
 
 # Web/A Form UX/UI Audit: The Path to "Minimum Lovable Product"

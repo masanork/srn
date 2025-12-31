@@ -3,13 +3,12 @@ title: "SRN Global Rebranding Strategy (Draft)"
 layout: article
 date: 2025-12-31
 description: "Strategic plan to redefine 'SRN' from a Static Site Generator to a Global Trust Protocol."
-draft: true
 ---
 
 # SRN Global Rebranding Strategy: From SSG to Trust Protocol
 
 **Date:** 2025-12-31  
-**Status:** DRAFT (Governance Discussion)
+**Status:** APPROVED (Governance Decision)
 
 ## 1. Context & Problem
 Currently, **"Sorane" (SRN)** is officially described in documentation as a "Static Site Generator (SSG)" or "CMS context". However, the actual development has evolved significantly into a **decentralized trust infrastructure** comprising:

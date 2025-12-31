@@ -3,7 +3,6 @@ title: "試算：API Economy vs Document Economy - 接続コストの構造的�
 layout: article
 author: "空音プロジェクト・ストラテジー・チーム"
 date: 2025-12-31
-draft: true
 ai_generated: true
 ---
 
