@@ -24,7 +24,7 @@ Implementation of critical guardrails and safety features requested by the Red T
   * **Aggregator Protection**: The Aggregator Browser now utilizes a `LocalStorageReplayStore` to automatically reject duplicate submissions of the same L2 encrypted message.
 
 * **Documentation & Compliance**:
-  * **Product Team Response**: Published the formal [Product Team Response to Red Team (v7)](./papers/web-a-product-team-response-v7.html) outlining the remediation strategy.
+  * **Product Team Response**: Published the formal [Product Team Response to Red Team (v7)](./governance/web-a-product-team-response-v7.html) outlining the remediation strategy.
   * **Roadmap Refinement**: Re-aligned the internal roadmap to prioritize safety boundaries over feature expansion for initial PoC deployments.
 
 

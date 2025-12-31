@@ -6,6 +6,8 @@ date: 2025-12-29
 ai_generated: true
 ---
 
+> **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.
+
 # Security Audit Report: Web/A Layer 2 Encryption
 
 ## 1. Executive Summary

@@ -80,6 +80,7 @@ ai_generated: true
 <div class="nav-subheader">Strategy & Technical Specs</div>
 <div class="spec-links-grid">
 <a href="./papers/web-a-ecosystem.html" style="font-weight:bold; border-color:var(--accent-color);">🕸️ Ecosystem Overview</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight);">⚖️ Governance & Audits</a>
 <a href="./papers/web-a-l2-market-comparison.html">Competitive Analysis</a>
 <a href="./papers/web-a-l2-encryption.html">L2 Encryption</a>
 <a href="./papers/context-routing-protocol.html">Context Routing</a>
@@ -105,6 +106,7 @@ ai_generated: true
 <div class="nav-subheader">戦略・技術仕様</div>
 <div class="spec-links-grid">
 <a href="./papers/web-a-ecosystem.ja.html" style="font-weight:bold; border-color:var(--accent-color);">🕸️ エコシステム概観</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight);">⚖️ ガバナンス ＆ 監査報告</a>
 <a href="./papers/web-a-l2-market-comparison.ja.html">市場競合分析</a>
 <a href="./papers/web-a-l2-encryption.ja.html">L2 暗号化</a>
 <a href="./papers/context-routing-protocol.ja.html">コンテキスト・ルーティング</a>
@@ -162,6 +164,13 @@ ai_generated: true
 <span class="desc">
     <span data-lang-en>Changelog & versions.</span>
     <span data-lang-ja>更新履歴 ＆ バージョン情報。</span>
+</span>
+</a>
+<a href="./governance.html" class="nav-item primary">
+<span class="icon">⚖️</span><span class="label">Governance & Audit Reports</span>
+<span class="desc">
+    <span data-lang-en>Security assessments, risk evaluations, and task force activities.</span>
+    <span data-lang-ja>セキュリティ監査、リスク評価、タスクフォースの活動記録。</span>
 </span>
 </a>
 <a href="https://github.com/masanork/srn" class="nav-item">

@@ -886,7 +886,7 @@ sequenceDiagram
   <li><a href="./papers/web-a.html">Web/A 解説書</a></li>
   <li><a href="./papers/web-a-l2-encryption.html">Web/A L2 暗号化仕様</a></li>
   <li><a href="./papers/web-a-folio.html">Web/A Folio コンセプト</a></li>
-  <li><a href="./papers/web-a-l2-security-audit-v3.html">再評価報告書 v3</a></li>
+  <li><a href="./governance/web-a-l2-security-audit-v3.html">再評価報告書 v3</a></li>
 </ul>
 </div>
 

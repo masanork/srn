@@ -47,6 +47,7 @@
 - **Staging Rule**: Do not add links to draft documents on main dashboards until they are finalized.
 - **Document Stating Process**: New conceptual papers must undergo a "Stating Process" where the core hypothesis is refined through dialogue with the **Red Team**.
 - **Red Team Engagement**: Proactively seek feedback from the Red Team (security/architectural reviewers) before finalizing state transitions in technical papers.
+- **Joint Task Force Review**: Critical architectural changes and public-facing specifications must be reviewed by the **Security & Legal Task Force (SLTF)** to ensure alignment between technical verifiability and legal validity.
 
 ## Documentation & Localization
 - For technical specifications and design notes, **prioritize updating the English version (`.md`)** during active development to reduce token consumption and maintain a single source of truth.

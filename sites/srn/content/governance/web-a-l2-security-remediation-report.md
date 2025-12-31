@@ -6,10 +6,12 @@ date: 2025-12-29
 ai_generated: true
 ---
 
+> **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.
+
 # Security Audit Remediation Report (Response to v2)
 
 **Date:** 2025-12-29
-**Reference:** `sites/srn/content/papers/web-a-l2-security-audit-v2.md`
+**Reference:** `sites/srn/content/governance/web-a-l2-security-audit-v2.md`
 
 ### Related
 - [Security Audit v2](./web-a-l2-security-audit-v2.html)

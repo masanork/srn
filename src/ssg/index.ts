@@ -55,9 +55,9 @@ async function build() {
             data.date = normalizeDate(data.date);
         }
 
-        // Check for draft status
-        if (data.status === 'draft') {
-            console.log(`Skipping draft: ${file}`);
+        // Skip private or draft content
+        if (['draft', 'secret', 'suspended'].includes(data.status)) {
+            console.log(`Skipping ${data.status}: ${file}`);
             continue;
         }
 
@@ -141,7 +141,7 @@ async function collectMetadata(files: string[], contentDir: string) {
         const source = await fs.readFile(path.join(contentDir, file), 'utf-8');
         const { data, content } = matter(source);
 
-        if (data.status === 'draft') continue;
+        if (['draft', 'secret', 'suspended'].includes(data.status)) continue;
 
         const normalizedContent = stripLeadingTitleHeading(content, data.title);
         const html = await marked.parse(normalizedContent);
