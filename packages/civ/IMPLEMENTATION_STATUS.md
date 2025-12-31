@@ -44,6 +44,13 @@ This library (`civ`) aims to provide a unified interface for accessing Japanese 
 *   ✅ **Parsing**: Implemented (TLV Parser, encoding TBD).
 *   **Remaining**: Verify specific encoding (UTF-8 vs Shift-JIS) on real cards.
 
+### 2.5. US PIV (Personal Identity Verification)
+*   ✅ **AP Selection**: Implemented.
+*   ✅ **CHUID Read**: Implemented (GET DATA).
+*   ✅ **Parsing**: Implemented (Expiry Date extraction).
+*   ✅ **Read Cert**: Implemented (Authentication Key 9A).
+*   **Remaining**: Authenticate (PIN verification, GENERAL AUTHENTICATE) for private operations.
+
 ## 3. Security Hardening & Next Steps
 
 ### 3.1. Secure Messaging (Priority: High)

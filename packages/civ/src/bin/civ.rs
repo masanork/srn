@@ -1,7 +1,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 use clap::{Parser, Subcommand};
 #[cfg(not(target_arch = "wasm32"))]
-use civ::{JpkiController, DriversLicenseController, PassportController, ResidenceCardController, PcscReader};
+use civ::{JpkiController, DriversLicenseController, PassportController, ResidenceCardController, PivController, PcscReader};
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
 
@@ -50,6 +50,9 @@ enum Commands {
         #[arg(short, long)]
         pin: Option<String>,
     },
+    /// US PIV (Personal Identity Verification)
+    #[command(name = "piv")]
+    Piv,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -212,6 +215,31 @@ async fn main() -> anyhow::Result<()> {
             match controller.read_info().await {
                 Ok(info) => println!("{}", info),
                 Err(e) => eprintln!("Failed to read Info: {}", e),
+            }
+        }
+        Commands::Piv => {
+            let mut controller = PivController::new(reader);
+            controller.select_piv_ap().await?;
+            println!("US PIV AP Selected");
+            
+            println!("Reading CHUID...");
+            match controller.read_chuid().await {
+                 Ok(data) => {
+                     // println!("CHUID Raw: {}", hex::encode(&data));
+                     use civ::piv::ParsingUtils;
+                     if let Some(date) = ParsingUtils::extract_expiry_date(&data) {
+                         println!("Card Expiration Date: {}", date);
+                     } else {
+                         println!("Expiration Date not found in CHUID");
+                     }
+                 },
+                 Err(e) => eprintln!("Failed to read CHUID: {}", e),
+            }
+
+            println!("Reading User Auth Certificate (Key 9A)...");
+            match controller.read_auth_cert().await {
+                Ok(data) => println!("Certificate Data found ({} bytes)", data.len()),
+                Err(e) => eprintln!("Failed to read Cert: {}", e),
             }
         }
     }
