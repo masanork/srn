@@ -45,7 +45,7 @@ API Economyが普及する前、事務のデジタル化における真の革命
 
 トポロジの違いが、いかにコスト構造に影響するかを可視化します。APIモデルでは「接続（線）」が増えるのに対し、Documentモデルでは「ノード（点）」が自立します。
 
-<div class="mermaid">
+```mermaid
 graph LR
     subgraph "Phase 1: API Economy (Hub & Spoke)"
         H((Hub Server))
@@ -71,7 +71,7 @@ graph LR
         style DC fill:#bbf,stroke:#333
         linkStyle 4,5,6 stroke:#0f0,stroke-width:2px;
     end
-</div>
+```
 
 1,000のシステムを相互に接続可能にするための「社会全体の総コスト」を試算します。
 
