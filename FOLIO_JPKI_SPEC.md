@@ -52,6 +52,8 @@ A lightweight diagnostic and utility tool for JPKI cards, similar to `myna`.
     *   `info`: Check card connection status.
     *   `cert --type auth`: Read and export the User Authentication Certificate.
     *   `sign --data <STRING> --pin <PIN>`: Sign data using the Auth key.
+    *   `num --pin <PIN>`: Read My Number (Individual Number).
+    *   `attr --pin <PIN>`: Read Card Attributes (Basic 4 Info).
 *   **PIN Handling**:
     *   Option: `--pin <VALUE>`
     *   Env Var: `JPKI_PIN`

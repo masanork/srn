@@ -18,8 +18,10 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Show card info
+    #[command(name = "info")]
     Info,
     /// Read certificate
+    #[command(name = "cert")]
     Cert {
         /// Type: auth (sign not fully supported yet)
         #[arg(short, long, default_value = "auth")]
@@ -29,6 +31,7 @@ enum Commands {
         output: Option<String>,
     },
     /// Sign data (using Auth key)
+    #[command(name = "sign")]
     Sign {
         /// PIN (can also be set via JPKI_PIN env var)
         #[arg(short, long, env = "JPKI_PIN")]
@@ -38,12 +41,14 @@ enum Commands {
         data: String,
     },
     /// Read My Number (Individual Number)
+    #[command(name = "num")]
     Mynumber {
         /// PIN (4 digits for Card Surface Input Support)
         #[arg(short, long, env = "JPKI_PIN")]
         pin: String,
     },
     /// Read Card Attributes (Basic 4 Info: Name, Address, DOB, Gender)
+    #[command(name = "attr")]
     Card {
         /// PIN (4 digits for Card Surface Input Support)
         #[arg(short, long, env = "JPKI_PIN")]
