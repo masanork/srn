@@ -53,3 +53,30 @@
 - For technical specifications and design notes, **prioritize updating the English version (`.md`)** during active development to reduce token consumption and maintain a single source of truth.
 - Update the Japanese version (`.ja.md`) intermittently or at major milestones (e.g., when a feature is finalized or ready for public review).
 - Ensure critical changes to data structures or protocols are reflected in both versions before a release.
+# AI Interaction Guidelines
+
+## Disclaimer Policy for Simulated Governance Documents
+
+When creating artifacts that simulate governance processes, legal discussions, or policy decisions (e.g., meeting minutes, agendas, official-looking specifications), you **MUST** include a prominent disclaimer to prevent misunderstanding by external parties.
+
+### Required Frontmatter
+For any simulated governance document, add the following fields to the YAML frontmatter:
+
+```yaml
+draft: true
+simulated_governance: true
+disclaimer: >
+  This document is a SIMULATION for quality assurance and scenario testing purposes.
+  It does not reflect actual decisions by the organization or government entities.
+```
+
+### Content Disclaimer
+In addition to the frontmatter, adding a visible quote block at the top of the markdown body is recommended:
+
+```markdown
+> **⚠️ SIMULATION NOTICE**
+> This document is a generated simulation for testing governance processes.
+> It is NOT an official record.
+```
+
+This rule applies to all files under `sites/srn/content/governance/` created by AI agents.

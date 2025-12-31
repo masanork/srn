@@ -6,6 +6,9 @@
   "engines": {
     "bun": ">= 1.0.0"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "bun run build:blog && bun run build:srn && bun run build:weba",
     "build:blog": "bun run src/ssg/index.ts --site my-blog",
