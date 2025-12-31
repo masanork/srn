@@ -45,7 +45,7 @@ The ideals that SGML, XML, and the Semantic Web once pursued—leaving a "trail 
 
 Comparing network topologies reveals how costs scale. In the API model, "Connections (Lines)" multiply costs. In the Document model, "Nodes (Points)" remain autonomous.
 
-<div class="mermaid">
+```mermaid
 graph LR
     subgraph "Phase 1: API Economy (Hub & Spoke)"
         H((Hub Server))
@@ -71,7 +71,7 @@ graph LR
         style DC fill:#bbf,stroke:#333
         linkStyle 4,5,6 stroke:#0f0,stroke-width:2px;
     end
-</div>
+```
 
 Total societal cost for enabling data exchange between 1,000 systems.
 
