@@ -97,7 +97,7 @@ Implementation of the **Web/A Post** prototype (Intelligent Postal Hub) and majo
             - **Context Freezing**: Verified JCS canonicalization to prevent Context Rot.
             - **Trust Store Embedding**: Automatically inject Issuer's DID Document into the generated HTML.
             - **Offline Verifier**: Updated `verify-app` to prioritize the embedded Trust Store.
-    *   **Governance Index**: Restructured the [Governance & Audit Reports](./governance.html) page from a blog-style list to a curated, categorized index (Strategic Analysis, Security Audits, Product Response, Risk & Legal).
+    *   **Governance Index**: Restructured the [Transparency Reports](./governance.html) page from a blog-style list to a curated, categorized index (Strategic Analysis, Security Audits, Product Response, Risk & Legal).
     *   **Transparency**: Standardized the display of "SIMULATION NOTICE" across all governance documents to clearly distinguish role-play artifacts from real-world legal documents.
 
 ## v2.4.0 - Red Team Guardrails & Compliance

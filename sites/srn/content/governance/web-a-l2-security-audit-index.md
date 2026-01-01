@@ -30,18 +30,18 @@ for fast navigation.
 - [Product Security Status Report (Red Team Sharing)](./web-a-product-security-status-report.html)
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
 - [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
-- [Offline Pre-Key Server Plan (Draft)](./web-a-l2-prekey-server-plan.html)
+- [Offline Pre-Key Server Plan (Draft)](../papers/web-a-l2-prekey-server-plan.html)
 - [Tech Lead Response: Web/A Folio Transport Threat
   Analysis](./web-a-folio-transport-tech-lead-response.html)
 - [Legal Risk Report: Hosting Web/A Folio Transport For Internal
   Use](./web-a-folio-transport-legal-risk-report.html)
 
 ### Reference Papers
-- [Graduated Forward Secrecy (Final Architecture)](./web-a-l2-graduated-pfs.html)
-- [Epoch-Based Forward Secrecy (Proposal)](./web-a-l2-epoch-pfs.html)
-- [Deployment & Operations Guide](./deployment-guide.html)
-- [Web/A L2 Encryption](./web-a-l2-encryption.html)
-- [Market Comparison](./web-a-l2-market-comparison.html)
+- [Graduated Forward Secrecy (Final Architecture)](../papers/web-a-l2-graduated-pfs.html)
+- [Epoch-Based Forward Secrecy (Proposal)](../papers/web-a-l2-epoch-pfs.html)
+- [Deployment & Operations Guide](../papers/deployment-guide.html)
+- [Web/A L2 Encryption](../papers/web-a-l2-encryption.html)
+- [Market Comparison](../papers/web-a-l2-market-comparison.html)
 
 ### Transport Assessment
 - [Red Team Report: Web/A Folio Transport Threat

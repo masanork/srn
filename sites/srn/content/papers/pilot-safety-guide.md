@@ -59,7 +59,7 @@ Additionally, if "Signature Verification" fails for a document, it may indicate 
 ## 5. Related Materials (For Technical Experts)
 
 For detailed technical responses and audit reports, please refer to:
-- [Web/A Security Audit Index](./web-a-l2-security-audit-index.html)
+- [Web/A Security Audit Index](../governance/web-a-l2-security-audit-index.html)
 
 ---
 *Web/A Product Team - Pilot Safety Policy (2024-12-31)*

@@ -100,6 +100,6 @@ sequenceDiagram
 
 ## 10. Related Documents
 - [Web/A L2 Encryption](./web-a-l2-encryption.html)
-- [Security Audit v2](./web-a-l2-security-audit-v2.html)
-- [Remediation Report (Response to v2)](./web-a-l2-security-remediation-report.html)
-- [Security Re-Assessment v3](./web-a-l2-security-audit-v3.html)
+- [Security Audit v2](../governance/web-a-l2-security-audit-v2.html)
+- [Remediation Report (Response to v2)](../governance/web-a-l2-security-remediation-report.html)
+- [Security Re-Assessment v3](../governance/web-a-l2-security-audit-v3.html)

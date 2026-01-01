@@ -46,6 +46,12 @@ export class LayoutManager {
                         name: data.title,
                         contentDigest: crypto.createHash('sha256').update(content).digest('hex')
                     }
+                }, {
+                    license: data.license,
+                    tags: data.tags,
+                    lang: data.lang,
+                    updated: data.updated,
+                    schemas: data.schemas
                 });
                 finalHtml = formLayout(data, content, fontCss, safeFontFamilies, vc, relPath, config);
 
@@ -133,6 +139,12 @@ export class LayoutManager {
                             jsonLdDigest,
                             contentDigest
                         }
+                    }, {
+                        license: data.license,
+                        tags: data.tags,
+                        lang: data.lang,
+                        updated: data.updated,
+                        schemas: data.schemas
                     });
 
                     vc = instanceVc;
@@ -165,6 +177,12 @@ export class LayoutManager {
                         name: data.title,
                         contentDigest: crypto.createHash('sha256').update(cheerio.load(htmlContent).text().trim()).digest('hex')
                     }
+                }, {
+                    license: data.license,
+                    tags: data.tags,
+                    lang: data.lang,
+                    updated: data.updated,
+                    schemas: data.schemas
                 });
                 finalHtml = articleLayout(data, htmlContent, fontCss, safeFontFamilies, vc, relPath);
                 break;

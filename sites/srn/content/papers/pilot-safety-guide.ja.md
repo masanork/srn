@@ -59,7 +59,7 @@ description: "Web/A Form Maker および生成されたドキュメントを利�
 ## 5. 関連資料（技術者・専門家向け）
 
 より詳細な技術的回答や監査レポートを確認したい場合は、以下のインデックスを参照してください。
-- [Web/A Security Audit Index](./web-a-l2-security-audit-index.html)
+- [Web/A Security Audit Index](../governance/web-a-l2-security-audit-index.html)
 
 ---
 *Web/A Product Team - Pilot Safety Policy (2024-12-31)*

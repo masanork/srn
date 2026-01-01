@@ -85,8 +85,8 @@ This section records the current response plan and documentation deliverables. I
 
 1.  **Mandatory Replay Checks**: Will be enforced by default at the API boundary with explicit opt-out only. Status: **Planned**.
 2.  **Pre-Key Infrastructure Plan**: Design document published. Status: **Draft Published**.  
-    *   [Offline Pre-Key Server Plan](./web-a-l2-prekey-server-plan.html)
+    *   [Offline Pre-Key Server Plan](../papers/web-a-l2-prekey-server-plan.html)
 3.  **Client-Side Integrity (SRI/CSP)**: Strict CSP/SRI template published in the L2 Encryption paper. Status: **Guidance Published**.  
-    *   [Web/A L2 Encryption](./web-a-l2-encryption.html)
+    *   [Web/A L2 Encryption](../papers/web-a-l2-encryption.html)
 4.  **Formal Audit of Rust Bindings**: Third-party review scope to be defined (focus: shared secret + HKDF flows). Status: **Planned**.
 5.  **Decoy Traffic**: Roadmap entry added for high-sensitivity deployments. Status: **Planned**.

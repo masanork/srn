@@ -16,8 +16,8 @@ ai_generated: true
 
 ### Related
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
-- [Graduated Forward Secrecy Architecture](./web-a-l2-graduated-pfs.html)
-- [Deployment & Operations Guide](./deployment-guide.html)
+- [Graduated Forward Secrecy Architecture](../papers/web-a-l2-graduated-pfs.html)
+- [Deployment & Operations Guide](../papers/deployment-guide.html)
 
 ## 1. Executive Summary
 

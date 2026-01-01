@@ -67,7 +67,9 @@ async function build() {
         processedCount++;
         console.log(`Processing: ${file}`);
         const normalizedContent = stripLeadingTitleHeading(content, data.title);
-        const htmlContent = await marked.parse(normalizedContent);
+        const rawHtmlContent = await marked.parse(normalizedContent);
+        // Rewrite .md links to .html for generated site
+        const htmlContent = (rawHtmlContent as string).replace(/href="([^"]+)\.md(#|")/g, 'href="$1.html$2');
 
         // Process Fonts
         let fontCss = '';

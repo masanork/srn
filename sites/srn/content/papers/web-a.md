@@ -234,7 +234,7 @@ While Layer 2 handles user authenticity, **Layer 2 Encryption (L2E)** ensures co
 - **Selective Decryption**: Compatible with organizational key management, allowing decryption only by authorized personnel (e.g., via a designated YubiKey or HSM).
 
 > [!TIP]
-> **Detailed Resources**: For the technical details of L2E, see [Web/A L2 Encryption](./web-a-l2-encryption.html). For security evaluations, see our [Red-Team Audit v2](./web-a-l2-security-audit-v2.html) and [Competitive Analysis](./web-a-l2-market-comparison.html).
+> **Detailed Resources**: For the technical details of L2E, see [Web/A L2 Encryption](./web-a-l2-encryption.html). For security evaluations, see our [Red-Team Audit v2](../governance/web-a-l2-security-audit-v2.html) and [Competitive Analysis](./web-a-l2-market-comparison.html).
 
 ### 6.6. Messaging and Transport (Extension)
 Web/A defines trusted, portable document layers. For **submission and reception**
