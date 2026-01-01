@@ -72,6 +72,13 @@ Implementation of the **Web/A Post** prototype (Intelligent Postal Hub) and majo
     *   **Deployment Strategy**: Published [Web/A Post Deployment Strategy](./papers/web-a-post-deployment-strategy.html) comparing Cloudflare, Supabase, and VPS options with a focus on data sovereignty and AI affinity.
 
 *   **Governance & Documentation**:
+    - **Governance**: Renamed "Governance & Audit Reports" to **"Transparency Reports"** to clarify the nature of self-governance documents.
+    - **Web/A LTV Architecture**: Published the initial design for [Web/A Long-Term Validation](./papers/web-a-ltv-architecture.html).
+        - Defined the **Layered Signature Model** (Payload/Context/Container) to solve the "Rebuild Paradox".
+        - Implemented **Phase 1: Offline Verification**:
+            - **Context Freezing**: Verified JCS canonicalization to prevent Context Rot.
+            - **Trust Store Embedding**: Automatically inject Issuer's DID Document into the generated HTML.
+            - **Offline Verifier**: Updated `verify-app` to prioritize the embedded Trust Store.
     *   **Governance Index**: Restructured the [Governance & Audit Reports](./governance.html) page from a blog-style list to a curated, categorized index (Strategic Analysis, Security Audits, Product Response, Risk & Legal).
     *   **Transparency**: Standardized the display of "SIMULATION NOTICE" across all governance documents to clearly distinguish role-play artifacts from real-world legal documents.
 
