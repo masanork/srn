@@ -171,7 +171,12 @@ export class SearchEngine {
         }
 
         // 同じ行または近隣のフィールドを検索
-        const container = input.closest('tr') || input.closest('.form-row')?.parentElement || document;
+        const container = input.closest('tr')
+            || input.closest('.dynamic-row')
+            || input.closest('table')
+            || input.closest('form')
+            || input.closest('.form-row')?.parentElement
+            || document;
         const allInputs = Array.from(container.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
 
         // 都道府県フィールドを探して自動入力
@@ -258,8 +263,10 @@ export class SearchEngine {
 
         // Click Event (Selection)
         document.body.addEventListener('click', (e: any) => {
-            if (e.target.classList.contains('suggestion-item')) {
-                this.handleSelection(e.target as HTMLElement);
+            const target = e.target as HTMLElement | null;
+            const suggestion = target?.closest?.('.suggestion-item') as HTMLElement | null;
+            if (suggestion) {
+                this.handleSelection(suggestion);
             }
         });
     }
