@@ -15,6 +15,7 @@ ai_generated: true
 - **2025-12-27**: Expanded into a 3-Layer Trust Architecture to support interactive forms (v1.1)
 - **2025-12-29**: Defined L2 Encryption (L2E) and Messaging/Transport extensions (v1.2)
 - **2025-12-31**: Transitioned to the "4-Layer Architecture" for improved context separation (v1.3)
+- **2026-01-01**: Defined Long-Term Validation (LTV) Architecture. Introduced "Layered Signatures" for rebuild-safety and Offline Verification model (v2.0)
 
 ## 1. Abstract
 This paper proposes **Web/A**, a specification for archival-grade web documents. While PDF/A is widely used for long-term visual preservation, it often becomes a "data silo" where structure and semantic meaning are difficult to extract. Web/A leverages standard web technologies—HTML5, CSS, and JSON-LD—to create a format that is universally readable by humans and machines, portable as a single file, and digitally verifiable.
