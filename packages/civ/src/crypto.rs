@@ -4,6 +4,8 @@ use rand_core::OsRng;
 use anyhow::{Result, anyhow};
 
 pub mod bac;
+pub mod pace;
+pub mod sm;
 
 /// FIDO-like KeyPair wrapper (P-256)
 pub struct FidoKeyPair {
