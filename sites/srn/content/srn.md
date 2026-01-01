@@ -49,8 +49,8 @@ ai_generated: true
     <span data-lang-ja>自己完結型の検証。発行元が消滅して数十年後でも、オフラインで文書単体で真正性を検証可能。</span>
 </li>
 <li><strong>Privacy by Design (L2E)</strong>
-    <span data-lang-en>Layer 2 Encryption (HPKE) ensures only the recipient can view the payload.</span>
-    <span data-lang-ja>HPKEによるL2暗号化。意図した受信者だけが内容を復号・閲覧可能です。</span>
+    <span data-lang-en>Payload Encryption. Securely transfer data without exchanging passwords (No PPAP).</span>
+    <span data-lang-ja>入力内容の暗号化。共通鍵（パスワード）をやり取りすることなく、意図した受信者だけが安全に閲覧可能（脱PPAP）。</span>
 </li>
 <li><strong>Rebuild-Safe Timestamp</strong>
     <span data-lang-en>Layered Signatures ensure that design updates (HTML rebuilds) do not invalidate the original "Signed At" timestamp.</span>

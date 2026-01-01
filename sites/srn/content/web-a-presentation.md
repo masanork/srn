@@ -147,9 +147,9 @@ ai_generated: true
 
 ## Web/A L2 Encryption
 
-- Encrypted for **recipient-only** access
-- Bound to Layer 1 template via AAD
-- Designed for **Passkey-first** UX
+- **No Shared Secrets**: Eliminate risky password exchange (No PPAP).
+- **Recipient-Only**: Public-key encryption guarantees privacy.
+- **Passkey-First**: Seamless experience without managing keys.
 
 ---
 
