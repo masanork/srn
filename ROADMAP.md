@@ -30,6 +30,8 @@ This document tracks the high-level development status, architectural decisions,
 - [x] **Guest DID Messaging**: `guestPostMessage` mutation for Passkey-authenticated submissions.
 - [x] **VC-based Authorization**: JCS-based Access Passes for decentralized access control.
 - [x] **Capability Delegation**: Chain of authority (Admin -> User -> Agent) for acting on behalf of others.
+- [x] **CIV Secure Messaging (BAC)**: 3DES ISO 7816-4 wrapper for ePassport
+  APDU encryption and response MAC validation.
 - [ ] **Passkey-based VC Binding**: Linking W3C Verifiable Credentials to hardware keys.
 - [ ] **Revocation List v2**: High-performance bitstring revocation for municipality-scale DIDs.
 

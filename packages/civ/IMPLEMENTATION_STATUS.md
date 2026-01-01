@@ -32,10 +32,13 @@ This library (`civ`) aims to provide a unified interface for accessing Japanese 
 ### 2.3. ePassport (EP)
 *   ✅ **AP Selection**: Implemented.
 *   ✅ **BAC Key Derivation**: Implemented (SHA-1 from MRZ).
-*   🚧 **Secure Messaging (SM)**: **MOCKED**.
-    *   Current: Derives keys but does not encrypt APDUs. Reads are attempted in plain text (will fail on real cards).
-    *   Required: ISO 7816-4 Secure Messaging wrapper (Encrypt Command Data, Compute MAC, Unencrypt Response).
-*   **Remaining**: PACE (Password Authenticated Connection Establishment) support for newer passports (replacing BAC). Active Authentication (AA) / Chip Authentication (CA).
+*   ✅ **Secure Messaging (SM)**: Implemented for BAC (3DES).
+    *   ISO 7816-4 Secure Messaging wrapper: DO87/DO97/DO8E/DO99, MAC
+        validation, encrypted APDUs, and response decryption.
+    *   AES-based SM for PACE remains pending.
+*   **Remaining**: PACE (Password Authenticated Connection Establishment) support
+    for newer passports (replacing BAC). Active Authentication (AA) / Chip
+    Authentication (CA).
 
 ### 2.4. Residence Card (RC)
 *   ✅ **AP Selection**: Implemented.
@@ -68,7 +71,8 @@ This library (`civ`) aims to provide a unified interface for accessing Japanese 
 *   **Task**: Implement the `SecureChannel` trait.
     *   `encrypt_apdu(apdu, session_keys) -> encrypted_apdu`
     *   `decrypt_response(response, session_keys) -> decrypted_data`
-*   **Crypto**: Needs 3DES (for BAC) and AES (for PACE/newer specs).
+*   **Progress**: BAC 3DES Secure Messaging wrapper implemented; AES-based PACE
+    remains pending.
 
 ### 3.2. Zeroization (Priority: Medium)
 *   **Target**: All PINs and Private Keys.

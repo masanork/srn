@@ -54,6 +54,7 @@ pub const INS_READ_BINARY: u8 = 0xB0;
 pub const INS_VERIFY: u8 = 0x20;
 pub const INS_COMPUTE_DIGITAL_SIGNATURE: u8 = 0x2A;
 pub const INS_GET_CHALLENGE: u8 = 0x84;
+pub const INS_EXTERNAL_AUTHENTICATE: u8 = 0x82;
 
 // File IDs (DF/EF)
 pub mod file_ids {
