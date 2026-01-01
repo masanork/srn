@@ -24,7 +24,7 @@ export class IdentityManager {
 
     async init() {
         const rootKeyPath = path.join(this.dataDir, 'root-key.json');
-        
+
         if (await fs.pathExists(rootKeyPath)) {
             this.rootKeys = await fs.readJson(rootKeyPath);
             this.currentKeys = await generateHybridKeys(); // Ephemeral for each build
@@ -42,7 +42,7 @@ export class IdentityManager {
         const historyPath = path.join(this.dataDir, 'key-history.json');
         let history: any[] = [];
         if (await fs.pathExists(historyPath)) {
-            try { history = await fs.readJson(historyPath); } catch(e) {}
+            try { history = await fs.readJson(historyPath); } catch (e) { }
         }
 
         history.push({
@@ -62,6 +62,8 @@ export class IdentityManager {
         await fs.writeJson(path.join(this.distDir, 'status-list.json'), statusListVc, { spaces: 2 });
     }
 
+    private lastGeneratedDidDoc: any;
+
     private async generateDidDoc() {
         const didDoc = {
             "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"],
@@ -78,9 +80,14 @@ export class IdentityManager {
             ],
             "assertionMethod": [`${this.siteDid}#root-ed25519`, `${this.siteDid}#${this.buildId}-ed25519`, `${this.siteDid}#${this.buildId}-pqc`]
         };
+        this.lastGeneratedDidDoc = didDoc;
         await fs.ensureDir(path.join(this.distDir, '.well-known'));
         await fs.writeJson(path.join(this.distDir, '.well-known', 'did.json'), didDoc, { spaces: 2 });
         await fs.writeJson(path.join(this.distDir, 'did.json'), didDoc, { spaces: 2 });
+    }
+
+    public getDidDocument() {
+        return this.lastGeneratedDidDoc;
     }
 
     async signDocument(payload: any): Promise<any> {

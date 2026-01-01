@@ -48,7 +48,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // Artificial delay for "scanning" effect
             await new Promise(r => setTimeout(r, 600));
 
-            const result = await verifyHybridVC(json, { didResolver: resolveDidDocument });
+            // --- LTV: Load Trust Store ---
+            const trustedDocs: Record<string, any> = {};
+            const trustScript = document.getElementById('weba-trust-store');
+            if (trustScript && trustScript.textContent) {
+                try {
+                    const store = JSON.parse(trustScript.textContent);
+                    if (Array.isArray(store.didDocuments)) {
+                        store.didDocuments.forEach((doc: any) => {
+                            trustedDocs[doc.id] = doc;
+                        });
+                        console.log("LTV: Loaded Trust Store with DIDs:", Object.keys(trustedDocs));
+                    }
+                } catch (e) {
+                    console.warn("LTV: Failed to parse Trust Store", e);
+                }
+            }
+
+            const result = await verifyHybridVC(json, {
+                didResolver: resolveDidDocument,
+                didDocuments: trustedDocs
+            });
 
             if (result.isValid) {
                 // Check Revocation

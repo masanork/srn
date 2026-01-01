@@ -170,6 +170,23 @@ export class LayoutManager {
                 break;
         }
 
+        // --- LTV: Inject Trust Store (Phase 1) ---
+        // Embed the Issuer's DID Document directly into the file.
+        // This allows offline verification of the signature chain (at least the root key).
+        if (vc && finalHtml.includes('</body>')) {
+            const didDoc = idManager.getDidDocument();
+            if (didDoc) {
+                // We use a specific script type for the trust store.
+                // In Phase 3, this will include CRLs and OCSP responses in CBOR format.
+                const trustStoreScript = `
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+${JSON.stringify({ didDocuments: [didDoc] }, null, 2)}
+</script>
+`;
+                finalHtml = finalHtml.replace('</body>', `${trustStoreScript}</body>`);
+            }
+        }
+
         return { html: finalHtml, vc };
     }
 }
