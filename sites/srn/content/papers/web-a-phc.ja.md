@@ -1,6 +1,9 @@
 ---
 title: "Web/A Prunable Hash Chain (PHC) 仕様書"
 date: 2026-01-01T12:00:00+09:00
+lang: ja
+license: "CC-BY-4.0"
+schema: "https://masanork.github.io/srn/schemas/weba-v1.json"
 tags: ["draft"]
 ---
 
