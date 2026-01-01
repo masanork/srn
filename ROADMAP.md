@@ -22,7 +22,7 @@ This document tracks the high-level development status, architectural decisions,
 - [x] **Server Architecture**: **Hono** implementation supporting both Bun (Local) and Edge runtimes.
 - [ ] **Event-Driven Ingress**: Implement a lightweight Pub/Sub-first receiver (Accepted-over-Stored) to ensure CSP portability.
 - [ ] **Async Rule Engine**: Port `PostalHub` logic to background workers triggered by message bus events.
-- [ ] **Storage Adapters**: Implement Object Storage (R2/GCS/S3) for raw containers + lightweight index (Firestore/D1/KV).
+- [ ] **Storage Adapters (Claim Check Pattern)**: Use Object Storage (R2/GCS/S3) for raw containers to bypass message size limits (128KB/10MB), using Pub/Sub only for lightweight handles.
 - [ ] **Client Integration**: Update `folio` CLI to interact with the new Post server (Inbox/Outbox).
 - [ ] **Federation**: Enable server-to-server communication (DID resolution & forwarding).
 
