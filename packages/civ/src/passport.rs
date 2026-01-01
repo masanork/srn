@@ -23,6 +23,8 @@ pub mod file_ids {
     pub const EF_DG11: [u8; 2] = [0x01, 0x0B];
     /// EF.DG12 (Additional Document Details)
     pub const EF_DG12: [u8; 2] = [0x01, 0x0C];
+    /// EF.SOD (Security Object Document - Signed hashes of all DGs)
+    pub const EF_SOD: [u8; 2] = [0x01, 0x1D];
 }
 
 impl<R: CardReader> PassportController<R> {
@@ -106,6 +108,12 @@ impl<R: CardReader> PassportController<R> {
     /// Read EF.DG12 (Additional Document Details)
     pub async fn read_dg12(&mut self) -> Result<Vec<u8>> {
         self.read_file(&file_ids::EF_DG12).await
+    }
+
+    /// Read EF.SOD (Security Object Document)
+    /// Contains signed hashes of all data groups for authenticity verification
+    pub async fn read_sod(&mut self) -> Result<Vec<u8>> {
+        self.read_file(&file_ids::EF_SOD).await
     }
 
     // Helper to Select EF and Read Binary
