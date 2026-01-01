@@ -67,6 +67,7 @@ impl BacSession {
         }
 
         let tlvs = parse_tlv(raw_data)?;
+        // let mut count = 0;
         let mut do87 = None;
         let mut do99 = None;
         let mut do8e = None;

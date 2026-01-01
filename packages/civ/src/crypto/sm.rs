@@ -1,12 +1,16 @@
 use anyhow::{Result, anyhow};
 use crate::apdu::ApduCommand;
+#[allow(unused_imports)]
 use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit, block_padding::Iso7816};
 use cbc::{Encryptor, Decryptor};
 use aes::Aes128;
 use cmac::{Cmac, Mac}; // Trait 'Mac' defines update/finalize
 
+#[allow(dead_code)]
 type Aes128CbcEnc = Encryptor<Aes128>;
+#[allow(dead_code)]
 type Aes128CbcDec = Decryptor<Aes128>;
+#[allow(dead_code)]
 type Aes128Cmac = Cmac<Aes128>;
 
 pub trait SecureMessagingSession {
@@ -14,6 +18,7 @@ pub trait SecureMessagingSession {
     fn unwrap_response(&mut self, data: &[u8]) -> Result<(Vec<u8>, u8, u8)>;
 }
 
+#[allow(dead_code)]
 pub struct AesSecureMessaging {
     k_enc: [u8; 16],
     k_mac: [u8; 16],
@@ -25,11 +30,13 @@ impl AesSecureMessaging {
         Self { k_enc, k_mac, ssc }
     }
 
+    #[allow(dead_code)]
     fn increment_ssc(&mut self) {
         self.ssc += 1;
     }
 
-    fn compute_mac(&self, data: &[u8]) -> Result<[u8; 8]> {
+    #[allow(dead_code)]
+    fn compute_mac(&self, _data: &[u8]) -> Result<[u8; 8]> {
          // AES CMAC produces 16 bytes (128 bits), but ICAO 9303 SM usually uses first 8 bytes for MAC 
          // Verify standard: Part 11 says 8 bytes for 3DES, 8 bytes for AES-CMAC too usually? 
          // Actually RFC 4493 (AES-CMAC) output is 128-bit. ICAO 9303 Part 11 9.8.something

@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use anyhow::{Result, Context};
 use encoding_rs::SHIFT_JIS;
 
