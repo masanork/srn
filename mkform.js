@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2026-01-01T10:08:06Z';
+window.__WEBA_BUILD_TIME__='2026-01-01T10:51:13Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -4600,7 +4600,7 @@ async function derivePasskeyPrf(credentialId, salt) {
 }
 
 // src/form/client/l2crypto.ts
-var import_canonicalize = __toESM(require_canonicalize(), 1);
+var import_canonicalize2 = __toESM(require_canonicalize(), 1);
 
 // src/core/wasm_bindings/weba_crypto_wasm.js
 var wasm;
@@ -4641,6 +4641,37 @@ function passArray8ToWasm0(arg, malloc) {
   WASM_VECTOR_LEN = arg.length;
   return ptr;
 }
+function passStringToWasm0(arg, malloc, realloc) {
+  if (realloc === undefined) {
+    const buf = cachedTextEncoder.encode(arg);
+    const ptr2 = malloc(buf.length, 1) >>> 0;
+    getUint8ArrayMemory0().subarray(ptr2, ptr2 + buf.length).set(buf);
+    WASM_VECTOR_LEN = buf.length;
+    return ptr2;
+  }
+  let len = arg.length;
+  let ptr = malloc(len, 1) >>> 0;
+  const mem = getUint8ArrayMemory0();
+  let offset = 0;
+  for (;offset < len; offset++) {
+    const code = arg.charCodeAt(offset);
+    if (code > 127)
+      break;
+    mem[ptr + offset] = code;
+  }
+  if (offset !== len) {
+    if (offset !== 0) {
+      arg = arg.slice(offset);
+    }
+    ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+    const view = getUint8ArrayMemory0().subarray(ptr + offset, ptr + len);
+    const ret = cachedTextEncoder.encodeInto(arg, view);
+    offset += ret.written;
+    ptr = realloc(ptr, len, offset, 1) >>> 0;
+  }
+  WASM_VECTOR_LEN = offset;
+  return ptr;
+}
 function takeFromExternrefTable0(idx) {
   const value = wasm.__wbindgen_externrefs.get(idx);
   wasm.__externref_table_dealloc(idx);
@@ -4671,6 +4702,80 @@ if (!("encodeInto" in cachedTextEncoder)) {
   };
 }
 var WASM_VECTOR_LEN = 0;
+function build_l2_envelope_wasm(payload_json, user_sk, user_kid, config_json, created_at) {
+  let deferred7_0;
+  let deferred7_1;
+  try {
+    const ptr0 = passStringToWasm0(payload_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(user_sk, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(user_kid, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passStringToWasm0(config_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passStringToWasm0(created_at, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ret = wasm.build_l2_envelope_wasm(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
+    var ptr6 = ret[0];
+    var len6 = ret[1];
+    if (ret[3]) {
+      ptr6 = 0;
+      len6 = 0;
+      throw takeFromExternrefTable0(ret[2]);
+    }
+    deferred7_0 = ptr6;
+    deferred7_1 = len6;
+    return getStringFromWasm0(ptr6, len6);
+  } finally {
+    wasm.__wbindgen_free(deferred7_0, deferred7_1, 1);
+  }
+}
+function decrypt_l2_envelope_wasm(envelope_json, recipient_sk, pqc_sk) {
+  let deferred5_0;
+  let deferred5_1;
+  try {
+    const ptr0 = passStringToWasm0(envelope_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(recipient_sk, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    var ptr2 = isLikeNone(pqc_sk) ? 0 : passArray8ToWasm0(pqc_sk, wasm.__wbindgen_malloc);
+    var len2 = WASM_VECTOR_LEN;
+    const ret = wasm.decrypt_l2_envelope_wasm(ptr0, len0, ptr1, len1, ptr2, len2);
+    var ptr4 = ret[0];
+    var len4 = ret[1];
+    if (ret[3]) {
+      ptr4 = 0;
+      len4 = 0;
+      throw takeFromExternrefTable0(ret[2]);
+    }
+    deferred5_0 = ptr4;
+    deferred5_1 = len4;
+    return getStringFromWasm0(ptr4, len4);
+  } finally {
+    wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
+  }
+}
+function ed25519_generate_keypair() {
+  const ret = wasm.ed25519_generate_keypair();
+  if (ret[3]) {
+    throw takeFromExternrefTable0(ret[2]);
+  }
+  var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+  wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+  return v1;
+}
+function ed25519_public_key_to_x25519_public_key(ed25519_pub) {
+  const ptr0 = passArray8ToWasm0(ed25519_pub, wasm.__wbindgen_malloc);
+  const len0 = WASM_VECTOR_LEN;
+  const ret = wasm.ed25519_public_key_to_x25519_public_key(ptr0, len0);
+  if (ret[3]) {
+    throw takeFromExternrefTable0(ret[2]);
+  }
+  var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+  wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+  return v2;
+}
 function get_version() {
   let deferred1_0;
   let deferred1_1;
@@ -4697,6 +4802,15 @@ function hkdf_sha256_wasm(ikm, salt, info, okm_len) {
   var v4 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
   wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
   return v4;
+}
+function x25519_generate_keypair() {
+  const ret = wasm.x25519_generate_keypair();
+  if (ret[3]) {
+    throw takeFromExternrefTable0(ret[2]);
+  }
+  var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+  wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+  return v1;
 }
 function x25519_get_public_key(private_key) {
   const ptr0 = passArray8ToWasm0(private_key, wasm.__wbindgen_malloc);
@@ -4921,15 +5035,710 @@ async function initWasmFromB64() {
   }
   await initWasm(bytes);
 }
+function x25519GenerateKeyPair() {
+  if (!initialized)
+    throw new Error("WASM not initialized");
+  const bytes = x25519_generate_keypair();
+  return {
+    privateKey: bytes.slice(0, 32),
+    publicKey: bytes.slice(32, 64)
+  };
+}
 function x25519GetPublicKey(privateKey) {
   if (!initialized)
     throw new Error("WASM not initialized");
   return x25519_get_public_key(privateKey);
 }
+function ed25519GenerateKeyPair() {
+  if (!initialized)
+    throw new Error("WASM not initialized");
+  const bytes = ed25519_generate_keypair();
+  return {
+    privateKey: bytes.slice(0, 32),
+    publicKey: bytes.slice(32, 64)
+  };
+}
 function hkdfSha256(ikm, salt, info, length) {
   if (!initialized)
     throw new Error("WASM not initialized");
   return hkdf_sha256_wasm(ikm, salt || new Uint8Array(0), info, length);
+}
+function buildL2Envelope(payloadJson, userSk, userKid, configJson, createdAt) {
+  if (!initialized)
+    throw new Error("WASM not initialized");
+  return build_l2_envelope_wasm(payloadJson, userSk, userKid, configJson, createdAt);
+}
+function decryptL2Envelope(envelopeJson, recipientSk, pqcSk) {
+  if (!initialized)
+    throw new Error("WASM not initialized");
+  return decrypt_l2_envelope_wasm(envelopeJson, recipientSk, pqcSk);
+}
+function ed25519PublicKeyToX25519PublicKey(ed25519Pub) {
+  if (!initialized)
+    throw new Error("WASM not initialized");
+  return ed25519_public_key_to_x25519_public_key(ed25519Pub);
+}
+
+// src/core/l2crypto.ts
+var import_canonicalize = __toESM(require_canonicalize(), 1);
+
+// src/core/encoding.ts
+var BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+var MULTIBASE_BASE58BTC_PREFIX = "z";
+var hasBuffer = typeof Buffer !== "undefined";
+function bytesToBase64Url(bytes) {
+  if (hasBuffer) {
+    return Buffer.from(bytes).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+  let value = "";
+  bytes.forEach((b) => {
+    value += String.fromCharCode(b);
+  });
+  return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function base64UrlToBytes(value) {
+  const padded = value.length % 4 === 0 ? value : value + "=".repeat(4 - value.length % 4);
+  const base64 = padded.replace(/-/g, "+").replace(/_/g, "/");
+  if (hasBuffer) {
+    return Uint8Array.from(Buffer.from(base64, "base64"));
+  }
+  const raw = atob(base64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i2 = 0;i2 < raw.length; i2++) {
+    bytes[i2] = raw.charCodeAt(i2);
+  }
+  return bytes;
+}
+function base58ToBytes(input) {
+  if (input.length === 0)
+    return new Uint8Array;
+  const bytes = [0];
+  for (const char of input) {
+    const value = BASE58_ALPHABET.indexOf(char);
+    if (value < 0) {
+      throw new Error(`Invalid base58 character: ${char}`);
+    }
+    let carry = value;
+    for (let i2 = 0;i2 < bytes.length; i2++) {
+      const acc = bytes[i2] * 58 + carry;
+      bytes[i2] = acc & 255;
+      carry = acc >> 8;
+    }
+    while (carry > 0) {
+      bytes.push(carry & 255);
+      carry >>= 8;
+    }
+  }
+  let zeros = 0;
+  for (const char of input) {
+    if (char !== BASE58_ALPHABET[0])
+      break;
+    zeros += 1;
+  }
+  const result = new Uint8Array(zeros + bytes.length);
+  for (let i2 = 0;i2 < bytes.length; i2++) {
+    result[result.length - 1 - i2] = bytes[i2];
+  }
+  return result;
+}
+function decodeMultibaseBase58btc(value) {
+  if (!value.startsWith(MULTIBASE_BASE58BTC_PREFIX)) {
+    throw new Error(`Unsupported multibase prefix in ${value}`);
+  }
+  return base58ToBytes(value.slice(1));
+}
+
+// src/core/l2crypto.ts
+var WEBA_VERSION = "0.1";
+function toBase64Url(buf) {
+  return bytesToBase64Url(buf);
+}
+function fromBase64Url(str2) {
+  return base64UrlToBytes(str2);
+}
+function canonicalJson(obj) {
+  const result = import_canonicalize.default(obj);
+  if (result === undefined)
+    throw new Error("Failed to canonicalize JSON");
+  return result;
+}
+async function generateRecipientKeyPair() {
+  await initWasm();
+  return x25519GenerateKeyPair();
+}
+async function generateUserKeyPair() {
+  await initWasm();
+  return ed25519GenerateKeyPair();
+}
+async function encryptLayer2(payload, recipientPublicKey, layer1Ref, recipientKid, options) {
+  await initWasm();
+  const userSk = options?.userSk;
+  const effectiveSk = userSk ?? (await generateUserKeyPair()).privateKey;
+  const createdAt = options?.meta?.created_at || new Date().toISOString();
+  const config = {
+    enabled: true,
+    recipient_kid: recipientKid,
+    recipient_x25519: toBase64Url(recipientPublicKey),
+    recipient_pqc: options?.pqc ? toBase64Url(options.pqc.recipientPublicKey) : undefined,
+    layer1_ref: layer1Ref,
+    weba_version: WEBA_VERSION,
+    campaign_id: options?.meta?.campaign_id
+  };
+  const userKid = options?.userKid || (options?.userSk ? "user#sig-custom" : "user#sig-1");
+  const envelopeJson = buildL2Envelope(canonicalJson(payload.layer2_plain), effectiveSk, userKid, JSON.stringify(config), createdAt);
+  return JSON.parse(envelopeJson);
+}
+
+class ReplayGuard {
+  seenNonces = new Set;
+  store;
+  constructor(store) {
+    this.store = store;
+  }
+  async checkAndMark(nonce) {
+    if (this.store) {
+      if (await this.store.has(nonce)) {
+        return false;
+      }
+      await this.store.add(nonce);
+      return true;
+    }
+    if (this.seenNonces.has(nonce)) {
+      return false;
+    }
+    this.seenNonces.add(nonce);
+    return true;
+  }
+  async reset() {
+    if (this.store) {
+      await this.store.reset();
+    }
+    this.seenNonces.clear();
+  }
+}
+async function decryptLayer2(envelope, recipientPrivateKey, options) {
+  await initWasm();
+  if (envelope.layer2.enc !== "HPKE-v1") {
+    throw new Error(`Unsupported layer2.enc: ${envelope.layer2.enc}`);
+  }
+  if (!options?.skipReplayCheck) {
+    let guard = options?.replayGuard;
+    if (!guard) {
+      console.warn("SECURITY WARNING: No ReplayGuard provided to decryptLayer2. Using in-memory ephemeral store. Replays will only be detected within this process lifetime.");
+      guard = new ReplayGuard;
+    }
+    const isFresh = await guard.checkAndMark(envelope.meta.nonce);
+    if (!isFresh) {
+      throw new Error("Security Error: Replay detected (nonce used).");
+    }
+  }
+  const envelopeJson = JSON.stringify(envelope);
+  const pqcSk = options?.pqc?.recipientPrivateKey;
+  try {
+    const plainJson = decryptL2Envelope(envelopeJson, recipientPrivateKey, pqcSk);
+    return JSON.parse(plainJson);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("Missing PQC KEM") || msg.includes("AAD mismatch")) {
+      throw new Error(msg);
+    }
+    throw new Error("Decryption failed");
+  }
+}
+
+// src/core/did.ts
+function decodeUvarint(bytes) {
+  let value = 0;
+  let shift = 0;
+  for (let i2 = 0;i2 < bytes.length; i2++) {
+    const byte = bytes[i2];
+    if (byte === undefined)
+      break;
+    value |= (byte & 127) << shift;
+    if ((byte & 128) === 0) {
+      return { value, length: i2 + 1 };
+    }
+    shift += 7;
+  }
+  throw new Error("Invalid varint encoding");
+}
+function decodeMulticodec(bytes) {
+  const { value, length } = decodeUvarint(bytes);
+  return {
+    code: value,
+    data: bytes.slice(length)
+  };
+}
+function collectVerificationMethods(doc) {
+  const methods = new Map;
+  if (Array.isArray(doc.verificationMethod)) {
+    doc.verificationMethod.forEach((method) => {
+      if (method?.id) {
+        methods.set(method.id, method);
+      }
+    });
+  }
+  if (Array.isArray(doc.assertionMethod)) {
+    doc.assertionMethod.forEach((entry) => {
+      if (entry && typeof entry === "object" && "id" in entry) {
+        const method = entry;
+        if (method.id) {
+          methods.set(method.id, method);
+        }
+      }
+    });
+  }
+  return methods;
+}
+function decodeDidKey(did) {
+  const parts = did.split("#");
+  const didKey = parts[0] || "";
+  if (!didKey.startsWith("did:key:")) {
+    throw new Error(`Unsupported DID method for did:key decoding: ${did}`);
+  }
+  const multibase = didKey.slice("did:key:".length);
+  const multicodec = decodeMulticodec(decodeMultibaseBase58btc(multibase));
+  return { code: multicodec.code, publicKey: multicodec.data };
+}
+async function resolveDidDocument(did, fetcher = fetch) {
+  if (did.startsWith("did:key:")) {
+    const multibase = did.slice("did:key:".length);
+    return {
+      id: did,
+      verificationMethod: [
+        {
+          id: `${did}#${multibase}`,
+          type: "Multikey",
+          controller: did,
+          publicKeyMultibase: multibase
+        }
+      ],
+      assertionMethod: [`${did}#${multibase}`]
+    };
+  }
+  if (!did.startsWith("did:web:")) {
+    return null;
+  }
+  const domain = did.split(":")[2];
+  if (!domain)
+    return null;
+  const pathParts = did.split(":").slice(3);
+  const didPath = pathParts.length > 0 ? pathParts.join("/") : ".well-known";
+  const url = `https://${domain}/${didPath}/did.json`;
+  try {
+    const resp = await fetcher(url);
+    if (!resp.ok)
+      return null;
+    return await resp.json();
+  } catch (e) {
+    console.warn(`Failed to resolve DID ${did}:`, e);
+    return null;
+  }
+}
+
+// src/form/client/guest_did.ts
+async function resolveEncryptionKey(did) {
+  if (did.startsWith("did:key:")) {
+    try {
+      const { code, publicKey } = decodeDidKey(did);
+      if (code === 236) {
+        return { publicKey, kid: `${did}#${did.split(":").pop()}` };
+      }
+      if (code === 237) {
+        const x25519Pub = ed25519PublicKeyToX25519PublicKey(publicKey);
+        return { publicKey: x25519Pub, kid: `${did}#${did.split(":").pop()}` };
+      }
+      throw new Error(`Unsupported did:key type (multicodec: 0x${code.toString(16)})`);
+    } catch (e) {
+      throw new Error(`Failed to resolve did:key: ${e.message || e}`);
+    }
+  }
+  const doc = await resolveDidDocument(did, fetch);
+  if (!doc) {
+    throw new Error(`Failed to resolve DID: ${did}`);
+  }
+  if (!doc.keyAgreement || doc.keyAgreement.length === 0) {
+    throw new Error("No keyAgreement found in DID Document");
+  }
+  const keyAgreementRef = doc.keyAgreement[0];
+  let keyAgreementId;
+  if (typeof keyAgreementRef === "string") {
+    keyAgreementId = keyAgreementRef;
+  } else if (keyAgreementRef && typeof keyAgreementRef === "object" && "id" in keyAgreementRef) {
+    keyAgreementId = keyAgreementRef.id;
+  } else {
+    throw new Error("Invalid keyAgreement format in DID Document");
+  }
+  const methods = collectVerificationMethods(doc);
+  let method = methods.get(keyAgreementId);
+  if (!method) {
+    const fragment = keyAgreementId.split("#").pop();
+    if (fragment) {
+      for (const [id, m] of methods.entries()) {
+        if (id.endsWith(`#${fragment}`)) {
+          method = m;
+          break;
+        }
+      }
+    }
+  }
+  if (!method && typeof keyAgreementRef === "object" && "publicKeyJwk" in keyAgreementRef) {
+    method = keyAgreementRef;
+  }
+  if (!method) {
+    throw new Error(`KeyAgreement method not found: ${keyAgreementId}`);
+  }
+  if (method.publicKeyJwk && typeof method.publicKeyJwk === "object") {
+    const jwk = method.publicKeyJwk;
+    if (jwk.kty === "OKP" && jwk.crv === "X25519" && jwk.x) {
+      return {
+        publicKey: fromBase64Url(jwk.x),
+        kid: method.id
+      };
+    }
+  }
+  throw new Error("No X25519 encryption key found in DID Document");
+}
+async function sendGuestMessage(did, recipientDid, messageText) {
+  await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+  const credentialId = localStorage.getItem(`guest-did:${did}`);
+  if (!credentialId)
+    throw new Error("Credential ID not found for DID");
+  const plainContent = {
+    type: "https://schema.org/Message",
+    ext: {
+      "com.example.rsvp": { attending: true, count: 1 }
+    },
+    text: messageText,
+    timestamp: new Date().toISOString()
+  };
+  const payload = {
+    layer2_plain: plainContent,
+    layer2_sig: { alg: "none", kid: "guest-passkey", sig: "", created_at: new Date().toISOString() }
+  };
+  console.log("Resolving recipient...", recipientDid);
+  const { publicKey: recipientKey, kid: recipientKid } = await resolveEncryptionKey(recipientDid);
+  console.log("Encrypting...", recipientKid);
+  const encrypted = await encryptLayer2(payload, recipientKey, `ref:${Date.now()}`, recipientKid, {
+    userSk: new Uint8Array(0),
+    userKid: "guest-passkey"
+  });
+  const challengeResp = await fetch(REMOTE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `query GetChallenge($did: ID!) { getChallenge(did: $did) { nonce } }`,
+      variables: { did }
+    })
+  });
+  const challengeResult = await challengeResp.json();
+  if (challengeResult.errors)
+    throw new Error(challengeResult.errors[0].message);
+  const nonce = challengeResult.data.getChallenge.nonce;
+  const challengeBuffer = base64UrlToArrayBuffer(nonce);
+  console.log("Requesting Passkey signature...");
+  const assertion = await navigator.credentials.get({
+    publicKey: {
+      challenge: challengeBuffer,
+      allowCredentials: [{
+        id: base64UrlToArrayBuffer(credentialId),
+        type: "public-key"
+      }],
+      userVerification: "required"
+    }
+  });
+  if (!assertion)
+    throw new Error("Authentication failed");
+  const response = assertion.response;
+  const mutation = `
+        mutation GuestPostMessage(
+            $did: ID!, 
+            $credentialId: String!, 
+            $signature: String!, 
+            $authenticatorData: String!, 
+            $clientDataJSON: String!,
+            $recipientDid: String!,
+            $envelope: String!
+        ) {
+            guestPostMessage(
+                did: $did, 
+                credentialId: $credentialId, 
+                signature: $signature, 
+                authenticatorData: $authenticatorData, 
+                clientDataJSON: $clientDataJSON,
+                recipientDid: $recipientDid,
+                envelope: $envelope
+            ) {
+                id
+            }
+        }
+    `;
+  const apiResp = await fetch(REMOTE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: mutation,
+      variables: {
+        did,
+        credentialId,
+        signature: arrayBufferToBase64(response.signature),
+        authenticatorData: arrayBufferToBase64(response.authenticatorData),
+        clientDataJSON: arrayBufferToBase64(response.clientDataJSON),
+        recipientDid,
+        envelope: JSON.stringify(encrypted)
+      }
+    })
+  });
+  const apiResult = await apiResp.json();
+  if (apiResult.errors)
+    throw new Error(apiResult.errors[0].message);
+  console.log("Guest Message Sent!", apiResult.data.guestPostMessage.id);
+  return apiResult.data.guestPostMessage;
+}
+var isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+var REMOTE_URL = isLocal ? "http://127.0.0.1:5002/api" : "/api";
+var RP_NAME = "SRN Guest Service";
+async function checkExistingGuestDid() {
+  const count = localStorage.length;
+  for (let i2 = 0;i2 < count; i2++) {
+    const key = localStorage.key(i2);
+    if (!key || !key.startsWith("guest-did:"))
+      continue;
+    if (key.endsWith(":privateKey"))
+      continue;
+    const did = key.replace("guest-did:", "");
+    return did;
+  }
+  return null;
+}
+async function getOrCreateGuestDid(forceNew = false) {
+  if (!window.PublicKeyCredential) {
+    throw new Error("Passkey not supported on this device");
+  }
+  if (!forceNew) {
+    const existingDid = await checkExistingGuestDid();
+    if (existingDid) {
+      console.log("Reusing existing Guest DID");
+      return { did: existingDid, isReused: true };
+    }
+  }
+  const did = await createGuestDidWithPasskey();
+  return { did, isReused: false };
+}
+async function createGuestDidWithPasskey() {
+  try {
+    let arrayBufferToBase64 = function(buffer) {
+      let binary2 = "";
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.length;
+      for (let i2 = 0;i2 < len; i2++) {
+        binary2 += String.fromCharCode(bytes[i2]);
+      }
+      return btoa(binary2);
+    };
+    await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    const userId = new Uint8Array(16);
+    crypto.getRandomValues(userId);
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: {
+          name: RP_NAME,
+          id: window.location.hostname
+        },
+        user: {
+          id: userId,
+          name: "guest@srn.example",
+          displayName: "SRN Guest User"
+        },
+        pubKeyCredParams: [
+          { alg: -7, type: "public-key" }
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required",
+          residentKey: "required",
+          requireResidentKey: true
+        },
+        timeout: 60000,
+        attestation: "none"
+      }
+    });
+    if (!credential) {
+      throw new Error("Passkey creation cancelled");
+    }
+    const encKeyPair = await generateRecipientKeyPair();
+    const encryptionPublicKeyJwk = {
+      kty: "OKP",
+      crv: "X25519",
+      x: arrayBufferToBase64Url(encKeyPair.publicKey)
+    };
+    const mutation = `
+      mutation CreateGuestDid($credentialId: String!, $attestationObject: String!, $clientDataJSON: String!, $encryptionPublicKeyJwk: String!) {
+        createGuestDid(credentialId: $credentialId, attestationObject: $attestationObject, clientDataJSON: $clientDataJSON, encryptionPublicKeyJwk: $encryptionPublicKeyJwk) {
+          did
+          expiresAt
+        }
+      }
+    `;
+    const response = await fetch(REMOTE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: mutation,
+        variables: {
+          credentialId: credential.id,
+          attestationObject: arrayBufferToBase64(credential.response.attestationObject),
+          clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
+          encryptionPublicKeyJwk: JSON.stringify(encryptionPublicKeyJwk)
+        }
+      })
+    });
+    const result = await response.json();
+    if (result.errors) {
+      throw new Error(`GraphQL Error: ${result.errors[0].message}`);
+    }
+    const { did, expiresAt } = result.data.createGuestDid;
+    localStorage.setItem(`guest-did:${did}`, credential.id);
+    localStorage.setItem(`guest-did:${did}:privateKey`, arrayBufferToBase64Url(encKeyPair.privateKey));
+    console.log(`Guest DID created: ${did} (expires: ${expiresAt})`);
+    return did;
+  } catch (error) {
+    console.error("Failed to create Guest DID:", error);
+    throw error;
+  }
+}
+async function fetchGuestInbox(did) {
+  await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+  const credentialId = localStorage.getItem(`guest-did:${did}`);
+  if (!credentialId)
+    throw new Error("Credential ID not found for DID");
+  const challengeResp = await fetch(REMOTE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `query GetChallenge($did: ID!) { getChallenge(did: $did) { nonce } }`,
+      variables: { did }
+    })
+  });
+  const challengeResult = await challengeResp.json();
+  if (challengeResult.errors)
+    throw new Error(challengeResult.errors[0].message);
+  const nonce = challengeResult.data.getChallenge.nonce;
+  const challengeBuffer = base64UrlToArrayBuffer(nonce);
+  const assertion = await navigator.credentials.get({
+    publicKey: {
+      challenge: challengeBuffer,
+      allowCredentials: [{
+        id: base64UrlToArrayBuffer(credentialId),
+        type: "public-key"
+      }],
+      userVerification: "required"
+    }
+  });
+  if (!assertion)
+    throw new Error("Authentication failed");
+  const response = assertion.response;
+  const query = `
+        query GuestInbox($did: ID!, $credentialId: String!, $signature: String!, $authenticatorData: String!, $clientDataJSON: String!) {
+            guestInbox(did: $did, credentialId: $credentialId, signature: $signature, authenticatorData: $authenticatorData, clientDataJSON: $clientDataJSON) {
+                id
+                senderDid
+                recipientDid
+                envelope
+                createdAt
+            }
+        }
+    `;
+  const apiResp = await fetch(REMOTE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query,
+      variables: {
+        did,
+        credentialId,
+        signature: arrayBufferToBase64(response.signature),
+        authenticatorData: arrayBufferToBase64(response.authenticatorData),
+        clientDataJSON: arrayBufferToBase64(response.clientDataJSON)
+      }
+    })
+  });
+  const apiResult = await apiResp.json();
+  if (apiResult.errors)
+    throw new Error(apiResult.errors[0].message);
+  const messages = apiResult.data.guestInbox;
+  const privateKeyB64 = localStorage.getItem(`guest-did:${did}:privateKey`);
+  if (privateKeyB64) {
+    const privateKey = new Uint8Array(base64UrlToArrayBuffer(privateKeyB64));
+    for (const msg of messages) {
+      if (msg.envelope) {
+        try {
+          const encrypted = JSON.parse(msg.envelope);
+          const decryptedPayload = await decryptLayer2(encrypted, privateKey);
+          if (decryptedPayload.layer2_plain) {
+            msg.content = decryptedPayload.layer2_plain;
+          } else {
+            msg.content = decryptedPayload;
+          }
+          delete msg.envelope;
+        } catch (e) {
+          console.error("Failed to decrypt:", e);
+          msg.content = { text: "[Decryption Failed: " + e.message + "]" };
+        }
+      }
+    }
+  }
+  return messages;
+}
+function base64UrlToArrayBuffer(base64url) {
+  const padding = "=".repeat((4 - base64url.length % 4) % 4);
+  const base64 = (base64url + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i2 = 0;i2 < rawData.length; ++i2) {
+    outputArray[i2] = rawData.charCodeAt(i2);
+  }
+  return outputArray.buffer;
+}
+function arrayBufferToBase64(buffer) {
+  let binary2 = "";
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.length;
+  for (let i2 = 0;i2 < len; i2++) {
+    binary2 += String.fromCharCode(bytes[i2]);
+  }
+  return window.btoa(binary2);
+}
+function arrayBufferToBase64Url(buffer) {
+  let binary2 = "";
+  const len = buffer.length;
+  for (let i2 = 0;i2 < len; i2++) {
+    binary2 += String.fromCharCode(buffer[i2]);
+  }
+  return btoa(binary2).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+if (typeof window !== "undefined") {
+  window.getOrCreateGuestDid = getOrCreateGuestDid;
+  window.fetchGuestInbox = fetchGuestInbox;
+  window.sendGuestMessage = sendGuestMessage;
+  window.submitFormWithGuestDid = async (formData, wantsReplies, recipientDid) => {
+    const { did, isReused } = await getOrCreateGuestDid(false);
+    const messageText = JSON.stringify(formData);
+    const targetDid = recipientDid || "did:web:srn.example";
+    await sendGuestMessage(did, targetDid, messageText);
+    return { senderDid: did };
+  };
+  window.clearAllGuestDids = () => {
+    const keys = Object.keys(localStorage);
+    for (const key of keys) {
+      if (key.startsWith("guest-did:")) {
+        localStorage.removeItem(key);
+      }
+    }
+  };
 }
 
 // src/form/client/l2crypto.ts
@@ -4954,7 +5763,7 @@ async function deriveKeyPairFromPrf(prfKey) {
   const publicKey = x25519GetPublicKey(seed);
   return { publicKey, privateKey: seed };
 }
-class ReplayGuard {
+class ReplayGuard2 {
   seenNonces = new Set;
   store;
   constructor(store) {
