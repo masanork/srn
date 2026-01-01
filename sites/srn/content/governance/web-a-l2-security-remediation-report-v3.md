@@ -44,8 +44,8 @@ To address the lack of Forward Secrecy without introducing dynamic servers (whic
 *   **Mechanism**: Clients fetch a static JSON registry (`epoch-public.json`) hosted on the CDN and select a public key valid for the current UTC date. No handshake server is required.
 *   **Security Gain**: If an aggregator's private keystore is compromised, the damage is limited to the current active Epoch (e.g., 24 hours). Past keys, if properly shredded by the aggregator, cannot be recovered.
 *   **Artifacts**:
-    *   Architecture: [Static-Epoch Forward Secrecy: Architecture & Risk Analysis](./web-a-l2-epoch-pfs.html)
-    *   Client Guide: [Implementation Guide: Client-Side Epoch-Based PFS](./web-a-l2-pfs-implementation-guide.html)
+    *   Architecture: [Static-Epoch Forward Secrecy: Architecture & Risk Analysis](../papers/web-a-l2-epoch-pfs.html)
+    *   Client Guide: [Implementation Guide: Client-Side Epoch-Based PFS](../papers/web-a-l2-pfs-implementation-guide.html)
 
 ### 3.4. Real-world Deployment Verification (Firebase)
 We have verified the Tier 3 (True PFS) implementation by deploying it to a live Google Cloud / Firebase environment.

@@ -16,7 +16,7 @@ ai_generated: true
 
 ### Related
 - [Remediation Report (Response to v3)](./web-a-l2-security-remediation-report-v3.html)
-- [Epoch-Based Forward Secrecy Architecture](./web-a-l2-epoch-pfs.html)
+- [Epoch-Based Forward Secrecy Architecture](../papers/web-a-l2-epoch-pfs.html)
 
 ## 1. Executive Summary
 

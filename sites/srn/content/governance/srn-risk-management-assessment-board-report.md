@@ -3,7 +3,7 @@ title: "Sorane社 リスク管理態勢評価（取締役会向け）"
 layout: article
 author: "社外取締役（リスク担当）"
 date: 2025-01-15
-status: draft
+status: published
 ---
 
 > **SIMULATION NOTICE:** This document (audit, evaluation, response) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or professional audit by any real-world entity.

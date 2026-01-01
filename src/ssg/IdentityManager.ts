@@ -7,6 +7,8 @@ import { createHybridVC, generateHybridKeys, createStatusListVC } from '../core/
 import type { HybridKeys } from '../core/vc.ts';
 import { encodeDidKey, encodePqcPublicKeyJwk } from '../core/did.ts';
 import { hexToBytes } from '../core/encoding.ts';
+import { PrunableHashChain } from '../core/phc.js';
+import type { PHCEventType } from '../core/phc.js';
 
 export class IdentityManager {
     public currentKeys!: HybridKeys;
@@ -136,44 +138,59 @@ export class IdentityManager {
         return crypto.createHash('sha256').update(canon || '').digest('hex');
     }
 
-    async signDocument(payload: any): Promise<any> {
+    async signDocument(payload: any, metadata?: any): Promise<any> {
         // LTV Phase 2: Stable Signatures
-        // Check if we already have a signature for this EXACT payload (content-hash).
-        // Note: payload here does not have issuanceDate yet.
         const canon = canonicalize(payload);
         const hash = crypto.createHash('sha256').update(canon || '').digest('hex');
 
         if (this.signatureStore[hash]) {
-            // Reuse existing VC (preserving original issuanceDate and signature)
-            // Warning: If keys were rotated, this signature might be valid but verified with an old key.
-            // LTV/TrustStore handles this by keeping key history.
+            const phc = PrunableHashChain.fromJSON(this.contextStore[hash]);
+            const links = phc.getLinks();
+
+            // Check if metadata changed (compare with last known metadata in chain)
+            // We look for the most recent MetadataUpdate or Genesis
+            let lastMeta = null;
+            for (let i = links.length - 1; i >= 0; i--) {
+                const l = links[i];
+                if (!l || !l.event) continue;
+                const e = l.event;
+                if (e.type === 'MetadataUpdate' || e.type === 'Genesis') {
+                    lastMeta = e.payload.metadata;
+                    break;
+                }
+            }
+
+            const metaChanged = metadata && JSON.stringify(lastMeta) !== JSON.stringify(metadata);
+
+            if (metaChanged) {
+                await phc.append('MetadataUpdate', {
+                    metadata,
+                    buildId: this.buildId,
+                    reason: "Frontmatter updated in SSG"
+                });
+            } else {
+                // Just a rebuild with same metadata
+                await phc.append('L4Rebuild', { buildId: this.buildId });
+            }
+
+            this.contextStore[hash] = phc.toJSON();
+            await this.saveStore();
             return this.signatureStore[hash];
         }
 
         const vc = await createHybridVC(payload, this.currentKeys, this.siteDid, this.buildId);
 
-        // LTV Phase 3: Create Genesis Context Link
-        // For now, we sign it with the same key as the VC, but logically this is the "First Custodian".
-        // In real LTV, this would reference the L2 VC's signature hash, but for simplicity we link to Payload Hash.
-        const genesisLink = {
-            type: "WebAContextLink",
-            prevHash: "genesis",
-            targetHash: hash,
-            signer: this.siteDid,
-            timestamp: new Date().toISOString(),
-            proof: {
-                type: "DataIntegrityProof",
-                cryptosuite: "eddsa-jcs-2022",
-                verificationMethod: `${this.siteDid}#${this.buildId}-ed25519`,
-                // Note: We are not actually computing a cryptographic signature on this link yet in this PoC.
-                // In production, we would call ed25519Sign(canonicalize(link_without_proof)).
-                proofValue: "mock_signature_for_poc"
-            }
-        };
+        // PHC Initialization (Genesis)
+        const phc = new PrunableHashChain();
+        await phc.append('Genesis', {
+            issuer: this.siteDid,
+            payloadHash: hash,
+            metadata: metadata || {}
+        });
 
         // Save to store
         this.signatureStore[hash] = vc;
-        this.contextStore[hash] = [genesisLink];
+        this.contextStore[hash] = phc.toJSON();
         await this.saveStore();
 
         return vc;

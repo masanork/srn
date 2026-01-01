@@ -533,5 +533,5 @@ organizational surveys without centralized infrastructure dependency.
 ---
 
 ## Reference Links
-- [Security Audit Index](./web-a-l2-security-audit-index.html)
+- [Security Audit Index](../governance/web-a-l2-security-audit-index.html)
 - [Market Comparison](./web-a-l2-market-comparison.html)
