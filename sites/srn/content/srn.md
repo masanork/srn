@@ -44,17 +44,17 @@ ai_generated: true
     <span data-lang-en>Cryptographic signatures prove origin and integrity. No central server required.</span>
     <span data-lang-ja>暗号署名により、発行元と完全性を証明。中央集権サーバーに依存しません。</span>
 </li>
-<li><strong>Portable Trust</strong>
-    <span data-lang-en>Data, logic, and view are bundled in one HTML file. Works offline and lasts forever.</span>
-    <span data-lang-ja>データ、ロジック、表示を単一のHTMLに封入。オフラインでも動作し、永続します。</span>
+<li><strong>Portable Trust (LTV)</strong>
+    <span data-lang-en>Self-contained verification. Documents verify themselves offline, 50 years later, even if the issuer is gone.</span>
+    <span data-lang-ja>自己完結型の検証。発行元が消滅して50年後でも、オフラインで文書単体で真正性を検証可能。</span>
 </li>
 <li><strong>Privacy by Design (L2E)</strong>
     <span data-lang-en>Layer 2 Encryption (HPKE) ensures only the recipient can view the payload.</span>
     <span data-lang-ja>HPKEによるL2暗号化。意図した受信者だけが内容を復号・閲覧可能です。</span>
 </li>
-<li><strong>AI-Native Context</strong>
-    <span data-lang-en>Structured JSON-LD + Semantic HTML for perfect AI agent interoperability.</span>
-    <span data-lang-ja>構造化JSON-LDと意味論的HTMLにより、AIエージェントとの完全な相互運用性を実現。</span>
+<li><strong>Rebuild-Safe Timestamp</strong>
+    <span data-lang-en>Layered Signatures ensure that design updates (HTML rebuilds) do not invalidate the original "Signed At" timestamp.</span>
+    <span data-lang-ja>階層化署名により、デザイン更新（HTMLリビルド）を行っても、オリジナルの「署名日時」が失われることはありません。</span>
 </li>
 </ul>
 </div>
@@ -86,6 +86,7 @@ ai_generated: true
 <a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Transparency Reports</a>
 <a href="./papers/api-economy-vs-document-economy.html">📊 API vs Document Economy</a>
 <a href="./papers/web-a-l2-security-audit-v8.html">🛡️ L2 Security Audit (v8)</a>
+<a href="./papers/web-a-ltv-architecture.html">🏛️ LTV Architecture (New)</a>
 <a href="./papers/web-a-vp-generator-spec.html">🆔 VP Generator Spec (Gov)</a>
 </div>
 </div>
@@ -114,6 +115,7 @@ ai_generated: true
 <a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ 透明性報告</a>
 <a href="./papers/api-economy-vs-document-economy.ja.html">📊 試算：API経済 vs 書類経済</a>
 <a href="./governance/web-a-l2-security-audit-v8.ja.html">🛡️ L2 セキュリティ監査 (v8)</a>
+<a href="./papers/web-a-ltv-architecture.html">🏛️ LTV 長期検証アーキテクチャ</a>
 <a href="./papers/web-a-vp-generator-spec.html">🆔 行政証明書提示ツール仕様</a>
 </div>
 </div>
