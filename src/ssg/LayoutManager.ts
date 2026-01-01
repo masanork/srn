@@ -170,20 +170,33 @@ export class LayoutManager {
                 break;
         }
 
-        // --- LTV: Inject Trust Store (Phase 1) ---
+        // --- LTV: Inject Trust Store (Phase 1) & Context Chain (Phase 3) ---
         // Embed the Issuer's DID Document directly into the file.
         // This allows offline verification of the signature chain (at least the root key).
         if (vc && finalHtml.includes('</body>')) {
+            // 1. Inject Trust Store
             const didDoc = idManager.getDidDocument();
             if (didDoc) {
-                // We use a specific script type for the trust store.
-                // In Phase 3, this will include CRLs and OCSP responses in CBOR format.
                 const trustStoreScript = `
 <script type="application/vnd.weba+trust-store" id="weba-trust-store">
 ${JSON.stringify({ didDocuments: [didDoc] }, null, 2)}
 </script>
 `;
                 finalHtml = finalHtml.replace('</body>', `${trustStoreScript}</body>`);
+            }
+
+            // 2. Inject Context Chain (L3)
+            // Retrieve the chain associated with this VC
+            const contextChain = idManager.getContextChain(vc);
+            if (contextChain) {
+                const chainScript = `
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+${JSON.stringify(contextChain, null, 2)}
+</script>
+`;
+                // Inject AFTER trust store (which replaced </body>)
+                // Note: finalHtml now ends with <script...trust-store...></script></body>
+                finalHtml = finalHtml.replace('</body>', `${chainScript}</body>`);
             }
 
             // --- LTV: Container Signature (Phase 2.5) ---
@@ -200,7 +213,9 @@ ${JSON.stringify({ didDocuments: [didDoc] }, null, 2)}
                 credentialSubject: {
                     id: `${idManager.siteDid}/${relPath.replace('.md', '')}#container`,
                     containerHash,
-                    buildId: idManager.buildId
+                    buildId: idManager.buildId,
+                    // Link to the latest context chain hash if available
+                    latestContextHash: contextChain ? crypto.createHash('sha256').update(JSON.stringify(contextChain)).digest('hex') : undefined
                 }
             });
 
@@ -208,12 +223,10 @@ ${JSON.stringify({ didDocuments: [didDoc] }, null, 2)}
 ${JSON.stringify(containerVc, null, 2)}
 </script>`;
 
-            // Replace the trust store script end tag logic or just append?
-            // Since we already injected trustStoreScript (replacing </body>), finalHtml DOES NOT have the L4 placeholder yet.
-            // We need to inject L4 *after* Trust Store.
             finalHtml = finalHtml.replace('</body>', `${l4Script}</body>`);
         }
 
         return { html: finalHtml, vc };
     }
 }
+```
