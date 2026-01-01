@@ -170,3 +170,53 @@ impl<R: CardReader> PassportController<R> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::TestReader;
+
+    #[tokio::test]
+    async fn test_select_ep_ap() {
+        let reader = TestReader::new();
+        let mut controller = PassportController::new(reader.clone());
+        reader.push_response(&[0x90, 0x00]);
+
+        let res = controller.select_ep_ap().await;
+        assert!(res.is_ok());
+
+        let apdus = reader.sent_apdus.lock().unwrap();
+        assert_eq!(apdus[0][1], 0xA4);
+        assert_eq!(&apdus[0][5..], &file_ids::DF_ICAO);
+    }
+
+    #[tokio::test]
+    async fn test_read_dg1_multi_block() {
+        let reader = TestReader::new();
+        let mut controller = PassportController::new(reader.clone());
+        
+        // 1. Select success
+        reader.push_response(&[0x90, 0x00]);
+        // 2. First block (256 bytes)
+        let mut block1 = vec![0xAA; 256];
+        block1.extend_from_slice(&[0x90, 0x00]);
+        reader.push_response(&block1);
+        // 3. Second block (10 bytes)
+        let mut block2 = vec![0xBB; 10];
+        block2.extend_from_slice(&[0x90, 0x00]);
+        reader.push_response(&block2);
+
+        let res = controller.read_dg1().await;
+        assert!(res.is_ok());
+        let data = res.unwrap();
+        assert_eq!(data.len(), 266);
+        assert_eq!(data[0], 0xAA);
+        assert_eq!(data[256], 0xBB);
+
+        let apdus = reader.sent_apdus.lock().unwrap();
+        assert_eq!(apdus.len(), 3); // Select + Read1 + Read2
+        // Check offset in Read2 (P1 P2)
+        assert_eq!(apdus[2][2], 0x01); // 256 >> 8 = 1
+        assert_eq!(apdus[2][3], 0x00); // 256 & FF = 0
+    }
+}

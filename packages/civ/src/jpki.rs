@@ -328,8 +328,8 @@ mod tests {
 
         let apdus = mock.sent_apdus.lock().unwrap();
         assert_eq!(apdus.len(), 1);
-        // CLA=00, INS=A4, P1=04, P2=0C, Lc=07, Data=DF_JPKI(7)
-        let expected_head = vec![0x00, 0xA4, 0x04, 0x0C, 0x07];
+        // CLA=00, INS=A4, P1=04, P2=0C, Lc=0A (10), Data=DF_JPKI(10)
+        let expected_head = vec![0x00, 0xA4, 0x04, 0x0C, 0x0A];
         assert_eq!(apdus[0][0..5], expected_head[..]);
         assert_eq!(apdus[0][5..], file_ids::DF_JPKI[..]);
     }
