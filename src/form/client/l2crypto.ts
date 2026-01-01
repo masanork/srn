@@ -7,6 +7,13 @@ import {
   hkdfSha256,
   x25519GetPublicKey
 } from "../../core/wasm_core";
+import { createMlKem768Provider, installBrowserPqcProvider } from './pqc';
+import './guest_did';
+import { initL2Viewer } from './l2viewer';
+import { initKeywrapTool } from './keywrap_tool';
+
+(window as any).initL2Viewer = initL2Viewer;
+(window as any).initKeywrapTool = initKeywrapTool;
 
 
 

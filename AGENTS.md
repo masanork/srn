@@ -23,6 +23,11 @@
 - SSG only: `bun run src/ssg/index.ts --site srn` (add `--clean` to reset)
 - Dev watch: `bun --watch src/ssg/index.ts`
 
+## Web/A Form Principles
+- **Self-Containment**: Web/A Forms must be standalone "Single HTML Applications".
+- **Asset Inlining**: All critical runtime scripts (`form-bundle.js`), styles, and reference data (e.g., postal data) MUST be inlined into the HTML to ensure offline functionality and bypass CORS/Security restrictions on the `file://` protocol.
+- **Privacy by Design**: Do not depend on external CDNs or APIs for core form logic. Data required for autocomplete or validation should be embedded (e.g., as compressed Base64).
+
 ## Build Gate
 - Run `bun test --coverage` before any build or deploy.
 - If tests fail, stop and fix before building.

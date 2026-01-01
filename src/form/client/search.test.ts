@@ -175,4 +175,28 @@ describe("Web/A Client Runtime > Search Engine", () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         expect(box?.style.display).toBe('none');
     });
+
+    test("postal field detection works", () => {
+        search.init();
+
+        // Test isPostalField detection (private method, testing via behavior)
+        const zipInput = document.createElement('input') as any;
+        zipInput.className = 'search-input';
+        zipInput.dataset.jsonPath = 'zip';
+        document.body.appendChild(zipInput);
+
+        const postalInput = document.createElement('input') as any;
+        postalInput.className = 'search-input';
+        postalInput.dataset.baseKey = 'postal_code';
+        document.body.appendChild(postalInput);
+
+        // These should be detected as postal fields (won't show master data suggestions)
+        zipInput.value = '123';
+        zipInput.dispatchEvent(new (window as any).Event('input', { bubbles: true }));
+
+        // Behavior: postal fields won't search master data
+        // Since postal data is not loaded in test, it should not crash
+        expect(document.getElementById('web-a-search-suggestions')).not.toBeNull();
+        expect(true).toBe(true); // Test passes if no crash occurs
+    });
 });

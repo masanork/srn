@@ -1,11 +1,27 @@
+import { postalLookup } from './postal';
+import type { PostalRecord } from './postal';
 
 export class SearchEngine {
     private suggestionsVisible = false;
     private activeSearchInput: HTMLInputElement | null = null;
     private globalBox: HTMLElement | null = null;
+    private postalReady = false;
 
     constructor() {
-        // Init
+        // Init postal lookup asynchronously
+        this.initPostalLookup();
+    }
+
+    private async initPostalLookup() {
+        try {
+            await postalLookup.autoInit();
+            this.postalReady = postalLookup.isReady();
+            if (this.postalReady) {
+                console.log('📮 Postal lookup enabled');
+            }
+        } catch (error) {
+            console.warn('Postal lookup not available:', error);
+        }
     }
 
     public init() {
@@ -42,6 +58,136 @@ export class SearchEngine {
     private toIndex(raw?: string): number {
         const parsed = parseInt(raw || '', 10);
         return Number.isFinite(parsed) ? parsed - 1 : -1;
+    }
+
+    /**
+     * 郵便番号フィールドかどうかを判定
+     */
+    private isPostalField(input: HTMLInputElement): boolean {
+        const key = (input.dataset.jsonPath || input.dataset.baseKey || '').toLowerCase();
+        const placeholder = (input.placeholder || '').toLowerCase();
+        return key.includes('zip') || key.includes('postal') ||
+            key.includes('郵便') || placeholder.includes('郵便');
+    }
+
+    /**
+     * 郵便番号入力の処理
+     */
+    private handlePostalInput(input: HTMLInputElement) {
+        if (!this.postalReady) {
+            this.hideSuggestions();
+            return;
+        }
+
+        const value = input.value.replace(/[^0-9]/g, '');
+
+        // 3桁未満は候補なし
+        if (value.length < 3) {
+            this.hideSuggestions();
+            return;
+        }
+
+        // 7桁完全入力の場合は完全一致検索
+        if (value.length === 7) {
+            const result = postalLookup.lookup(value);
+            if (result) {
+                this.fillPostalData(input, result, true);
+                this.hideSuggestions();
+            }
+            return;
+        }
+
+        // 3-6桁の場合は候補表示
+        const suggestions = postalLookup.suggest(value, 50);
+        if (suggestions.length > 0) {
+            this.renderPostalSuggestions(input, suggestions);
+        } else {
+            this.hideSuggestions();
+        }
+    }
+
+    /**
+     * 郵便番号候補をレンダリング
+     */
+    private renderPostalSuggestions(input: HTMLInputElement, suggestions: PostalRecord[]) {
+        const w = window as any;
+        let html = '';
+
+        suggestions.forEach(record => {
+            const displayZip = record.zip.substring(0, 3) + '-' + record.zip.substring(3);
+            const display = `${displayZip} ${record.pref} ${record.city} ${record.town}`;
+            const dataJson = w.escapeHtml(JSON.stringify(record));
+
+            html += `<div class="suggestion-item postal-item" data-postal="${dataJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">
+                <div style="font-weight:600; color:#3b82f6;">${displayZip}</div>
+                <div style="font-size:13px; color:#6b7280;">${w.escapeHtml(record.pref)} ${w.escapeHtml(record.city)} ${w.escapeHtml(record.town)}</div>
+            </div>`;
+        });
+
+        const box = this.getGlobalBox();
+        box.innerHTML = html;
+
+        // Positioning
+        const rect = input.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+
+        box.style.width = Math.max(rect.width, 300) + 'px';
+        box.style.left = (rect.left + scrollLeft) + 'px';
+        box.style.top = (rect.bottom + scrollTop) + 'px';
+
+        // Hover effects
+        box.querySelectorAll('.suggestion-item').forEach((el: any) => {
+            el.onmouseenter = () => el.style.background = '#f0f8ff';
+            el.onmouseleave = () => el.style.background = 'white';
+        });
+
+        box.style.display = 'block';
+        this.suggestionsVisible = true;
+    }
+
+    /**
+     * 郵便番号データを関連フィールドに自動入力
+     */
+    private fillPostalData(input: HTMLInputElement, record: PostalRecord, formatZip = false) {
+        // 郵便番号フィールド自体を更新（ハイフン付き）
+        if (formatZip) {
+            input.value = record.zip.substring(0, 3) + '-' + record.zip.substring(3);
+        }
+
+        // 同じ行または近隣のフィールドを検索
+        const container = input.closest('tr') || input.closest('.form-row')?.parentElement || document;
+        const allInputs = Array.from(container.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
+
+        // 都道府県フィールドを探して自動入力
+        const prefField = allInputs.find(inp => {
+            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || '').toLowerCase();
+            return key.includes('pref') || key.includes('都道府県');
+        });
+        if (prefField && prefField !== input) {
+            prefField.value = record.pref;
+            prefField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        // 市区町村フィールドを探して自動入力
+        const cityField = allInputs.find(inp => {
+            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || '').toLowerCase();
+            return key.includes('city') || key.includes('市区町村');
+        });
+        if (cityField && cityField !== input) {
+            cityField.value = record.city;
+            cityField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        // 町字フィールドを探して自動入力
+        const townField = allInputs.find(inp => {
+            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || '').toLowerCase();
+            return key.includes('town') || key.includes('address') || key.includes('町') || key.includes('字');
+        });
+        if (townField && townField !== input && townField !== cityField) {
+            townField.value = record.town;
+            townField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
     }
 
     private getGlobalBox(): HTMLElement {
@@ -106,6 +252,11 @@ export class SearchEngine {
     private handleSearchInput(input: HTMLInputElement) {
         this.activeSearchInput = input;
         const w = window as any;
+
+        // Note: Postal handling moved to runtime.ts global listener for better datalist integration
+        if (this.isPostalField(input)) {
+            return;
+        }
 
         const srcKey = input.dataset.masterSrc;
         const suggestSource = input.dataset.suggestSource;
@@ -201,6 +352,22 @@ export class SearchEngine {
     private handleSelection(item: HTMLElement) {
         if (!this.activeSearchInput) return;
 
+        // 郵便番号候補の選択
+        if (item.classList.contains('postal-item')) {
+            const postalJson = item.dataset.postal;
+            if (postalJson) {
+                try {
+                    const record = JSON.parse(postalJson) as PostalRecord;
+                    this.fillPostalData(this.activeSearchInput, record, true);
+                } catch (e) {
+                    console.error('Failed to parse postal data:', e);
+                }
+            }
+            this.hideSuggestions();
+            return;
+        }
+
+        // 既存のマスタデータ選択処理
         const w = window as any;
         const input = this.activeSearchInput;
         const val = item.dataset.val || '';

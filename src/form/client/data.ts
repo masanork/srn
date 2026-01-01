@@ -1,14 +1,7 @@
 
 import { globalSigner } from './signer';
-import {
-    buildLayer2Envelope,
-    type L2Config,
-    type Layer2Encrypted,
-    fetchEpochRegistry,
-    selectEpochKey,
-    fetchPreKey
-} from './l2crypto';
 import { downloadHtml, type DownloadHtmlOptions, type DraftState } from './download';
+import type { L2Config, Layer2Encrypted, L2Keywrap } from './l2crypto';
 
 export class DataManager {
     private formId: string;
@@ -110,6 +103,7 @@ export class DataManager {
             // 1. Attempt Tier 3 (Dynamic Pre-key)
             if (l2Config.prekey_url) {
                 try {
+                    const { fetchPreKey } = await import('./l2crypto');
                     const preKey = await fetchPreKey(l2Config.prekey_url);
                     if (preKey) {
                         console.log("Tier 3 Active: Using dynamic pre-key", preKey.kid);
@@ -128,6 +122,7 @@ export class DataManager {
             // 2. Attempt Tier 2 (Epoch-based)
             if (tier === 'offline' && l2Config.epoch_registry_url) {
                 try {
+                    const { fetchEpochRegistry, selectEpochKey } = await import('./l2crypto');
                     const registry = await fetchEpochRegistry(l2Config.epoch_registry_url);
                     if (registry) {
                         const epochKey = selectEpochKey(registry);
@@ -170,6 +165,7 @@ export class DataManager {
             }
 
             try {
+                const { buildLayer2Envelope } = await import('./l2crypto');
                 const envelope = await buildLayer2Envelope({
                     layer2_plain: data,
                     config: encryptionConfig,

@@ -1,3 +1,8 @@
+import fs from 'fs-extra';
+import path from 'path';
+import zlib from 'zlib';
+const packageJson = fs.readJsonSync(path.resolve('package.json'));
+const VERSION = packageJson.version || 'unknown';
 import { baseLayout } from './base.js';
 import { getRelativePrefix } from '../utils.js';
 import { parseMarkdown } from '../../form/parser.js';
@@ -8,15 +13,38 @@ export interface FormData {
     [key: string]: any;
 }
 
-export function formLayout(
-    data: FormData,
-    rawMarkdown: string,
-    fontCss: string,
-    fontFamilies: string[],
-    vc?: object,
-    relPath = '',
-    config?: any
-) {
+/**
+ * JSONデータをサイズに応じて圧縮してスクリプトタグに変換する
+ */
+function compressJson(id: string, data: any): string {
+    const json = JSON.stringify(data);
+    if (json.length > 512) {
+        const compressed = zlib.gzipSync(Buffer.from(json));
+        return `<script id="${id}" type="application/x-gzip">${compressed.toString('base64')}</script>`;
+    }
+    return `<script id="${id}" type="application/json">${json}</script>`;
+}
+
+/**
+ * JSバンドルを圧縮してスクリプトタグに変換する
+ */
+function compressJs(id: string, js: string): string {
+    if (!js) return '';
+    const compressed = zlib.gzipSync(Buffer.from(js));
+    return `<script id="${id}" type="application/x-weba-js-gz">${compressed.toString('base64')}</script>`;
+}
+
+export function formLayout(params: {
+    data: FormData;
+    rawMarkdown: string;
+    fontCss: string;
+    fontFamilies: string[];
+    vc?: object;
+    relPath?: string;
+    config?: any;
+    distDir?: string;
+}) {
+    const { data, rawMarkdown, fontCss, fontFamilies, vc, relPath = '', config, distDir } = params;
     const { html, jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
 
@@ -50,38 +78,48 @@ export function formLayout(
     const l2Keywrap = data.l2_keywrap ? data.l2_keywrap : null;
 
     // Embed structure for client-side logic
-    const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
-    const l2ConfigScript = l2Config
-        ? `<script id="weba-l2-config" type="application/json">${JSON.stringify(l2Config)}</script>`
-        : '';
-    const l2KeywrapScript = l2Keywrap
-        ? `<script id="weba-l2-keywrap" type="application/json">${JSON.stringify(l2Keywrap)}</script>`
-        : '';
+    const structureScript = compressJson('weba-structure', jsonStructure);
+    const l2ConfigScript = l2Config ? compressJson('weba-l2-config', l2Config) : '';
+    const l2KeywrapScript = l2Keywrap ? compressJson('weba-l2-keywrap', l2Keywrap) : '';
 
-    const verificationDetails = vc ? `
-        <details style="margin-top: 0.5rem;">
-            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
-                <span>✓</span>
-                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
-                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
-            </summary>
-            <div style="padding: 1rem 0;">
-                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">${JSON.stringify(vc, null, 2)}</pre>
+    // Embed Postal Data if any address-related fields are detected
+    let postalScript = '';
+    const needsPostal = rawMarkdown.match(/zip|postal|郵便|pref|都道府県|city|市区町村|市町村|town|町名|町字|address|住所/i);
+    const needsL2 = l2Config || rawMarkdown.includes('weba-l2-') || rawMarkdown.includes('l2crypto');
+
+    if (needsPostal) {
+        try {
+            const postalDataPath = path.resolve('data/postal/postal-optimized.json.gz');
+            if (fs.existsSync(postalDataPath)) {
+                const b64 = fs.readFileSync(postalDataPath).toString('base64');
+                postalScript = `<script id="weba-postal-data" type="application/x-gzip">${b64}</script>
+                <script>window.__needsPostal = true;</script>`;
+            }
+        } catch (e) { console.warn('Failed to embed postal data', e); }
+    }
+
+    const l2Toggle = l2Config ? `
+        <div class="l2-status-toggle no-print" style="margin-top: 2rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <div id="l2-indicator" style="width: 12px; height: 12px; border-radius: 50%; background: #94a3b8;"></div>
+               <span style="font-weight: 600; font-size: 0.9rem;" data-i18n-ja="レイヤー2保護" data-i18n-en="Layer 2 Protection">レイヤー2保護</span>
             </div>
-        </details>
+            <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                <input type="checkbox" id="l2-encrypt-toggle" ${l2Config.default_enabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 24px;"></span>
+            </label>
+        </div>
     ` : '';
 
-    const l2Toggle = l2Config
-        ? `
-            <div class="no-print weba-l2-toggle" style="margin-top: 1.5rem; padding: 0.75rem 1rem; border: 1px dashed #cbd5f5; border-radius: 8px; background: #f8fafc; font-size: 0.85rem;">
-                <label style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="checkbox" id="weba-l2-encrypt" ${l2Config.default_enabled ? 'checked' : ''}>
-                    <span>Encrypt L2 (任意暗号化)</span>
-                </label>
-                <div style="color: #64748b; margin-top: 0.4rem;">Encrypted answers can only be opened by the recipient key.</div>
+    const verificationDetails = vc ? `
+        <div class="verification-details" style="margin-top: 1rem; padding: 1rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;" data-i18n-ja="真正性情報 (VC)" data-i18n-en="Authenticity (VC)">真正性情報 (VC)</div>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; font-family: monospace; font-size: 0.75rem;">
+                <span style="color: #94a3b8;">Issuer:</span> <span>${(vc as any).issuer || 'Unknown'}</span>
+                <span style="color: #94a3b8;">DID:</span> <span>${(vc as any).credentialSubject?.id || 'N/A'}</span>
             </div>
-        `
-        : '';
+        </div>
+    ` : '';
 
     const content = `
         <div class="weba-form-container">
@@ -101,12 +139,56 @@ export function formLayout(
                     </details>
                     ${verificationDetails}
                 </div>
+                <div class="no-print" style="margin-top: 1rem; color: #94a3b8; font-size: 0.75rem; display: flex; gap: 1rem;">
+                    <span>v${VERSION}</span>
+                    <span>Build: ${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}</span>
+                </div>
             </footer>
         </div>
         ${structureScript}
         ${l2ConfigScript}
         ${l2KeywrapScript}
-        <script src="${getRelativePrefix(relPath)}assets/form-bundle.js" type="module"></script>
+        ${postalScript}
+        ${(() => {
+            const scripts: string[] = [];
+            const inlineScript = (name: string, id: string) => {
+                const paths = [
+                    distDir ? path.join(distDir, 'assets', name) : '',
+                    path.resolve('dist/assets', name)
+                ].filter(Boolean);
+                for (const p of paths) {
+                    try {
+                        if (fs.existsSync(p)) {
+                            scripts.push(compressJs(id, fs.readFileSync(p, 'utf-8')));
+                            return true;
+                        }
+                    } catch (e) { }
+                }
+                return false;
+            };
+            inlineScript('form-core.js', 'weba-js-core');
+            if (needsL2) inlineScript('form-l2.js', 'weba-js-l2');
+            if (needsPostal) inlineScript('form-postal.js', 'weba-js-postal');
+            if (data.layout === 'aggregator' || data.layout === 'report') inlineScript('form-aggregator.js', 'weba-js-aggregator');
+
+            scripts.push('<script id="weba-bootstrap">');
+            scripts.push('(async () => {');
+            scripts.push('  const s = document.querySelectorAll(\'script[type="application/x-weba-js-gz"]\');');
+            scripts.push('  for (const el of s) {');
+            scripts.push('    try {');
+            scripts.push('      const bin = atob(el.textContent.trim());');
+            scripts.push('      const ui8 = new Uint8Array(bin.length);');
+            scripts.push('      for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);');
+            scripts.push('      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream(\'gzip\'));');
+            scripts.push('      const text = await new Response(stream).text();');
+            scripts.push('      const ns = document.createElement(\'script\'); ns.type = \'module\'; ns.textContent = text; document.body.appendChild(ns);');
+            scripts.push('    } catch (e) { console.error("JS Boot Error", e); }');
+            scripts.push('  }');
+            scripts.push('  setTimeout(() => { if (window.initRuntime) window.initRuntime(); }, 1);');
+            scripts.push('})();');
+            scripts.push('</script>');
+            return scripts.join('\n');
+        })()}
     `;
 
     return baseLayout({
@@ -119,178 +201,61 @@ export function formLayout(
     });
 }
 
-export function formReportLayout(
-    data: FormData,
-    rawMarkdown: string,
-    fontCss: string,
-    fontFamilies: string[],
-    relPath = ''
-) {
+export function formReportLayout(params: {
+    data: FormData;
+    rawMarkdown: string;
+    fontCss: string;
+    fontFamilies: string[];
+    relPath?: string;
+    distDir?: string;
+}) {
+    const { data, rawMarkdown, fontCss, fontFamilies, relPath = '', distDir } = params;
     const { jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
     const title = data.title ? `${data.title} (集計)` : 'Web/A Form (集計)';
 
-    // Embed structure for client-side logic
-    const structureScript = `<script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script>`;
+    const structureScript = compressJson('weba-structure', jsonStructure);
 
     const content = `
         <div class="weba-report-container">
             <h1>${title}</h1>
-            <div class="report-controls" style="margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-                <input id="weba-report-files" type="file" multiple accept=".html" style="padding: 0.4rem;">
-                <label style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span data-i18n-ja="X軸" data-i18n-en="X Axis">X軸</span>
-                    <select id="weba-x-key"></select>
-                </label>
-                <label style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span data-i18n-ja="Y軸" data-i18n-en="Y Axis">Y軸</span>
-                    <select id="weba-y-key"></select>
-                </label>
-                <span id="weba-report-status" style="color: #666;"></span>
-            </div>
-            <canvas id="weba-scatter" width="900" height="420" style="border: 1px solid #ddd; border-radius: 6px; background: #fff;"></canvas>
-            <div id="weba-report-table" style="margin-top: 1rem; overflow-x: auto;"></div>
+            <div id="weba-report-root">Loading Aggregator...</div>
         </div>
         ${structureScript}
-        <script>
-            const statusEl = document.getElementById('weba-report-status');
-            const fileInput = document.getElementById('weba-report-files');
-            const xSelect = document.getElementById('weba-x-key');
-            const ySelect = document.getElementById('weba-y-key');
-            const tableHost = document.getElementById('weba-report-table');
-            const canvas = document.getElementById('weba-scatter');
-            const ctx = canvas.getContext('2d');
-
-            const parseHtmlJsonLd = (htmlText) => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
-                let script = doc.querySelector('#data-layer');
-                if (!script) script = doc.querySelector('script[type="application/ld+json"]');
-                if (!script) return null;
-                try { return JSON.parse(script.textContent || ''); } catch { return null; }
-            };
-
-            const flatten = (obj, prefix, out) => {
-                if (!obj || typeof obj !== 'object') return;
-                for (const [key, value] of Object.entries(obj)) {
-                    const path = prefix ? prefix + '.' + key : key;
-                    if (Array.isArray(value)) {
-                        value.forEach((entry, idx) => {
-                            if (entry && typeof entry === 'object') {
-                                flatten(entry, path + '[' + idx + ']', out);
-                            } else {
-                                out[path + '[' + idx + ']'] = entry;
-                            }
-                        });
-                    } else if (value && typeof value === 'object') {
-                        flatten(value, path, out);
-                    } else {
-                        out[path] = value;
+        ${(() => {
+            const scripts: string[] = [];
+            const inlineScript = (name: string, id: string) => {
+                const paths = [
+                    distDir ? path.join(distDir, 'assets', name) : '',
+                    path.resolve('dist/assets', name)
+                ].filter(Boolean);
+                for (const p of paths) {
+                    if (fs.existsSync(p)) {
+                        scripts.push(compressJs(id, fs.readFileSync(p, 'utf-8')));
+                        return true;
                     }
                 }
+                return false;
             };
+            inlineScript('form-core.js', 'weba-js-core');
+            inlineScript('form-aggregator.js', 'weba-js-aggregator');
 
-            const isNumeric = (val) => {
-                if (val === null || val === undefined) return false;
-                const num = typeof val === 'number' ? val : parseFloat(String(val));
-                return Number.isFinite(num);
-            };
-
-            const drawScatter = (rows, xKey, yKey) => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const points = rows
-                    .map(r => ({ x: r[xKey], y: r[yKey], raw: r }))
-                    .filter(p => isNumeric(p.x) && isNumeric(p.y))
-                    .map(p => ({ x: parseFloat(p.x), y: parseFloat(p.y) }));
-
-                if (points.length === 0) {
-                    ctx.fillStyle = '#666';
-                    ctx.fillText('No numeric data for scatter plot.', 20, 30);
-                    return;
-                }
-
-                const padding = 40;
-                const xs = points.map(p => p.x);
-                const ys = points.map(p => p.y);
-                const minX = Math.min(...xs);
-                const maxX = Math.max(...xs);
-                const minY = Math.min(...ys);
-                const maxY = Math.max(...ys);
-
-                const scaleX = (val) => padding + ((val - minX) / (maxX - minX || 1)) * (canvas.width - padding * 2);
-                const scaleY = (val) => canvas.height - padding - ((val - minY) / (maxY - minY || 1)) * (canvas.height - padding * 2);
-
-                ctx.strokeStyle = '#ccc';
-                ctx.beginPath();
-                ctx.moveTo(padding, padding);
-                ctx.lineTo(padding, canvas.height - padding);
-                ctx.lineTo(canvas.width - padding, canvas.height - padding);
-                ctx.stroke();
-
-                ctx.fillStyle = '#1f77b4';
-                points.forEach(p => {
-                    ctx.beginPath();
-                    ctx.arc(scaleX(p.x), scaleY(p.y), 4, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-            };
-
-            const renderTable = (rows, keys) => {
-                if (rows.length === 0) {
-                    tableHost.innerHTML = '';
-                    return;
-                }
-                const header = keys.map(k => '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #ddd;">' + k + '</th>').join('');
-                const body = rows.slice(0, 50).map(r => {
-                    const cells = keys.map(k => '<td style="padding:6px 8px;border-bottom:1px solid #f0f0f0;">' + (r[k] ?? '') + '</td>').join('');
-                    return '<tr>' + cells + '</tr>';
-                }).join('');
-                tableHost.innerHTML = '<table style="border-collapse: collapse; min-width: 600px;">' +
-                    '<thead><tr>' + header + '</tr></thead><tbody>' + body + '</tbody></table>';
-            };
-
-            const updateScatter = (rows) => {
-                const xKey = xSelect.value;
-                const yKey = ySelect.value;
-                if (xKey && yKey) drawScatter(rows, xKey, yKey);
-            };
-
-            let aggregatedRows = [];
-            fileInput.addEventListener('change', async () => {
-                const files = Array.from(fileInput.files || []);
-                aggregatedRows = [];
-                statusEl.textContent = '';
-                if (files.length === 0) return;
-
-                for (const file of files) {
-                    const text = await file.text();
-                    const jsonLd = parseHtmlJsonLd(text);
-                    if (!jsonLd) continue;
-                    const flat = {};
-                    flatten(jsonLd, '', flat);
-                    flat['_filename'] = file.name;
-                    aggregatedRows.push(flat);
-                }
-
-                if (aggregatedRows.length === 0) {
-                    statusEl.textContent = 'No JSON-LD found.';
-                    return;
-                }
-
-                const keys = Array.from(new Set(aggregatedRows.flatMap(r => Object.keys(r)))).sort();
-                const numericKeys = keys.filter(k => aggregatedRows.some(r => isNumeric(r[k])));
-
-                xSelect.innerHTML = numericKeys.map(k => '<option value="' + k + '">' + k + '</option>').join('');
-                ySelect.innerHTML = numericKeys.map(k => '<option value="' + k + '">' + k + '</option>').join('');
-
-                statusEl.textContent = 'Loaded ' + aggregatedRows.length + ' files.';
-                renderTable(aggregatedRows, keys);
-                updateScatter(aggregatedRows);
-            });
-
-            xSelect.addEventListener('change', () => updateScatter(aggregatedRows));
-            ySelect.addEventListener('change', () => updateScatter(aggregatedRows));
-        </script>
+            scripts.push('<script id="weba-bootstrap">');
+            scripts.push('(async () => {');
+            scripts.push('  const s = document.querySelectorAll(\'script[type="application/x-weba-js-gz"]\');');
+            scripts.push('  for (const el of s) {');
+            scripts.push('    const bin = atob(el.textContent.trim());');
+            scripts.push('    const ui8 = new Uint8Array(bin.length);');
+            scripts.push('    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);');
+            scripts.push('    const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream(\'gzip\'));');
+            scripts.push('    const text = await new Response(stream).text();');
+            scripts.push('    const ns = document.createElement(\'script\'); ns.textContent = text; document.body.appendChild(ns);');
+            scripts.push('  }');
+            scripts.push('  setTimeout(() => { if (window.initRuntime) window.initRuntime(); }, 1);');
+            scripts.push('})();');
+            scripts.push('</script>');
+            return scripts.join('\n');
+        })()}
     `;
 
     return baseLayout({

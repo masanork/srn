@@ -30,31 +30,54 @@ export function initRuntime(): void {
 export function generateHtml(markdown: string): string {
     const { html, jsonStructure } = parseMarkdown(markdown);
     const sourceMd = markdown.replace(/<\/script>/g, '<\\/script>');
-    return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${jsonStructure.name || 'Web/A Form'}</title><link rel="icon" href="${FAVICON_DATA_URI}"><style>
-    body{font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;position:relative;min-height:100vh;}
-    .form-row{margin-bottom:1rem;}
-    .form-label{font-weight:bold;display:block;margin-bottom:0.5rem;}
-    .form-input{width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;}
-    .tabs-nav{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid #e5e7eb;flex-wrap:wrap;}
-    .tab-btn{background:#f1f5f9;border:1px solid #e5e7eb;border-bottom:none;padding:10px 16px;cursor:pointer;border-radius:6px 6px 0 0;font-size:14px;font-weight:600;color:#64748b;}
-    .tab-btn:hover{background:#e2e8f0;}
-    .tab-btn.active{background:#fff;color:#111827;border-bottom:1px solid #fff;position:relative;top:1px;}
-    .tab-content{display:none;animation:fadeIn 0.2s ease-in-out;}
-    .tab-content.active{display:block;}
-    .experimental-banner { background:#fef2f2; border:1px solid #ef4444; color:#b91c1c; padding:12px; border-radius:8px; margin-bottom:2rem; font-size:13px; line-height:1.5; }
-    .experimental-tag { background:#ef4444; color:white; padding:2px 6px; border-radius:4px; font-weight:bold; margin-right:8px; }
-    .watermark { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg); font-size:120px; color:rgba(239,68,68,0.08); pointer-events:none; z-index:9999; font-weight:bold; text-transform:uppercase; white-space:nowrap; }
-    @media print { .experimental-banner { border-width:2px; } .watermark { color:rgba(239,68,68,0.15); } }
-    @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+    return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${jsonStructure.name || 'Web/A Form'}</title><link rel="icon" href="${FAVICON_DATA_URI}"><style>
+    :root { --primary: #111827; --primary-hover: #1f2937; --border: #e5e7eb; --bg-subtle: #f9fafb; --text-secondary: #6b7280; --pilot-blue: #3b82f6; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 1rem; max-width: 900px; margin: 0 auto; position: relative; min-height: 100vh; padding-bottom: 100px; }
+    .form-row { margin-bottom: 1.25rem; }
+    .form-label { font-weight: 600; display: block; margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--primary); }
+    .form-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; background: white; transition: border-color 0.2s; }
+    .form-input:focus { outline: none; border-color: var(--pilot-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+    .form-hint { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem; line-height: 1.4; }
+    .tabs-nav { display: flex; gap: 4px; margin-bottom: 1.25rem; border-bottom: 2px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab-btn { background: var(--bg-subtle); border: 1px solid var(--border); border-bottom: none; padding: 0.75rem 1rem; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; min-height: 44px; display: flex; align-items: center; transition: all 0.2s; }
+    .tab-btn:hover { background: #e5e7eb; }
+    .tab-btn.active { background: white; color: var(--primary); border-bottom: 2px solid white; position: relative; top: 2px; }
+    .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+    .tab-content.active { display: block; }
+    .pilot-banner { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid var(--pilot-blue); border-left: 4px solid var(--pilot-blue); color: #1e40af; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.6; }
+    .pilot-tag { background: var(--pilot-blue); color: white; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 600; font-size: 0.75rem; margin-right: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(59, 130, 246, 0.04); pointer-events: none; z-index: 1; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+    .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; gap: 0.5rem; justify-content: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000; }
+    .action-btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; min-height: 44px; min-width: 44px; transition: all 0.2s; white-space: nowrap; }
+    .action-btn-primary { background: var(--primary); color: white; }
+    .action-btn-primary:hover { background: var(--primary-hover); }
+    .action-btn-secondary { background: white; color: var(--primary); border: 1px solid var(--border); }
+    .action-btn-secondary:hover { background: var(--bg-subtle); }
+    @media (max-width: 768px) { 
+        body { padding: 0.75rem; padding-bottom: 120px; } 
+        .form-label { font-size: 0.9rem; }
+        .tabs-nav { gap: 2px; }
+        .tab-btn { padding: 0.6rem 0.85rem; font-size: 0.875rem; }
+        .action-bar { flex-wrap: wrap; padding: 0.5rem; }
+        .action-btn { flex: 1; min-width: calc(50% - 0.25rem); padding: 0.7rem 1rem; font-size: 0.9rem; }
+    }
+    @media print { .pilot-banner, .action-bar { display: none; } .watermark { color: rgba(59, 130, 246, 0.08); } body { padding-bottom: 0; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style></head><body>
-    <div class="watermark">EXPERIMENTAL</div>
-    <div class="experimental-banner">
-        <span class="experimental-tag">PILOT PHASE</span>
-        <strong>NOTICE:</strong> This is an experimental document generated for a pilot project.
-        Security mechanisms are currently in prototype phase. Avoid including highly sensitive personal information.
-        See the <a href="./papers/pilot-safety-guide.ja.html" style="color:#b91c1c; font-weight:bold; text-decoration:underline;">安全ガイド (Safety Guide)</a> for details.
+    <div class="watermark">PILOT</div>
+    <div class="pilot-banner">
+        <span class="pilot-tag">Pilot Preview</span>
+        <strong>Preview Notice:</strong> This form is part of an exclusive pilot program.
+        Security features are in active development. Please review the <a href="./papers/pilot-safety-guide.ja.html" style="color:#1e40af; font-weight:600; text-decoration:underline;">Safety Guide</a> before use.
     </div>
-    <div class="page">${html}</div><script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
+    <div class="page">${html}</div>
+    <div class="action-bar">
+        <button class="action-btn action-btn-secondary" onclick="saveDraft()">💾 Save Draft</button>
+        <button class="action-btn action-btn-primary" onclick="submitDocument()">📤 Submit</button>
+        <button class="action-btn action-btn-secondary" onclick="clearData()">🗑️ Clear</button>
+    </div>
+    <script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;
 }
 
 /**

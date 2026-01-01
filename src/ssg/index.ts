@@ -39,7 +39,8 @@ async function build() {
 
     const layoutManager = new LayoutManager();
 
-    // Copy Assets
+    // Prepare client bundles first (to allow inlining if needed)
+    await bundleClientScripts(DIST_DIR);
     await copyStaticAssets(SITE_DIR, DIST_DIR, SCHEMAS_DIR);
 
     // Process Content
@@ -53,6 +54,14 @@ async function build() {
         const { data, content } = matter(source);
         if (data.date) {
             data.date = normalizeDate(data.date);
+        }
+
+        // Auto-detect GJM in frontmatter to enable font embedding
+        const hasGjmInFrontmatter = JSON.stringify(data).includes('GJM');
+        if (hasGjmInFrontmatter) {
+            if (data.embedFonts === undefined) {
+                data.embedFonts = true;
+            }
         }
 
         // Skip private or draft content
@@ -71,10 +80,10 @@ async function build() {
         // Rewrite .md links to .html for generated site
         const htmlContent = (rawHtmlContent as string).replace(/href="([^"]+)\.md(#|")/g, 'href="$1.html$2');
 
-        // Process Fonts
+        // Process Fonts (Opt-in)
         let fontCss = '';
         let safeFontFamilies: string[] = [];
-        if (!data.noFontEmbedding) {
+        if (data.embedFonts) {
             const fontResult = await fontProcessor.processPageFonts(
                 htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages
             );
@@ -109,7 +118,6 @@ async function build() {
         }
     }
 
-    await bundleClientScripts(DIST_DIR);
     await generateSitemaps(allPages, config, DIST_DIR, files.includes('srn.md') && !files.includes('index.md'));
 
     const totalSize = await getDirSize(DIST_DIR);
@@ -252,17 +260,31 @@ async function bundleClientScripts(distDir: string) {
     const assetsDir = path.join(distDir, 'assets');
     await fs.ensureDir(assetsDir);
 
-    // Verify App
+    // Verify App (Standalone)
     const verifyEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
     if (await fs.pathExists(verifyEntry)) {
         await Bun.build({ entrypoints: [verifyEntry], outdir: assetsDir, naming: "verify-bundle.js", minify: true });
     }
 
-    // Form Client
-    const formEntry = path.join(process.cwd(), 'src/form/client/index.ts');
-    if (await fs.pathExists(formEntry)) {
-        await Bun.build({ entrypoints: [formEntry], outdir: assetsDir, naming: "form-bundle.js", minify: true });
-    }
+    // --- Modular Form Bundles ---
+    const buildBundle = async (entry: string, name: string) => {
+        const fullPath = path.join(process.cwd(), entry);
+        if (await fs.pathExists(fullPath)) {
+            await Bun.build({ entrypoints: [fullPath], outdir: assetsDir, naming: name, minify: true });
+        }
+    };
+
+    // 1. Core (Validation, basic logic, always needed)
+    await buildBundle('src/form/client/index.ts', 'form-core.js');
+
+    // 2. Postal Lookup (Only for address fields)
+    await buildBundle('src/form/client/postal.ts', 'form-postal.js');
+
+    // 3. L2 Cryptography (Encryption, Signatures, Guest DID)
+    await buildBundle('src/form/client/l2crypto.ts', 'form-l2.js');
+
+    // 4. Aggregator (Heavy UI, Client-side parsing)
+    await buildBundle('src/form/client/aggregator_browser.ts', 'form-aggregator.js');
 }
 
 async function generateSitemaps(pages: any[], config: any, distDir: string, hasFallbackIndex: boolean) {

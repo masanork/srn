@@ -53,10 +53,10 @@ export class LayoutManager {
                     updated: data.updated,
                     schemas: data.schemas
                 });
-                finalHtml = formLayout(data, content, fontCss, safeFontFamilies, vc, relPath, config);
+                finalHtml = formLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, vc, relPath, config, distDir });
 
                 // Extra output: Report page
-                const reportHtml = formReportLayout(data, content, fontCss, safeFontFamilies, relPath);
+                const reportHtml = formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir });
                 const reportPath = path.join(distDir, relPath.replace('.md', '.report.html'));
                 await fs.ensureDir(path.dirname(reportPath));
                 await fs.writeFile(reportPath, reportHtml);
