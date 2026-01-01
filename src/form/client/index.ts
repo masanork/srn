@@ -8,4 +8,6 @@ const search = new SearchEngine();
 
 // Boot the core runtime
 initRuntime();
-search.init();
+
+// Initialize SearchEngine asynchronously
+search.init().catch(err => console.error('Failed to initialize SearchEngine:', err));

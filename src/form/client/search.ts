@@ -18,8 +18,7 @@ export class SearchEngine {
     private postalReady = false;
 
     constructor() {
-        // Init postal lookup asynchronously
-        this.initPostalLookup();
+        // Postal lookup will be initialized in init() method
     }
 
     private async initPostalLookup() {
@@ -37,8 +36,12 @@ export class SearchEngine {
         }
     }
 
-    public init() {
+    public async init() {
         console.log("Initializing Search Engine (Bundle)...");
+
+        // Wait for postal lookup to be ready
+        await this.initPostalLookup();
+
         const w = window as any;
         // @ts-ignore
         if (w.generatedJsonStructure && w.generatedJsonStructure.masterData) {
@@ -48,6 +51,7 @@ export class SearchEngine {
         }
 
         this.setupEventDelegation();
+        console.log("Search Engine ready. Postal enabled:", this.postalReady);
     }
 
     private normalize(val: string): string {
@@ -79,33 +83,44 @@ export class SearchEngine {
     private isPostalField(input: HTMLInputElement): boolean {
         const key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
         const placeholder = (input.placeholder || '').toLowerCase();
-        return key.includes('zip') || key.includes('postal') ||
-            key.includes('郵便') || placeholder.includes('郵便') || placeholder.includes('zip') || placeholder.includes('postal');
+        const isZipKey = (key.match(/zip|postal|postcode|郵便/) && !key.match(/pref|city|town|address|都道府県|市区町村|住所/));
+        const isZipPlaceholder = placeholder.match(/郵便|zip|postal/);
+        return Boolean(isZipKey || isZipPlaceholder);
     }
 
     /**
      * 郵便番号入力の処理
      */
     private handlePostalInput(input: HTMLInputElement) {
+        console.log('[SearchEngine] handlePostalInput - postalReady:', this.postalReady);
+
         if (!this.postalReady) {
+            console.log('[SearchEngine] Postal not ready, hiding suggestions');
             this.hideSuggestions();
             return;
         }
 
         const value = input.value.replace(/[^0-9]/g, '');
+        console.log('[SearchEngine] Cleaned postal value:', value);
 
         // 3桁未満は候補なし
         if (value.length < 3) {
+            console.log('[SearchEngine] Value too short (<3), hiding suggestions');
             this.hideSuggestions();
             return;
         }
 
         const postal = (window as any).postalLookup;
-        if (!postal) return;
+        if (!postal) {
+            console.log('[SearchEngine] ERROR: postalLookup not found on window');
+            return;
+        }
 
         // 7桁完全入力の場合は完全一致検索
         if (value.length === 7) {
+            console.log('[SearchEngine] 7-digit zip, doing lookup');
             const result = postal.lookup(value);
+            console.log('[SearchEngine] Lookup result:', result);
             if (result) {
                 this.fillPostalData(input, result, true);
                 this.hideSuggestions();
@@ -114,7 +129,9 @@ export class SearchEngine {
         }
 
         // 3-6桁の場合は候補表示
+        console.log('[SearchEngine] Partial zip, getting suggestions');
         const suggestions = postal.suggest(value, 50);
+        console.log('[SearchEngine] Got', suggestions.length, 'suggestions');
         if (suggestions.length > 0) {
             this.renderPostalSuggestions(input, suggestions);
         } else {
@@ -130,12 +147,13 @@ export class SearchEngine {
 
         suggestions.forEach(record => {
             const displayZip = record.zip.substring(0, 3) + '-' + record.zip.substring(3);
-            const display = `${displayZip} ${record.pref} ${record.city} ${record.town}`;
+            const address = `${record.pref} ${record.city} ${record.town}`;
             const dataJson = escapeHtml(JSON.stringify(record));
 
-            html += `<div class="suggestion-item postal-item" data-postal="${dataJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">
-                <div style="font-weight:600; color:#3b82f6;">${displayZip}</div>
-                <div style="font-size:13px; color:#6b7280;">${escapeHtml(record.pref)} ${escapeHtml(record.city)} ${escapeHtml(record.town)}</div>
+            // Single line layout: zip code on left, address on right
+            html += `<div class="suggestion-item postal-item" data-postal="${dataJson}" style="padding:6px 8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333; display:flex; gap:12px; align-items:center;">
+                <span style="color:#3b82f6; flex-shrink:0; min-width:85px;">${displayZip}</span>
+                <span style="color:#666; flex-grow:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(address)}</span>
             </div>`;
         });
 
@@ -147,9 +165,11 @@ export class SearchEngine {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
 
-        box.style.width = Math.max(rect.width, 300) + 'px';
+        box.style.width = Math.max(rect.width, 400) + 'px';
         box.style.left = (rect.left + scrollLeft) + 'px';
         box.style.top = (rect.bottom + scrollTop) + 'px';
+        box.style.maxHeight = '360px';  // Enforce max height
+        box.style.overflowY = 'auto';    // Enable scrolling
 
         // Hover effects
         box.querySelectorAll('.suggestion-item').forEach((el: any) => {
@@ -177,7 +197,16 @@ export class SearchEngine {
             || input.closest('form')
             || input.closest('.form-row')?.parentElement
             || document;
+
+        const containerType = container === document ? 'document' :
+                             input.closest('tr') ? 'tr' :
+                             input.closest('.dynamic-row') ? 'dynamic-row' :
+                             input.closest('table') ? 'table' :
+                             input.closest('form') ? 'form' : 'form-row';
+        console.log('[fillPostalData] Container type:', containerType, 'Input:', input.dataset.jsonPath || input.name);
+
         const allInputs = Array.from(container.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
+        console.log('[fillPostalData] Found', allInputs.length, 'inputs in container');
 
         // 都道府県フィールドを探して自動入力
         const prefField = allInputs.find(inp => {
@@ -199,14 +228,26 @@ export class SearchEngine {
             cityField.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
-        // 町字フィールドを探して自動入力
+        // 町字フィールドまたは住所一体型フィールドを探して自動入力
         const townField = allInputs.find(inp => {
+            if (inp === input || inp === prefField || inp === cityField) return false;
             const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
-            return key.includes('town') || key.includes('address') || key.includes('町') || key.includes('字');
+            return key.includes('town') || key.includes('町') || key.includes('字');
         });
-        if (townField && townField !== input && townField !== cityField) {
+        const addressField = allInputs.find(inp => {
+            if (inp === input || inp === prefField || inp === cityField || inp === townField) return false;
+            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
+            return (key.includes('address') || key.includes('住所')) &&
+                   !key.match(/detail|sub|番地|building|room|mansion|house/);
+        });
+
+        if (townField) {
             townField.value = record.town;
             townField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (addressField) {
+            addressField.value = `${record.pref}${record.city}${record.town}`;
+            addressField.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 
@@ -224,8 +265,6 @@ export class SearchEngine {
                     border: '1px solid #ccc',
                     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                     zIndex: '9999',
-                    maxHeight: '200px',
-                    overflowY: 'auto',
                     borderRadius: '4px'
                 });
                 document.body.appendChild(this.globalBox);
@@ -242,6 +281,8 @@ export class SearchEngine {
     }
 
     private setupEventDelegation() {
+        console.log('[SearchEngine] Setting up event delegation');
+
         // Close on click outside
         document.addEventListener('click', (e: any) => {
             if (this.suggestionsVisible && !e.target.closest('#web-a-search-suggestions') && e.target !== this.activeSearchInput) {
@@ -256,8 +297,12 @@ export class SearchEngine {
 
         // Input Event
         document.body.addEventListener('input', (e: any) => {
+            console.log('[SearchEngine] Input event on:', e.target.tagName, 'classList:', e.target.classList.value);
             if (e.target.classList.contains('search-input')) {
+                console.log('[SearchEngine] Target has search-input class, handling');
                 this.handleSearchInput(e.target as HTMLInputElement);
+            } else {
+                console.log('[SearchEngine] Target does not have search-input class, ignoring');
             }
         });
 
@@ -275,8 +320,11 @@ export class SearchEngine {
         this.activeSearchInput = input;
         const w = window as any;
 
+        console.log('[SearchEngine] handleSearchInput called for:', input.dataset.jsonPath || input.name, 'value:', input.value);
+
         // Note: Postal handling moved to runtime.ts global listener for better datalist integration
         if (this.isPostalField(input)) {
+            console.log('[SearchEngine] Detected as postal field, calling handlePostalInput');
             this.handlePostalInput(input);
             return;
         }
@@ -361,6 +409,8 @@ export class SearchEngine {
         box.style.width = Math.max(rect.width, 200) + 'px';
         box.style.left = (rect.left + scrollLeft) + 'px';
         box.style.top = (rect.bottom + scrollTop) + 'px';
+        box.style.maxHeight = '300px';  // Enforce max height for regular suggestions too
+        box.style.overflowY = 'auto';    // Enable scrolling
 
         // Hover effects via JS
         box.querySelectorAll('.suggestion-item').forEach((el: any) => {

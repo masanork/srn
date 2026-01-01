@@ -29,6 +29,11 @@ const PREFECTURES = [
 export class PostalLookup {
     private data: Record<string, OptimizedGroup> = {};
     private initialized = false;
+    private instanceId = Math.random().toString(36).substring(7);
+
+    constructor() {
+        console.log('[PostalLookup] New instance created:', this.instanceId);
+    }
 
     /**
      * 埋め込みBase64データからロード
@@ -63,7 +68,7 @@ export class PostalLookup {
 
             this.data = JSON.parse(jsonString);
             this.initialized = true;
-            console.log('📮 Postal lookup initialized:', Object.keys(this.data).length, 'prefixes');
+            console.log('📮 Postal lookup initialized:', Object.keys(this.data).length, 'prefixes', '[Instance:', this.instanceId + ']');
         } catch (error) {
             console.error('Failed to load postal data:', error);
             // Don't throw, just log, so runtime doesn't crash completely
@@ -74,6 +79,12 @@ export class PostalLookup {
      * 埋め込みデータから自動初期化
      */
     async autoInit(): Promise<void> {
+        // Already initialized, skip
+        if (this.initialized) {
+            console.log('📮 Postal lookup already initialized, skipping');
+            return;
+        }
+
         // HTML内の<script id="weba-postal-data">を探す
         const scriptEl = document.getElementById('weba-postal-data');
         if (scriptEl && scriptEl.textContent) {
@@ -206,5 +217,12 @@ export class PostalLookup {
 export const postalLookup = new PostalLookup();
 
 if (typeof window !== 'undefined') {
-    (window as any).postalLookup = postalLookup;
+    // Only set window.postalLookup if it doesn't exist yet
+    // This prevents multiple bundle loads from overwriting an initialized instance
+    if (!(window as any).postalLookup) {
+        console.log('[PostalLookup] Registering instance to window:', postalLookup['instanceId']);
+        (window as any).postalLookup = postalLookup;
+    } else {
+        console.log('[PostalLookup] window.postalLookup already exists, skipping registration. Existing instance:', (window as any).postalLookup['instanceId'], 'New instance:', postalLookup['instanceId']);
+    }
 }

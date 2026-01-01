@@ -69,13 +69,15 @@ export function initRuntime() {
         if (!input || input.tagName !== 'INPUT') return;
         if (e.isTrusted) input.dataset.dirty = 'true';
 
-        const key = (input.dataset.jsonPath || input.name || '').toLowerCase();
+        let key = (input.dataset.jsonPath || input.name || '').toLowerCase();
         const val = input.value.trim();
         const postal = w.postalLookup;
 
         // A. Postal & Address Suggestions (Datalist based)
-        if (postal && postal.isReady()) {
-            const key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
+        // Skip if this is a search-input field - SearchEngine will handle it
+        const isSearchInput = input.classList.contains('search-input');
+        if (postal && postal.isReady() && !isSearchInput) {
+            key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
             const placeholder = (input.placeholder || '').toLowerCase();
 
             const isZipField = (key.match(/zip|postal|postcode|郵便/) && !key.match(/pref|city|town|address|都道府県|市区町村|住所/))
