@@ -52,6 +52,13 @@ export const Renderers: Record<string, any> = {
             const valMatchSimple = attrs.match(/(?:val|value)=([^\s\)]+)/);
             if (valMatchSimple) extra += ` value="${this.escapeHtml(valMatchSimple[1])}"`;
         }
+
+        const contextMatch = attrs.match(/context="([^"]+)"/) || attrs.match(/context='([^']+)'/);
+        if (contextMatch) extra += ` data-context="${this.escapeHtml(contextMatch[1])}"`;
+
+        const propertyMatch = attrs.match(/property="([^"]+)"/) || attrs.match(/property='([^']+)'/);
+        if (propertyMatch) extra += ` data-property="${this.escapeHtml(propertyMatch[1])}"`;
+
         return extra;
     },
 
@@ -64,7 +71,9 @@ export const Renderers: Record<string, any> = {
 
         const val = valMatch ? valMatch[1] : '';
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
+        const contextMatch = (attrs || '').match(/context="([^"]+)"/) || (attrs || '').match(/context='([^']+)'/);
+        const effectiveHint = hintMatch ? hintMatch[1] : (contextMatch ? contextMatch[1] : '');
+        const hint = effectiveHint ? `<div class="form-hint">${this.formatHint(effectiveHint)}</div>` : '';
 
         return `
         <div class="form-row" style="${this.getStyle(attrs)}">
@@ -79,7 +88,9 @@ export const Renderers: Record<string, any> = {
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-row"><div class="form-hint">${this.formatHint(hintMatch[1])}</div></div>` : '';
+        const contextMatch = (attrs || '').match(/context="([^"]+)"/) || (attrs || '').match(/context='([^']+)'/);
+        const effectiveHint = hintMatch ? hintMatch[1] : (contextMatch ? contextMatch[1] : '');
+        const hint = effectiveHint ? `<div class="form-row"><div class="form-hint">${this.formatHint(effectiveHint)}</div></div>` : '';
 
         return `
         <div class="form-row">
@@ -102,7 +113,9 @@ export const Renderers: Record<string, any> = {
         const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
 
         const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
+        const contextMatch = (attrs || '').match(/context="([^"]+)"/) || (attrs || '').match(/context='([^']+)'/);
+        const effectiveHint = hintMatch ? hintMatch[1] : (contextMatch ? contextMatch[1] : '');
+        const hint = effectiveHint ? `<div class="form-hint">${this.formatHint(effectiveHint)}</div>` : '';
         const valMatch = (attrs || '').match(/(?:val|value)="([^"]+)"/) || (attrs || '').match(/(?:val|value)='([^']+)'/) || (attrs || '').match(/(?:val|value)=([^ ]+)/);
         const val = valMatch ? valMatch[1] : '';
 

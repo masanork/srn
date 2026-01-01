@@ -13,7 +13,7 @@ ai_generated: true
 
 <div class="hero-section">
 <div class="logo-area font-logo">空音</div>
-<p class="lead">SORANE (空音): The Trust Infrastructure for <br><strong>Signed Resource Network</strong> & <strong>Verifiable Data</strong>.</p>
+<p class="lead">SORANE (空音): A simple medium for <br><strong>Signed Resources</strong> & <strong>Verifiable Data</strong>.</p>
 </div>
 
 <div class="vision-banner">
@@ -40,21 +40,17 @@ ai_generated: true
 </div>
 <div class="panel-body">
 <ul class="spec-list">
-<li><strong>Verifiable Ownership</strong>
-    <span data-lang-en>Digital signatures prove origin and integrity. No external server required.</span>
-    <span data-lang-ja>デジタル署名により、発行元と完全性を証明。外部サーバーに依存しません。</span>
+<li><strong>Machine-Readable Integrity</strong>
+    <span data-lang-en>Digital signatures and structured data provide verifiable facts that any system can understand and trust immediately.</span>
+    <span data-lang-ja>機械判読可能な真正性: デジタル署名と構造化データ（JSON-LD）により、あらゆるシステムが即座に内容を理解し、検証できます。</span>
 </li>
-<li><strong>Portable Trust (LTV)</strong>
-    <span data-lang-en>Self-contained verification. Documents verify themselves offline, decades later, even if the issuer is gone.</span>
-    <span data-lang-ja>自己完結型の検証。発行元が消滅して数十年後でも、オフラインで文書単体で真正性を検証可能。</span>
+<li><strong>Agentic AI Ready</strong>
+    <span data-lang-en>Built for the future of AI. Our semantic structure allows autonomous agents to handle data exchange with precision.</span>
+    <span data-lang-ja>エージェント対応 (Agentic AI): 人間とAIの双方が同じ情報を理解できる設計。AIエージェントによる自動的なデータ連携を可能にします。</span>
 </li>
-<li><strong>Privacy by Design (L2E)</strong>
-    <span data-lang-en>Payload Encryption. Securely transfer data without exchanging passwords (No PPAP).</span>
-    <span data-lang-ja>入力内容の暗号化。共通鍵（パスワード）をやり取りすることなく、意図した受信者だけが安全に閲覧可能（脱PPAP）。</span>
-</li>
-<li><strong>Rebuild-Safe Timestamp</strong>
-    <span data-lang-en>Layered Signatures ensure that design updates (HTML rebuilds) do not invalidate the original "Signed At" timestamp.</span>
-    <span data-lang-ja>階層化署名により、デザイン更新（HTMLリビルド）を行っても、オリジナルの「署名日時」が失われることはありません。</span>
+<li><strong>Zero-Touch Deployment</strong>
+    <span data-lang-en>Deploy as simple static files on any CDN or edge network. No specialized backend or complex database required.</span>
+    <span data-lang-ja>ゼロタッチ・デプロイ: 複雑なサーバー構成は不要。CDNや静的なホスティング環境があれば、即座にトラスト基盤を構築できます。</span>
 </li>
 </ul>
 </div>
@@ -63,7 +59,7 @@ ai_generated: true
 <div class="panel">
 <div class="panel-body nav-links">
 <div data-lang-en>
-<div class="nav-subheader"> The Trust Stack (Protocol Suite)</div>
+<div class="nav-subheader">SRN Stack (Protocol Suite)</div>
 <a href="./papers/web-a.html" class="nav-item">
 <span class="icon">📄</span> <span class="label">Web/A Format</span>
 <span class="desc">The Verifiable Document Standard (HTML + JSON-LD).</span>
@@ -76,10 +72,6 @@ ai_generated: true
 <span class="icon">💼</span> <span class="label">Web/A Folio</span>
 <span class="desc">The "Browser Wallet" & Key Management.</span>
 </a>
-<a href="./papers/web-a-post-architecture.html" class="nav-item">
-<span class="icon">📮</span> <span class="label">Web/A Post</span>
-<span class="desc">Decentralized Delivery & Routing Protocol.</span>
-</a>
 
 <div class="nav-subheader">Strategic Resources</div>
 <div class="spec-links-grid">
@@ -90,7 +82,7 @@ ai_generated: true
 </div>
 
 <div data-lang-ja>
-<div class="nav-subheader">SRN トラスト・スタック (構成要素)</div>
+<div class="nav-subheader">SRN スタック (構成要素)</div>
 <a href="./papers/web-a.ja.html" class="nav-item">
 <span class="icon">📄</span> <span class="label">Web/A Format</span>
 <span class="desc">検証可能なドキュメント規格 (HTML + JSON-LD)。</span>
@@ -102,10 +94,6 @@ ai_generated: true
 <a href="./papers/web-a-folio.ja.html" class="nav-item">
 <span class="icon">💼</span> <span class="label">Web/A Folio</span>
 <span class="desc">ブラウザウォレット ＆ 鍵管理アーキテクチャ。</span>
-</a>
-<a href="./papers/web-a-post-architecture.ja.html" class="nav-item">
-<span class="icon">📮</span> <span class="label">Web/A Post</span>
-<span class="desc">分散型配送 ＆ ルーティングプロトコル。</span>
 </a>
 
 <div class="nav-subheader">戦略・重要資料</div>

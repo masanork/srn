@@ -9,7 +9,9 @@ pub struct JpkiController<R: CardReader> {
 
 use std::fmt;
 
-#[derive(Debug, Default)]
+use serde::Serialize;
+
+#[derive(Debug, Default, Serialize)]
 pub struct BasicInfo {
     pub name: String,
     pub address: String,

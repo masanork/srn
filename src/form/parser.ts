@@ -49,7 +49,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 const cells = t.split('|').slice(1, -1).map(c => c.trim());
                 const isSep = cells.every(c => c.match(/^-+$/));
                 if (!isSep && scanMasterKey && masterData[scanMasterKey]) {
-                    masterData[scanMasterKey].push(cells);
+                    const data = masterData[scanMasterKey];
+                    if (data) data.push(cells);
                 }
             } else {
                 if (t.length > 0) scanInMaster = false;
@@ -83,15 +84,40 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     };
 
     const processInlineTags = (text: string) => {
-        return text.replace(/\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/g, (match, type, key, attrs) => {
-            // Register field
-            const label = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
-            const cleanLabel = label ? label[1] : key;
-            jsonStructure.fields.push({ key, label: cleanLabel, type: type || 'text' });
+        const tagRegex = /\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/g;
+        let lastIndex = 0;
+        let result = '';
+        let match;
 
-            // Render inline
-            return Renderers.renderInput(type || 'text', key, attrs || '');
-        });
+        while ((match = tagRegex.exec(text)) !== null) {
+            // Escape text before the tag
+            result += Renderers.escapeHtml(text.substring(lastIndex, match.index));
+
+            const [fullMatch, type, key, attrs] = match;
+            const attrStr = attrs || '';
+            const typeStr = type || 'text';
+            const labelMatch = attrStr.match(/placeholder="([^"]+)"/) || attrStr.match(/placeholder='([^']+)'/);
+            const cleanLabel = labelMatch ? labelMatch[1] : key;
+
+            const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
+            const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
+
+            jsonStructure.fields.push({
+                key,
+                label: cleanLabel,
+                type: typeStr,
+                context: contextMatch ? contextMatch[1] : undefined,
+                property: propertyMatch ? propertyMatch[1] : undefined
+            });
+
+            // Render tag (already produces safe HTML)
+            result += Renderers.renderInput(typeStr, key, attrStr);
+            lastIndex = tagRegex.lastIndex;
+        }
+
+        // Escape remaining text
+        result += Renderers.escapeHtml(text.substring(lastIndex));
+        return result;
     };
 
     lines.forEach((line) => {
@@ -171,7 +197,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                             if (match) {
                                 let [_, type, keyPart, attrsParen, attrsColon] = match;
                                 // Handle cases where keyPart contains attributes like "idx autonum"
-                                let key = keyPart.trim();
+                                let key = (keyPart || '').trim();
                                 let extraAttrs = attrsParen || attrsColon || '';
                                 if (key.includes(' ')) {
                                     const parts = key.split(/\s+/);
@@ -180,7 +206,10 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                                 }
                                 const placeholderMatch = extraAttrs.match(/placeholder="([^"]+)"/) || extraAttrs.match(/placeholder='([^']+)'/);
                                 const label = placeholderMatch ? placeholderMatch[1] : key;
-                                jsonStructure.tables[tableKey].push({ key, label, type: type || 'text' });
+                                const tableData = jsonStructure.tables[tableKey];
+                                if (tableData) {
+                                    tableData.push({ key, label, type: type || 'text' });
+                                }
                             }
                         });
                         // @ts-ignore
@@ -280,23 +309,33 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 const [_, type, key, attrs, label] = match;
                 currentRadioGroup = null;
                 const cleanLabel = (label || '').trim();
+                const attrStr = attrs || '';
 
-                jsonStructure.fields.push({ key, label: cleanLabel, type });
+                const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
+                const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
+
+                jsonStructure.fields.push({
+                    key,
+                    label: cleanLabel,
+                    type: type || 'text',
+                    context: contextMatch ? contextMatch[1] : undefined,
+                    property: propertyMatch ? propertyMatch[1] : undefined
+                });
 
                 // Explicit dispatch to avoid dynamic property access issues
                 if (type === 'radio') {
-                    currentRadioGroup = { key, label: cleanLabel, attrs: attrs || '' };
-                    appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
+                    currentRadioGroup = { key, label: cleanLabel, attrs: attrStr };
+                    appendHtml(Renderers.radioStart(key, cleanLabel, attrStr));
                 }
-                else if (type === 'text') appendHtml(Renderers.text(key, cleanLabel, attrs));
-                else if (type === 'number') appendHtml(Renderers.number(key, cleanLabel, attrs));
-                else if (type === 'date') appendHtml(Renderers.date(key, cleanLabel, attrs));
-                else if (type === 'textarea') appendHtml(Renderers.textarea(key, cleanLabel, attrs));
-                else if (type === 'search') appendHtml(Renderers.search(key, cleanLabel, attrs));
-                else if (type === 'calc') appendHtml(Renderers.calc(key, cleanLabel, attrs));
-                else if (type === 'datalist') appendHtml(Renderers.renderInput(type, key, attrs));
+                else if (type === 'text') appendHtml(Renderers.text(key, cleanLabel, attrStr));
+                else if (type === 'number') appendHtml(Renderers.number(key, cleanLabel, attrStr));
+                else if (type === 'date') appendHtml(Renderers.date(key, cleanLabel, attrStr));
+                else if (type === 'textarea') appendHtml(Renderers.textarea(key, cleanLabel, attrStr));
+                else if (type === 'search') appendHtml(Renderers.search(key, cleanLabel, attrStr));
+                else if (type === 'calc') appendHtml(Renderers.calc(key, cleanLabel, attrStr));
+                else if (type === 'datalist') appendHtml(Renderers.renderInput(type, key, attrStr));
                 else if (type && Renderers[type]) {
-                    appendHtml(Renderers[type](key, cleanLabel, attrs));
+                    appendHtml((Renderers as any)[type](key, cleanLabel, attrStr));
                 } else {
                     console.warn(`Unknown type: ${type}`, Object.keys(Renderers));
                     appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
@@ -316,7 +355,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
         else if (trimmed.length > 0) {
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
-            appendHtml(`<p>${Renderers.escapeHtml(processInlineTags(trimmed))}</p>`);
+            appendHtml(`<p>${processInlineTags(trimmed)}</p>`);
         } else {
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
         }
