@@ -9,15 +9,18 @@ ai_generated: true
 
 **Date:** 2026-01-01
 
-Delivered production-ready Secure Messaging for the `civ` ePassport/EuId
-implementation, enabling encrypted APDUs and MAC-verified responses when using
-BAC.
-
-*   **Secure Messaging Wrapper**:
+*   **CIV Secure Messaging (BAC)**:
   - Implemented ISO 7816-4 DO87/DO97/DO8E/DO99 handling with 3DES CBC
     encryption and retail MAC validation for command/response protection.
   - Added BAC mutual authentication flow with session key setup and SSC-based
     MAC inputs to unlock read access on real ePassports.
+
+*   **Web/A LTV Architecture & Metadata Refinement**:
+  - **L1 Schema Definition**: Refined Layer 1 from "Template" to "Schema" and established Markdown as the primary Source of Truth for HMP-compliant definitions.
+  - **L4 Presentation Role**: Clarified Layer 4 as the "Presentation" layer responsible for HTML templates, allowing L2 data to remain immutable across design updates (solving the "Rebuild Paradox").
+  - **PHC Specification**: Published the initial technical draft for **Prunable Hash Chain (PHC)** in L3 Context, defining events for Metadata Updates and ownership transfers.
+  - **Metadata Extensions**: Expanded Frontmatter support for `schemas`, `license`, `updated`, and `lang`, enabling documents to self-describe their trust and structural compliance.
+  - **SSG Logic**: Implemented tag-based draft filtering (`tags: ["draft"]`) for more flexible content lifecycle management.
 
 ## v2.8.0 - New Year Update: CIV Integration & LTV Architecture
 
