@@ -59,9 +59,9 @@ impl BacSession {
         if response.len() < 2 {
             return Err(anyhow!("Secure messaging response too short"));
         }
-        let (raw_data, sw1, sw2) = response.split_at(response.len() - 2);
-        let sw1 = sw1[0];
-        let sw2 = sw2[0];
+        let (raw_data, sw_bytes) = response.split_at(response.len() - 2);
+        let sw1 = sw_bytes[0];
+        let sw2 = sw_bytes[1];
         if sw1 != 0x90 || sw2 != 0x00 {
             return Err(anyhow!("Secure messaging transport error: SW={:02X}{:02X}", sw1, sw2));
         }

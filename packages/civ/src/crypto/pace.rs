@@ -2,7 +2,8 @@ use anyhow::{Result, anyhow};
 use p256::ecdh::EphemeralSecret;
 use p256::{PublicKey, EncodedPoint};
 use sha2::{Sha256, Digest};
-use aes::cipher::{KeyIvInit, StreamCipher};
+use p256::elliptic_curve::sec1::ToEncodedPoint;
+use aes::cipher::StreamCipher;
 // Note: cipher crate traits are typically needed for AES-CBC/CMAC
 
 /// PACE Session Keys (AES-128 / AES-256)
@@ -72,4 +73,40 @@ impl PaceStateMachine {
     }
     
     // ... Steps functions outline ...
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_kdf_sha256() {
+        let secret = b"shared_secret";
+        
+        // K_enc (counter = 1)
+        let k_enc = kdf_sha256(secret, 1);
+        assert_eq!(k_enc.len(), 16); // AES-128
+        
+        // K_mac (counter = 2)
+        let k_mac = kdf_sha256(secret, 2);
+        assert_eq!(k_mac.len(), 16);
+        
+        assert_ne!(k_enc, k_mac);
+    }
+
+    #[test]
+    fn test_ecdh_shared_secret() {
+        let mut alice = PaceStateMachine::new();
+        let alice_pk = alice.generate_ephemeral_key();
+        let alice_pk_bytes = alice_pk.to_encoded_point(false).as_bytes().to_vec();
+
+        let mut bob = PaceStateMachine::new();
+        let bob_pk = bob.generate_ephemeral_key();
+        let bob_pk_bytes = bob_pk.to_encoded_point(false).as_bytes().to_vec();
+
+        let alice_shared = alice.compute_shared_secret(&bob_pk_bytes).unwrap();
+        let bob_shared = bob.compute_shared_secret(&alice_pk_bytes).unwrap();
+
+        assert_eq!(alice_shared, bob_shared);
+    }
 }

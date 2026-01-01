@@ -34,7 +34,7 @@ impl AesSecureMessaging {
          // Verify standard: Part 11 says 8 bytes for 3DES, 8 bytes for AES-CMAC too usually? 
          // Actually RFC 4493 (AES-CMAC) output is 128-bit. ICAO 9303 Part 11 9.8.something
          // For AES, output is 8 bytes (truncated)
-         let mut mac = Aes128Cmac::new_from_slice(&self.k_mac).map_err(|e| anyhow!("MAC Init error: {}", e))?;
+         let mut mac = <Aes128Cmac as Mac>::new_from_slice(&self.k_mac).map_err(|e| anyhow!("MAC Init error: {}", e))?;
          mac.update(&self.ssc.to_be_bytes()); // NOTE: AES SM SSC handling might differ from 3DES
          // Wait, AES SSC is 16 bytes (128 bit) encrypted with K_enc? No. 
          // ICAO 9303 Part 11 9.8.2.2: SSC is 16 bytes. initialized to 0. 
