@@ -3,6 +3,8 @@ use p256::ecdsa::signature::Verifier;
 use rand_core::OsRng;
 use anyhow::{Result, anyhow};
 
+pub mod bac;
+
 /// FIDO-like KeyPair wrapper (P-256)
 pub struct FidoKeyPair {
     signing_key: SigningKey,

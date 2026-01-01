@@ -48,8 +48,10 @@ This library (`civ`) aims to provide a unified interface for accessing Japanese 
 *   ✅ **AP Selection**: Implemented.
 *   ✅ **CHUID Read**: Implemented (GET DATA).
 *   ✅ **Parsing**: Implemented (Expiry Date extraction).
-*   ✅ **Read Cert**: Implemented (Authentication Key 9A).
-*   **Remaining**: Authenticate (PIN verification, GENERAL AUTHENTICATE) for private operations.
+*   ✅ **Read Cert**: Implemented (Authentication Key 9A, Sign Key 9C, etc.).
+*   ✅ **PIN Verification**: Implemented (Verify 0x80).
+*   ✅ **General Authenticate**: Implemented (Sign/Internal Auth).
+*   ✅ **Key Management**: Implemented (KeyReference & Algorithm enums).
 
 ## 3. Security Hardening & Next Steps
 

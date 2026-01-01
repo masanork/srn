@@ -83,7 +83,7 @@ ai_generated: true
 
 <div class="nav-subheader">Strategic Resources</div>
 <div class="spec-links-grid">
-<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Governance & Audits</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Transparency Reports</a>
 <a href="./papers/api-economy-vs-document-economy.html">📊 API vs Document Economy</a>
 <a href="./papers/web-a-l2-security-audit-v8.html">🛡️ L2 Security Audit (v8)</a>
 <a href="./papers/web-a-vp-generator-spec.html">🆔 VP Generator Spec (Gov)</a>
@@ -111,7 +111,7 @@ ai_generated: true
 
 <div class="nav-subheader">戦略・重要資料</div>
 <div class="spec-links-grid">
-<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ ガバナンス ＆ 監査報告</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ 透明性報告 (Transparency)</a>
 <a href="./papers/api-economy-vs-document-economy.ja.html">📊 試算：API経済 vs 書類経済</a>
 <a href="./governance/web-a-l2-security-audit-v8.ja.html">🛡️ L2 セキュリティ監査 (v8)</a>
 <a href="./papers/web-a-vp-generator-spec.html">🆔 行政証明書提示ツール仕様</a>

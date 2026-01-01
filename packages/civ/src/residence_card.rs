@@ -44,7 +44,19 @@ impl<R: CardReader> ResidenceCardController<R> {
         Self { reader }
     }
 
-    // ... existing select/verify ...
+    pub async fn select_rc_ap(&mut self) -> Result<()> {
+        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
+            .with_data(&file_ids::DF_RC);
+        let res = self.reader.transmit(&apdu.to_bytes()).await?;
+        Self::check_sw(&res).context("Failed to select RC AP")
+    }
+
+    /// Verify Card Number (Access Control)
+    /// In a real implementation, this might derive a key from the card number (like BAC)
+    /// or verify it against a specific file. For now, we mock it as success.
+    pub async fn verify_card_number(&mut self, _number: &str) -> Result<()> {
+        Ok(())
+    }
 
     pub async fn read_info(&mut self) -> Result<ResidenceCardInfo> {
         let raw = self.read_file(&file_ids::EF_RC_COMMON).await?;
@@ -61,7 +73,7 @@ impl<R: CardReader> ResidenceCardController<R> {
         // 0x16: Address
         // 0x17: Expiry Info?
         
-        use crate::utils::{parse_tlv_flat, decode_shift_jis};
+        use crate::utils::parse_tlv_flat;
         // Note: Check if UTF-8 is used instead? Usually text is UTF-8 in RC?
         // Let's try Shift-JIS first as fail-safe, or check encoding.
         // Actually, Residence Card specs often align with ICAO or JPKI.
