@@ -45,8 +45,8 @@ ai_generated: true
     <span data-lang-ja>暗号署名により、発行元と完全性を証明。中央集権サーバーに依存しません。</span>
 </li>
 <li><strong>Portable Trust (LTV)</strong>
-    <span data-lang-en>Self-contained verification. Documents verify themselves offline, 50 years later, even if the issuer is gone.</span>
-    <span data-lang-ja>自己完結型の検証。発行元が消滅して50年後でも、オフラインで文書単体で真正性を検証可能。</span>
+    <span data-lang-en>Self-contained verification. Documents verify themselves offline, decades later, even if the issuer is gone.</span>
+    <span data-lang-ja>自己完結型の検証。発行元が消滅して数十年後でも、オフラインで文書単体で真正性を検証可能。</span>
 </li>
 <li><strong>Privacy by Design (L2E)</strong>
     <span data-lang-en>Layer 2 Encryption (HPKE) ensures only the recipient can view the payload.</span>
