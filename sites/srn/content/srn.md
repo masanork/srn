@@ -85,9 +85,7 @@ ai_generated: true
 <div class="spec-links-grid">
 <a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Transparency Reports</a>
 <a href="./papers/api-economy-vs-document-economy.html">📊 API vs Document Economy</a>
-
 <a href="./papers/web-a-ltv-architecture.html">🏛️ LTV Architecture (New)</a>
-
 </div>
 </div>
 
@@ -114,9 +112,7 @@ ai_generated: true
 <div class="spec-links-grid">
 <a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ 透明性報告</a>
 <a href="./papers/api-economy-vs-document-economy.ja.html">📊 試算：API経済 vs 書類経済</a>
-
 <a href="./papers/web-a-ltv-architecture.html">🏛️ LTV 長期検証アーキテクチャ</a>
-
 </div>
 </div>
 </div>
