@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIV Web Demo: JPKI Attribute Extraction</title>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap">
+    <style>
+        :root {
+            --primary: #007bff;
+            --bg: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            background: radial-gradient(circle at top right, #eef2ff, #f8fafc),
+                radial-gradient(circle at bottom left, #f0fdf4, #f8fafc);
+            color: var(--text);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 32px;
+        }
+
+        .warning-box {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            padding: 16px;
+            border-radius: 12px;
+            color: #92400e;
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        input {
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .result-area {
+            margin-top: 32px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 24px;
+            display: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+
+        .label-cell {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .value-cell {
+            color: #1e293b;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .status.error {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .status.info {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .usb-hint {
+            margin-top: 24px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .iwa-badge {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+    <link rel="manifest" href="/manifest.webmanifest">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>CIV Web Demo <span style="font-size:0.5em; opacity:0.7">(IWA)</span></h1>
+        <p class="subtitle">Extract JPKI Attributes (WebUSB + WASM)</p>
+
+        <div class="iwa-badge">Isolated Web App Mode</div>
+
+        <div class="warning-box" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d;">
+            <strong>✅ Unrestricted Access:</strong>
+            This app is running as an <strong>Isolated Web App</strong>.
+            The <code>usb-unrestricted</code> permission allows direct access to Smart Cards (CCID) on macOS and
+            Windows, bypassing browser blocklists.
+            <br><br>
+            <small>Note: You may still need to stop OS smart card services (e.g. `com.apple.ifdreader`) if the device is
+                busy.</small>
+        </div>
+
+        <div class="control-group">
+            <div class="input-field">
+                <label for="pin">券面事項入力補助用パスワード (4桁)</label>
+                <input type="password" id="pin" maxlength="4" placeholder="••••" required>
+            </div>
+
+            <button id="connect-btn" class="btn">
+                <span>🔌 Connect Reader & Read</span>
+            </button>
+            <button id="simulation-btn" class="btn" style="background: #64748b; margin-top: 8px;">
+                <span>🧪 Test Simulation (No Reader)</span>
+            </button>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+
+        <div id="result" class="result-area">
+            <h3 style="margin-top: 0; margin-bottom: 16px;">Extracted Information</h3>
+            <div class="result-grid">
+                <div class="label-cell">氏名</div>
+                <div class="value-cell" id="res-name">-</div>
+                <div class="label-cell">住所</div>
+                <div class="value-cell" id="res-address">-</div>
+                <div class="label-cell">生年月日</div>
+                <div class="value-cell" id="res-dob">-</div>
+                <div class="label-cell">性別</div>
+                <div class="value-cell" id="res-gender">-</div>
+                <div class="label-cell">個人番号</div>
+                <div class="value-cell" id="res-mynumber">************</div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.8rem; color: #94a3b8;">
+                * Data is processed entirely on the client side using WebAssembly.
+            </div>
+        </div>
+
+        <div class="usb-hint">
+            Supports ACR122U, uTrust 2700 R, etc.<br>
+            Requires Android/ChromeOS/Linux/Windows (Chrome/Edge/Opera).
+        </div>
+    </div>
+
+    <script type="module">
+        import init, { WasmJpkiController, WebUsbReader } from './wasm/civ/civ.js';
+
+        async function initializeWasm() {
+            try {
+                await init();
+                console.log("CIV WASM Initialized");
+            } catch (e) {
+                console.error("CIV WASM Init Failed", e);
+            }
+        }
+        initializeWasm();
+
+        const pinInput = document.getElementById('pin');
+        const connectBtn = document.getElementById('connect-btn');
+        const simBtn = document.getElementById('simulation-btn');
+        const statusDiv = document.getElementById('status');
+        const resultDiv = document.getElementById('result');
+
+        function showStatus(msg, type = 'info') {
+            statusDiv.textContent = msg;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function showResult(info) {
+            document.getElementById('res-name').textContent = info.name;
+            document.getElementById('res-address').textContent = info.address;
+            document.getElementById('res-dob').textContent = info.birth_date;
+            document.getElementById('res-gender').textContent = info.gender;
+            document.getElementById('res-mynumber').textContent = info.my_number || '************';
+            resultDiv.style.display = 'block';
+            showStatus('Attributes read successfully!', 'info');
+        }
+
+        // --- CCID Driver Implementation ---
+        class CcidConnection {
+            constructor(device) {
+                this.device = device;
+                this.seq = 0;
+                this.inEndpoint = 0;
+                this.outEndpoint = 0;
+                this.packetSize = 64;
+            }
+
+            async connect() {
+                await this.device.open();
+                await this.device.selectConfiguration(1);
+
+                // Find Smart Card Interface (Class 0x0B)
+                const interfaceEl = this.device.configuration.interfaces.find(i =>
+                    i.alternates.some(a => a.interfaceClass === 0x0B)
+                );
+                if (!interfaceEl) throw new Error("No Smart Card Interface found (Class 0x0B)");
+
+                const interfaceNum = interfaceEl.interfaceNumber;
+                try {
+                    await this.device.claimInterface(interfaceNum);
+                } catch (e) {
+                    console.error("claimInterface failed:", e);
+                    if (e.message.includes("protected") || e.name === "SecurityError") {
+                        throw new Error(`OS Restricted (Protected Class 0x0B). \nMainstream OS (Win/Mac) blocks direct WebUSB access to Smart Cards using standard drivers.\n\nTry on Android/Linux, or use "Test Simulation".`);
+                    }
+                    throw e;
+                }
+
+                const alt = interfaceEl.alternates.find(a => a.interfaceClass === 0x0B);
+                const epIn = alt.endpoints.find(e => e.direction === "in");
+                const epOut = alt.endpoints.find(e => e.direction === "out");
+
+                if (!epIn || !epOut) throw new Error("Missing CCID Endpoints");
+
+                this.inEndpoint = epIn.endpointNumber;
+                this.outEndpoint = epOut.endpointNumber;
+                this.packetSize = epOut.packetSize;
+
+                console.log(`CCID Ready: Iface ${interfaceNum}, IN ${this.inEndpoint}, OUT ${this.outEndpoint}`);
+            }
+
+            async powerOn() {
+                // PC_to_RDR_IccPowerOn (0x62)
+                const header = new Uint8Array([
+                    0x62, 0x00, 0x00, 0x00, 0x00, 0x00, this.seq++, 0x00, 0x00, 0x00
+                ]);
+                await this.send(header);
+                const resp = await this.receive();
+                // Validate RDR_to_PC_DataBlock (0x80) containing ATR
+                if (resp[0] !== 0x80) throw new Error(`PowerOn Failed: Type ${resp[0].toString(16)}`);
+                console.log("Card Power On OK. ATR received.");
+            }
+
+            async transceive(apdu) {
+                // PC_to_RDR_XfrBlock (0x6F)
+                const len = apdu.length;
+                const header = new Uint8Array([
+                    0x6F,
+                    len & 0xFF, (len >> 8) & 0xFF, (len >> 16) & 0xFF, (len >> 24) & 0xFF,
+                    0x00,
+                    this.seq++,
+                    0x00, 0x00, 0x00
+                ]);
+
+                const packet = new Uint8Array(10 + len);
+                packet.set(header, 0);
+                packet.set(apdu, 10);
+
+                await this.send(packet);
+
+                const resp = await this.receive();
+
+                if (resp[0] !== 0x80) throw new Error(`Transmit Failed: Type ${resp[0].toString(16)}`);
+
+                // Parse RDR_to_PC_DataBlock
+                const dataLen = resp[1] | (resp[2] << 8) | (resp[3] << 16) | (resp[4] << 24);
+                const status = resp[7];
+                const err = resp[8];
+
+                if ((status & 0x40) !== 0) {
+                    // Check error details if needed
+                    // console.warn("CCID Status indicates error/warning:", status, err);
+                }
+
+                const data = resp.slice(10, 10 + dataLen);
+                return data;
+            }
+
+            async send(data) {
+                await this.device.transferOut(this.outEndpoint, data);
+            }
+
+            async receive() {
+                // Read first chunk (usually enough for short APDU, 64-1024 bytes)
+                const res = await this.device.transferIn(this.inEndpoint, 1024);
+                if (!res.data) throw new Error("No data received");
+                return new Uint8Array(res.data.buffer);
+            }
+        }
+
+        // --- WASM Integration Logic ---
+        async function runNative() {
+            const pin = pinInput.value;
+            if (!pin) {
+                showStatus('Please enter your 4-digit PIN.', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Connecting to USB device...', 'info');
+
+                // 1. Request WebUSB Device
+                const device = await navigator.usb.requestDevice({
+                    filters: [
+                        { classCode: 0x0B }, // Smart Card
+                        { vendorId: 0x072f }, // ACS
+                        { vendorId: 0x04e6 }  // Identiv
+                    ]
+                });
+
+                showStatus(`Connected: ${device.productName}. Initializing CCID...`, 'info');
+
+                // 2. Init CCID
+                const conn = new CcidConnection(device);
+                await conn.connect();
+                await conn.powerOn();
+
+                // 3. Adapter for WASM
+                const jsTransport = {
+                    async transmit(apdu) {
+                        const hex = Array.from(apdu).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                        console.log(`[APDU >>] ${hex}`);
+
+                        const resp = await conn.transceive(apdu);
+
+                        const rHex = Array.from(resp).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                        console.log(`[APDU <<] ${rHex}`);
+
+                        return resp;
+                    }
+                };
+
+                const reader = new WebUsbReader(jsTransport);
+                const controller = new WasmJpkiController(reader);
+
+                showStatus('Reading verification attributes via CCID...', 'info');
+
+                const info = await controller.read_attributes(pin);
+                showResult(info);
+
+            } catch (err) {
+                console.error(err);
+                if (err.name === 'NotFoundError') {
+                    showStatus('No device selected.', 'error');
+                } else {
+                    showStatus(`Error: ${err.message}`, 'error');
+                }
+            }
+        }
+
+        // --- Simulation Logic ---
+        function runSimulation() {
+            showStatus('Starting simulation...', 'info');
+            setTimeout(() => {
+                showResult({
+                    name: "空音 太郎 (SORANE TARO)",
+                    address: "東京都千代田区1-1-1",
+                    birth_date: "1988-01-01",
+                    gender: "男性",
+                    my_number: "123456789012"
+                });
+            }, 800);
+        }
+
+        connectBtn.addEventListener('click', runNative);
+        simBtn.addEventListener('click', runSimulation);
+
+    </script>
+</body>
+
+</html>
