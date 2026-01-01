@@ -79,6 +79,22 @@ Web/A separates the trust model for "Data" vs. "Presentation" to allow independe
 *   **Lifecycle**: Ephemeral. Regenerated upon every rebuild/deployment.
 *   **Trust**: Validates "The current view is authorized by the issuer." It protects against UI tampering (e.g., swapping a "Valid" icon for an "Invalid" one) without altering the underlying data.
 
+### 3.3. L3 Structure: Prunable Hash Chain (PHC)
+
+To prevent the **Context Layer (L3)** from growing indefinitely while maintaining a complete audit trail (Chain of Custody), we adopt a **Prunable Hash Chain** model.
+
+*   **The Chain (Mandatory)**: A lightweight linked list of signatures. Each node contains:
+    *   `previous_hash`: Link to the prior state.
+    *   `signer`: The DID of the custodian at that time.
+    *   `timestamp`: When the update occurred.
+    *   `evidence_hash`: Hash of the associated heavy data (e.g., CRLs, detailed logs).
+    *   **Immutability**: This chain ensures that no history can be silently deleted.
+*   **The Evidence (Optional/Prunable)**: The actual heavy data blobs referenced by `evidence_hash`.
+    *   **Self-Contained Mode**: Evidence is embedded within the Web/A file (e.g., in a separate CBOR block).
+    *   **Stripped Mode**: To save space, old evidence can be removed from the file. The `evidence_hash` remains in the chain, enabling "Existence Proof" even without the data. The actual data can be stored in an external archive if needed.
+
+This allows a 100-year-old document to keep its verification chain intact (KB size) while offloading gigabytes of obsolete CRLs.
+
 **Workflow:**
 *   **Content Change**: Trigger re-signing of Payload layer. Update Timestamp.
 *   **Template Change**: Rebuild HTML. **Retain Payload Signature.** Re-sign Container Signature.
