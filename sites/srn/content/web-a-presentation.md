@@ -133,7 +133,7 @@ ai_generated: true
 
 - **Rebuild-Safe**: Fix typos in 2030 without breaking 2025 signatures.
 - **Offline**: Self-contained trust anchors (embedded DID).
-- **50-Year Proof**: Verify independently even if the issuer vanishes.
+- **Long-Term Proof**: Verify independently even if the issuer vanishes.
 
 ---
 
