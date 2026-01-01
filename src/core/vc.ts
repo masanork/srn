@@ -183,11 +183,12 @@ export async function createHybridVC(
     const proofPurpose = proofOptions.proofPurpose || 'assertionMethod';
 
     // 2. Prepare Payload
+    const issuanceDate = (document as any).issuanceDate || new Date().toISOString();
     const vcPayload = {
         "@context": ["https://www.w3.org/2018/credentials/v1"],
         "type": ["VerifiableCredential"],
         "issuer": issuer,
-        "issuanceDate": new Date().toISOString(),
+        "issuanceDate": issuanceDate,
         ...document
     };
 
