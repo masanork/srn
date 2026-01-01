@@ -73,12 +73,35 @@ bun x http-server dist/srn
 
 `layout: form` を使用することで、検証可能なフォームを作成できます。
 
+#### 基本記法
+
+Markdownのリスト構文を使ってフィールドを定義します。属性は `(key="value")` の形式で指定します。
+
 ```markdown
----
-title: "申請フォーム"
-layout: form
----
-- [text:name (label="氏名")] 氏名
+- [text:full_name] 氏名
+- [number:age (min="0")] 年齢
+- [date:birthday] 生年月日
+```
+
+#### AI Context (v2.8+)
+
+AI エージェントがフィールドの意味を理解し、自動入力や入力支援を行えるようにするための属性です。
+
+- **`context`**: 具体的な入力の意図や指示。「ヒントテキスト」としても機能します。
+- **`property`**: schema.org などの語彙を用いた意味的な定義。
+
+```markdown
+- [text:name (context="戸籍上の氏名を記入" property="schema:name")] 氏名
+```
+
+#### 自動計算とロジック
+
+Excelのような計算式や集計ロジックを埋め込むことができます。
+
+```markdown
+- [number:price] 単価
+- [number:qty] 数量
+- [calc:total (val="price * qty")] 合計
 ```
 
 *   **Single-File Runtime**: ロジック、CSS、署名をすべて含んだ単一のHTMLファイルを生成。
