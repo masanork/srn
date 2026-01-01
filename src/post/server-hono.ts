@@ -16,7 +16,7 @@ const ADMIN_DID = process.env.ADMIN_DID || "did:key:z6MkhaXgBZDvotDkL5257faiztiG
 
 // Initialize Hub with Local Storage (for now)
 // In Cloudflare Worker environment, we would inject D1Storage here.
-const storage = new LocalFileStorage("./data/post");
+const storage = new LocalFileStorage("./shared/data/post");
 const hub = new PostalHub(storage);
 
 hub.registerDid(ADMIN_DID, 'admin');

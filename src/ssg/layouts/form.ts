@@ -89,7 +89,7 @@ export function formLayout(params: {
 
     if (needsPostal) {
         try {
-            const postalDataPath = path.resolve('data/postal/postal-optimized.json.gz');
+            const postalDataPath = path.resolve('shared/data/postal/postal-optimized.json.gz');
             if (fs.existsSync(postalDataPath)) {
                 const b64 = fs.readFileSync(postalDataPath).toString('base64');
                 postalScript = `<script id="weba-postal-data" type="application/x-gzip">${b64}</script>

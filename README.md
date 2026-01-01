@@ -61,7 +61,7 @@ The build process will automatically subset these fonts.
 ### Prepare Postal Data (Local Only)
 Postal data is ignored by git for copyright and size reasons.
 1. Download `utf_ken_all.csv` from [Japan Post](https://www.post.japanpost.jp/zipcode/dl/utf-8.html).
-2. Place it in `data/postal/utf_ken_all.csv`.
+2. Place it in `shared/data/postal/utf_ken_all.csv`.
 3. Run `bun run scripts/build_postal_data.ts` to generate optimized JSON and gzip files.
 
 ### Build

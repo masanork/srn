@@ -12,19 +12,19 @@ layout: form
 
 | 項目 | 入力フィールド |
 | --- | --- |
-| 郵便番号 | [search:zip (placeholder="例: 100-0001")] |
-| 都道府県 | [text:pref (placeholder="自動入力")] |
-| 市区町村 | [text:city (placeholder="自動入力")] |
-| 町名     | [text:town (placeholder="自動入力")] |
-| 番地     | [text:address_detail] |
+| 郵便番号 | [search:contact.zip (placeholder="例: 100-0001")] |
+| 都道府県 | [text:contact.pref (placeholder="自動入力")] |
+| 市区町村 | [text:contact.city (placeholder="自動入力")] |
+| 町名     | [text:contact.town (placeholder="自動入力")] |
+| 番地     | [text:contact.address_detail] |
 
 ## 住所一体型フィールド（自動判別テスト）
 
 | 項目 | 入力フィールド |
 | --- | --- |
-| 郵便番号 | [search:zip2] |
-| 住所(一体) | [text:address] |
-| 建物名 | [text:building] |
+| 郵便番号 | [search:combined.zip] |
+| 住所(一体) | [text:combined.address] |
+| 建物名 | [text:combined.building] |
 
 ---
 
@@ -34,7 +34,7 @@ Web/A Form で郵便番号補完を有効にするには、以下のように記
 
 1.  **郵便番号フィールド**:
     - `search` タイプを指定し、キー名に `zip` / `postal` / `郵便` のいずれかを含めます。
-    - 例：`[search:zip (placeholder="000-0000")]` のように記述
+    - 例：`[search:attribute.zip (placeholder="000-0000")]` のように記述
 2.  **自動入力先のフィールド**:
     - 都道府県: キー名に `pref` または `都道府県` を含める。
     - 市区町村: キー名に `city` または `市区町村` を含める。

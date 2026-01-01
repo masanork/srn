@@ -5,7 +5,7 @@ import { join } from "path";
 
 describe("Postal Lookup with Real Data", () => {
     beforeAll(async () => {
-        const base64 = readFileSync(join(process.cwd(), 'data', 'postal', 'postal-embedded.txt'), 'utf-8');
+        const base64 = readFileSync(join(process.cwd(), 'shared', 'data', 'postal', 'postal-embedded.txt'), 'utf-8');
         await postalLookup.loadFromBase64(base64);
     });
 

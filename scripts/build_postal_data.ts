@@ -30,8 +30,8 @@ const PREFECTURES = [
     '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
 ];
 
-const CSV_PATH = join(process.cwd(), 'data', 'postal', 'utf_ken_all.csv');
-const OUTPUT_DIR = join(process.cwd(), 'data', 'postal');
+const CSV_PATH = join(process.cwd(), 'shared', 'data', 'postal', 'utf_ken_all.csv');
+const OUTPUT_DIR = join(process.cwd(), 'shared', 'data', 'postal');
 
 if (!existsSync(OUTPUT_DIR)) {
     mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -122,9 +122,9 @@ async function main() {
     writeFileSync(join(OUTPUT_DIR, 'postal-embedded.txt'), base64Data);
 
     console.log('✅ ビルド完了！');
-    console.log(`   - data/postal/postal-optimized.json: ${(optimizedSize / 1024).toFixed(1)} KB`);
-    console.log(`   - data/postal/postal-optimized.json.gz: ${(compressed.length / 1024).toFixed(1)} KB`);
-    console.log(`   - data/postal/postal-embedded.txt: ${(base64Data.length / 1024).toFixed(1)} KB`);
+    console.log(`   - shared/data/postal/postal-optimized.json: ${(optimizedSize / 1024).toFixed(1)} KB`);
+    console.log(`   - shared/data/postal/postal-optimized.json.gz: ${(compressed.length / 1024).toFixed(1)} KB`);
+    console.log(`   - shared/data/postal/postal-embedded.txt: ${(base64Data.length / 1024).toFixed(1)} KB`);
     
     console.log('\n💡 実行環境でのヒント:');
     console.log('   ブラウザで利用する場合、.json.gz を fetch して DecompressionStream で展開すると');

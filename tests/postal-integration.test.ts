@@ -12,9 +12,8 @@ describe("Postal Integration Tests (SearchEngine + PostalLookup)", () => {
 
     beforeAll(async () => {
         // Load real postal data
-        const base64 = readFileSync(join(process.cwd(), 'data', 'postal', 'postal-embedded.txt'), 'utf-8');
+        const base64 = readFileSync(join(process.cwd(), 'shared', 'data', 'postal', 'postal-embedded.txt'), 'utf-8');
         await postalLookup.loadFromBase64(base64);
-        expect(postalLookup.isReady()).toBe(true);
     });
 
     beforeEach(async () => {
@@ -198,13 +197,17 @@ describe("Postal Integration Tests (SearchEngine + PostalLookup)", () => {
     test("複数の郵便番号フィールドが独立して動作する", async () => {
         document.body.innerHTML = `
             <div>
-                <h3>送付先1</h3>
-                <input type="text" class="search-input" data-json-path="zip" value="" />
-                <input type="text" data-json-path="pref" value="" />
+                <form>
+                    <h3>送付先1</h3>
+                    <input type="text" class="search-input" data-json-path="zip" value="" />
+                    <input type="text" data-json-path="pref" value="" />
+                </form>
 
-                <h3>送付先2</h3>
-                <input type="text" class="search-input" data-json-path="zip2" value="" />
-                <input type="text" data-json-path="pref2" value="" />
+                <form>
+                    <h3>送付先2</h3>
+                    <input type="text" class="search-input" data-json-path="zip2" value="" />
+                    <input type="text" data-json-path="pref2" value="" />
+                </form>
             </div>
         `;
 

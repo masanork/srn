@@ -8,7 +8,7 @@ import type { PostalEnvelope, PostalRule } from "../types.js";
  * Saves envelopes as JSON files in a local directory structure.
  * 
  * Structure:
- * ./data/post/
+ * ./shared/data/post/
  *   ├── inbox/
  *   │   └── <doc_id>.json
  *   ├── sent/
@@ -17,7 +17,7 @@ import type { PostalEnvelope, PostalRule } from "../types.js";
 export class LocalFileStorage implements IPostalStorage {
     private baseDir: string;
 
-    constructor(baseDir: string = "./data/post") {
+    constructor(baseDir: string = "./shared/data/post") {
         this.baseDir = path.resolve(process.cwd(), baseDir);
     }
 
