@@ -46,6 +46,8 @@ This document tracks the high-level development status, architectural decisions,
 - [ ] **Trust Store Embedding**: Injecting Issuer DIDs and CRLs into HTML `<script>` for offline verification.
 - [ ] **Rebuild Automation**: Auto-generation of Ephemeral L4 (Container) Signatures during SSG build.
 - [ ] **Schema Compatibility**: Validator to ensure L1 Schema updates remain upper-compatible.
+- [ ] **Active Schema Validation**: Enforce L1 rules during SSG build (fail if frontmatter/data violates schema).
+- [ ] **L1 Markdown Compiler**: Drive L1 definition (JSON Schema/JSON-LD) from human-readable Markdown tables.
 
 ### 5. Post-Quantum & Standards
 - [x] **Hybrid Signatures (ML-DSA-44)**: Ensuring long-term authenticity.
