@@ -110,8 +110,16 @@ To uniformly handle static documents, interactive forms, and wide-area distribut
 
 1.  **Layer 1: The Schema (L1)**
     *   **Role**: Defines document type, structure, and semantics.
-    *   **Content**: JSON-LD Context, validation logic, and structural definitions. Operates stably under backward compatibility principles.
+    *   **Format**: **Human-readable Markdown specifications** serve as the Source of Truth.
+    *   **Content**: JSON-LD Context, JSON Schema, and validation logic derived from Markdown.
     *   **Signer**: **Issuer**. Guarantees the "Type definition" of the fact.
+
+#### 6.1.1. L1 (Schema) Definition and Derivation
+To ensure Human-Machine Parity (HMP), Web/A requires that schema definition files be human-readable and human-writable.
+
+*   **Markdown Schema**: Data structures are defined in tables or similar human-friendly formats within Markdown files. This serves as the basis for the L1 hash.
+*   **Derivation**: During the build process, Markdown is compiled into machine-readable JSON Schema and JSON-LD Context.
+*   **Pluggable Validation**: Validators (such as AJV) use these derived artifacts to check the integrity of Layer 2 data. Keeping the schema language pluggable ensures adaptability to evolving standards.
 2.  **Layer 2: The Data (Payload)**
     *   **Role**: Record of concrete facts (Immutable Core).
     *   **Content**: User answers, inputs, and agreed-upon facts. Can be encrypted via L2E (Layer 2 Encryption).
