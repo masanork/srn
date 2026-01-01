@@ -190,13 +190,14 @@
 
         <div class="warning-box">
             <strong>⚠️ Platform Compatibility:</strong>
-            Direct WebUSB access to Smart Cards is <strong>blocked on macOS and Windows</strong> by system drivers.
+            Direct WebUSB access to Smart Cards is <strong>blocked on macOS and Windows</strong> by both system drivers
+            and browser security policies (Protected Interface Class 0x0B).
             <ul style="margin-top:8px; margin-bottom:8px; padding-left:20px;">
                 <li><strong>Android / Linux / ChromeOS</strong>: Recommended (Linux may need udev rules).</li>
-                <li><strong>macOS / Windows</strong>: Please use the <strong>"Test Simulation"</strong> button below.
-                </li>
+                <li><strong>macOS / Windows</strong>: Even if you stop the OS smart card service (e.g.
+                    `com.apple.ifdreader`), Chrome typically blocks standard CCID interfaces. Please use <strong>"Test
+                        Simulation"</strong>.</li>
             </ul>
-            This is a browser security limitation for "Protected Class 0x0B" devices.
         </div>
 
         <div class="control-group">
