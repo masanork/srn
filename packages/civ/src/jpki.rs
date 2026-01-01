@@ -25,16 +25,23 @@ fn convert_jp2_to_png(jp2_data: &[u8]) -> Result<Vec<u8>> {
         return Err(anyhow::anyhow!("No components found in JP2 image"));
     }
 
+    // Check component sizes
+    for (i, comp) in components.iter().enumerate() {
+        if comp.data().len() != (width * height) as usize {
+             return Err(anyhow::anyhow!(
+                 "Component {} has mismatched size: expected {}, got {} (Subsampling not supported)",
+                 i, width * height, comp.data().len()
+             ));
+        }
+    }
+
     // Interleave components (assuming RGB or L)
     let mut u8_pixels = Vec::with_capacity((width * height * components.len() as u32) as usize);
     for i in 0..(width * height) as usize {
         for comp in components {
             let data = comp.data();
-            if i < data.len() {
-                u8_pixels.push(data[i] as u8);
-            } else {
-                u8_pixels.push(0);
-            }
+            // Safe indexing because we checked sizes
+            u8_pixels.push(data[i] as u8);
         }
     }
 
@@ -304,13 +311,6 @@ impl<R: CardReader> JpkiController<R> {
             println!("Debug: EF0005 data too short (<12 bytes), skipping face photo.");
         }
 
-        let extract_digits = |bytes: &[u8]| -> String {
-            bytes.iter()
-                .filter(|&&b| b >= 0x30 && b <= 0x39)
-                .map(|&b| b as char)
-                .collect()
-        };
-
         let extract_digit_groups = |bytes: &[u8]| -> Vec<String> {
             let mut groups = Vec::new();
             let mut current = String::new();
@@ -341,29 +341,72 @@ impl<R: CardReader> JpkiController<R> {
 
         let mut exp_digits = String::new();
         let mut sc_digits = String::new();
-        let mut exp_index = None;
+        let mut date_found_idx = None;
+
+        // 1. Try to find explicit 8 digit date (e.g. 20250331)
         for (idx, group) in groups.iter().enumerate() {
             if group.len() >= 8 {
-                exp_digits = group[0..8].to_string();
-                exp_index = Some(idx);
-                break;
-            }
-        }
-
-        if let Some(idx) = exp_index {
-            for group in groups.iter().skip(idx + 1) {
-                if group.len() == 4 {
-                    sc_digits = group.clone();
+                // If the group is longer than 8, it might contain connected security code
+                // But we prioritize finding the date part.
+                // My Number Card expiration starts with 20 (for foreseeable future)
+                if group.starts_with("20") {
+                    exp_digits = group[0..8].to_string();
+                    date_found_idx = Some(idx);
                     break;
                 }
             }
         }
 
+        // 2. If not found, try to assemble from parts (YYYY, MM, DD) which are split by non-digits (e.g. 2025年3月31日)
         if exp_digits.is_empty() {
-            exp_digits = extract_digits(raw_exp_bytes);
+            for i in 0..groups.len() {
+                if groups[i].len() == 4 && groups[i].starts_with("20") {
+                    // Potential Year
+                    if i + 2 < groups.len() {
+                        let year = &groups[i];
+                        let month = &groups[i+1];
+                        let day = &groups[i+2];
+
+                        // Basic validation for Month/Day parts
+                        if month.len() <= 2 && day.len() <= 2 {
+                             if let (Ok(m), Ok(d)) = (month.parse::<u8>(), day.parse::<u8>()) {
+                                 if m >= 1 && m <= 12 && d >= 1 && d <= 31 {
+                                     exp_digits = format!("{}{:02}{:02}", year, m, d);
+                                     date_found_idx = Some(i + 2);
+                                     break;
+                                 }
+                             }
+                        }
+                    }
+                }
+            }
         }
-        if sc_digits.is_empty() {
-            sc_digits = extract_digits(raw_sc_bytes);
+
+        // 3. Look for Security Code (4 digits) after the date
+        // Note: Security Code is a 4-digit number.
+        if let Some(last_used_idx) = date_found_idx {
+            // Check remaining characters in the same group if we split a large group?
+            // In step 1, we took [0..8]. If group len > 8, the rest might be SC.
+            let group_at_date = &groups[date_found_idx.unwrap()]; // Re-access safe because index comes from loop
+            // But wait, if we used step 2, date_found_idx points to 'day' group.
+            // If we used step 1, date_found_idx points to the single group containing date.
+
+            // Logic A: Check if the date group itself has more digits (e.g. 202503311234)
+            // But extract_digit_groups splits by non-digits.
+            // If the input was "202503311234", it is one group.
+            // In Step 1: we took first 8 chars.
+            if group_at_date.len() >= 12 {
+                // likely 8 digit date + 4 digit SC
+                 sc_digits = group_at_date[8..12].to_string();
+            } else {
+                 // Logic B: Search subsequent groups
+                 for group in groups.iter().skip(last_used_idx + 1) {
+                    if group.len() == 4 {
+                        sc_digits = group.clone();
+                        break;
+                    }
+                }
+            }
         }
 
         println!("Debug: ExpDigits='{}', SCDigits='{}'", exp_digits, sc_digits);
@@ -388,14 +431,16 @@ impl<R: CardReader> JpkiController<R> {
                 Ok(photo_data) => {
                     println!("Debug: Read Photo Success. Size: {}", photo_data.len());
                      // Convert JP2 to PNG
-                     let final_photo = match convert_jp2_to_png(&photo_data) {
-                        Ok(png) => png,
+                     match convert_jp2_to_png(&photo_data) {
+                        Ok(png) => {
+                             info.face_photo = Some(base64::Engine::encode(&base64::engine::general_purpose::STANDARD, png));
+                        }
                         Err(e) => {
                             eprintln!("Debug: JP2->PNG Conversion Failed: {}", e);
-                            photo_data
-                        }, 
-                    };
-                    info.face_photo = Some(base64::Engine::encode(&base64::engine::general_purpose::STANDARD, final_photo));
+                            // Do not set info.face_photo to avoid displaying broken image (raw JP2 bytes as PNG)
+                            // Or maybe set a flag? For now, leave it None.
+                        }
+                    }
                 },
                 Err(e) => {
                     eprintln!("Debug: Read Photo Failed: {:?}", e);
