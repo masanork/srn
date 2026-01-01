@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self';">
+    <title>郵便番号自動入力デモ</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+</style>
+    
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="">
+    <main>
+        
+        <div class="weba-form-container">
+            <div class="tabs-nav"><button class="tab-btn active" onclick="switchTab(this, 'tab-1')">連絡先情報</button><div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1;">
+            
+            <div style="flex:1"></div>
+            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
+    
+        </div></div><p>このフォームは、郵便番号を入力すると住所を自動補完するデモです。</p><p>（実データをビルドして `weba-postal-data` スクリプトが埋め込まれている環境で動作します）</p><div id="tab-1" class="tab-content active" data-tab-title="連絡先情報"><div class="form-row vertical"><div class="table-wrapper"><table class="data-table" ><tbody><tr ><td>項目</td><td>入力フィールド</td></tr><tr ><td>郵便番号</td><td>[郵便番号]{zip .search-input placeholder=&quot;000-0000&quot;}</td></tr><tr ><td>都道府県</td><td>[都道府県]{pref}</td></tr><tr ><td>市区町村</td><td>[市区町村]{city}</td></tr><tr ><td>町名・番地</td><td>[住所]{address style=&quot;width:100%&quot;}</td></tr></tbody></table></div></div><h3>書き方のポイント</h3><p>Web/A Form で自動入力を有効にするには、以下の条件を満たすように Markdown を記述します：</p><p>1.  **郵便番号フィールド**:</p><p>- キー名（`{...}` の中身）に `zip` / `postal` / `郵便` のいずれかを含める。</p><p>- クラスに `.search-input` を指定する。</p><p>- 例: `<input type="text" class="form-input" data-json-path="郵便番号"  style=" ">{zip .search-input}`</p><p>2.  **自動入力先のフィールド**:</p><p>- 都道府県: キー名に `pref` または `都道府県` を含める。</p><p>- 市区町村: キー名に `city` または `市区町村` を含める。</p><p>- 住所・町名: キー名に `town` / `address` / `町` / `住所` のいずれかを含める。</p><p>これらのフィールドが同じ行（`tr`）や同じフォーム内に配置されていると、郵便番号の確定時に連動して値がセットされます。</p></div>
+            
+
+            <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <details>
+                        <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                            <span style="color: #3b82f6;">ℹ️</span>
+                            <span data-i18n-ja="記入内容（データ）の確認" data-i18n-en="Review Form Data">記入内容（データ）の確認</span>
+                        </summary>
+                        <div style="padding: 1rem 0;">
+                            <pre id="json-debug" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;"></pre>
+                        </div>
+                    </details>
+                    
+        <details style="margin-top: 0.5rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAFormTemplate"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-01T09:24:28.807Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/postal-demo",
+    "name": "郵便番号自動入力デモ",
+    "contentDigest": "e41f64b930294fb66b2963f099e8df6795abbd577794029a5210f25f504e3b0a"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767259460265-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T09:24:28.807Z",
+      "proofValue": "zB6QgspozUcK8qqmimmSVnofbGha5uCuvfSE22qsbEC55zm2n4VSBXv6KinHpXUS3vZ5EZDgGSr43HQukb9pDhGs"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767259460265-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T09:24:28.807Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+            </div>
+        </details>
+    
+                </div>
+            </footer>
+        </div>
+        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[{"key":"郵便番号","label":"郵便番号","type":"text"}],"tables":{},"masterData":{}}</script>
+        
+        
+        <script src="../assets/form-bundle.js" type="module"></script>
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767259460265-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767259460265-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767259460265-ed25519",
+        "did:web:masanork.github.io:srn#build-1767259460265-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T09:24:28.842Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "da640c1a3a955b21c80c176e1fd82feb40bb9e30fbc83f33d3574ba2b63a4f81",
+        "metadata": {}
+      }
+    },
+    "eventHash": "17c58ab29be7343dc0587427403307b3a8f86a742540352f1eace98cbfbaf4fd",
+    "chainHash": "50960d45956339033f4a546fb1445fabdcd00a9afd0c20d0b6c4fe4ff2efd14e"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-01T09:24:28.852Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/postal-demo#container",
+    "containerHash": "89853abc35073d749b5464e6851cb550c1c8cfb188eb5db6c72d761284c31b30",
+    "buildId": "build-1767259460265",
+    "latestContextHash": "aa0e3b74af4ee913835cfaa816bdb1d15c53664645f3e7d31bbe35328bb724e0"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767259460265-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T09:24:28.852Z",
+      "proofValue": "z3JeGyRgWNBxp8RmLQ35EFjaXttXGvFMdbmd14iGSqy2Jy5fDZMjSuhouQvjzJjzXTbnDJh6D2357M5is1HXMe8Uk"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767259460265-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T09:24:28.852Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script></body>
+</html>

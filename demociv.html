@@ -189,9 +189,15 @@
         <p class="subtitle">Extract JPKI Attributes (WebUSB + WASM)</p>
 
         <div class="warning-box">
-            <strong>⚠️ Experimental Note:</strong> This is a cross-platform demo for Android, ChromeOS, and Linux. It
-            requires a WebUSB-compatible CCID smart card reader. Real-world JPKI cards may have strict protocols; this
-            is a Proof of Concept.
+            <strong>⚠️ Platform Compatibility:</strong>
+            Direct WebUSB access to Smart Cards is <strong>blocked on macOS and Windows</strong> by both system drivers
+            and browser security policies (Protected Interface Class 0x0B).
+            <ul style="margin-top:8px; margin-bottom:8px; padding-left:20px;">
+                <li><strong>Android / Linux / ChromeOS</strong>: Recommended (Linux may need udev rules).</li>
+                <li><strong>macOS / Windows</strong>: Even if you stop the OS smart card service (e.g.
+                    `com.apple.ifdreader`), Chrome typically blocks standard CCID interfaces. Please use <strong>"Test
+                        Simulation"</strong>.</li>
+            </ul>
         </div>
 
         <div class="control-group">
@@ -292,7 +298,15 @@
                 if (!interfaceEl) throw new Error("No Smart Card Interface found (Class 0x0B)");
 
                 const interfaceNum = interfaceEl.interfaceNumber;
-                await this.device.claimInterface(interfaceNum);
+                try {
+                    await this.device.claimInterface(interfaceNum);
+                } catch (e) {
+                    console.error("claimInterface failed:", e);
+                    if (e.message.includes("protected") || e.name === "SecurityError") {
+                        throw new Error(`OS Restricted (Protected Class 0x0B). \nMainstream OS (Win/Mac) blocks direct WebUSB access to Smart Cards using standard drivers.\n\nTry on Android/Linux, or use "Test Simulation".`);
+                    }
+                    throw e;
+                }
 
                 const alt = interfaceEl.alternates.find(a => a.interfaceClass === 0x0B);
                 const epIn = alt.endpoints.find(e => e.direction === "in");
