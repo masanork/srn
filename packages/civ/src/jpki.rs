@@ -8,8 +8,63 @@ pub struct JpkiController<R: CardReader> {
 }
 
 use std::fmt;
+use std::io::Cursor;
 
 use serde::Serialize;
+
+fn convert_jp2_to_png(jp2_data: &[u8]) -> Result<Vec<u8>> {
+    // Decode JP2 using jpeg2k
+    let jp2_image = jpeg2k::Image::from_bytes(jp2_data)
+        .map_err(|e| anyhow::anyhow!("JP2 Decode Error: {}", e))?;
+    
+    let width = jp2_image.width();
+    let height = jp2_image.height();
+    let components = jp2_image.components();
+    
+    if components.is_empty() {
+        return Err(anyhow::anyhow!("No components found in JP2 image"));
+    }
+
+    // Interleave components (assuming RGB or L)
+    let mut u8_pixels = Vec::with_capacity((width * height * components.len() as u32) as usize);
+    for i in 0..(width * height) as usize {
+        for comp in components {
+            let data = comp.data();
+            if i < data.len() {
+                u8_pixels.push(data[i] as u8);
+            } else {
+                u8_pixels.push(0);
+            }
+        }
+    }
+
+    // Determine image format
+    let dynamic_image = match components.len() {
+        1 => {
+            let img_buffer = image::ImageBuffer::<image::Luma<u8>, _>::from_raw(width, height, u8_pixels)
+                .ok_or_else(|| anyhow::anyhow!("Failed to create Luma image buffer"))?;
+            image::DynamicImage::ImageLuma8(img_buffer)
+        }
+        3 => {
+            let img_buffer = image::ImageBuffer::<image::Rgb<u8>, _>::from_raw(width, height, u8_pixels)
+                .ok_or_else(|| anyhow::anyhow!("Failed to create RGB image buffer"))?;
+            image::DynamicImage::ImageRgb8(img_buffer)
+        }
+        4 => {
+            let img_buffer = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(width, height, u8_pixels)
+                .ok_or_else(|| anyhow::anyhow!("Failed to create RGBA image buffer"))?;
+            image::DynamicImage::ImageRgba8(img_buffer)
+        }
+        _ => return Err(anyhow::anyhow!("Unsupported number of components: {}", components.len())),
+    };
+
+    // Encode to PNG
+    let mut png_data = Vec::new();
+    dynamic_image.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png)
+        .map_err(|e| anyhow::anyhow!("PNG Encode Error: {}", e))?;
+    
+    Ok(png_data)
+}
 
 #[derive(Debug, Default, Serialize)]
 pub struct BasicInfo {
@@ -17,12 +72,14 @@ pub struct BasicInfo {
     pub address: String,
     pub birth_date: String,
     pub gender: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub face_photo: Option<String>, // Base64 encoded
 }
 
 impl fmt::Display for BasicInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Name: {}\nAddress: {}\nDOB: {}\nGender: {}", 
-            self.name, self.address, self.birth_date, self.gender)
+        write!(f, "Name: {}\nAddress: {}\nDOB: {}\nGender: {}\nHas Photo: {}", 
+            self.name, self.address, self.birth_date, self.gender, self.face_photo.is_some())
     }
 }
 
@@ -165,6 +222,7 @@ impl<R: CardReader> JpkiController<R> {
     }
 
     /// Read Basic 4 Information (Name, Address, DOB, Gender)
+    /// Also attempts to read face photo if possible using derived Verification Number B.
     pub async fn read_attributes(&mut self, pin: &str) -> Result<BasicInfo> {
         // 1. Select Input Support AP
         self.select_input_support_ap().await?;
@@ -172,51 +230,138 @@ impl<R: CardReader> JpkiController<R> {
         // 2. Verify PIN
         self.verify_pin(&file_ids::EF_INPUT_SUPPORT_PIN, pin).await?;
 
-        // 3. Select Attributes EF
-        let select_attr = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x02, 0x0C)
-            .with_data(&file_ids::EF_ATTRIBUTES);
-        let res_sel = self.reader.transmit(&select_attr.to_bytes()).await?;
-        Self::check_sw(&res_sel).context("Failed to select Attributes EF")?;
+        // 3. Read Surface Info (Expiration, Security Code) - required for B-Number
+        // This EF0005 is under Input Support AP and usually requires the same PIN
+        let mut surface_info_data = self.read_ef_full(&file_ids::EF_SURFACE_INFO).await
+            .context("Failed to read Surface Info (EF0005)")?;
+        
+        println!("Debug: EF0005 Read. Len: {}, Hex: {}", surface_info_data.len(), hex::encode(&surface_info_data));
 
-        // 4. Read Binary (Read chunks)
-        // EF0002 can be larger than 256 bytes (Address can be long).
-        // Simple loop to read until end.
+        // Format check helper
+        let is_valid_surface = |data: &[u8]| -> bool {
+            // Very basic check: needs to contain some digits?
+            // If it's all zeros, it's invalid.
+            data.iter().any(|&b| b != 0x00)
+        };
+
+        if !is_valid_surface(&surface_info_data) {
+             println!("Debug: EF0005 seems empty. Trying EF0006...");
+             if let Ok(data6) = self.read_ef_full(&file_ids::EF_SURFACE_INFO_B).await {
+                 println!("Debug: EF0006 Read. Len: {}, Hex: {}", data6.len(), hex::encode(&data6));
+                 if is_valid_surface(&data6) {
+                     surface_info_data = data6;
+                 }
+             }
+        }
+
+        // Parse Surface Info: Offset 0: Expiration Date (8 bytes), Offset 8: Security Code (4 bytes)
+        // Check length before slicing to avoid panic
+        if surface_info_data.len() < 12 {
+            println!("Debug: EF0005 data too short (<12 bytes), skipping face photo.");
+        }
+        
+        let raw_exp_bytes = if surface_info_data.len() >= 8 { &surface_info_data[0..8] } else { &[] };
+        let raw_sc_bytes = if surface_info_data.len() >= 12 { &surface_info_data[8..12] } else { &[] };
+
+        // Debug output raw strings (might be garbage if binary)
+        let expiration_raw = String::from_utf8_lossy(raw_exp_bytes).to_string();
+        let security_code_raw = String::from_utf8_lossy(raw_sc_bytes).to_string();
+        println!("Debug: ExpirationRaw='{}', len={}", expiration_raw, expiration_raw.len());
+        println!("Debug: SCRaw='{}', len={}", security_code_raw, security_code_raw.len());
+
+        // Construct B-Number components by extracting digits only
+        // Expiration is expected to be YYYYMMDD. We need YYMMDD (pos 2..8).
+        // Since we don't know the exact format causing len=16, let's try to sanitise.
+        
+        // Helper to extract ascii digits
+        let extract_digits = |bytes: &[u8]| -> String {
+            bytes.iter()
+                .filter(|&&b| b >= 0x30 && b <= 0x39)
+                .map(|&b| b as char)
+                .collect()
+        };
+
+        let exp_digits = extract_digits(raw_exp_bytes);
+        let sc_digits = extract_digits(raw_sc_bytes);
+        println!("Debug: ExpDigits='{}', SCDigits='{}'", exp_digits, sc_digits);
+
+        // 4. Select Attributes EF and Read
+        let attr_data = self.read_ef_full(&file_ids::EF_ATTRIBUTES).await
+            .context("Failed to read Attributes EF")?;
+        
+        let mut info = Self::parse_basic_info(&attr_data)?;
+
+        // 5. Attempt to Read Face Photo using derived B-Number
+        // B-Number = DOB(YYMMDD) + Expiration(YYMMDD) + SecurityCode(4)
+        // We need exp_digits to be at least 8 chars (YYYYMMDD) to extract YYMMDD
+        // We need sc_digits to be 4 chars
+        if info.birth_date.len() == 8 && exp_digits.len() == 8 && sc_digits.len() == 4 {
+            let dob_yymmdd = &info.birth_date[2..8];
+            let exp_yymmdd = &exp_digits[2..8]; // Extract YYMMDD from YYYYMMDD
+            let b_number = format!("{}{}{}", dob_yymmdd, exp_yymmdd, sc_digits);
+            println!("Debug: Derived B-Number: {}", b_number);
+
+            match self.read_face_photo_with_b_number(&b_number).await {
+                Ok(photo_data) => {
+                    println!("Debug: Read Photo Success. Size: {}", photo_data.len());
+                     // Convert JP2 to PNG
+                     let final_photo = match convert_jp2_to_png(&photo_data) {
+                        Ok(png) => png,
+                        Err(e) => {
+                            eprintln!("Debug: JP2->PNG Conversion Failed: {}", e);
+                            photo_data
+                        }, 
+                    };
+                    info.face_photo = Some(base64::Engine::encode(&base64::engine::general_purpose::STANDARD, final_photo));
+                },
+                Err(e) => {
+                    eprintln!("Debug: Read Photo Failed: {:?}", e);
+                }
+            }
+        } else {
+             eprintln!("Debug: Conditions for Face Photo not met. InfoLen={}, ExpDigitsLen={}, SCDigitsLen={}", 
+                info.birth_date.len(), exp_digits.len(), sc_digits.len());
+        }
+
+        Ok(info)
+    }
+
+    /// Helper to read a full EF by looping READ BINARY
+    async fn read_ef_full(&mut self, ef_id: &[u8]) -> Result<Vec<u8>> {
+        let select = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x02, 0x0C)
+            .with_data(ef_id);
+        let res_sel = self.reader.transmit(&select.to_bytes()).await?;
+        Self::check_sw(&res_sel)?;
+
         let mut data = Vec::new();
         let mut offset: u16 = 0;
         loop {
-            // P1=Offset High, P2=Offset Low
             let p1 = (offset >> 8) as u8;
             let p2 = (offset & 0xFF) as u8;
-            
-            let read = ApduCommand::new(CLA_ISO, INS_READ_BINARY, p1, p2)
-                .with_le(0x00); // Max length (256)
-            
+            let read = ApduCommand::new(CLA_ISO, INS_READ_BINARY, p1, p2).with_le(0x00);
             let res = self.reader.transmit(&read.to_bytes()).await?;
-            
-            let sw1 = res[res.len() - 2];
-            let sw2 = res[res.len() - 1];
-            
-            // Capture data regardless of SW success if there is payload
             let chunk = &res[0..res.len()-2];
-            if !chunk.is_empty() {
-                data.extend_from_slice(chunk);
-                offset += chunk.len() as u16;
-            }
-
-            if sw1 == 0x90 && sw2 == 0x00 {
-                if chunk.len() < 256 {
-                    break; // End of file reached (short read)
-                }
-            } else if sw1 == 0x6B {
-                 break; // Offset outside limits
-            } else if sw1 == 0x62 && sw2 == 0x82 {
-                 break; // EOF reached
-            } else {
-                 return Err(anyhow::anyhow!("Read Binary Error: {:02X}{:02X}", sw1, sw2));
-            }
+            if chunk.is_empty() { break; }
+            data.extend_from_slice(chunk);
+            offset += chunk.len() as u16;
+            if chunk.len() < 256 { break; }
         }
+        Ok(data)
+    }
 
-        Self::parse_basic_info(&data)
+    async fn read_face_photo_with_b_number(&mut self, b_number: &str) -> Result<Vec<u8>> {
+        // 1. Select Face Recognition AP
+        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
+            .with_data(&file_ids::DF_FACE_RECOGNITION);
+        let res = self.reader.transmit(&apdu.to_bytes()).await?;
+        Self::check_sw(&res).context("Failed to select Face Recognition AP")?;
+
+        // 2. Verify B-Number (as PIN)
+        // EF ID for B-Number is 0011 (same as Input Support PIN EF ID but under this AP)
+        self.verify_pin(&[0x00, 0x11], b_number).await?;
+
+        // 3. Read Face Photo EF
+        self.read_ef_full(&file_ids::EF_FACE_PHOTO).await
     }
 
     fn parse_basic_info(data: &[u8]) -> Result<BasicInfo> {
@@ -312,7 +457,8 @@ mod tests {
         }
     }
 
-    #[async_trait(?Send)]
+    #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+    #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
     impl CardReader for MockReader {
         async fn transmit(&mut self, apdu: &[u8]) -> Result<Vec<u8>> {
             self.sent_apdus.lock().unwrap().push(apdu.to_vec());
