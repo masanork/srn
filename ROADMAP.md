@@ -34,13 +34,20 @@ This document tracks the high-level development status, architectural decisions,
   APDU encryption and response MAC validation.
 - [ ] **Passkey-based VC Binding**: Linking W3C Verifiable Credentials to hardware keys.
 - [ ] **Revocation List v2**: High-performance bitstring revocation for municipality-scale DIDs.
+- [ ] **CIV PACE Support**: AES/ECDH implementation for newer IDs (Phase 1).
 
 ### 3. AI & Agent Intelligence (MCP)
 - [x] **Basic Form Tools**: Parse and fill Web/A forms via LLM.
 - [ ] **Inbox Intelligence**: Summarization and action-recommendation for new messages.
 - [ ] **Security Verifier**: AI-driven pre-flight checks for encryption and signing status.
 
-### 4. Post-Quantum & Standards
+### 4. Web/A Long-Term Validation (LTV)
+- [ ] **L3 Prunable Hash Chain**: Logic to append build/distribution history to the Context Layer.
+- [ ] **Trust Store Embedding**: Injecting Issuer DIDs and CRLs into HTML `<script>` for offline verification.
+- [ ] **Rebuild Automation**: Auto-generation of Ephemeral L4 (Container) Signatures during SSG build.
+- [ ] **Schema Compatibility**: Validator to ensure L1 Schema updates remain upper-compatible.
+
+### 5. Post-Quantum & Standards
 - [x] **Hybrid Signatures (ML-DSA-44)**: Ensuring long-term authenticity.
 - [x] **Hybrid DIDs**: Dual-key (Ed25519 + ML-DSA-44) implementation in Folio.
 - [ ] **Binary COSE VCs**: Optimizing for size and mobile transport.
