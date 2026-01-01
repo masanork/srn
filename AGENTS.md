@@ -17,6 +17,8 @@
 - Tests: `bun test --coverage`
 
 ## Build & SSG
+- **Do not execute build commands without explicit permission from the user.**
+- A lock file (`.ssg-build.lock`) is used to prevent concurrent SSG builds. If a build fails with a lock error, wait for the other build to finish.
 - SRN build: `bun run build:srn`
 - Full build (all sites): `bun run build`
 - Clean rebuild (all sites): `bun run build:full`

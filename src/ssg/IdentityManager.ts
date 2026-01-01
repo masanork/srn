@@ -21,7 +21,9 @@ export class IdentityManager {
     private contextStore: Record<string, any[]> = {};
 
     constructor(siteDomain: string, sitePath: string, dataDir: string, distDir: string) {
-        this.siteDid = `did:web:${siteDomain}${sitePath.replace(/\//g, ':')}`;
+        const normalizedPath = sitePath.replace(/^\//, '').replace(/\/$/, '');
+        const didSubPath = normalizedPath ? ':' + normalizedPath.replace(/\//g, ':') : '';
+        this.siteDid = `did:web:${siteDomain}${didSubPath}`;
         this.dataDir = dataDir;
         this.distDir = distDir;
         this.buildId = `build-${Date.now()}`;
