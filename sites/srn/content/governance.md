@@ -90,6 +90,7 @@ ai_generated: true
 
 <div data-lang-ja>
 <ul class="doc-list">
+    <li><a href="./governance/proposals/web-a-ltv-architecture-decision.ja.html"><strong>技術提案: Web/A LTV 統合アーキテクチャの定義</strong></a><br><small>4層モデル、PHC、およびイベント駆動型 Post 配送基盤への決定事項。 (2026-01-01)</small></li>
     <li><a href="./governance/web-a-product-team-response-ai-analysis.html"><strong>Product Team Response to AI Analysis (Pivot Strategy)</strong></a><br><small>AIリスク分析（Gemini/ChatGPT）を受けた戦略転換（Utility First）の提案。</small></li>
     <li><a href="./governance/web-a-governance-committee-feedback-v1.html"><strong>Governance Committee Feedback on AI Risk Analysis</strong></a><br><small>上記戦略転換に対するガバナンス委員会の承認と条件。</small></li>
     <li><a href="./governance/web-a-product-team-response-v7.ja.html"><strong>製品チーム応答 v7</strong></a><br><small>Audit v7 での指摘事項（鍵ローテーション等）に対する実装方針。</small></li>
@@ -101,6 +102,7 @@ ai_generated: true
 
 <div data-lang-en>
 <ul class="doc-list">
+    <li><a href="./governance/proposals/web-a-ltv-architecture-decision.ja.html"><strong>Technical Proposal: Web/A LTV Architecture Definition</strong></a><br><small>Decisions on 4-Layer Model, PHC, and Event-Driven Post Network. (2026-01-01)</small></li>
     <li><a href="./governance/web-a-product-team-response-ai-analysis.html"><strong>Product Team Response to AI Analysis</strong></a><br><small>Strategic pivot proposal ("Utility First") in response to AI risk analysis.</small></li>
     <li><a href="./governance/web-a-governance-committee-feedback-v1.html"><strong>Governance Committee Feedback on AI Risk Analysis</strong></a><br><small>Conditional approval and directives regarding the strategic pivot.</small></li>
     <li><a href="./governance/web-a-product-team-response-v7.html"><strong>Product Team Response v7</strong></a><br><small>Implementation plan addressing findings in Audit v7.</small></li>
