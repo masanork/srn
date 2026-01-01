@@ -70,23 +70,35 @@ pub mod file_ids {
         0xD3, 0x92, 0x10, 0x00, 0x31, 0x00, 0x01, 0x01, 0x04, 0x08
     ];
 
+    /// Face Recognition Application AID (券面事項確認AP)
+    /// D3 92 10 00 31 00 01 01 01 03
+    pub const DF_FACE_RECOGNITION: [u8; 10] = [
+        0xD3, 0x92, 0x10, 0x00, 0x31, 0x00, 0x01, 0x01, 0x01, 0x03
+    ];
+
     /// Authentication PIN EF
     pub const EF_AUTH_PIN: [u8; 2] = [0x00, 0x18];
-
-    /// Signing PIN EF
-    pub const EF_SIGN_PIN: [u8; 2] = [0x00, 0x1B];
-
+    
     /// Card Surface Input Support PIN EF
     pub const EF_INPUT_SUPPORT_PIN: [u8; 2] = [0x00, 0x11];
 
     /// My Number EF (under Input Support AP)
     pub const EF_MYNUMBER: [u8; 2] = [0x00, 0x01];
 
-    /// Attributes EF (Basic 4 Info: Name, Address, DOB, Gender) (under Input Support AP)
+    /// Attributes EF (Basic 4 Info) (under Input Support AP)
     pub const EF_ATTRIBUTES: [u8; 2] = [0x00, 0x02];
 
-    /// User Authentication Certificate EF
-    pub const EF_CERT_AUTH: [u8; 2] = [0x00, 0x0A];
+    /// Card Surface Information EF (contains Expiration Date, Security Code)
+    /// (under Input Support AP)
+    pub const EF_SURFACE_INFO: [u8; 2] = [0x00, 0x05];
+    /// Fallback Surface Info (sometimes 0006)
+    pub const EF_SURFACE_INFO_B: [u8; 2] = [0x00, 0x06];
+
+    /// Face Photo EF (under Face Recognition AP)
+    pub const EF_FACE_PHOTO: [u8; 2] = [0x00, 0x02];
+
+    /// Face Recognition Text EF (under Face Recognition AP)
+    pub const EF_FACE_TEXT: [u8; 2] = [0x00, 0x01];
 }
 
 #[cfg(test)]
