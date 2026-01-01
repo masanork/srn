@@ -2,6 +2,7 @@ import { Calculator } from './calculator';
 import { DataManager } from './data';
 import { UIManager } from './ui';
 import type { PostalRecord } from './postal';
+import { parseFieldName, isSameGroup, detectFieldType } from './postal-group';
 
 /**
  * Web/A Runtime Core
@@ -142,25 +143,66 @@ export function initRuntime() {
 }
 
 /**
- * 住所自動入力ヘルパー
+ * 住所自動入力ヘルパー（グループ対応版）
  */
 function fillAddress(triggerInput: HTMLInputElement, record: PostalRecord, scope: Element, includeZip = false) {
+    // トリガーフィールドのグループ情報を解析
+    const sourceField = parseFieldName(triggerInput);
+
+    // グループがない場合は警告
+    if (!sourceField.group) {
+        console.warn('[fillAddress] グループプレフィックスが必要です。フィールド名:', sourceField.raw);
+        return;
+    }
+
     const inputs = Array.from(scope.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
-    inputs.forEach((input: any) => {
-        const key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
+
+    // 同じグループのフィールドのみをフィルタリング
+    const groupedInputs = inputs
+        .map(inp => ({ element: inp, parsed: parseFieldName(inp) }))
+        .filter(({ parsed }) => isSameGroup(sourceField, parsed));
+
+    // 個別フィールドの存在をチェック
+    const hasPref = groupedInputs.some(({ element: inp, parsed }) => {
+        if (inp === triggerInput) return false;
+        return detectFieldType(parsed.fieldType || '') === 'pref';
+    });
+    const hasCity = groupedInputs.some(({ element: inp, parsed }) => {
+        if (inp === triggerInput) return false;
+        return detectFieldType(parsed.fieldType || '') === 'city';
+    });
+    const hasTown = groupedInputs.some(({ element: inp, parsed }) => {
+        if (inp === triggerInput) return false;
+        return detectFieldType(parsed.fieldType || '') === 'town';
+    });
+
+    groupedInputs.forEach(({ element: input, parsed }) => {
         if (input === triggerInput) return;
 
+        const fieldType = detectFieldType(parsed.fieldType || '');
         let valToSet = '';
-        if (includeZip && key.match(/zip|postal|郵便/)) {
+
+        if (includeZip && fieldType === 'zip') {
             valToSet = record.zip.substring(0, 3) + '-' + record.zip.substring(3);
-        } else if (key.match(/pref|都道府県/)) {
+        } else if (fieldType === 'pref') {
             valToSet = record.pref;
-        } else if (key.match(/city|市区町村|市町村/)) {
+        } else if (fieldType === 'city') {
             valToSet = record.city;
-        } else if (key.match(/town|町名|町字/)) {
+        } else if (fieldType === 'town') {
             valToSet = record.town;
-        } else if (key.match(/address|住所/) && !key.match(/detail|sub|番地|building|room|mansion|house/)) {
-            valToSet = `${record.pref}${record.city}${record.town}`;
+        } else if (fieldType === 'address') {
+            // 個別フィールドで入力されていない部分のみ
+            if (!hasPref && !hasCity && !hasTown) {
+                // 個別フィールドが全くない場合：完全な住所
+                valToSet = `${record.pref}${record.city}${record.town}`;
+            } else if (hasPref && !hasCity && !hasTown) {
+                // prefのみがある場合：市区町村+町名
+                valToSet = `${record.city}${record.town}`;
+            } else if (!hasTown) {
+                // pref/cityのいずれかがある場合：町名のみ
+                valToSet = record.town;
+            }
+            // townがある場合は、addressには何も入れない
         }
 
         if (valToSet && input.value !== valToSet) {

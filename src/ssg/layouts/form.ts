@@ -112,13 +112,22 @@ export function formLayout(params: {
     ` : '';
 
     const verificationDetails = vc ? `
-        <div class="verification-details" style="margin-top: 1rem; padding: 1rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;" data-i18n-ja="真正性情報 (VC)" data-i18n-en="Authenticity (VC)">真正性情報 (VC)</div>
-            <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; font-family: monospace; font-size: 0.75rem;">
-                <span style="color: #94a3b8;">Issuer:</span> <span>${(vc as any).issuer || 'Unknown'}</span>
-                <span style="color: #94a3b8;">DID:</span> <span>${(vc as any).credentialSubject?.id || 'N/A'}</span>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
+                <span>✓</span>
+                <span data-i18n-ja="真正性情報 (VC)" data-i18n-en="Authenticity (VC)">真正性情報 (VC)</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+            </summary>
+            <div style="padding: 1rem 0;">
+                <div style="margin-bottom: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; font-size: 0.8rem;">
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; font-family: monospace;">
+                        <span style="color: #64748b;">Issuer:</span> <span>${(vc as any).issuer || 'Unknown'}</span>
+                        <span style="color: #64748b;">DID:</span> <span>${(vc as any).credentialSubject?.id || 'N/A'}</span>
+                    </div>
+                </div>
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.75rem; line-height: 1.4;">${JSON.stringify(vc, null, 2)}</pre>
             </div>
-        </div>
+        </details>
     ` : '';
 
     const content = `

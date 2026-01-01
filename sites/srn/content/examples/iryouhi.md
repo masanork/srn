@@ -13,7 +13,9 @@ author: "Sorane Project"
 
 ## 詳細
 
+**医療費の区分**: 診療=診療・治療、医薬品=医薬品購入、介護=介護保険サービス、その他=その他の医療費
+
 [dynamic-table:details]
-| No | 医療を受けた人 | 病院・薬局などの名称 | 診療・治療 | 医薬品購入 | 介護保険サービス | その他の医療費 | 支払った医療費の金額 | 左のうち、補填される金額 | 支払年月日 |
+| No | 医療を受けた人 | 病院・薬局など | 診療 | 医薬品 | 介護 | その他 | 支払医療費 | 補填金額 | 支払年月日 |
 | -- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [autonum:no] | [text:patient (placeholder="全角10文字以内" suggest:column)] | [text:place (placeholder="全角20文字以内" suggest:column)] | [checkbox:cat_med (align:C)] | [checkbox:cat_drug (align:C)] | [checkbox:cat_care (align:C)] | [checkbox:cat_other (align:C)] | [number:amount (placeholder="半角数字")] | [number:comp (placeholder="半角数字")] | [date:date] |

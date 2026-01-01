@@ -1,5 +1,6 @@
 import type { PostalRecord } from './postal';
 import './postal'; // Ensure side-effects run
+import { parseFieldName, isSameGroup, detectFieldType } from './postal-group';
 
 function escapeHtml(str: string): string {
     if (!str) return '';
@@ -190,9 +191,25 @@ export class SearchEngine {
             input.value = record.zip.substring(0, 3) + '-' + record.zip.substring(3);
         }
 
-        // 同じ行または近隣のフィールドを検索
-        const container = input.closest('tr')
-            || input.closest('.dynamic-row')
+        // 入力フィールドのグループ情報を解析
+        const sourceField = parseFieldName(input);
+
+        // グループがない場合は警告して処理中断
+        if (!sourceField.group) {
+            console.warn(
+                '[fillPostalData] グループプレフィックスが必要です。フィールド名:', sourceField.raw,
+                '例: sender.zip, sender_zip, sender-zip'
+            );
+            return;
+        }
+
+        console.log('[fillPostalData] Source field group:', sourceField.group,
+                    'separator:', sourceField.separator);
+
+        // 同じ行または近隣のフィールドを検索（スコープ検出）
+        // dynamic-rowがある場合はそれを優先、なければtableまたはformを使用
+        const container = input.closest('.dynamic-row')
+            || input.closest('.address-group')
             || input.closest('table')
             || input.closest('form')
             || input.closest('.form-row')?.parentElement
@@ -201,53 +218,85 @@ export class SearchEngine {
         const containerType = container === document ? 'document' :
                              input.closest('tr') ? 'tr' :
                              input.closest('.dynamic-row') ? 'dynamic-row' :
+                             input.closest('.address-group') ? 'address-group' :
                              input.closest('table') ? 'table' :
                              input.closest('form') ? 'form' : 'form-row';
-        console.log('[fillPostalData] Container type:', containerType, 'Input:', input.dataset.jsonPath || input.name);
+
+        console.log('[fillPostalData] Container type:', containerType,
+                    'Source group:', sourceField.group);
 
         const allInputs = Array.from(container.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
-        console.log('[fillPostalData] Found', allInputs.length, 'inputs in container');
 
-        // 都道府県フィールドを探して自動入力
-        const prefField = allInputs.find(inp => {
-            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
-            return key.includes('pref') || key.includes('都道府県');
-        });
-        if (prefField && prefField !== input) {
+        // 同じグループのフィールドのみをフィルタリング
+        const groupedFields = allInputs
+            .map(inp => ({ element: inp, parsed: parseFieldName(inp) }))
+            .filter(({ parsed }) => isSameGroup(sourceField, parsed));
+
+        console.log('[fillPostalData] Found', groupedFields.length,
+                    'fields in same group:', sourceField.group);
+
+        // タイプ別にフィールドを探して自動入力
+        const fieldMap = new Map<string, HTMLInputElement>();
+
+        for (const { element, parsed } of groupedFields) {
+            if (element === input) continue; // 自分自身はスキップ
+
+            const type = detectFieldType(parsed.fieldType || '');
+            if (type && !fieldMap.has(type)) {
+                fieldMap.set(type, element);
+            }
+        }
+
+        // 都道府県フィールド
+        const prefField = fieldMap.get('pref');
+        if (prefField) {
             prefField.value = record.pref;
             prefField.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('[fillPostalData] Filled pref:', prefField.dataset.jsonPath || prefField.name);
         }
 
-        // 市区町村フィールドを探して自動入力
-        const cityField = allInputs.find(inp => {
-            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
-            return key.includes('city') || key.includes('市区町村');
-        });
-        if (cityField && cityField !== input) {
+        // 市区町村フィールド
+        const cityField = fieldMap.get('city');
+        if (cityField) {
             cityField.value = record.city;
             cityField.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('[fillPostalData] Filled city:', cityField.dataset.jsonPath || cityField.name);
         }
 
-        // 町字フィールドまたは住所一体型フィールドを探して自動入力
-        const townField = allInputs.find(inp => {
-            if (inp === input || inp === prefField || inp === cityField) return false;
-            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
-            return key.includes('town') || key.includes('町') || key.includes('字');
-        });
-        const addressField = allInputs.find(inp => {
-            if (inp === input || inp === prefField || inp === cityField || inp === townField) return false;
-            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
-            return (key.includes('address') || key.includes('住所')) &&
-                   !key.match(/detail|sub|番地|building|room|mansion|house/);
-        });
-
+        // 町字フィールド
+        const townField = fieldMap.get('town');
         if (townField) {
             townField.value = record.town;
             townField.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('[fillPostalData] Filled town:', townField.dataset.jsonPath || townField.name);
         }
+
+        // 住所フィールド（個別フィールドで入力されていない部分のみ）
+        const addressField = fieldMap.get('address');
         if (addressField) {
-            addressField.value = `${record.pref}${record.city}${record.town}`;
-            addressField.dispatchEvent(new Event('input', { bubbles: true }));
+            let addressValue = '';
+            if (!prefField && !cityField && !townField) {
+                // 個別フィールドが全くない場合：完全な住所
+                addressValue = `${record.pref}${record.city}${record.town}`;
+            } else if (prefField && !cityField && !townField) {
+                // prefのみがある場合：市区町村+町名
+                addressValue = `${record.city}${record.town}`;
+            } else if (!townField) {
+                // pref/cityのいずれかがある場合：町名のみ
+                addressValue = record.town;
+            }
+            // townがある場合は、addressには何も入れない
+
+            if (addressValue) {
+                addressField.value = addressValue;
+                addressField.dispatchEvent(new Event('input', { bubbles: true }));
+                console.log('[fillPostalData] Filled address:', addressField.dataset.jsonPath || addressField.name, '=', addressValue);
+            }
+        }
+
+        // フィールドが1つも見つからなかった場合の警告
+        if (fieldMap.size === 0) {
+            console.warn('[fillPostalData] 同じグループ内に住所フィールドが見つかりませんでした。グループ:', sourceField.group);
         }
     }
 
