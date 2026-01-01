@@ -10,9 +10,13 @@ To bundle this app into a Signed Web Bundle (`.swbn`), you need the `isolated-we
 ### Prerequisites
 
 - Chrome 128+ (Enable "Isolated Web Apps" flag if needed)
-- **Install Tools via npm**:
+- **Install Tools**:
   ```bash
+  # Using npm
   npm install -g wbn wbn-sign
+  
+  # OR using Bun
+  bun add -g wbn wbn-sign
   ```
 - **OpenSSL** (usually pre-installed on macOS/Linux)
 
