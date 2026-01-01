@@ -8,70 +8,8 @@ pub struct JpkiController<R: CardReader> {
 }
 
 use std::fmt;
-use std::io::Cursor;
 
 use serde::Serialize;
-
-fn convert_jp2_to_png(jp2_data: &[u8]) -> Result<Vec<u8>> {
-    // Decode JP2 using jpeg2k
-    let jp2_image = jpeg2k::Image::from_bytes(jp2_data)
-        .map_err(|e| anyhow::anyhow!("JP2 Decode Error: {}", e))?;
-    
-    let width = jp2_image.width();
-    let height = jp2_image.height();
-    let components = jp2_image.components();
-    
-    if components.is_empty() {
-        return Err(anyhow::anyhow!("No components found in JP2 image"));
-    }
-
-    // Check component sizes
-    for (i, comp) in components.iter().enumerate() {
-        if comp.data().len() != (width * height) as usize {
-             return Err(anyhow::anyhow!(
-                 "Component {} has mismatched size: expected {}, got {} (Subsampling not supported)",
-                 i, width * height, comp.data().len()
-             ));
-        }
-    }
-
-    // Interleave components (assuming RGB or L)
-    let mut u8_pixels = Vec::with_capacity((width * height * components.len() as u32) as usize);
-    for i in 0..(width * height) as usize {
-        for comp in components {
-            let data = comp.data();
-            // Safe indexing because we checked sizes
-            u8_pixels.push(data[i] as u8);
-        }
-    }
-
-    // Determine image format
-    let dynamic_image = match components.len() {
-        1 => {
-            let img_buffer = image::ImageBuffer::<image::Luma<u8>, _>::from_raw(width, height, u8_pixels)
-                .ok_or_else(|| anyhow::anyhow!("Failed to create Luma image buffer"))?;
-            image::DynamicImage::ImageLuma8(img_buffer)
-        }
-        3 => {
-            let img_buffer = image::ImageBuffer::<image::Rgb<u8>, _>::from_raw(width, height, u8_pixels)
-                .ok_or_else(|| anyhow::anyhow!("Failed to create RGB image buffer"))?;
-            image::DynamicImage::ImageRgb8(img_buffer)
-        }
-        4 => {
-            let img_buffer = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(width, height, u8_pixels)
-                .ok_or_else(|| anyhow::anyhow!("Failed to create RGBA image buffer"))?;
-            image::DynamicImage::ImageRgba8(img_buffer)
-        }
-        _ => return Err(anyhow::anyhow!("Unsupported number of components: {}", components.len())),
-    };
-
-    // Encode to PNG
-    let mut png_data = Vec::new();
-    dynamic_image.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png)
-        .map_err(|e| anyhow::anyhow!("PNG Encode Error: {}", e))?;
-    
-    Ok(png_data)
-}
 
 #[derive(Debug, Default, Serialize)]
 pub struct BasicInfo {
@@ -430,17 +368,8 @@ impl<R: CardReader> JpkiController<R> {
             match self.read_face_photo_with_b_number(&b_number).await {
                 Ok(photo_data) => {
                     println!("Debug: Read Photo Success. Size: {}", photo_data.len());
-                     // Convert JP2 to PNG
-                     match convert_jp2_to_png(&photo_data) {
-                        Ok(png) => {
-                             info.face_photo = Some(base64::Engine::encode(&base64::engine::general_purpose::STANDARD, png));
-                        }
-                        Err(e) => {
-                            eprintln!("Debug: JP2->PNG Conversion Failed: {}", e);
-                            // Do not set info.face_photo to avoid displaying broken image (raw JP2 bytes as PNG)
-                            // Or maybe set a flag? For now, leave it None.
-                        }
-                    }
+                    // Return raw JP2 data (Base64 encoded) to be handled by frontend
+                    info.face_photo = Some(base64::Engine::encode(&base64::engine::general_purpose::STANDARD, photo_data));
                 },
                 Err(e) => {
                     eprintln!("Debug: Read Photo Failed: {:?}", e);
