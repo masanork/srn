@@ -5,6 +5,7 @@ use anyhow::{Result, Context};
 /// Passport (ePassport/ICAO 9303) Application Controller
 pub struct PassportController<R: CardReader> {
     reader: R,
+    secure_session: Option<crate::crypto::bac::BacSession>,
 }
 
 pub mod file_ids {
@@ -26,7 +27,7 @@ pub mod file_ids {
 
 impl<R: CardReader> PassportController<R> {
     pub fn new(reader: R) -> Self {
-        Self { reader }
+        Self { reader, secure_session: None }
     }
 
     /// Select the ePassport Application
@@ -39,10 +40,7 @@ impl<R: CardReader> PassportController<R> {
     }
 
     /// Perform Basic Access Control (BAC)
-    /// This establishes Secure Messaging. For PoC, this is a placeholder 
-    /// that derives the K_seed (theoretically) but doesn't implement the full 3DES/AES crypto 
-    /// to wrap subsequent APDUs yet.
-    /// Perform Basic Access Control (BAC)
+    /// Establishes Secure Messaging and stores the session for subsequent APDUs.
     pub async fn perform_bac(&mut self, mrz: &str) -> Result<()> {
         use crate::crypto::bac;
 
@@ -62,18 +60,26 @@ impl<R: CardReader> PassportController<R> {
             .with_le(0x08); // 8 bytes random
         
         // Note: Without a real card, this might fail or return mock data.
-        match self.reader.transmit(&get_challenge.to_bytes()).await {
-             Ok(rnd_ic) => {
-                 println!("[BAC] Card Challenge: {}", hex::encode(&rnd_ic));
-                 // 3. Mutual Auth & Session Key Establishment would follow here.
-                 // This involves generating RND.IFD, K.IFD, concatenating, encrypting, etc.
-             }
-             Err(e) => {
-                 eprintln!("[BAC] GET CHALLENGE failed (Expected on Mock/No-Card): {}", e);
-             }
+        let rnd_ic_response = self.reader.transmit(&get_challenge.to_bytes()).await
+            .context("GET CHALLENGE failed")?;
+        if rnd_ic_response.len() < 10 {
+            return Err(anyhow::anyhow!("GET CHALLENGE response too short"));
         }
-        
-        println!("[BAC] Keys derived successfully. Secure Messaging Wrapper is pending.");
+        Self::check_sw(&rnd_ic_response)?;
+        let rnd_ic = &rnd_ic_response[0..8];
+        println!("[BAC] Card Challenge: {}", hex::encode(rnd_ic));
+
+        let rnd_ic: [u8; 8] = rnd_ic.try_into()
+            .map_err(|_| anyhow::anyhow!("Invalid RND.ICC"))?;
+        let (auth_data, ssc) = bac::build_mutual_auth_data(&k_enc, &k_mac, &rnd_ic)?;
+        use crate::apdu::INS_EXTERNAL_AUTHENTICATE;
+        let external_auth = ApduCommand::new(CLA_ISO, INS_EXTERNAL_AUTHENTICATE, 0x00, 0x00)
+            .with_data(&auth_data);
+        let response = self.reader.transmit(&external_auth.to_bytes()).await?;
+        Self::check_sw(&response).context("Mutual authentication failed")?;
+
+        self.secure_session = Some(bac::BacSession::new(k_enc, k_mac, ssc));
+        println!("[BAC] Secure Messaging session established.");
         Ok(())
     }
 
@@ -107,7 +113,7 @@ impl<R: CardReader> PassportController<R> {
         // 1. Select File
         let select = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x02, 0x0C)
             .with_data(file_id);
-        let res_sel = self.reader.transmit(&select.to_bytes()).await?;
+        let res_sel = self.transmit(&select).await?;
         Self::check_sw(&res_sel).context("Failed to select EF")?;
 
         // 2. Read Binary Loop
@@ -122,7 +128,7 @@ impl<R: CardReader> PassportController<R> {
             let read = ApduCommand::new(CLA_ISO, INS_READ_BINARY, p1, p2)
                 .with_le(0x00);
             
-            let res = self.reader.transmit(&read.to_bytes()).await?;
+            let res = self.transmit(&read).await?;
             
             if res.len() < 2 {
                 return Err(anyhow::anyhow!("Response too short"));
@@ -167,6 +173,20 @@ impl<R: CardReader> PassportController<R> {
             Ok(())
         } else {
             Err(anyhow::anyhow!("Card Error: SW={:02X}{:02X}", sw1, sw2))
+        }
+    }
+
+    async fn transmit(&mut self, apdu: &ApduCommand) -> Result<Vec<u8>> {
+        if let Some(session) = self.secure_session.as_mut() {
+            let wrapped = session.wrap_command(apdu)?;
+            let response = self.reader.transmit(&wrapped).await?;
+            let (data, sw1, sw2) = session.unwrap_response(&response)?;
+            let mut out = data;
+            out.push(sw1);
+            out.push(sw2);
+            Ok(out)
+        } else {
+            self.reader.transmit(&apdu.to_bytes()).await
         }
     }
 }

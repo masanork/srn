@@ -5,6 +5,20 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.8.1 - CIV Secure Messaging (BAC)
+
+**Date:** 2026-01-01
+
+Delivered production-ready Secure Messaging for the `civ` ePassport/EuId
+implementation, enabling encrypted APDUs and MAC-verified responses when using
+BAC.
+
+*   **Secure Messaging Wrapper**:
+  - Implemented ISO 7816-4 DO87/DO97/DO8E/DO99 handling with 3DES CBC
+    encryption and retail MAC validation for command/response protection.
+  - Added BAC mutual authentication flow with session key setup and SSC-based
+    MAC inputs to unlock read access on real ePassports.
+
 ## v2.8.0 - New Year Update: CIV Integration & LTV Architecture
 
 **Date:** 2026-01-01

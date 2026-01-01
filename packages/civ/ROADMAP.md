@@ -12,7 +12,8 @@ This document outlines the development path for the `civ` library and the requir
 ## 2. Roadmap
 
 ### Phase 1: Communication Integrity & Stability (Short-term)
-- **Secure Messaging (SM) Wrapper**: Implement ISO 7816-4 / ICAO 9303 SM (3DES/AES) to encrypt APDUs. Necessary for reading sensitive DGs on real cards.
+- **Secure Messaging (SM) Wrapper**: Implemented BAC 3DES ISO 7816-4 / ICAO
+  9303 wrapper for encrypted APDUs. AES-based PACE SM remains pending.
 - **PACE Support**: Implement Password Authenticated Connection Establishment for newer passports and EU IDs.
 - **Extended Read Logic**: Support for large file reading across all controllers (already started for Passport/DL).
 
