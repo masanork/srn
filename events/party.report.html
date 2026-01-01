@@ -69,7 +69,7 @@ body {
             <canvas id="weba-scatter" width="900" height="420" style="border: 1px solid #ddd; border-radius: 6px; background: #fff;"></canvas>
             <div id="weba-report-table" style="margin-top: 1rem; overflow-x: auto;"></div>
         </div>
-        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[],"tables":{},"masterData":{}}</script>
+        <script id="weba-structure" type="application/json">{"@context":"https://schema.org","@type":"CreativeWork","fields":[{"key":"name","label":"Name","type":"text","context":"Your full name for the guest list","property":"schema:name"},{"key":"attendance","label":"Yes, I'll be there! 🍻","type":"radio"},{"key":"attendance","label":"Joining Online 💻","type":"radio"},{"key":"attendance","label":"Sorry, can't make it 😢","type":"radio"},{"key":"guests","label":"Number of Guests","type":"number","context":"Number of people including yourself","show_if":"attendance == 'yes'"},{"key":"dietary","label":"Dietary Restrictions","type":"text","context":"Allergies or restrictions","show_if":"attendance == 'yes'"},{"key":"message","label":"Message","type":"textarea","context":"Message to the host"}],"tables":{},"masterData":{}}</script>
         <script>
             const statusEl = document.getElementById('weba-report-status');
             const fileInput = document.getElementById('weba-report-files');

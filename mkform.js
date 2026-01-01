@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2026-01-01T06:39:44Z';
+window.__WEBA_BUILD_TIME__='2026-01-01T06:49:49Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -347,6 +347,17 @@ var Renderers = {
     const propertyMatch = attrs.match(/property="([^"]+)"/) || attrs.match(/property='([^']+)'/);
     if (propertyMatch)
       extra += ` data-property="${this.escapeHtml(propertyMatch[1])}"`;
+    const showIfMatch = attrs.match(/show_if="([^"]+)"/) || attrs.match(/show_if='([^']+)'/);
+    if (showIfMatch)
+      extra += ` data-show-if="${this.escapeHtml(showIfMatch[1])}"`;
+    const validationAttrs = ["min", "max", "step", "pattern", "required", "readonly", "disabled", "minlength", "maxlength"];
+    validationAttrs.forEach((attr) => {
+      const match = attrs.match(new RegExp(`${attr}="([^"]+)"`)) || attrs.match(new RegExp(`${attr}='([^']+)'`)) || attrs.match(new RegExp(`${attr}=([^\\s\\)]+)`));
+      if (match)
+        extra += ` ${attr}="${this.escapeHtml(match[1])}"`;
+      else if (new RegExp(`\\b${attr}\\b`).test(attrs))
+        extra += ` ${attr}`;
+    });
     return extra;
   },
   text: function(key, label, attrs) {
@@ -3321,7 +3332,8 @@ function parseMarkdown(text) {
         label: cleanLabel,
         type: typeStr,
         context: contextMatch ? contextMatch[1] : undefined,
-        property: propertyMatch ? propertyMatch[1] : undefined
+        property: propertyMatch ? propertyMatch[1] : undefined,
+        show_if: (attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/))?.[1]
       });
       result += Renderers.renderInput(typeStr, key, attrStr);
       lastIndex = tagRegex.lastIndex;
@@ -3470,12 +3482,14 @@ function parseMarkdown(text) {
         const attrStr = attrs || "";
         const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
         const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
+        const showIfMatch = attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/);
         jsonStructure.fields.push({
           key,
           label: cleanLabel,
           type: type2 || "text",
           context: contextMatch ? contextMatch[1] : undefined,
-          property: propertyMatch ? propertyMatch[1] : undefined
+          property: propertyMatch ? propertyMatch[1] : undefined,
+          show_if: showIfMatch ? showIfMatch[1] : undefined
         });
         if (type2 === "radio") {
           currentRadioGroup = { key, label: cleanLabel, attrs: attrStr };
@@ -3896,8 +3910,10 @@ var DEFAULT_MARKDOWN_EN = `# Team Dinner Poll (Sample)
 
 ## 3. Preferences
 
-- [search:cuisine (src:cuisines label:2 value:2 placeholder="Type or pick a cuisine")] Preferred cuisine
+- [search:cuisine (src:cuisines label:2 value:2 placeholder="Type or pick a cuisine" context="Preferred food genre")] Preferred cuisine
 - [number:budget (placeholder="0")] Preferred budget (JPY)
+- [checkbox:shuttle] Request Shuttle
+- [text:pickup (show_if="shuttle" placeholder="Nearest station")] Pickup Location
 - [textarea:comment (placeholder="Allergies or constraints")] Notes
 
 ---
@@ -3967,8 +3983,10 @@ var DEFAULT_MARKDOWN_JA = `# 飲み会日程調整（サンプル）
 
 ## 3. 希望
 
-- [search:cuisine (src:cuisines label:2 value:2 placeholder="料理ジャンルを入力")] 料理の希望
-- [number:budget (placeholder="0")] 希望予算 (JPY)
+- [search:cuisine (src:cuisines label:2 value:2 placeholder="料理ジャンルを入力" context="希望する料理のジャンル")] 料理の希望
+- [number:budget (placeholder="0" min="0")] 希望予算 (JPY)
+- [checkbox:shuttle] 送迎を希望する
+- [text:pickup (show_if="shuttle" placeholder="最寄り駅など")] ピックアップ場所
 - [textarea:comment (placeholder="アレルギーや条件")] 備考
 
 ---
