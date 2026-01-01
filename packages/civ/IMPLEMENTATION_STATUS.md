@@ -53,6 +53,14 @@ This library (`civ`) aims to provide a unified interface for accessing Japanese 
 *   ✅ **General Authenticate**: Implemented (Sign/Internal Auth).
 *   ✅ **Key Management**: Implemented (KeyReference & Algorithm enums).
 
+### 2.6. European Identity Card (EuId)
+*   ✅ **AP Selection**: Implemented (Reuse ICAO AID).
+*   ✅ **Access Control**: Implemented (BAC supported, PACE pending).
+*   ✅ **Read MRZ**: Implemented (DG1).
+*   ✅ **Read Photo**: Implemented (DG2).
+*   ✅ **Read Details**: Implemented (DG11 - Address, etc.).
+*   **Note**: Wraps ICAO ePassport logic as most EU IDs are compliant MRTDs.
+
 ## 3. Security Hardening & Next Steps
 
 ### 3.1. Secure Messaging (Priority: High)
