@@ -185,6 +185,33 @@ ${JSON.stringify({ didDocuments: [didDoc] }, null, 2)}
 `;
                 finalHtml = finalHtml.replace('</body>', `${trustStoreScript}</body>`);
             }
+
+            // --- LTV: Container Signature (Phase 2.5) ---
+            // Sign the final HTML container (Layer 4) to ensure UI integrity.
+            // We use a placeholder to calculate the hash, then replace it with the signature.
+            const l4Placeholder = `<script type="application/vnd.weba+container-signature" id="weba-container-signature">{"placeholder":true}</script>`;
+            const htmlWithPlaceholder = finalHtml.replace('</body>', `${l4Placeholder}</body>`);
+
+            const containerHash = crypto.createHash('sha256').update(htmlWithPlaceholder).digest('hex');
+
+            // L4 VC is ephemeral (Deploy-Time), so we include buildId to force fresh signature.
+            const containerVc = await idManager.signDocument({
+                type: ["VerifiableCredential", "WebAContainerSignature"],
+                credentialSubject: {
+                    id: `${idManager.siteDid}/${relPath.replace('.md', '')}#container`,
+                    containerHash,
+                    buildId: idManager.buildId
+                }
+            });
+
+            const l4Script = `<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+${JSON.stringify(containerVc, null, 2)}
+</script>`;
+
+            // Replace the trust store script end tag logic or just append?
+            // Since we already injected trustStoreScript (replacing </body>), finalHtml DOES NOT have the L4 placeholder yet.
+            // We need to inject L4 *after* Trust Store.
+            finalHtml = finalHtml.replace('</body>', `${l4Script}</body>`);
         }
 
         return { html: finalHtml, vc };

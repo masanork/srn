@@ -2,6 +2,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
+import canonicalize from 'canonicalize';
 import { createHybridVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
 import type { HybridKeys } from '../core/vc.ts';
 import { encodeDidKey, encodePqcPublicKeyJwk } from '../core/did.ts';
@@ -14,6 +15,7 @@ export class IdentityManager {
     public siteDid: string;
     private dataDir: string;
     private distDir: string;
+    private signatureStore: Record<string, any> = {};
 
     constructor(siteDomain: string, sitePath: string, dataDir: string, distDir: string) {
         this.siteDid = `did:web:${siteDomain}${sitePath.replace(/\//g, ':')}`;
@@ -27,15 +29,31 @@ export class IdentityManager {
 
         if (await fs.pathExists(rootKeyPath)) {
             this.rootKeys = await fs.readJson(rootKeyPath);
-            this.currentKeys = await generateHybridKeys(); // Ephemeral for each build
         } else {
             this.rootKeys = await generateHybridKeys();
-            this.currentKeys = await generateHybridKeys();
             await fs.writeJson(rootKeyPath, this.rootKeys, { spaces: 2 });
+        }
+
+        const buildKeyPath = path.join(this.dataDir, 'build-key.json');
+        if (await fs.pathExists(buildKeyPath)) {
+            this.currentKeys = await fs.readJson(buildKeyPath);
+        } else {
+            this.currentKeys = await generateHybridKeys();
+            await fs.writeJson(buildKeyPath, this.currentKeys, { spaces: 2 });
+        }
+
+        const storePath = path.join(this.dataDir, 'signature-store.json');
+        if (await fs.pathExists(storePath)) {
+            try { this.signatureStore = await fs.readJson(storePath); } catch (e) { console.warn("Failed to load signature store", e); }
         }
 
         await this.updateKeyHistory();
         await this.generateDidDoc();
+    }
+
+    private async saveStore() {
+        const storePath = path.join(this.dataDir, 'signature-store.json');
+        await fs.writeJson(storePath, this.signatureStore, { spaces: 2 });
     }
 
     private async updateKeyHistory() {
@@ -91,6 +109,25 @@ export class IdentityManager {
     }
 
     async signDocument(payload: any): Promise<any> {
-        return createHybridVC(payload, this.currentKeys, this.siteDid, this.buildId);
+        // LTV Phase 2: Stable Signatures
+        // Check if we already have a signature for this EXACT payload (content-hash).
+        // Note: payload here does not have issuanceDate yet.
+        const canon = canonicalize(payload);
+        const hash = crypto.createHash('sha256').update(canon || '').digest('hex');
+
+        if (this.signatureStore[hash]) {
+            // Reuse existing VC (preserving original issuanceDate and signature)
+            // Warning: If keys were rotated, this signature might be valid but verified with an old key.
+            // LTV/TrustStore handles this by keeping key history.
+            return this.signatureStore[hash];
+        }
+
+        const vc = await createHybridVC(payload, this.currentKeys, this.siteDid, this.buildId);
+
+        // Save to store
+        this.signatureStore[hash] = vc;
+        await this.saveStore();
+
+        return vc;
     }
 }
