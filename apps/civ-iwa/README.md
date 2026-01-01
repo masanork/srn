@@ -41,6 +41,7 @@ To bundle this app into a Signed Web Bundle (`.swbn`), you need the `isolated-we
 
 4.  **Install in Chrome**:
     - **Important**: Must enable `chrome://flags/#enable-isolated-web-app-dev-mode` and restart Chrome first.
+    - *Note: On macOS/Windows, this flag might be marked as "Unsupported" depending on the Chrome version. If so, IWA cannot be tested yet.*
     - Go to `chrome://web-app-internals`.
     - Look for the **"IWA Dev Mode"** tab or "Install IWA" section (UI varies by version).
     - If you only see JSON text, verify the flag is enabled.
