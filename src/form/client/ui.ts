@@ -63,18 +63,26 @@ export class UIManager {
     }
 
     public initTables() {
-        document.querySelectorAll('.data-table.dynamic tbody').forEach((tbody) => {
-            this.renumberRows(tbody as HTMLElement);
+        // Supports standard table structures and div-based structures with .dynamic-container
+        document.querySelectorAll('.data-table.dynamic tbody, .dynamic-container').forEach((container) => {
+            this.renumberRows(container as HTMLElement);
         });
     }
 
-    private renumberRows(tbody: HTMLElement) {
-        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
-            // Exclude header rows (which usually contain th, or no td)
-            return row.querySelectorAll('td').length > 0;
+    private renumberRows(container: HTMLElement) {
+        // Find rows: tr for tables, or .dynamic-row for divs
+        let rows = Array.from(container.querySelectorAll('tr'));
+        if (rows.length === 0) {
+            rows = Array.from(container.querySelectorAll('.dynamic-row'));
+        }
+
+        // Filter out header/template if needed (simplified check)
+        const validRows = rows.filter(row => {
+            // If it's a table row, check for cells. If div, assume it's a row.
+            return row.tagName !== 'TR' || row.querySelectorAll('td').length > 0;
         });
 
-        rows.forEach((row, index) => {
+        validRows.forEach((row, index) => {
             const num = index + 1;
             row.querySelectorAll('.auto-num').forEach((input: any) => {
                 if (input.value != num) {
@@ -87,17 +95,19 @@ export class UIManager {
     }
 
     public removeTableRow(btn: any) {
-        const tr = btn.closest('tr');
-        const tbody = tr.parentElement as HTMLElement;
-        if (tr.classList.contains('template-row')) {
+        const row = btn.closest('tr') || btn.closest('.dynamic-row');
+        if (!row) return;
+
+        const container = row.parentElement as HTMLElement;
+        if (row.classList.contains('template-row')) {
             // Cannot delete template row, just clear inputs
-            tr.querySelectorAll('input').forEach((inp: HTMLInputElement) => {
+            row.querySelectorAll('input').forEach((inp: HTMLInputElement) => {
                 if (inp.type === 'checkbox') inp.checked = false;
                 else inp.value = '';
             });
         } else {
-            tr.remove();
-            if (tbody) this.renumberRows(tbody);
+            row.remove();
+            if (container) this.renumberRows(container);
             this.calc.recalculate();
             this.data.updateJsonLd();
         }
@@ -106,9 +116,11 @@ export class UIManager {
     public addTableRow(btn: any, tableKey: string) {
         const table = document.getElementById('tbl_' + tableKey);
         if (!table) return;
-        const tbody = table.querySelector('tbody');
-        if (!tbody) return;
-        const templateRow = tbody.querySelector('.template-row');
+        // Support tbody or just the container itself
+        const container = table.querySelector('tbody') || table;
+        if (!container) return;
+
+        const templateRow = container.querySelector('.template-row');
         if (!templateRow) return;
 
         const newRow = templateRow.cloneNode(true) as HTMLElement;
