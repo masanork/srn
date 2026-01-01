@@ -41,8 +41,8 @@ ai_generated: true
 <div class="panel-body">
 <ul class="spec-list">
 <li><strong>Verifiable Ownership</strong>
-    <span data-lang-en>Cryptographic signatures prove origin and integrity. No central server required.</span>
-    <span data-lang-ja>暗号署名により、発行元と完全性を証明。中央集権サーバーに依存しません。</span>
+    <span data-lang-en>Digital signatures prove origin and integrity. No external server required.</span>
+    <span data-lang-ja>デジタル署名により、発行元と完全性を証明。外部サーバーに依存しません。</span>
 </li>
 <li><strong>Portable Trust (LTV)</strong>
     <span data-lang-en>Self-contained verification. Documents verify themselves offline, decades later, even if the issuer is gone.</span>
@@ -85,9 +85,9 @@ ai_generated: true
 <div class="spec-links-grid">
 <a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Transparency Reports</a>
 <a href="./papers/api-economy-vs-document-economy.html">📊 API vs Document Economy</a>
-<a href="./papers/web-a-l2-security-audit-v8.html">🛡️ L2 Security Audit (v8)</a>
+
 <a href="./papers/web-a-ltv-architecture.html">🏛️ LTV Architecture (New)</a>
-<a href="./papers/web-a-vp-generator-spec.html">🆔 VP Generator Spec (Gov)</a>
+
 </div>
 </div>
 
@@ -114,9 +114,9 @@ ai_generated: true
 <div class="spec-links-grid">
 <a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ 透明性報告</a>
 <a href="./papers/api-economy-vs-document-economy.ja.html">📊 試算：API経済 vs 書類経済</a>
-<a href="./governance/web-a-l2-security-audit-v8.ja.html">🛡️ L2 セキュリティ監査 (v8)</a>
+
 <a href="./papers/web-a-ltv-architecture.html">🏛️ LTV 長期検証アーキテクチャ</a>
-<a href="./papers/web-a-vp-generator-spec.html">🆔 行政証明書提示ツール仕様</a>
+
 </div>
 </div>
 </div>
