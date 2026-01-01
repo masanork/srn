@@ -5,65 +5,75 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
-## v2.7.1 - CIV Secure Messaging (BAC)
+## v2.8.1 - CIV Secure Messaging (BAC)
 
-**Date:** 2026-01-02
+**Date:** 2026-01-01
 
 Delivered production-ready Secure Messaging for the `civ` ePassport/EuId
 implementation, enabling encrypted APDUs and MAC-verified responses when using
 BAC.
 
-- **Secure Messaging Wrapper**:
+*   **Secure Messaging Wrapper**:
   - Implemented ISO 7816-4 DO87/DO97/DO8E/DO99 handling with 3DES CBC
     encryption and retail MAC validation for command/response protection.
   - Added BAC mutual authentication flow with session key setup and SSC-based
     MAC inputs to unlock read access on real ePassports.
 
+## v2.8.0 - New Year Update: CIV Integration & LTV Architecture
+
+**Date:** 2026-01-01
+
+Major update for the new year, integrating the multi-document **CIV (Citizen Identity Verification)** module and establishing the **LTV (Long-Term Validation)** architecture for archival-grade trust.
+
+*   **CIV (Citizen Identity Verification) Integration**:
+    *   **Renamed & Expanded**: `jpki` package is now `civ` to support multiple identity documents.
+    *   **Driver's License (DL)**: Added AP selection, PIN verification, and Shift-JIS parsing.
+    *   **ePassport (EP)**: Added BAC (Basic Access Control) key derivation from MRZ.
+    *   **Residence Card (RC)**: Supported card number verification.
+    *   **US PIV Cards**: Added support for CHUID and Authentication Cert reading.
+    *   **Updated CLI**: `civ` command now supports subcommands: `jpki`, `dl`, `ep`, `rc`, `piv`.
+
+*   **Web/A LTV Architecture (Long-Term Validation)**:
+    *   **Layered Signature Model**: Implemented the Full 4-Layer Trust Architecture:
+        *   **L2 Payload**: Immutable Data with Stable Signatures (solving the "Rebuild Paradox").
+        *   **L3 Context**: Prunable Hash Chain (PHC) for lightweight audit trails.
+        *   **L4 Container**: Ephemeral signatures for visual integrity at deploy-time.
+    *   **Offline Verification**: Implemented **Trust Store Embedding**, allowing documents to carry their own issuer DID Documents.
+    *   **Documentation Upgrade**: Major update to the [Web/A Whitepaper](./papers/web-a.html) (v2.0).
+
 ## v2.7.0 - Folio POC v0.1.0: JPKI Integration
 
 **Date:** 2025-12-31
 
-Implementation of the **Folio POC** (Proof of Concept) core functionality, enabling cryptographic interaction with Japanese Public Key Infrastructure (JPKI) cards via both CLI and Browser interfaces. This establishes the physical bridge between "Web/A" digital documents and national identity hardware.
+Implementation of the **Folio POC** (Proof of Concept) core functionality, enabling cryptographic interaction with Japanese Public Key Infrastructure (JPKI) cards via both CLI and Browser interfaces.
 
 *   **JPKI Core Architecture**:
-    *   **Generic Library**: Extracted JPKI interaction logic into a standalone `packages/jpki` crate, decoupling generic smart card operations (APDU, P-256 Crypto) from Folio-specific domain logic.
-    *   **WASM Controller**: Exposed high-level JPKI operations (PIN verification, Digital Signature generation) to JavaScript via WebAssembly bindings (`WasmJpkiController`).
-    *   **Native & Web Support**: Designed the core to compile for both `wasm32-unknown-unknown` (Browser/Node) and native targets (macOS/Linux/Windows).
+    *   **Generic Library**: Extracted JPKI interaction logic into a standalone `packages/jpki` crate.
+    *   **WASM Controller**: Exposed high-level JPKI operations via WebAssembly (`WasmJpkiController`).
+    *   **Native & Web Support**: Designed the core to compile for both `wasm32-unknown-unknown` and native targets.
 
 *   **Tools & Interfaces**:
-    *   **Folio CLI**: Updated `folio present` to support real hardware interactions using PC/SC. Implemented secure PIN handling via `--pin` argument or `FOLIO_JPKI_PIN` environment variable to prevent accidental card lockouts.
-    *   **Native Diagnostics**: Added a new `jpki` CLI tool (Rust native binary) for lightweight card diagnostics (`info`, `cert`, `sign`), similar to the `myna` command but integrated with the new architecture.
-    *   **Browser Driver**: Implemented `WebUsbCcidDriver` (JavaScript) to enable direct communication between the browser and smart card readers via WebUSB, bypassing the need for native PC/SC bridges in the demo environment.
+    *   **Folio CLI**: Updated `folio present` to support real hardware interactions using PC/SC.
+    *   **Native Diagnostics**: Added `jpki` CLI tool for lightweight card diagnostics.
+    *   **Browser Driver**: Implemented `WebUsbCcidDriver` for WebUSB support.
 
 *   **Security & Safety**:
-    *   **Secure PIN Handling**: Removed all hardcoded PINs from the codebase.
-    *   **Hardware Abstraction**: Standardized the `CardReader` trait to support multiple transports (PC/SC, WebUSB) with a unified interface for the cryptographic core.
+    *   **Secure PIN Handling**: Removed all hardcoded PINs.
+    *   **Hardware Abstraction**: Standardized the `CardReader` trait.
 
 ## v2.6.0 - Strategy Pivot: Signed Resource Network
 
 **Date:** 2025-12-31
 
-A strategic turning point for the project, redefining SRN as the **"Signed Resource Network"** and pivoting development focus towards pragmatism ("Worse is Better") and User Experience based on critical AI analyses.
-
-- **2026-01-01**: **Major Update: CIV (Citizen Identity Verification) Integration**
-    - Renamed and expanded `jpki` package to `civ` to support multiple identity documents.
-    - Added support for **Driver's License (DL)**: AP selection, PIN verification, and Shift-JIS (with Gaiji placeholder) parsing for common data.
-    - Added support for **ePassport (EP)**: AP selection and BAC (Basic Access Control) key derivation logic from MRZ.
-    - Added support for **Residence Card (RC)**: AP selection, card number verification, and basic info parsing.
-    - Added support for **US PIV Cards**: AP selection, CHUID reading (Expiry Date), and Authentication Cert reading.
-    - Updated `civ` CLI tool to support subcommands for all document types (`civ jpki`, `civ dl`, `civ ep`, `civ rc`, `civ piv`).
-    - Published `IMPLEMENTATION_STATUS.md` detailing security/verification scope for OSS.
-    - Updated Web/A Folio whitepaper and VP Generator spec to reflect multi-document support scope.
-- **2026-01-01**: **Governance & Branding Update**
-    - Published "SRN Global Rebranding Strategy" (Static Site Generator -> Signed Resource Network).
+A strategic turning point for the project, redefining SRN as the **"Signed Resource Network"** and pivoting development focus towards pragmatism.
 
 *   **Global Rebranding Strategy**:
-    *   **Signed Resource Network**: Officially proposed redefining the SRN acronym to **"Signed Resource Network"**. This emphasizes the objective fact of cryptographic provenance (Web/A Signatures) over subjective claims of "Security" or abstract "Semantics".
-    *   **Identity**: Positioned "Sorane" as the reference toolchain for creating and verifying these Signed Resources.
+    *   **Signed Resource Network**: Officially proposed redefining the SRN acronym.
+    *   **Identity**: Positioned "Sorane" as the reference toolchain.
 
 *   **Strategic Pivot ("Worse is Better")**:
-    *   **AI Risk Synthesis**: Integrated critical analysis reports from **Gemini 3 DeepResearch** and **ChatGPT (o1)** into the governance repository, acknowledging risks like "WS-Deathstar" (complexity) and "Middlebox Death" (opaque encryption).
-    *   **Pragmatism First**: Shifted architectural priority from strict Semantic Web correctness to **"Minimum Viable Context"** and **"Onion Routing"** (unencrypted routing headers) to ensure cloud cacheability and ease of adoption.
+    *   **AI Risk Synthesis**: Integrated critical analysis reports (Gemini 3 / ChatGPT o1).
+    *   **Pragmatism First**: Prioritized "Minimum Viable Context" and "Onion Routing".
 
 *   **Adoption-Driven UX Overhaul**:
     *   **Web/A Form UX Audit**: Completed a comprehensive [UX Audit](./governance/web-a-form-ux-audit.html) to transform the form experience from "digital paper" to "mobile-first application".
