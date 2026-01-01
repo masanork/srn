@@ -2,6 +2,15 @@ import { describe, test, expect, beforeEach } from "bun:test";
 import { Window } from 'happy-dom';
 import { SearchEngine } from './search';
 
+// Mock postalLookup
+const mockPostal = {
+    autoInit: async () => {},
+    isReady: () => false,
+    lookup: () => null,
+    suggest: () => []
+};
+(global as any).postalLookup = mockPostal;
+
 // Setup global environment
 const window = new Window();
 const document = window.document;
@@ -10,18 +19,6 @@ const document = window.document;
 (global as any).HTMLElement = window.HTMLElement;
 (global as any).HTMLInputElement = window.HTMLInputElement;
 (global as any).Event = window.Event;
-
-// Mock escapeHtml
-(window as any).escapeHtml = (str: string) => {
-    if (!str) return '';
-    return str.toString().replace(/[&<>"']/g, (m) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    })[m] || m);
-};
 
 describe("Web/A Client Runtime > Search Engine", () => {
     let search: SearchEngine;
@@ -33,7 +30,8 @@ describe("Web/A Client Runtime > Search Engine", () => {
                 'vendors': [
                     ['Code', 'Name', 'Tel'],
                     ['v1', 'Vendor One', '03-1111-2222'],
-                    ['v2', 'Vendor Two', '03-3333-4444']
+                    ['v2', 'Vendor Two', '03-3333-4444'],
+                    ['v3', '<script>alert(1)</script>', '03-5555-6666']
                 ]
             }
         };
@@ -68,6 +66,28 @@ describe("Web/A Client Runtime > Search Engine", () => {
         const items = box?.querySelectorAll('.suggestion-item');
         expect(items?.length).toBe(2);
         expect(items?.[0].textContent).toContain('Vendor One');
+    });
+
+    test("should handle special characters safely in suggestions (XSS prevention)", async () => {
+        search.init();
+
+        const input = document.createElement('input');
+        input.className = 'search-input';
+        input.dataset.masterSrc = 'vendors';
+        input.value = '<script>';
+        document.body.appendChild(input);
+
+        input.dispatchEvent(new (window as any).Event('input', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        const box = document.getElementById('web-a-search-suggestions') as any;
+        const items = box?.querySelectorAll('.suggestion-item');
+        expect(items?.length).toBe(1);
+        
+        // Verify that content is escaped in HTML
+        const itemHtml = items[0].innerHTML;
+        expect(itemHtml).toContain('&lt;script&gt;');
+        expect(itemHtml).not.toContain('<script>');
     });
 
     test("shows suggestions from column values (suggest:column)", async () => {

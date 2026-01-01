@@ -5,7 +5,7 @@ async function build() {
     console.log("Building Web/A client bundle...");
 
     // 1. Build Bundle
-    const buildProc = Bun.spawn(["bun", "build", "src/weba/client/index.ts", "--outfile", "src/weba/client/bundle.js"]);
+    const buildProc = Bun.spawn(["bun", "build", "src/form/client/index.ts", "--outfile", "src/form/client/bundle.js"]);
     await buildProc.exited;
 
     if (buildProc.exitCode !== 0) {
@@ -14,7 +14,7 @@ async function build() {
     }
 
     // 2. Read Bundle
-    const bundleFile = Bun.file("src/weba/client/bundle.js");
+    const bundleFile = Bun.file("src/form/client/bundle.js");
     const bundleContent = await bundleFile.text();
 
     // 3. Create Embed
@@ -28,8 +28,8 @@ export const CLIENT_BUNDLE = ${escapedContent};
 `;
 
     // 4. Write Embed
-    await Bun.write("src/weba/client/embed.ts", embedContent);
-    console.log("Generated src/weba/client/embed.ts");
+    await Bun.write("src/form/client/embed.ts", embedContent);
+    console.log("Generated src/form/client/embed.ts");
 }
 
 build();
