@@ -115,13 +115,35 @@ author: "Author Name"
 
 To create a verifiable interactive form, use `layout: form`.
 
+#### Basic Syntax
+
+Define fields using Markdown list syntax. Attributes are specified in `(key="value")` format.
+
 ```markdown
----
-title: "Application Form"
-layout: form
----
-- [text:name (placeholder="Your Name")] Name
-- [number:age] Age
+- [text:full_name] Full Name
+- [number:age (min="0")] Age
+- [date:birthday] Date of Birth
+```
+
+#### AI Context (v2.8+)
+
+Attributes to help AI agents correctly interpret the meaning and intent of fields for auto-filling and assistance.
+
+- **`context`**: Instructions or hints for the AI. Also displayed as a fallback hint to the user.
+- **`property`**: Semantic definition (e.g., schema.org property).
+
+```markdown
+- [text:name (context="Full legal name" property="schema:name")] Name
+```
+
+#### Logic & Calculation
+
+Embed Excel-like calculation formulas.
+
+```markdown
+- [number:price] Price
+- [number:qty] Quantity
+- [calc:total (val="price * qty")] Total
 ```
 
 *   **Single-File Runtime**: Generates a self-contained HTML file incorporating all logic, CSS, and structural signatures.
