@@ -20,8 +20,9 @@ This document tracks the high-level development status, architectural decisions,
 ### 1. Web/A Post (Intelligent Agent) (Active)
 - [x] **Core Logic**: `PostalHub` with role-based routing (Admin/Member/Guest/Visitor) and rule engine.
 - [x] **Server Architecture**: **Hono** implementation supporting both Bun (Local) and Edge runtimes.
-- [x] **Storage Abstraction**: `IPostalStorage` interface with `LocalFileStorage` implementation.
-- [ ] **Cloud Storage Adapters**: Implement D1 (Cloudflare) and Firestore (Firebase) adapters.
+- [ ] **Event-Driven Ingress**: Implement a lightweight Pub/Sub-first receiver (Accepted-over-Stored) to ensure CSP portability.
+- [ ] **Async Rule Engine**: Port `PostalHub` logic to background workers triggered by message bus events.
+- [ ] **Storage Adapters**: Implement Object Storage (R2/GCS/S3) for raw containers + lightweight index (Firestore/D1/KV).
 - [ ] **Client Integration**: Update `folio` CLI to interact with the new Post server (Inbox/Outbox).
 - [ ] **Federation**: Enable server-to-server communication (DID resolution & forwarding).
 
@@ -63,6 +64,7 @@ This document tracks the high-level development status, architectural decisions,
 - **Privacy by Design**: Mandatory L2 encryption for sensitive payload.
 - **Longevity**: Standard JSON-LD/HTML binding ensures 10+ years of verify-ability.
 - **User Agency**: The Folio (data container) belongs to the user, not the server.
+- **Event-Driven Portability**: Prefer asynchronous Pub/Sub and Object Storage over proprietary DB schemas for global interoperability.
 
 ---
-*Last Updated: 2025-12-31*
+*Last Updated: 2026-01-01*
