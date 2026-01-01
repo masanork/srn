@@ -354,4 +354,24 @@ mod tests {
         // Check PIN "1234" -> 31 32 33 34
         assert_eq!(&apdus[1][5..], b"1234");
     }
+
+    #[tokio::test]
+    async fn test_read_attributes_parsing() {
+        let mock = MockReader::new(vec![0x90, 0x00]);
+        let mut controller = JpkiController::new(mock.clone());
+
+        // We need a more flexible mock for sequential responses
+        // But for parse_basic_info, we can test it directly
+        let mut data = vec![
+            0xDF, 0x22, 0x09, b'K', b'O', b'N', b'O', b' ', b'T', b'A', b'R', b'O',
+            0xDF, 0x23, 0x05, b'T', b'O', b'K', b'Y', b'O'
+        ];
+        
+        // JPKI attributes are wrapped in DF20 (sometimes) or just list of tags
+        let res = JpkiController::<MockReader>::parse_basic_info(&data);
+        assert!(res.is_ok());
+        let info = res.unwrap();
+        assert_eq!(info.name, "KONO TARO");
+        assert_eq!(info.address, "TOKYO");
+    }
 }

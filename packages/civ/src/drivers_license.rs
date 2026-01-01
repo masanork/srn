@@ -182,43 +182,60 @@ impl<R: CardReader> DriversLicenseController<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::{Arc, Mutex};
-    use async_trait::async_trait;
-
-    #[derive(Clone)]
-    struct MockReader {
-        pub sent_apdus: Arc<Mutex<Vec<Vec<u8>>>>,
-        pub response: Vec<u8>,
-    }
-
-    impl MockReader {
-        fn new(response: Vec<u8>) -> Self {
-            Self {
-                sent_apdus: Arc::new(Mutex::new(Vec::new())),
-                response,
-            }
-        }
-    }
-
-    #[async_trait(?Send)]
-    impl CardReader for MockReader {
-        async fn transmit(&mut self, apdu: &[u8]) -> Result<Vec<u8>> {
-            self.sent_apdus.lock().unwrap().push(apdu.to_vec());
-            Ok(self.response.clone())
-        }
-    }
+    use crate::test_utils::TestReader;
 
     #[tokio::test]
     async fn test_select_dl_ap() {
-        let mock = MockReader::new(vec![0x90, 0x00]);
-        let mut controller = DriversLicenseController::new(mock.clone());
+        let reader = TestReader::new();
+        let mut controller = DriversLicenseController::new(reader.clone());
+        reader.push_response(&[0x90, 0x00]);
 
         let res = controller.select_dl_ap().await;
         assert!(res.is_ok());
 
-        let apdus = mock.sent_apdus.lock().unwrap();
+        let apdus = reader.sent_apdus.lock().unwrap();
         assert_eq!(apdus.len(), 1);
-        // Check AID
         assert_eq!(&apdus[0][5..], &file_ids::DF_DL[..]);
+    }
+
+    #[tokio::test]
+    async fn test_read_common_data_parsing() {
+        let reader = TestReader::new();
+        let mut controller = DriversLicenseController::new(reader.clone());
+        
+        // Mock responses for read_common_data:
+        // 1. select EF01
+        reader.push_response(&[0x90, 0x00]);
+        // 2. read binary
+        // "外務 太郎" in Shift-JIS: 8a 4f 96 b1 20 91 be 98 59
+        let name_bytes = [0x8a, 0x4f, 0x96, 0xb1, 0x20, 0x91, 0xbe, 0x98, 0x59];
+        let mut mock_data = vec![0x11, name_bytes.len() as u8];
+        mock_data.extend_from_slice(&name_bytes);
+            
+        // Tag 0x13: DOB (19800101)
+        mock_data.extend_from_slice(&[0x13, 8, b'1', b'9', b'8', b'0', b'0', b'1', b'0', b'1']);
+        // Tag 0x17: License No
+        mock_data.extend_from_slice(&[0x17, 12, b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'0', b'1', b'2']);
+        
+        mock_data.extend_from_slice(&[0x90, 0x00]);
+        reader.push_response(&mock_data);
+
+        let res = controller.read_common_data().await;
+        assert!(res.is_ok());
+        let info = res.unwrap();
+        
+        assert_eq!(info.name, "外務 太郎");
+    }
+
+    #[tokio::test]
+    async fn test_verify_pin_error() {
+        let reader = TestReader::new();
+        let mut controller = DriversLicenseController::new(reader.clone());
+        // Mock 63 C2 (Auth Failed)
+        reader.push_response(&[0x63, 0xC2]);
+
+        let res = controller.verify_pin("0000").await;
+        // SW 63 C2 should be caught by check_sw and return Err
+        assert!(res.is_err());
     }
 }
