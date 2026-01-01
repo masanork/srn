@@ -26,14 +26,45 @@ impl fmt::Display for LicenseInfo {
     }
 }
 
-// ... file_ids ...
+pub mod file_ids {
+    pub const DF_DL: [u8; 16] = [
+        0xA0, 0x00, 0x00, 0x02, 0x31, 0x01, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    ];
+    pub const EF_COMMON_DATA: [u8; 2] = [0x00, 0x01]; // EF01
+    pub const EF_SENSITIVE_DATA: [u8; 2] = [0x00, 0x02]; // EF02
+}
 
 impl<R: CardReader> DriversLicenseController<R> {
     pub fn new(reader: R) -> Self {
         Self { reader }
     }
 
-    // ... existing verify/select methods ...
+    /// Select Driver's License Application
+    pub async fn select_dl_ap(&mut self) -> Result<()> {
+        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
+            .with_data(&file_ids::DF_DL);
+        
+        let res = self.reader.transmit(&apdu.to_bytes()).await?;
+        Self::check_sw(&res).context("Failed to select DL AP")
+    }
+
+    /// Verify PIN (PIN1 or PIN2)
+    /// Usually PIN1 for Common Data, PIN2 for Sensitive Data.
+    /// Implementation detail: The exact command depends on the card profile (often 00 20 00 80).
+    pub async fn verify_pin(&mut self, pin: &str) -> Result<()> {
+        let pin_bytes = pin.as_bytes();
+        let apdu = ApduCommand::new(CLA_ISO, INS_VERIFY, 0x00, 0x80)
+            .with_data(pin_bytes);
+        
+        let res = self.reader.transmit(&apdu.to_bytes()).await?;
+        Self::check_sw(&res).context("PIN Verification Failed")
+    }
+
+    /// Alias for PIN1 Verification
+    pub async fn verify_pin1(&mut self, pin: &str) -> Result<()> {
+        self.verify_pin(pin).await
+    }
 
     /// Read Common Data (EF01) and Parse
     /// Requires PIN 1 verification beforehand.

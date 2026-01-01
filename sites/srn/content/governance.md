@@ -1,11 +1,11 @@
 ---
-title: "Governance & Audit Reports"
+title: "Transparency Reports"
 layout: article
 description: "Archive of Security Audits, Risk Assessments, and Governance Documents."
 ai_generated: true
 ---
 
-# Governance & Audit Reports
+# Transparency Reports
 
 <div data-lang-ja>
 <blockquote>
