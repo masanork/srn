@@ -36,7 +36,7 @@ To bundle this app into a Signed Web Bundle (`.swbn`), you need the `isolated-we
 3.  **Sign the Bundle**:
     Sign the bundle with your private key to create the `.swbn` file.
     ```bash
-    wbn-sign sign --input civ-iwa.wbn --privateKey private_key.pem --output civ-iwa.swbn
+    wbn-sign --input civ-iwa.wbn --private-key private_key.pem --output civ-iwa.swbn
     ```
 
 4.  **Install in Chrome**:
