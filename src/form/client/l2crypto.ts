@@ -12,10 +12,10 @@ import './guest_did';
 import { initL2Viewer } from './l2viewer';
 import { initKeywrapTool } from './keywrap_tool';
 
-(window as any).initL2Viewer = initL2Viewer;
-(window as any).initKeywrapTool = initKeywrapTool;
-
-
+if (typeof window !== 'undefined') {
+  (window as any).initL2Viewer = initL2Viewer;
+  (window as any).initKeywrapTool = initKeywrapTool;
+}
 
 export interface ReplayStore {
   has(nonce: string): Promise<boolean>;
@@ -163,10 +163,8 @@ export async function getPaddingTargetSize(currentSize: number): Promise<number>
 
 
 
-const L2_SIG_KEY_STORAGE = "weba_l2_ed25519_sk";
-
 function getOrCreateL2SigKey(): Uint8Array {
-  const stored = localStorage.getItem(L2_SIG_KEY_STORAGE);
+  const stored = localStorage.getItem("weba_l2_ed25519_sk");
   if (stored) {
     return b64urlDecode(stored);
   }
@@ -174,7 +172,7 @@ function getOrCreateL2SigKey(): Uint8Array {
   // For now, simple random is fine for seed
   const sk = new Uint8Array(32);
   crypto.getRandomValues(sk);
-  localStorage.setItem(L2_SIG_KEY_STORAGE, b64urlEncode(sk));
+  localStorage.setItem("weba_l2_ed25519_sk", b64urlEncode(sk));
   return sk;
 }
 

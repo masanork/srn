@@ -20,110 +20,158 @@ import { juminhyoLayout } from './layouts/juminhyo.js';
 
 
 
-async function build() {
-    const configOverridePath = process.argv.indexOf('--site-config') !== -1 ? process.argv[process.argv.indexOf('--site-config') + 1] : undefined;
-    const config = await loadConfig(configOverridePath);
-    const { SITE_DIR, DIST_DIR, CONTENT_DIR, DATA_DIR, SCHEMAS_DIR } = getAbsolutePaths(config);
-    const isClean = process.argv.includes('--clean');
+const LOCK_FILE = path.join(process.cwd(), '.ssg-build.lock');
 
-    if (isClean) await fs.emptyDir(DIST_DIR);
-    await fs.ensureDir(DIST_DIR);
-    await fs.ensureDir(DATA_DIR);
-
-    // Initialize Managers
-    const idManager = new IdentityManager(config.identity.domain, config.identity.path, DATA_DIR, DIST_DIR);
-    await idManager.init();
-
-    const fontProcessor = new FontProcessor(config, process.cwd());
-    await fontProcessor.init();
-
-    const layoutManager = new LayoutManager();
-
-    // Prepare client bundles first (to allow inlining if needed)
-    await bundleClientScripts(DIST_DIR);
-    await copyStaticAssets(SITE_DIR, DIST_DIR, SCHEMAS_DIR);
-
-    // Process Content
-    const files = await glob('**/*.md', { cwd: CONTENT_DIR });
-    const allPages = await collectMetadata(files, CONTENT_DIR);
-    let processedCount = 0;
-
-    for (const file of files) {
-        const filePath = path.join(CONTENT_DIR, file);
-        const source = await fs.readFile(filePath, 'utf-8');
-        const { data, content } = matter(source);
-        if (data.date) {
-            data.date = normalizeDate(data.date);
+async function acquireLock() {
+    if (process.argv.includes('--no-lock')) return;
+    try {
+        await fs.writeFile(LOCK_FILE, process.pid.toString(), { flag: 'wx' });
+    } catch (err: any) {
+        if (err.code === 'EEXIST') {
+            const stalePidStr = await fs.readFile(LOCK_FILE, 'utf-8').catch(() => '');
+            if (stalePidStr) {
+                const stalePid = parseInt(stalePidStr);
+                try {
+                    process.kill(stalePid, 0);
+                    console.error(`\n❌ Error: Another build is already in progress (PID: ${stalePid}).`);
+                    console.error(`Wait for the other build to finish, or if you are sure it crashed, delete ${LOCK_FILE}.`);
+                    process.exit(1);
+                } catch (e) {
+                    // Process is dead, stale lock
+                    await fs.remove(LOCK_FILE);
+                    return acquireLock();
+                }
+            }
         }
+        throw err;
+    }
+}
 
-        // Auto-detect GJM in frontmatter to enable font embedding
-        const hasGjmInFrontmatter = JSON.stringify(data).includes('GJM');
-        if (hasGjmInFrontmatter) {
+async function releaseLock() {
+    if (process.argv.includes('--no-lock')) return;
+    await fs.remove(LOCK_FILE).catch(() => { });
+}
+
+// Cleanup on various termination signals
+['SIGINT', 'SIGTERM', 'SIGHUP'].forEach(sig => {
+    process.on(sig as any, async () => {
+        await releaseLock();
+        process.exit(0);
+    });
+});
+
+async function build() {
+    await acquireLock();
+    try {
+        const configOverridePath = process.argv.indexOf('--site-config') !== -1 ? process.argv[process.argv.indexOf('--site-config') + 1] : undefined;
+        const config = await loadConfig(configOverridePath);
+        const { SITE_DIR, DIST_DIR, CONTENT_DIR, DATA_DIR, SCHEMAS_DIR } = getAbsolutePaths(config);
+        const isClean = process.argv.includes('--clean');
+
+        if (isClean) await fs.emptyDir(DIST_DIR);
+        await fs.ensureDir(DIST_DIR);
+        await fs.ensureDir(DATA_DIR);
+
+        // Initialize Managers
+        const idManager = new IdentityManager(config.identity.domain, config.identity.path, DATA_DIR, DIST_DIR);
+        await idManager.init();
+
+        const fontProcessor = new FontProcessor(config, process.cwd());
+        await fontProcessor.init();
+
+        const layoutManager = new LayoutManager();
+
+        // Prepare client bundles first (to allow inlining if needed)
+        await bundleClientScripts(DIST_DIR);
+        await copyStaticAssets(SITE_DIR, DIST_DIR, SCHEMAS_DIR);
+
+        // Process Content
+        const files = await glob('**/*.md', { cwd: CONTENT_DIR });
+        const allPages = await collectMetadata(files, CONTENT_DIR);
+        let processedCount = 0;
+
+        for (const file of files) {
+            const filePath = path.join(CONTENT_DIR, file);
+            const source = await fs.readFile(filePath, 'utf-8');
+            const { data, content } = matter(source);
+            if (data.date) {
+                data.date = normalizeDate(data.date);
+            }
+
+            // Auto-detect triggers for font embedding
+            const hasGjmInFrontmatter = JSON.stringify(data).includes('GJM');
+            const hasCustomFont = Boolean(data.font);
+            const isThemedLayout = ['blog', 'width'].includes(data.layout);
+
             if (data.embedFonts === undefined) {
-                data.embedFonts = true;
+                if (hasGjmInFrontmatter || hasCustomFont || isThemedLayout) {
+                    data.embedFonts = true;
+                }
+            }
+
+            // Skip private or draft content
+            if (isDraft(data)) {
+                console.log(`Skipping draft/private content: ${file}`);
+                continue;
+            }
+
+
+            if (!isClean && await isUpToDate(filePath, file, DIST_DIR, data.layout)) continue;
+
+            processedCount++;
+            console.log(`Processing: ${file}`);
+            const normalizedContent = stripLeadingTitleHeading(content, data.title);
+            const rawHtmlContent = await marked.parse(normalizedContent);
+            // Rewrite .md links to .html for generated site
+            const htmlContent = (rawHtmlContent as string).replace(/href="([^"]+)\.md(#|")/g, 'href="$1.html$2');
+
+            // Process Fonts (Opt-in)
+            let fontCss = '';
+            let safeFontFamilies: string[] = [];
+            if (data.embedFonts) {
+                const fontResult = await fontProcessor.processPageFonts(
+                    htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages
+                );
+                fontCss = fontResult.fontCss;
+                safeFontFamilies = fontResult.safeFontFamilies;
+            }
+
+            // Render via Layout Manager
+            const { html: finalHtml, vc } = await layoutManager.render({
+                data,
+                config,
+                content: normalizedContent,
+                htmlContent,
+                fontCss,
+                safeFontFamilies,
+                allPages,
+                idManager,
+                distDir: DIST_DIR,
+                relPath: file,
+                contentDir: CONTENT_DIR
+            });
+
+            // Write Outputs
+            const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
+            await fs.ensureDir(path.dirname(outPath));
+            await fs.writeFile(outPath, finalHtml);
+            if (vc) await fs.writeJson(outPath.replace('.html', '.vc.json'), vc, { spaces: 2 });
+
+            // SRN.md fallback to index.html
+            if (file === 'srn.md' && !files.includes('index.md')) {
+                await fs.writeFile(path.join(DIST_DIR, 'index.html'), finalHtml);
             }
         }
 
-        // Skip private or draft content
-        if (isDraft(data)) {
-            console.log(`Skipping draft/private content: ${file}`);
-            continue;
-        }
+        await generateSitemaps(allPages, config, DIST_DIR, files.includes('srn.md') && !files.includes('index.md'));
 
-
-        if (!isClean && await isUpToDate(filePath, file, DIST_DIR, data.layout)) continue;
-
-        processedCount++;
-        console.log(`Processing: ${file}`);
-        const normalizedContent = stripLeadingTitleHeading(content, data.title);
-        const rawHtmlContent = await marked.parse(normalizedContent);
-        // Rewrite .md links to .html for generated site
-        const htmlContent = (rawHtmlContent as string).replace(/href="([^"]+)\.md(#|")/g, 'href="$1.html$2');
-
-        // Process Fonts (Opt-in)
-        let fontCss = '';
-        let safeFontFamilies: string[] = [];
-        if (data.embedFonts) {
-            const fontResult = await fontProcessor.processPageFonts(
-                htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages
-            );
-            fontCss = fontResult.fontCss;
-            safeFontFamilies = fontResult.safeFontFamilies;
-        }
-
-        // Render via Layout Manager
-        const { html: finalHtml, vc } = await layoutManager.render({
-            data,
-            config,
-            content: normalizedContent,
-            htmlContent,
-            fontCss,
-            safeFontFamilies,
-            allPages,
-            idManager,
-            distDir: DIST_DIR,
-            relPath: file,
-            contentDir: CONTENT_DIR
-        });
-
-        // Write Outputs
-        const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
-        await fs.ensureDir(path.dirname(outPath));
-        await fs.writeFile(outPath, finalHtml);
-        if (vc) await fs.writeJson(outPath.replace('.html', '.vc.json'), vc, { spaces: 2 });
-
-        // SRN.md fallback to index.html
-        if (file === 'srn.md' && !files.includes('index.md')) {
-            await fs.writeFile(path.join(DIST_DIR, 'index.html'), finalHtml);
-        }
+        const totalSize = await getDirSize(DIST_DIR);
+        console.log(`\nBuild complete.`);
+        console.log(`- Pages rebuilt: ${processedCount}`);
+        console.log(`- Total dist size: ${formatBytes(totalSize)}`);
+    } finally {
+        await releaseLock();
     }
-
-    await generateSitemaps(allPages, config, DIST_DIR, files.includes('srn.md') && !files.includes('index.md'));
-
-    const totalSize = await getDirSize(DIST_DIR);
-    console.log(`\nBuild complete.`);
-    console.log(`- Pages rebuilt: ${processedCount}`);
-    console.log(`- Total dist size: ${formatBytes(totalSize)}`);
 }
 
 // --- Helpers ---
@@ -293,7 +341,7 @@ async function generateSitemaps(pages: any[], config: any, distDir: string, hasF
     if (hasFallbackIndex) urls.push(`${baseUrl}/index.html`);
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-        ${urls.map(u => `<url><loc>${u}</loc></url>`).join('')}</urlset>`;
+    ${urls.map(u => `<url><loc>${u}</loc></url>`).join('')}</urlset>`;
     await fs.writeFile(path.join(distDir, 'sitemap.xml'), xml);
 }
 
@@ -320,5 +368,5 @@ function formatBytes(bytes: number) {
 
 export { build };
 if (import.meta.main) {
-    build().catch(err => { console.error(err); process.exit(1); });
+    build().catch((err: any) => { console.error(err); process.exit(1); });
 }

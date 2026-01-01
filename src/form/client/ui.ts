@@ -150,9 +150,9 @@ export class UIManager {
             }
         });
 
-        tbody.appendChild(newRow);
+        container.appendChild(newRow);
 
-        this.renumberRows(tbody);
+        this.renumberRows(container as HTMLElement);
         this.calc.recalculate();
     }
 

@@ -255,6 +255,7 @@ export class SearchEngine {
 
         // Note: Postal handling moved to runtime.ts global listener for better datalist integration
         if (this.isPostalField(input)) {
+            this.handlePostalInput(input);
             return;
         }
 
