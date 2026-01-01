@@ -63,7 +63,7 @@ impl PcscReader {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[async_trait(?Send)]
+#[async_trait]
 impl CardReader for PcscReader {
     async fn transmit(&mut self, apdu: &[u8]) -> Result<Vec<u8>> {
         let card = self.card.as_ref().ok_or_else(|| anyhow!("Card not connected"))?;

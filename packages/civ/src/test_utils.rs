@@ -20,7 +20,8 @@ impl TestReader {
     }
 }
 
-#[async_trait(?Send)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl CardReader for TestReader {
     async fn transmit(&mut self, apdu: &[u8]) -> Result<Vec<u8>> {
         self.sent_apdus.lock().unwrap().push(apdu.to_vec());
