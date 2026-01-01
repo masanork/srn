@@ -207,4 +207,43 @@ mod tests {
         assert_eq!(info.card_number, "AB12345678");
         assert_eq!(info.name, "在留 太郎");
     }
+
+    #[tokio::test]
+    async fn test_read_rc_info_large() {
+        let reader = TestReader::new();
+        let mut controller = ResidenceCardController::new(reader.clone());
+
+        // 1. Select EF (Success)
+        reader.push_response(&[0x90, 0x00]);
+
+        // 2. Read Binary Loop responses
+        // Block 1: 256 bytes (full chunk)
+        let mut block1 = vec![0xAA; 256];
+        block1.extend_from_slice(&[0x90, 0x00]);
+        reader.push_response(&block1);
+
+        // Block 2: 10 bytes (remaining)
+        let mut block2 = vec![0xBB; 10];
+        block2.extend_from_slice(&[0x90, 0x00]);
+        reader.push_response(&block2);
+
+        // Use read_file directly to verify raw bytes assembly
+        let res = controller.read_file(&file_ids::EF_RC_COMMON).await;
+        
+        assert!(res.is_ok());
+        let data = res.unwrap();
+        assert_eq!(data.len(), 266);
+        assert_eq!(data[0], 0xAA);
+        assert_eq!(data[255], 0xAA);
+        assert_eq!(data[256], 0xBB);
+
+        // Verify APDUs sent
+        let apdus = reader.sent_apdus.lock().unwrap();
+        assert_eq!(apdus.len(), 3); // Select, Read1, Read2
+        
+        // Assert Read2 offset (P1=01, P2=00 for 256)
+        assert_eq!(apdus[2][1], 0xB0); // INS_READ_BINARY
+        assert_eq!(apdus[2][2], 0x01); // P1
+        assert_eq!(apdus[2][3], 0x00); // P2
+    }
 }
