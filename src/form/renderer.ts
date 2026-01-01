@@ -39,6 +39,75 @@ export const Renderers: Record<string, any> = {
         return style;
     },
 
+    getSemanticAttrs(key: string, attrs: string | undefined): string {
+        if (!attrs) return '';
+        let semantic = '';
+
+        // Infer from key name patterns
+        const keyLower = key.toLowerCase();
+        
+        // Phone numbers
+        if (keyLower.includes('phone') || keyLower.includes('tel') || keyLower.includes('電話')) {
+            semantic += ' type="tel" inputmode="tel" autocomplete="tel"';
+        }
+        // Email
+        else if (keyLower.includes('email') || keyLower.includes('mail') || keyLower.includes('メール')) {
+            semantic += ' type="email" inputmode="email" autocomplete="email"';
+        }
+        // Postal code
+        else if (keyLower.includes('zip') || keyLower.includes('postal') || keyLower.includes('郵便')) {
+            semantic += ' inputmode="numeric" autocomplete="postal-code"';
+        }
+        // Name fields
+        else if (keyLower.includes('name') || keyLower.includes('氏名') || keyLower.includes('名前')) {
+            if (keyLower.includes('sei') || keyLower.includes('姓') || keyLower.includes('family')) {
+                semantic += ' autocomplete="family-name"';
+            } else if (keyLower.includes('mei') || keyLower.includes('名') || keyLower.includes('given')) {
+                semantic += ' autocomplete="given-name"';
+            } else {
+                semantic += ' autocomplete="name"';
+            }
+        }
+        // Organization
+        else if (keyLower.includes('company') || keyLower.includes('organization') || keyLower.includes('会社') || keyLower.includes('組織')) {
+            semantic += ' autocomplete="organization"';
+        }
+        // Address fields
+        else if (keyLower.includes('address') || keyLower.includes('住所')) {
+            if (keyLower.includes('1') || keyLower.includes('line1')) {
+                semantic += ' autocomplete="address-line1"';
+            } else if (keyLower.includes('2') || keyLower.includes('line2')) {
+                semantic += ' autocomplete="address-line2"';
+            } else {
+                semantic += ' autocomplete="street-address"';
+            }
+        }
+        // Prefecture/State
+        else if (keyLower.includes('pref') || keyLower.includes('都道府県') || keyLower.includes('state')) {
+            semantic += ' autocomplete="address-level1"';
+        }
+        // City
+        else if (keyLower.includes('city') || keyLower.includes('市区町村')) {
+            semantic += ' autocomplete="address-level2"';
+        }
+
+        // Explicit attribute overrides
+        const autocompleteMatch = (attrs || '').match(/autocomplete="([^"]+)"/) || (attrs || '').match(/autocomplete='([^']+)'/);
+        if (autocompleteMatch) {
+            // Replace inferred autocomplete with explicit one
+            semantic = semantic.replace(/autocomplete="[^"]*"/, '');
+            semantic += ` autocomplete="${autocompleteMatch[1]}"`;
+        }
+
+        const inputmodeMatch = (attrs || '').match(/inputmode="([^"]+)"/) || (attrs || '').match(/inputmode='([^']+)'/);
+        if (inputmodeMatch) {
+            semantic = semantic.replace(/inputmode="[^"]*"/, '');
+            semantic += ` inputmode="${inputmodeMatch[1]}"`;
+        }
+
+        return semantic;
+    },
+
     getExtraAttrs(attrs: string | undefined): string {
         if (!attrs) return '';
         let extra = '';
@@ -85,11 +154,12 @@ export const Renderers: Record<string, any> = {
         const contextMatch = (attrs || '').match(/context="([^"]+)"/) || (attrs || '').match(/context='([^']+)'/);
         const effectiveHint = hintMatch ? hintMatch[1] : (contextMatch ? contextMatch[1] : '');
         const hint = effectiveHint ? `<div class="form-hint">${this.formatHint(effectiveHint)}</div>` : '';
+        const semanticAttrs = this.getSemanticAttrs(key, attrs);
 
         return `
         <div class="form-row" style="${this.getStyle(attrs)}">
             <label class="form-label">${this.escapeHtml(label)}</label>
-            <input type="text" class="form-input" data-json-path="${key}" value="${this.escapeHtml(val)}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+            <input ${semanticAttrs ? semanticAttrs : 'type="text"'} class="form-input" data-json-path="${key}" value="${this.escapeHtml(val)}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
             ${hint}
         </div>`;
     },
@@ -106,7 +176,7 @@ export const Renderers: Record<string, any> = {
         return `
         <div class="form-row">
             <label class="form-label">${this.escapeHtml(label)}</label>
-            <input type="number" class="form-input" data-json-path="${key}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+            <input type="number" inputmode="decimal" class="form-input" data-json-path="${key}" placeholder="${this.escapeHtml(placeholder)}" style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
             ${hint}
         </div>`;
     },
@@ -274,8 +344,9 @@ export const Renderers: Record<string, any> = {
         const copyMatch = (attrs || '').match(/copy:([^\s)]+)/);
         const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : '';
         const bgStyle = copyMatch ? 'background-color: #ffffea;' : '';
+        const semanticAttrs = this.getSemanticAttrs(key, attrs);
 
-        return `<input type="text" class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>`;
+        return `<input ${semanticAttrs ? semanticAttrs : 'type="text"'} class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>`;
     },
 
     tableRow(cells: string[], isTemplate = false) {
