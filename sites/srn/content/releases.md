@@ -25,6 +25,14 @@ Implementation of the **Folio POC** (Proof of Concept) core functionality, enabl
     *   **Secure PIN Handling**: Removed all hardcoded PINs from the codebase.
     *   **Hardware Abstraction**: Standardized the `CardReader` trait to support multiple transports (PC/SC, WebUSB) with a unified interface for the cryptographic core.
 
+*   **Web/A LTV Architecture (Long-Term Validation)**:
+    *   **Layered Signature Model**: Implemented the Full 4-Layer Trust Architecture:
+        *   **L2 Payload**: Immutable Data with Stable Signatures (solving the "Rebuild Paradox").
+        *   **L3 Context**: Prunable Hash Chain (PHC) for lightweight audit trails.
+        *   **L4 Container**: Ephemeral signatures for visual integrity at deploy-time.
+    *   **Offline Verification**: Implemented **Trust Store Embedding**, allowing documents to carry their own issuer DID Documents and revocation data for verification in disconnected environments.
+    *   **Documentation Upgrade**: Major update to the [Web/A Whitepaper](./papers/web-a.html) (v2.0), formalizing the LTV architecture and offline verification model.
+
 ## v2.6.0 - Strategy Pivot: Signed Resource Network
 
 **Date:** 2025-12-31

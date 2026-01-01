@@ -467,6 +467,68 @@ flowchart TB
 
 ---
 
+
+---
+
+<div class="slide-section">
+<div class="slide-kicker">LTV Architecture</div>
+<h2>Long-Term Validation (LTV)</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>Rebuild Paradox Solved</strong>: How to fix a typo in 2030 without breaking the 2025 signature?</li>
+  <li><strong>Offline Verification</strong>: Trust anchors embedded in the file itself.</li>
+  <li><strong>Context Freezing</strong>: Self-contained semantic verification (no 404s).</li>
+</ul>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Layered Signatures: Solving the Rebuild Paradox</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="280" viewBox="0 0 760 280" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <rect x="24" y="24" width="712" height="232" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <!-- Layer 2 Payload -->
+  <rect x="60" y="60" width="280" height="100" rx="8" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="80" y="90" font-family="system-ui" font-size="14" font-weight="700" fill="#047857">L2: Verified Payload</text>
+  <text x="80" y="115" font-family="system-ui" font-size="12" fill="#065F46">User Data + Schema</text>
+  <text x="80" y="135" font-family="system-ui" font-size="12" fill="#065F46">Signed: 2025-01-01</text>
+  
+  <!-- Layer 4 Container -->
+  <rect x="420" y="60" width="280" height="100" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="440" y="90" font-family="system-ui" font-size="14" font-weight="700" fill="#4338CA">L4: Visual Container</text>
+  <text x="440" y="115" font-family="system-ui" font-size="12" fill="#334155">HTML/CSS/Fonts</text>
+  <text x="440" y="135" font-family="system-ui" font-size="12" fill="#334155">Signed: 2030-05-20 (Rebuild)</text>
+
+  <!-- Arrow -->
+  <path d="M340 110H420" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-tech)"/>
+  <defs>
+    <marker id="arrow-tech" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+
+  <rect x="60" y="180" width="640" height="40" rx="4" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="380" y="205" font-family="system-ui" font-size="12" font-weight="700" fill="#92400E" text-anchor="middle">LTV Benefit: L2 Timestamp is preserved even if L4 is updated.</text>
+</svg>
+</div>
+</div>
+
+---
+
+<div class="slide-card">
+<h2>Offline Verification: Trust Store Embedding</h2>
+<ul>
+  <li><strong>Problem</strong>: Issuer's website (DID) might be offline in 50 years.</li>
+  <li><strong>Solution</strong>: Embed the <strong>Issuer's DID Document</strong> and <strong>CRLs</strong> directly into the HTML.</li>
+  <li><strong>Result</strong>: The file verifies itself without network access.</li>
+</ul>
+</div>
+
+---
+
 <div class="slide-section">
 <div class="slide-kicker">L3 Outlook</div>
 <h2>Layer 3: Web/A Folio</h2>
