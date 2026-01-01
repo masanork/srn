@@ -112,20 +112,20 @@ To uniformly handle static documents, interactive forms, and wide-area distribut
     *   **Content**: HTML templates, JSON-LD schemas, and validation logic.
     *   **Signer**: **Issuer**. Guarantees the "vessel of defined facts."
 
-2.  **Layer 2: The Data**
-    *   **Role**: Record of concrete facts.
+2.  **Layer 2: The Data (Payload)**
+    *   **Role**: Record of concrete facts (Immutable Core).
     *   **Content**: User answers, inputs, and agreed-upon facts. Can be encrypted via L2E (Layer 2 Encryption).
-    *   **Signer**: **User/Subject**. Includes a hash of Layer 1 to bind the data to the specific template.
+    *   **Signature**: **Payload Signature** (Stable). Signed once at creation. This signature remains valid and timestamped even if the HTML container is completely rebuilt 10 years later.
 
-3.  **Layer 3: The Context (New)**
-    *   **Role**: Attribution for distribution and management.
-    *   **Content**: Transport Tags, expiration dates, Replay-Guard Nonces, and policy references.
-    *   **特性**: Disconnects metadata from Layer 2, allowing intermediaries (Web/A Post) to route or validate without decrypting the payload.
+3.  **Layer 3: The Context (Chain of Custody)**
+    *   **Role**: Audit trail and management history.
+    *   **Content**: **Prunable Hash Chain (PHC)** containing timestamps, transport tags, and archival evidence (CRLs/OCSP).
+    *   **Signature**: **Context Signature** (Cumulative). A linked list of signatures that proves "who held this document and when," ensuring no history is silently deleted.
 
-4.  **Layer 4: The Presentation**
+4.  **Layer 4: The Presentation (Container)**
     *   **Role**: Visual expression and user experience.
-    *   **Content**: CSS, fonts, and minimal rendering logic (JavaScript).
-    *   **特性**: Loosely coupled from the signed data/context layers, allowing UI updates for future devices without compromising original integrity.
+    *   **Content**: HTML structure, CSS, fonts, and minimal rendering logic (JavaScript).
+    *   **Signature**: **Container Signature** (Ephemeral). Regenerated upon every rebuild/deployment. It proves "Current View Integrity" but does not affect the validity of the underlying Layer 2 data.
 
 ### 6.2. Human-Machine Parity (HMP)
 Generation tools (such as Sorane) are responsible for ensuring that JSON-LD and HTML do not diverge:
@@ -196,10 +196,23 @@ To enhance third-party verifiability, Web/A encourages the use of semantic attri
 ### 6.3. Trust Anchor (DID Resolution)
 Verifiers resolve the issuer's identity via the Decentralized Identifier (**DID**) included in the JSON-LD. This leverages the existing "Web Chain of Trust" rooted in DNS and WebTrust-certified TLS certificates, providing a more agile and resilient trust model that is not tied to the rigid policies of specific certificate authorities (CAs).
 
-### 6.4. Proof of Existence: Time Stamping Authority (TSA)
-A signature from the issuer proves *who* issued the document, but it doesn't objectively prove *when* it was issued relative to the rest of the world.
-- **RFC 3161 Compliance**: Web/A encourages including a time-stamp token from a trusted Time Stamping Authority (TSA) within the provenance manifest.
-- **Long-Term Validation (LTV)**: By tying the document to a public TSA, verifiers can confirm that the signature was valid at the time of issuance, even if the issuer's signing key is later revoked or the algorithm becomes weak.
+### 6.4. Long-Term Validation (LTV) Architecture
+A signature from the issuer proves *who* issued the document, but standard web signatures often fail the test of time due to "Link Rot" or "Context Rot." Web/A implements a robust LTV strategy:
+
+#### 6.4.1. Solving the "Rebuild Paradox"
+In traditional static site generators, rebuilding the site (e.g., to fix a typo in the footer) regenerates all HTML files, invalidating their original signatures and timestamps.
+**Web/A solves this via Layered Signatures:**
+*   **Payload Signature (L2)**: Signed once at creation. This signature block is carried over byte-for-byte into new HTML builds.
+*   **Container Signature (L4)**: A fresh signature covering the new HTML structure, binding the specific presentation to the immutable payload.
+This allows a document issued in 2025 to retain its "2025 Timestamp" even when displayed in a "2030 HTML Template."
+
+#### 6.4.2. Offline Verification (Trust Store Embedding)
+To verify a document 50 years later, the original issuer's website (DID) might be gone.
+*   **Embedded Trust Store**: Web/A injects the issuer's DID Document (and future CRLs/OCSP responses) directly into the HTML file as a `<script>` tag.
+*   **Self-Contained Trust**: The file contains all necessary cryptographic keys and revocation data to verify itself offline, without querying dead servers.
+
+#### 6.4.3. Context Freezing
+Web/A uses **JCS (JSON Canonicalization Scheme, RFC 8785)**, which does not require fetching external `@context` files from the web during verification. This eliminates "Context Rot" (verification failure due to 404 on schema URLs).
 
 ### 6.5. Confidentiality: Layer 2 Encryption (L2E)
 While Layer 2 handles user authenticity, **Layer 2 Encryption (L2E)** ensures confidentiality for sensitive submissions.

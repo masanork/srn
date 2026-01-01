@@ -16,6 +16,7 @@ export class IdentityManager {
     private dataDir: string;
     private distDir: string;
     private signatureStore: Record<string, any> = {};
+    private contextStore: Record<string, any[]> = {};
 
     constructor(siteDomain: string, sitePath: string, dataDir: string, distDir: string) {
         this.siteDid = `did:web:${siteDomain}${sitePath.replace(/\//g, ':')}`;
@@ -47,6 +48,11 @@ export class IdentityManager {
             try { this.signatureStore = await fs.readJson(storePath); } catch (e) { console.warn("Failed to load signature store", e); }
         }
 
+        const contextStorePath = path.join(this.dataDir, 'context-store.json');
+        if (await fs.pathExists(contextStorePath)) {
+            try { this.contextStore = await fs.readJson(contextStorePath); } catch (e) { console.warn("Failed to load context store", e); }
+        }
+
         await this.updateKeyHistory();
         await this.generateDidDoc();
     }
@@ -54,6 +60,9 @@ export class IdentityManager {
     private async saveStore() {
         const storePath = path.join(this.dataDir, 'signature-store.json');
         await fs.writeJson(storePath, this.signatureStore, { spaces: 2 });
+
+        const contextStorePath = path.join(this.dataDir, 'context-store.json');
+        await fs.writeJson(contextStorePath, this.contextStore, { spaces: 2 });
     }
 
     private async updateKeyHistory() {
@@ -104,8 +113,27 @@ export class IdentityManager {
         await fs.writeJson(path.join(this.distDir, 'did.json'), didDoc, { spaces: 2 });
     }
 
+    public getContextChain(vc: any): any[] | null {
+        // Reverse lookup: Find chain by matching VC signature with stored VCs.
+        if (!vc || !vc.proof || !vc.proof[0]) return null;
+        const targetSig = vc.proof[0].proofValue;
+
+        for (const hash in this.signatureStore) {
+            const storedVc = this.signatureStore[hash];
+            if (storedVc && storedVc.proof && storedVc.proof[0] && storedVc.proof[0].proofValue === targetSig) {
+                return this.contextStore[hash] || null;
+            }
+        }
+        return null;
+    }
+
     public getDidDocument() {
         return this.lastGeneratedDidDoc;
+    }
+
+    public getPayloadHash(payload: any): string {
+        const canon = canonicalize(payload);
+        return crypto.createHash('sha256').update(canon || '').digest('hex');
     }
 
     async signDocument(payload: any): Promise<any> {
@@ -124,8 +152,28 @@ export class IdentityManager {
 
         const vc = await createHybridVC(payload, this.currentKeys, this.siteDid, this.buildId);
 
+        // LTV Phase 3: Create Genesis Context Link
+        // For now, we sign it with the same key as the VC, but logically this is the "First Custodian".
+        // In real LTV, this would reference the L2 VC's signature hash, but for simplicity we link to Payload Hash.
+        const genesisLink = {
+            type: "WebAContextLink",
+            prevHash: "genesis",
+            targetHash: hash,
+            signer: this.siteDid,
+            timestamp: new Date().toISOString(),
+            proof: {
+                type: "DataIntegrityProof",
+                cryptosuite: "eddsa-jcs-2022",
+                verificationMethod: `${this.siteDid}#${this.buildId}-ed25519`,
+                // Note: We are not actually computing a cryptographic signature on this link yet in this PoC.
+                // In production, we would call ed25519Sign(canonicalize(link_without_proof)).
+                proofValue: "mock_signature_for_poc"
+            }
+        };
+
         // Save to store
         this.signatureStore[hash] = vc;
+        this.contextStore[hash] = [genesisLink];
         await this.saveStore();
 
         return vc;

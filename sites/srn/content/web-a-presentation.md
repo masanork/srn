@@ -126,6 +126,17 @@ ai_generated: true
 
 ---
 
+
+---
+
+## Strength 3: LTV Guarantee
+
+- **Rebuild-Safe**: Fix typos in 2030 without breaking 2025 signatures.
+- **Offline**: Self-contained trust anchors (embedded DID).
+- **50-Year Proof**: Verify independently even if the issuer vanishes.
+
+---
+
 ## Web/A Form
 
 - Low-frequency, high-value workflows
