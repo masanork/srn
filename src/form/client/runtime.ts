@@ -96,7 +96,7 @@ export function initRuntime() {
                     }
                     if (cleanVal.length === 7) {
                         const addr = postal.lookup(cleanVal);
-                        if (addr) fillAddress(input, addr, input.closest('table') || input.closest('form') || document.body);
+                        if (addr) fillAddress(input, addr, input.closest('tr') || input.closest('.dynamic-row') || input.closest('.address-group') || input.closest('table') || input.closest('form') || document.body);
                     }
                 } else if (isAddrField) {
                     if (datalist && val.length >= 2) {
@@ -106,7 +106,7 @@ export function initRuntime() {
                     if (val.length >= 5) {
                         const candidates = postal.suggestByAddress(val, 5);
                         const exactMatch = candidates.find((c: PostalRecord) => `${c.pref}${c.city}${c.town}` === val);
-                        if (exactMatch) fillAddress(input, exactMatch, input.closest('table') || input.closest('form') || document.body, true);
+                        if (exactMatch) fillAddress(input, exactMatch, input.closest('tr') || input.closest('.dynamic-row') || input.closest('.address-group') || input.closest('table') || input.closest('form') || document.body, true);
                     }
                 }
             }
@@ -120,7 +120,7 @@ export function initRuntime() {
 
         // C. Data-Copy & Recalculation
         if (key) {
-            const scope = input.closest('tr') || document;
+            const scope = input.closest('tr') || input.closest('.dynamic-row') || input.closest('.group') || document;
             scope.querySelectorAll(`[data-copy-from="${key}"]`).forEach((dest: any) => {
                 if (!dest.dataset.dirty && dest.value !== input.value) {
                     dest.value = input.value;
