@@ -108,11 +108,10 @@ Similar to PDF/A-1a or 1b, Web/A defines levels of technical rigor:
 ### 6.1. The 4-Layer Trust Architecture
 To uniformly handle static documents, interactive forms, and wide-area distribution protocols, Web/A defines a hierarchical **4-Layer Trust Architecture**.
 
-1.  **Layer 1: The Template**
-    *   **Role**: Definition of the document structure, questions, and semantics.
-    *   **Content**: HTML templates, JSON-LD schemas, and validation logic.
-    *   **Signer**: **Issuer**. Guarantees the "vessel of defined facts."
-
+1.  **Layer 1: The Schema (L1)**
+    *   **Role**: Defines document type, structure, and semantics.
+    *   **Content**: JSON-LD Context, validation logic, and structural definitions. Operates stably under backward compatibility principles.
+    *   **Signer**: **Issuer**. Guarantees the "Type definition" of the fact.
 2.  **Layer 2: The Data (Payload)**
     *   **Role**: Record of concrete facts (Immutable Core).
     *   **Content**: User answers, inputs, and agreed-upon facts. Can be encrypted via L2E (Layer 2 Encryption).
@@ -123,10 +122,10 @@ To uniformly handle static documents, interactive forms, and wide-area distribut
     *   **Content**: **Prunable Hash Chain (PHC)** containing timestamps, transport tags, and archival evidence (CRLs/OCSP).
     *   **Signature**: **Context Signature** (Cumulative). A linked list of signatures that proves "who held this document and when," ensuring no history is silently deleted.
 
-4.  **Layer 4: The Presentation (Container)**
-    *   **Role**: Visual expression and user experience.
-    *   **Content**: HTML structure, CSS, fonts, and minimal rendering logic (JavaScript).
-    *   **Signature**: **Container Signature** (Ephemeral). Regenerated upon every rebuild/deployment. It proves "Current View Integrity" but does not affect the validity of the underlying Layer 2 data.
+4.  **Layer 4: The Presentation (L4)**
+    *   **Role**: Visual representation and current authenticity.
+    *   **Content**: **HTML Templates**, CSS, Fonts, and the container wrapping all layers up to L3.
+    *   **Nature**: **Container Signature (Ephemeral)**. Regenerated upon each rebuild. Proves the validity of the current "View" (template implementation) without altering the core L1/L2 structure.
 
 ### 6.2. Human-Machine Parity (HMP)
 Generation tools (such as Sorane) are responsible for ensuring that JSON-LD and HTML do not diverge:
@@ -201,11 +200,16 @@ Verifiers resolve the issuer's identity via the Decentralized Identifier (**DID*
 A signature from the issuer proves *who* issued the document, but standard web signatures often fail the test of time due to "Link Rot" or "Context Rot." Web/A implements a robust LTV strategy:
 
 #### 6.4.1. Solving the "Rebuild Paradox"
-In traditional static site generators, rebuilding the site (e.g., to fix a typo in the footer) regenerates all HTML files, invalidating their original signatures and timestamps.
-**Web/A solves this via Layered Signatures:**
-*   **Payload Signature (L2)**: Signed once at creation. This signature block is carried over byte-for-byte into new HTML builds.
-*   **Container Signature (L4)**: A fresh signature covering the new HTML structure, binding the specific presentation to the immutable payload.
-This allows a document issued in 2025 to retain its "2025 Timestamp" even when displayed in a "2030 HTML Template."
+In website operations, HTML is frequently rebuilt to update common footers or fix browser compatibility issues. With traditional digital signatures, if even 1 bit of HTML changes, all signatures become invalid.
+**Web/A solves this using "Layered Signatures" and an "Append-Only L3 Structure":**
+
+While validation mechanisms exist for all 4 layers, their update cycles differ:
+
+*   **L1 (Schema) & L2 (Payload)**: **Immutable**. Fixed at issuance and preserved byte-for-byte (Schema updates are backward compatible).
+*   **L3 (Context)**: **Append-Only**. Using a Prunable Hash Chain, build and distribution history is appended like a blockchain. "Presentation Update" is recorded as an event here.
+*   **L4 (Presentation)**: **Mutable**. Generated upon each rebuild, creating a new container signature that wraps the current L1+L2+L3 state with the latest HTML/CSS implementation.
+
+This allows preserving the "fact of issuance in 2025 (L2)" and the "history (L3)" while enabling "display in 2030's latest design (L4)".
 
 #### 6.4.2. Offline Verification (Trust Store Embedding)
 To verify a document 50 years later, the original issuer's website (DID) might be gone.
