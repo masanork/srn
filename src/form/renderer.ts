@@ -59,6 +59,17 @@ export const Renderers: Record<string, any> = {
         const propertyMatch = attrs.match(/property="([^"]+)"/) || attrs.match(/property='([^']+)'/);
         if (propertyMatch) extra += ` data-property="${this.escapeHtml(propertyMatch[1])}"`;
 
+        const showIfMatch = attrs.match(/show_if="([^"]+)"/) || attrs.match(/show_if='([^']+)'/);
+        if (showIfMatch) extra += ` data-show-if="${this.escapeHtml(showIfMatch[1])}"`;
+
+        // Pass through standard validation attributes
+        const validationAttrs = ['min', 'max', 'step', 'pattern', 'required', 'readonly', 'disabled', 'minlength', 'maxlength'];
+        validationAttrs.forEach(attr => {
+            const match = attrs.match(new RegExp(`${attr}="([^"]+)"`)) || attrs.match(new RegExp(`${attr}='([^']+)'`)) || attrs.match(new RegExp(`${attr}=([^\\s\\)]+)`));
+            if (match) extra += ` ${attr}="${this.escapeHtml(match[1])}"`;
+            else if (new RegExp(`\\b${attr}\\b`).test(attrs)) extra += ` ${attr}`;
+        });
+
         return extra;
     },
 

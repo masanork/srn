@@ -210,9 +210,12 @@ export function initRuntime() {
         }
 
         calc.recalculate();
+        ui.updateVisibility();
         data.updateJsonLd();
         clearTimeout(tm); tm = setTimeout(() => data.saveToLS(), 1000);
     });
 
     console.log("Web/A Runtime Ready.");
+    // Initial visibility check
+    ui.updateVisibility();
 }
