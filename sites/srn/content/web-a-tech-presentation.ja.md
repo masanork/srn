@@ -473,7 +473,7 @@ flowchart TB
 <h2>長期検証 (Long-Term Validation)</h2>
 <div class="slide-divider"></div>
 <ul>
-  <li><strong>Rebuild Paradox の解決</strong>：2030年に2025年の署名を無効化せずに誤字修正・デザイン更新を行うには？</li>
+  <li><strong>Rebuild Paradox の解決</strong>：2030年に2025年の署名を無効化せずに、ブラウザ仕様に合わせた表示更新を行うには？</li>
   <li><strong>オフライン検証</strong>：トラストアンカーをファイル自身に埋め込む。</li>
   <li><strong>Context Freezing</strong>：意味論の検証を自己完結化し、404エラーを防ぐ。</li>
 </ul>
