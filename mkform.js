@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2026-01-01T06:29:57Z';
+window.__WEBA_BUILD_TIME__='2026-01-01T06:39:44Z';
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -341,6 +341,12 @@ var Renderers = {
       if (valMatchSimple)
         extra += ` value="${this.escapeHtml(valMatchSimple[1])}"`;
     }
+    const contextMatch = attrs.match(/context="([^"]+)"/) || attrs.match(/context='([^']+)'/);
+    if (contextMatch)
+      extra += ` data-context="${this.escapeHtml(contextMatch[1])}"`;
+    const propertyMatch = attrs.match(/property="([^"]+)"/) || attrs.match(/property='([^']+)'/);
+    if (propertyMatch)
+      extra += ` data-property="${this.escapeHtml(propertyMatch[1])}"`;
     return extra;
   },
   text: function(key, label, attrs) {
@@ -349,7 +355,9 @@ var Renderers = {
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const val = valMatch ? valMatch[1] : "";
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
-    const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : "";
+    const contextMatch = (attrs || "").match(/context="([^"]+)"/) || (attrs || "").match(/context='([^']+)'/);
+    const effectiveHint = hintMatch ? hintMatch[1] : contextMatch ? contextMatch[1] : "";
+    const hint = effectiveHint ? `<div class="form-hint">${this.formatHint(effectiveHint)}</div>` : "";
     return `
         <div class="form-row" style="${this.getStyle(attrs)}">
             <label class="form-label">${this.escapeHtml(label)}</label>
@@ -361,7 +369,9 @@ var Renderers = {
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
-    const hint = hintMatch ? `<div class="form-row"><div class="form-hint">${this.formatHint(hintMatch[1])}</div></div>` : "";
+    const contextMatch = (attrs || "").match(/context="([^"]+)"/) || (attrs || "").match(/context='([^']+)'/);
+    const effectiveHint = hintMatch ? hintMatch[1] : contextMatch ? contextMatch[1] : "";
+    const hint = effectiveHint ? `<div class="form-row"><div class="form-hint">${this.formatHint(effectiveHint)}</div></div>` : "";
     return `
         <div class="form-row">
             <label class="form-label">${this.escapeHtml(label)}</label>
@@ -380,7 +390,9 @@ var Renderers = {
     const placeholderMatch = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
     const hintMatch = (attrs || "").match(/hint="([^"]+)"/) || (attrs || "").match(/hint='([^']+)'/);
     const placeholder = placeholderMatch ? placeholderMatch[1] : "";
-    const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : "";
+    const contextMatch = (attrs || "").match(/context="([^"]+)"/) || (attrs || "").match(/context='([^']+)'/);
+    const effectiveHint = hintMatch ? hintMatch[1] : contextMatch ? contextMatch[1] : "";
+    const hint = effectiveHint ? `<div class="form-hint">${this.formatHint(effectiveHint)}</div>` : "";
     const valMatch = (attrs || "").match(/(?:val|value)="([^"]+)"/) || (attrs || "").match(/(?:val|value)='([^']+)'/) || (attrs || "").match(/(?:val|value)=([^ ]+)/);
     const val = valMatch ? valMatch[1] : "";
     return `
@@ -3263,7 +3275,9 @@ function parseMarkdown(text) {
         const cells = t.split("|").slice(1, -1).map((c) => c.trim());
         const isSep = cells.every((c) => c.match(/^-+$/));
         if (!isSep && scanMasterKey && masterData[scanMasterKey]) {
-          masterData[scanMasterKey].push(cells);
+          const data = masterData[scanMasterKey];
+          if (data)
+            data.push(cells);
         }
       } else {
         if (t.length > 0)
@@ -3289,12 +3303,31 @@ function parseMarkdown(text) {
     mainContentHtml += str2;
   };
   const processInlineTags = (text2) => {
-    return text2.replace(/\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/g, (match, type2, key, attrs) => {
-      const label = (attrs || "").match(/placeholder="([^"]+)"/) || (attrs || "").match(/placeholder='([^']+)'/);
-      const cleanLabel = label ? label[1] : key;
-      jsonStructure.fields.push({ key, label: cleanLabel, type: type2 || "text" });
-      return Renderers.renderInput(type2 || "text", key, attrs || "");
-    });
+    const tagRegex = /\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/g;
+    let lastIndex = 0;
+    let result = "";
+    let match;
+    while ((match = tagRegex.exec(text2)) !== null) {
+      result += Renderers.escapeHtml(text2.substring(lastIndex, match.index));
+      const [fullMatch, type2, key, attrs] = match;
+      const attrStr = attrs || "";
+      const typeStr = type2 || "text";
+      const labelMatch = attrStr.match(/placeholder="([^"]+)"/) || attrStr.match(/placeholder='([^']+)'/);
+      const cleanLabel = labelMatch ? labelMatch[1] : key;
+      const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
+      const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
+      jsonStructure.fields.push({
+        key,
+        label: cleanLabel,
+        type: typeStr,
+        context: contextMatch ? contextMatch[1] : undefined,
+        property: propertyMatch ? propertyMatch[1] : undefined
+      });
+      result += Renderers.renderInput(typeStr, key, attrStr);
+      lastIndex = tagRegex.lastIndex;
+    }
+    result += Renderers.escapeHtml(text2.substring(lastIndex));
+    return result;
   };
   lines.forEach((line) => {
     const trimmed = line.trim();
@@ -3357,7 +3390,7 @@ function parseMarkdown(text) {
               const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
               if (match) {
                 let [_, type2, keyPart, attrsParen, attrsColon] = match;
-                let key = keyPart.trim();
+                let key = (keyPart || "").trim();
                 let extraAttrs = attrsParen || attrsColon || "";
                 if (key.includes(" ")) {
                   const parts = key.split(/\s+/);
@@ -3366,7 +3399,10 @@ function parseMarkdown(text) {
                 }
                 const placeholderMatch = extraAttrs.match(/placeholder="([^"]+)"/) || extraAttrs.match(/placeholder='([^']+)'/);
                 const label = placeholderMatch ? placeholderMatch[1] : key;
-                jsonStructure.tables[tableKey].push({ key, label, type: type2 || "text" });
+                const tableData = jsonStructure.tables[tableKey];
+                if (tableData) {
+                  tableData.push({ key, label, type: type2 || "text" });
+                }
               }
             });
             let trHtml = Renderers.tableRow(cells, true);
@@ -3431,26 +3467,35 @@ function parseMarkdown(text) {
         const [_, type2, key, attrs, label] = match;
         currentRadioGroup = null;
         const cleanLabel = (label || "").trim();
-        jsonStructure.fields.push({ key, label: cleanLabel, type: type2 });
+        const attrStr = attrs || "";
+        const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
+        const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
+        jsonStructure.fields.push({
+          key,
+          label: cleanLabel,
+          type: type2 || "text",
+          context: contextMatch ? contextMatch[1] : undefined,
+          property: propertyMatch ? propertyMatch[1] : undefined
+        });
         if (type2 === "radio") {
-          currentRadioGroup = { key, label: cleanLabel, attrs: attrs || "" };
-          appendHtml(Renderers.radioStart(key, cleanLabel, attrs));
+          currentRadioGroup = { key, label: cleanLabel, attrs: attrStr };
+          appendHtml(Renderers.radioStart(key, cleanLabel, attrStr));
         } else if (type2 === "text")
-          appendHtml(Renderers.text(key, cleanLabel, attrs));
+          appendHtml(Renderers.text(key, cleanLabel, attrStr));
         else if (type2 === "number")
-          appendHtml(Renderers.number(key, cleanLabel, attrs));
+          appendHtml(Renderers.number(key, cleanLabel, attrStr));
         else if (type2 === "date")
-          appendHtml(Renderers.date(key, cleanLabel, attrs));
+          appendHtml(Renderers.date(key, cleanLabel, attrStr));
         else if (type2 === "textarea")
-          appendHtml(Renderers.textarea(key, cleanLabel, attrs));
+          appendHtml(Renderers.textarea(key, cleanLabel, attrStr));
         else if (type2 === "search")
-          appendHtml(Renderers.search(key, cleanLabel, attrs));
+          appendHtml(Renderers.search(key, cleanLabel, attrStr));
         else if (type2 === "calc")
-          appendHtml(Renderers.calc(key, cleanLabel, attrs));
+          appendHtml(Renderers.calc(key, cleanLabel, attrStr));
         else if (type2 === "datalist")
-          appendHtml(Renderers.renderInput(type2, key, attrs));
+          appendHtml(Renderers.renderInput(type2, key, attrStr));
         else if (type2 && Renderers[type2]) {
-          appendHtml(Renderers[type2](key, cleanLabel, attrs));
+          appendHtml(Renderers[type2](key, cleanLabel, attrStr));
         } else {
           console.warn(`Unknown type: ${type2}`, Object.keys(Renderers));
           appendHtml(`<p style="color:red">Unknown type: ${type2}</p>`);
@@ -3472,7 +3517,7 @@ function parseMarkdown(text) {
         appendHtml("</div></div>");
         currentRadioGroup = null;
       }
-      appendHtml(`<p>${Renderers.escapeHtml(processInlineTags(trimmed))}</p>`);
+      appendHtml(`<p>${processInlineTags(trimmed)}</p>`);
     } else {
       if (currentRadioGroup) {
         appendHtml("</div></div>");

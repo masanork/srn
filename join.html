@@ -53,7 +53,7 @@ body {
     <main>
         
         <div class="weba-form-container">
-            <p>This Folio instance operates in **Secure Mode**. To exchange messages, your DID must be explicitly allowed by the administrator.</p><p>Please submit your access request below. You will use a temporary **Guest Passkey** to sign this request securely.</p><h3>Applicant Information</h3><p>**Display Name**:</p><input type="text" id="name" class="weba-input" placeholder="e.g. Alice Smith" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px;"><p>**Your DID**:</p><div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;"><p>Generate this on your machine using &lt;code&gt;folio init&lt;/code&gt; or &lt;code&gt;folio did create&lt;/code&gt;.</p></div><input type="text" id="did" class="weba-input" placeholder="did:key:z..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace;"><p>**Reason / Introduction**:</p><textarea id="reason" class="weba-input" placeholder="e.g. I am a new team member needing read/write access." style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; min-height: 80px;"></textarea><h3>Submission</h3><p>**Administrator DID (Host)**:</p><input type="text" id="recipient" class="weba-input" value="did:web:srn.example" readonly style="width: 100%; background: #f5f5f5; border: none; color: #666; font-family: monospace; font-size: 0.9em; margin-bottom: 10px;"><div style="margin-top: 1.5rem; padding: 1.5rem; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;"><p style="margin-top: 0; font-size: 0.9rem; color: #0369a1;"><strong>🔒 Security Check:</strong> We will create a temporary Guest ID on this device using your biometric passkey to sign this request.</p><button id="submit-btn" class="weba-btn" style="background: #0284c7; color: white; padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center;"><span>⚡️</span> Sign & Submit Request</button><div id="status-msg" style="margin-top: 15px; font-size: 0.9rem; text-align: center; min-height: 1.2em;"></div></div><script><p>document.getElementById(&#039;submit-btn&#039;).addEventListener(&#039;click&#039;, async () =&gt; {</p><p>const btn = document.getElementById(&#039;submit-btn&#039;);</p><p>const status = document.getElementById(&#039;status-msg&#039;);</p><p>// Validation</p><p>const name = document.getElementById(&#039;name&#039;).value.trim();</p><p>const candidateDid = document.getElementById(&#039;did&#039;).value.trim();</p><p>const reason = document.getElementById(&#039;reason&#039;).value.trim();</p><p>if (!name || !candidateDid) {</p><p>alert(&quot;Please enter your Name and DID.&quot;);</p><p>return;</p><p>}</p><p>if (!candidateDid.startsWith(&quot;did:&quot;)) {</p><p>alert(&quot;Invalid DID format. It must start with &#039;did:&#039;.&quot;);</p><p>return;</p><p>}</p><p>try {</p><p>btn.disabled = true;</p><p>const originalText = btn.innerHTML;</p><p>btn.innerHTML = &quot;&lt;span&gt;🔐&lt;/span&gt; Verifying Passkey...&quot;;</p><p>status.innerText = &quot;Please confirm with TouchID / FaceID...&quot;;</p><p>status.style.color = &quot;#666&quot;;</p><p>const recipient = document.getElementById(&#039;recipient&#039;).value;</p><p>const formData = {</p><p>type: &quot;AccountRequest&quot;,</p><p>name,</p><p>candidateDid,</p><p>reason,</p><p>timestamp: new Date().toISOString()</p><p>};</p><p>// Submit using Guest DID</p><p>const result = await window.submitFormWithGuestDid(formData, false, recipient);</p><p>status.style.color = &quot;#059669&quot;;</p><p>status.innerHTML = `</p><div style="padding: 10px; background: #dcfce7; border-radius: 6px; border: 1px solid #86efac;"><strong>✓ Request Sent!</strong><br><span style="font-size: 0.85em">Reference ID: <code>${result.id}</code></span><br><span style="font-size: 0.85em">Guest Signer: <code>${result.senderDid.substring(0, 20)}...</code></span></div><p style="margin-top:10px; color: #333;">The administrator has been notified. Please wait for approval.</p><p>`;</p><p>btn.innerHTML = &quot;✓ Request Submitted&quot;;</p><p>btn.style.background = &quot;#059669&quot;;</p><p>} catch (e) {</p><p>console.error(e);</p><p>status.style.color = &quot;#dc2626&quot;;</p><p>status.innerText = &quot;Error: &quot; + e.message;</p><p>btn.disabled = false;</p><p>btn.innerHTML = &quot;&lt;span&gt;⚠️&lt;/span&gt; Try Again&quot;;</p><p>}</p><p>});</p></script><div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <p>This Folio instance operates in **Secure Mode**. To exchange messages, your DID must be explicitly allowed by the administrator.</p><p>Please submit your access request below. You will use a temporary **Guest Passkey** to sign this request securely.</p><h3>Applicant Information</h3><p>**Display Name**:</p>&lt;input type=&quot;text&quot; id=&quot;name&quot; class=&quot;weba-input&quot; placeholder=&quot;e.g. Alice Smith&quot; style=&quot;width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px;&quot;&gt;<p>**Your DID**:</p>&lt;div style=&quot;font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;&quot;&gt;<p>Generate this on your machine using &lt;code&gt;folio init&lt;/code&gt; or &lt;code&gt;folio did create&lt;/code&gt;.</p>&lt;/div&gt;&lt;input type=&quot;text&quot; id=&quot;did&quot; class=&quot;weba-input&quot; placeholder=&quot;did:key:z...&quot; style=&quot;width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace;&quot;&gt;<p>**Reason / Introduction**:</p>&lt;textarea id=&quot;reason&quot; class=&quot;weba-input&quot; placeholder=&quot;e.g. I am a new team member needing read/write access.&quot; style=&quot;width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; min-height: 80px;&quot;&gt;&lt;/textarea&gt;<h3>Submission</h3><p>**Administrator DID (Host)**:</p>&lt;input type=&quot;text&quot; id=&quot;recipient&quot; class=&quot;weba-input&quot; value=&quot;did:web:srn.example&quot; readonly style=&quot;width: 100%; background: #f5f5f5; border: none; color: #666; font-family: monospace; font-size: 0.9em; margin-bottom: 10px;&quot;&gt;&lt;div style=&quot;margin-top: 1.5rem; padding: 1.5rem; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;&quot;&gt;&lt;p style=&quot;margin-top: 0; font-size: 0.9rem; color: #0369a1;&quot;&gt;&lt;strong&gt;🔒 Security Check:&lt;/strong&gt; We will create a temporary Guest ID on this device using your biometric passkey to sign this request.&lt;/p&gt;&lt;button id=&quot;submit-btn&quot; class=&quot;weba-btn&quot; style=&quot;background: #0284c7; color: white; padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center;&quot;&gt;&lt;span&gt;⚡️&lt;/span&gt; Sign &amp; Submit Request&lt;/button&gt;&lt;div id=&quot;status-msg&quot; style=&quot;margin-top: 15px; font-size: 0.9rem; text-align: center; min-height: 1.2em;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;script&gt;<p>document.getElementById(&#039;submit-btn&#039;).addEventListener(&#039;click&#039;, async () =&gt; {</p><p>const btn = document.getElementById(&#039;submit-btn&#039;);</p><p>const status = document.getElementById(&#039;status-msg&#039;);</p><p>// Validation</p><p>const name = document.getElementById(&#039;name&#039;).value.trim();</p><p>const candidateDid = document.getElementById(&#039;did&#039;).value.trim();</p><p>const reason = document.getElementById(&#039;reason&#039;).value.trim();</p><p>if (!name || !candidateDid) {</p><p>alert(&quot;Please enter your Name and DID.&quot;);</p><p>return;</p><p>}</p><p>if (!candidateDid.startsWith(&quot;did:&quot;)) {</p><p>alert(&quot;Invalid DID format. It must start with &#039;did:&#039;.&quot;);</p><p>return;</p><p>}</p><p>try {</p><p>btn.disabled = true;</p><p>const originalText = btn.innerHTML;</p><p>btn.innerHTML = &quot;&lt;span&gt;🔐&lt;/span&gt; Verifying Passkey...&quot;;</p><p>status.innerText = &quot;Please confirm with TouchID / FaceID...&quot;;</p><p>status.style.color = &quot;#666&quot;;</p><p>const recipient = document.getElementById(&#039;recipient&#039;).value;</p><p>const formData = {</p><p>type: &quot;AccountRequest&quot;,</p><p>name,</p><p>candidateDid,</p><p>reason,</p><p>timestamp: new Date().toISOString()</p><p>};</p><p>// Submit using Guest DID</p><p>const result = await window.submitFormWithGuestDid(formData, false, recipient);</p><p>status.style.color = &quot;#059669&quot;;</p><p>status.innerHTML = `</p>&lt;div style=&quot;padding: 10px; background: #dcfce7; border-radius: 6px; border: 1px solid #86efac;&quot;&gt;&lt;strong&gt;✓ Request Sent!&lt;/strong&gt;&lt;br&gt;&lt;span style=&quot;font-size: 0.85em&quot;&gt;Reference ID: &lt;code&gt;${result.id}&lt;/code&gt;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size: 0.85em&quot;&gt;Guest Signer: &lt;code&gt;${result.senderDid.substring(0, 20)}...&lt;/code&gt;&lt;/span&gt;&lt;/div&gt;&lt;p style=&quot;margin-top:10px; color: #333;&quot;&gt;The administrator has been notified. Please wait for approval.&lt;/p&gt;<p>`;</p><p>btn.innerHTML = &quot;✓ Request Submitted&quot;;</p><p>btn.style.background = &quot;#059669&quot;;</p><p>} catch (e) {</p><p>console.error(e);</p><p>status.style.color = &quot;#dc2626&quot;;</p><p>status.innerText = &quot;Error: &quot; + e.message;</p><p>btn.disabled = false;</p><p>btn.innerHTML = &quot;&lt;span&gt;⚠️&lt;/span&gt; Try Again&quot;;</p><p>}</p><p>});</p>&lt;/script&gt;<div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
             
             <div style="flex:1"></div>
             <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
@@ -146,13 +146,13 @@ body {
           "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767248997593-ed25519",
+          "id": "did:web:masanork.github.io:srn#build-1767249584307-ed25519",
           "type": "Ed25519VerificationKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767248997593-pqc",
+          "id": "did:web:masanork.github.io:srn#build-1767249584307-pqc",
           "type": "JsonWebKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyJwk": {
@@ -164,8 +164,8 @@ body {
       ],
       "assertionMethod": [
         "did:web:masanork.github.io:srn#root-ed25519",
-        "did:web:masanork.github.io:srn#build-1767248997593-ed25519",
-        "did:web:masanork.github.io:srn#build-1767248997593-pqc"
+        "did:web:masanork.github.io:srn#build-1767249584307-ed25519",
+        "did:web:masanork.github.io:srn#build-1767249584307-pqc"
       ]
     }
   ]
@@ -319,6 +319,30 @@ body {
     },
     "eventHash": "0317ba111e669d3ea5888a883daa8745e9cdb22ac9782a305c8be59613fbbd47",
     "chainHash": "6156be469dcd93c19e768fd5e576a5ae3d49a18db15e8f904d4f3be7820e8343"
+  },
+  {
+    "prevHash": "6156be469dcd93c19e768fd5e576a5ae3d49a18db15e8f904d4f3be7820e8343",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T06:38:17.483Z",
+      "payload": {
+        "buildId": "build-1767249496965"
+      }
+    },
+    "eventHash": "ca6a0943e1cadb0d33f6b2c843eb16f99fd9364fd266128a37fa0a783b48ae88",
+    "chainHash": "6c4d2d025e0029a361b3760add92af6af42377e9d8bd53d0b8bbf2e42b39724f"
+  },
+  {
+    "prevHash": "6c4d2d025e0029a361b3760add92af6af42377e9d8bd53d0b8bbf2e42b39724f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T06:39:44.822Z",
+      "payload": {
+        "buildId": "build-1767249584307"
+      }
+    },
+    "eventHash": "d60cdb3bb90f021f41ca05873e14e9d35c2da246cd71f481411287ddb5a8a422",
+    "chainHash": "39d1237be4e30fe95d674ac690f5dcf3335d2d558dc60ae7d3de80d4801514b8"
   }
 ]
 </script>
@@ -332,29 +356,29 @@ body {
     "WebAContainerSignature"
   ],
   "issuer": "did:web:masanork.github.io:srn",
-  "issuanceDate": "2026-01-01T06:29:58.124Z",
+  "issuanceDate": "2026-01-01T06:39:44.835Z",
   "credentialSubject": {
     "id": "did:web:masanork.github.io:srn/join#container",
-    "containerHash": "cb80b85bec3465867d1c2f1993aa646ec799dd0971b10b63a5bd45859e967960",
-    "buildId": "build-1767248997593",
-    "latestContextHash": "b15bbf95ea513f6153df6cf410f8df6a2a76e4d70d10b8bd7eb697bcbda3f9af"
+    "containerHash": "8e2ac9b249ea26e400e5697b97b069fad2e75155f2bb3202c9d3b1553b0f4b43",
+    "buildId": "build-1767249584307",
+    "latestContextHash": "a9fe22db5f20a5b0307833b189d43bd13a678957b1aeba61650b6531c46b5f70"
   },
   "proof": [
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767248997593-ed25519",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767249584307-ed25519",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-01T06:29:58.124Z",
-      "proofValue": "z3SuTRHhTBX7PDR3KvtgSsm1gJFLPUaDZFwHuzE9FgXbMjqGMN63oMMQuRpLL6JYid4whaSBQ6nma5T2DoKStXGTE"
+      "created": "2026-01-01T06:39:44.835Z",
+      "proofValue": "z3uyhrkDULfitM8jMMtXpBSv7MxVwqZL4TpEfGjfr5h696z9jDj4NNUYDR75QgurkVhgwnpdyvYsNBLY9LWYEVX3D"
     },
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "ml-dsa-44-jcs-2025",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767248997593-pqc",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767249584307-pqc",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-01T06:29:58.124Z",
-      "proofValue": "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"
+      "created": "2026-01-01T06:39:44.835Z",
+      "proofValue": "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"
     }
   ]
 }
