@@ -5,24 +5,7 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
-## v2.8.1 - CIV Secure Messaging (BAC)
-
-**Date:** 2026-01-01
-
-*   **CIV Secure Messaging (BAC)**:
-  - Implemented ISO 7816-4 DO87/DO97/DO8E/DO99 handling with 3DES CBC
-    encryption and retail MAC validation for command/response protection.
-  - Added BAC mutual authentication flow with session key setup and SSC-based
-    MAC inputs to unlock read access on real ePassports.
-
-*   **Web/A LTV Architecture & Metadata Refinement**:
-  - **L1 Schema Definition**: Refined Layer 1 from "Template" to "Schema" and established Markdown as the primary Source of Truth for HMP-compliant definitions.
-  - **L4 Presentation Role**: Clarified Layer 4 as the "Presentation" layer responsible for HTML templates, allowing L2 data to remain immutable across design updates (solving the "Rebuild Paradox").
-  - **PHC Specification**: Published the initial technical draft for **Prunable Hash Chain (PHC)** in L3 Context, defining events for Metadata Updates and ownership transfers.
-  - **Metadata Extensions**: Expanded Frontmatter support for `schemas`, `license`, `updated`, and `lang`, enabling documents to self-describe their trust and structural compliance.
-  - **SSG Logic**: Implemented tag-based draft filtering (`tags: ["draft"]`) for more flexible content lifecycle management.
-
-## v2.8.0 - New Year Update: CIV Integration & LTV Architecture
+## v2.8.0 - New Year Update: CIV Identity & LTV Architecture
 
 **Date:** 2026-01-01
 
@@ -31,18 +14,21 @@ Major update for the new year, integrating the multi-document **CIV (Citizen Ide
 *   **CIV (Citizen Identity Verification) Integration**:
     *   **Renamed & Expanded**: `jpki` package is now `civ` to support multiple identity documents.
     *   **Driver's License (DL)**: Added AP selection, PIN verification, and Shift-JIS parsing.
-    *   **ePassport (EP)**: Added BAC (Basic Access Control) key derivation from MRZ.
-    *   **Residence Card (RC)**: Supported card number verification.
+    *   **ePassport (EP)**: Added BAC (Basic Access Control) key derivation from MRZ and **Secure Messaging (BAC)** with ISO 7816-4 DO87/DO97 handling.
+    *   **Residence Card (RC)**: Supported card number verification and extended read logic.
     *   **US PIV Cards**: Added support for CHUID and Authentication Cert reading.
     *   **Updated CLI**: `civ` command now supports subcommands: `jpki`, `dl`, `ep`, `rc`, `piv`.
 
-*   **Web/A LTV Architecture (Long-Term Validation)**:
-    *   **Layered Signature Model**: Implemented the Full 4-Layer Trust Architecture:
+*   **Web/A LTV Architecture & Metadata Refinement**:
+    *   **Layered Signature Model**: Established the Full 4-Layer Trust Architecture:
+        *   **L1 Schema**: Refined from "Template" to "Schema", establishing Markdown as the primary Source of Truth.
         *   **L2 Payload**: Immutable Data with Stable Signatures (solving the "Rebuild Paradox").
-        *   **L3 Context**: Prunable Hash Chain (PHC) for lightweight audit trails.
-        *   **L4 Container**: Ephemeral signatures for visual integrity at deploy-time.
-    *   **Offline Verification**: Implemented **Trust Store Embedding**, allowing documents to carry their own issuer DID Documents.
-    *   **Documentation Upgrade**: Major update to the [Web/A Whitepaper](./papers/web-a.html) (v2.0).
+        *   **L3 Context**: **Prunable Hash Chain (PHC)** for audits. Published the [PHC Specification](./papers/web-a-phc.html).
+        *   **L4 Presentation**: Clarified as the mutable layer for HTML templates.
+    *   **Offline Verification**: Implemented **Trust Store Embedding**, injecting Issuer's DIDs directly into HTML.
+    *   **Metadata Extensions**: Added Frontmatter support for `schemas`, `license`, `updated`, and `lang`.
+    *   **SSG Logic**: Implemented tag-based draft filtering (`tags: ["draft"]`).
+    *   **Documentation**: Major update to the [Web/A Whitepaper](./papers/web-a.html) (v2.0).
 
 ## v2.7.0 - Folio POC v0.1.0: JPKI Integration
 
