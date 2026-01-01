@@ -152,9 +152,14 @@ async function collectMetadata(files: string[], contentDir: string) {
             description: data.description ? String(data.description) : '',
             author: data.author ? String(data.author) : '',
             date: data.date ? normalizeDate(data.date) : '',
+            updated: data.updated ? normalizeDate(data.updated) : undefined,
             path: file.replace('.md', '.html'),
             layout: String(data.layout || 'article'),
             isSystem: Boolean(data.isSystem),
+            lang: data.lang ? String(data.lang) : undefined,
+            schemas: Array.isArray(data.schemas) ? data.schemas : (data.schema ? [data.schema] : []),
+            issuer: data.issuer ? String(data.issuer) : undefined,
+            license: data.license ? String(data.license) : undefined,
             excerptHtml,
             excerptText
         });
