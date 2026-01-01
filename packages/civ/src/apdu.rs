@@ -78,9 +78,15 @@ pub mod file_ids {
 
     /// Authentication PIN EF
     pub const EF_AUTH_PIN: [u8; 2] = [0x00, 0x18];
+
+    /// Signature PIN EF
+    pub const EF_SIGN_PIN: [u8; 2] = [0x00, 0x1B];
     
     /// Card Surface Input Support PIN EF
     pub const EF_INPUT_SUPPORT_PIN: [u8; 2] = [0x00, 0x11];
+
+    /// Face Recognition PIN EF (B-Number)
+    pub const EF_FACE_RECOGNITION_PIN: [u8; 2] = [0x00, 0x11];
 
     /// My Number EF (under Input Support AP)
     pub const EF_MYNUMBER: [u8; 2] = [0x00, 0x01];
