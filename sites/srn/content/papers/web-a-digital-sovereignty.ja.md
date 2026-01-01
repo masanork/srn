@@ -4,7 +4,6 @@ layout: article
 description: "既存のSaaS代替戦略を超えて。Web/Aが提示する、データ中心主義とWeb標準による真のデジタル主権確立への提言。"
 author: "Masanori Kusunoki"
 date: 2026-01-01
-draft: true
 tags: ["draft", "vision"]
 ---
 

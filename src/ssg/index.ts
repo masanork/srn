@@ -56,7 +56,7 @@ async function build() {
         }
 
         // Skip private or draft content
-        if (['draft', 'secret', 'suspended'].includes(data.status) || data.draft === true) {
+        if (isDraft(data)) {
             console.log(`Skipping draft/private content: ${file}`);
             continue;
         }
@@ -141,7 +141,7 @@ async function collectMetadata(files: string[], contentDir: string) {
         const source = await fs.readFile(path.join(contentDir, file), 'utf-8');
         const { data, content } = matter(source);
 
-        if (['draft', 'secret', 'suspended'].includes(data.status) || data.draft === true) continue;
+        if (isDraft(data)) continue;
 
         const normalizedContent = stripLeadingTitleHeading(content, data.title);
         const html = await marked.parse(normalizedContent);
@@ -183,6 +183,13 @@ function buildExcerpt(html: string) {
         excerptHtml: `<p>${escapeHtml(snippet)}${suffix}</p>`,
         excerptText: `${snippet}${suffix}`
     };
+}
+
+function isDraft(data: any): boolean {
+    if (['draft', 'secret', 'suspended'].includes(data.status)) return true;
+    if (data.draft === true) return true;
+    if (Array.isArray(data.tags) && data.tags.includes('draft')) return true;
+    return false;
 }
 
 function stripTags(value: string) {
