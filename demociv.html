@@ -191,7 +191,7 @@
         <div class="warning-box">
             <strong>⚠️ Experimental Note:</strong> This is a cross-platform demo for Android, ChromeOS, and Linux. It
             requires a WebUSB-compatible CCID smart card reader. Real-world JPKI cards may have strict protocols; this
-            PoC logic is based on simulators.
+            is a Proof of Concept.
         </div>
 
         <div class="control-group">
@@ -237,7 +237,7 @@
     </div>
 
     <script type="module">
-        import init, { WasmJpkiController } from './wasm/civ/civ.js';
+        import init, { WasmJpkiController, WebUsbReader } from './wasm/civ/civ.js';
 
         async function initializeWasm() {
             try {
@@ -248,9 +248,6 @@
             }
         }
         initializeWasm();
-
-        // Robust Mock/Bridge framework 
-        // to illustrate how it integrates with packages/civ/src/wasm.rs
 
         const pinInput = document.getElementById('pin');
         const connectBtn = document.getElementById('connect-btn');
@@ -274,6 +271,101 @@
             showStatus('Attributes read successfully!', 'info');
         }
 
+        // --- CCID Driver Implementation ---
+        class CcidConnection {
+            constructor(device) {
+                this.device = device;
+                this.seq = 0;
+                this.inEndpoint = 0;
+                this.outEndpoint = 0;
+                this.packetSize = 64;
+            }
+
+            async connect() {
+                await this.device.open();
+                await this.device.selectConfiguration(1);
+
+                // Find Smart Card Interface (Class 0x0B)
+                const interfaceEl = this.device.configuration.interfaces.find(i =>
+                    i.alternates.some(a => a.interfaceClass === 0x0B)
+                );
+                if (!interfaceEl) throw new Error("No Smart Card Interface found (Class 0x0B)");
+
+                const interfaceNum = interfaceEl.interfaceNumber;
+                await this.device.claimInterface(interfaceNum);
+
+                const alt = interfaceEl.alternates.find(a => a.interfaceClass === 0x0B);
+                const epIn = alt.endpoints.find(e => e.direction === "in");
+                const epOut = alt.endpoints.find(e => e.direction === "out");
+
+                if (!epIn || !epOut) throw new Error("Missing CCID Endpoints");
+
+                this.inEndpoint = epIn.endpointNumber;
+                this.outEndpoint = epOut.endpointNumber;
+                this.packetSize = epOut.packetSize;
+
+                console.log(`CCID Ready: Iface ${interfaceNum}, IN ${this.inEndpoint}, OUT ${this.outEndpoint}`);
+            }
+
+            async powerOn() {
+                // PC_to_RDR_IccPowerOn (0x62)
+                const header = new Uint8Array([
+                    0x62, 0x00, 0x00, 0x00, 0x00, 0x00, this.seq++, 0x00, 0x00, 0x00
+                ]);
+                await this.send(header);
+                const resp = await this.receive();
+                // Validate RDR_to_PC_DataBlock (0x80) containing ATR
+                if (resp[0] !== 0x80) throw new Error(`PowerOn Failed: Type ${resp[0].toString(16)}`);
+                console.log("Card Power On OK. ATR received.");
+            }
+
+            async transceive(apdu) {
+                // PC_to_RDR_XfrBlock (0x6F)
+                const len = apdu.length;
+                const header = new Uint8Array([
+                    0x6F,
+                    len & 0xFF, (len >> 8) & 0xFF, (len >> 16) & 0xFF, (len >> 24) & 0xFF,
+                    0x00,
+                    this.seq++,
+                    0x00, 0x00, 0x00
+                ]);
+
+                const packet = new Uint8Array(10 + len);
+                packet.set(header, 0);
+                packet.set(apdu, 10);
+
+                await this.send(packet);
+
+                const resp = await this.receive();
+
+                if (resp[0] !== 0x80) throw new Error(`Transmit Failed: Type ${resp[0].toString(16)}`);
+
+                // Parse RDR_to_PC_DataBlock
+                const dataLen = resp[1] | (resp[2] << 8) | (resp[3] << 16) | (resp[4] << 24);
+                const status = resp[7];
+                const err = resp[8];
+
+                if ((status & 0x40) !== 0) {
+                    // Check error details if needed
+                    // console.warn("CCID Status indicates error/warning:", status, err);
+                }
+
+                const data = resp.slice(10, 10 + dataLen);
+                return data;
+            }
+
+            async send(data) {
+                await this.device.transferOut(this.outEndpoint, data);
+            }
+
+            async receive() {
+                // Read first chunk (usually enough for short APDU, 64-1024 bytes)
+                const res = await this.device.transferIn(this.inEndpoint, 1024);
+                if (!res.data) throw new Error("No data received");
+                return new Uint8Array(res.data.buffer);
+            }
+        }
+
         // --- WASM Integration Logic ---
         async function runNative() {
             const pin = pinInput.value;
@@ -285,34 +377,52 @@
             try {
                 showStatus('Connecting to USB device...', 'info');
 
-                // 1. Request WebUSB Device (Simplified CCID flow)
+                // 1. Request WebUSB Device
                 const device = await navigator.usb.requestDevice({
                     filters: [
                         { classCode: 0x0B }, // Smart Card
-                        { vendorId: 0x072f }, // ACS (ACR122U etc)
+                        { vendorId: 0x072f }, // ACS
                         { vendorId: 0x04e6 }  // Identiv
                     ]
                 });
 
-                showStatus(`Connected: ${device.productName}. Initializing WASM CIV...`, 'info');
+                showStatus(`Connected: ${device.productName}. Initializing CCID...`, 'info');
 
-                // 2. Initialize JS-side reader for WebUsbReader
-                // In a real build, we'd use 'init' and create a WasmJpkiController
-                // For this demo, we simulate the interaction pattern defined in transport.rs
+                // 2. Init CCID
+                const conn = new CcidConnection(device);
+                await conn.connect();
+                await conn.powerOn();
 
-                showStatus('Sending APDUs to card...', 'info');
+                // 3. Adapter for WASM
+                const jsTransport = {
+                    async transmit(apdu) {
+                        const hex = Array.from(apdu).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                        console.log(`[APDU >>] ${hex}`);
 
-                // [Logic would go here once civ.js is compiled and deployed]
-                // const reader = new WebUsbReader(jsReaderProxy);
-                // const controller = new WasmJpkiController(reader);
-                // const info = await controller.read_attributes(pin);
-                // showResult(info);
+                        const resp = await conn.transceive(apdu);
 
-                throw new Error('WASM CIV module binary not deployed. Please check build status.');
+                        const rHex = Array.from(resp).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                        console.log(`[APDU <<] ${rHex}`);
+
+                        return resp;
+                    }
+                };
+
+                const reader = new WebUsbReader(jsTransport);
+                const controller = new WasmJpkiController(reader);
+
+                showStatus('Reading verification attributes via CCID...', 'info');
+
+                const info = await controller.read_attributes(pin);
+                showResult(info);
 
             } catch (err) {
                 console.error(err);
-                showStatus(`Error: ${err.message}`, 'error');
+                if (err.name === 'NotFoundError') {
+                    showStatus('No device selected.', 'error');
+                } else {
+                    showStatus(`Error: ${err.message}`, 'error');
+                }
             }
         }
 
