@@ -3,6 +3,10 @@
 A unified Rust library for accessing and verifying various Citizen Identity Cards.
 Originally focused on Japanese JPKI (My Number Card), it has expanded to support:
 
+> [!WARNING]
+> **Experimental Status**: This library is in an experimental stage. Implementation is based on specifications and simulator-bound testing; **testing with actual hardware (NFC readers/smart cards) has not yet been performed.** Using this for real-world identity verification requires extreme caution and physical validation.
+
+
 *   **JPKI (Japan My Number Card)**
     *   Auth/Sign Certificates
     *   My Number / 4 Attributes (Name, Address, DOB, Gender)

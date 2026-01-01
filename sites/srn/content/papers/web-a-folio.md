@@ -206,6 +206,9 @@ Key principles for Phase 4 (Production):
 In a general web environment, **PassKey (WebAuthn)** is the de facto standard for secure hardware-level key management. However, while a PassKey is secure, it does not inherently prove "who" the holder is.
 To bridge this gap without the complexity of full-scale government ID "VC-ification," Web/A Folio implements **Holder Binding**. This mechanism cryptographically links a locally-generated PassKey to an existing high-assurance identity, such as a national ID.
 
+> [!WARNING]
+> **Experimental Implementation**: The Citizen Identity Verification (CIV) logic used for national ID binding is currently experimental and has been validated primarily via simulators. **Real-world testing with physical hardware and authentic smart cards is pending.**
+
 1.  **PassKey Generation**: Generate a PassKey pair on the user's device (smartphone or PC).
 2.  **Identity Linking**: Use the qualified signing certificate of a national ID card to sign the public key of the new PassKey.
 3.  **Binding Proof**: Store this signature as a "Binding VC" in the Folio. This proof states: "The holder of this national ID credential has authorized this specific PassKey."

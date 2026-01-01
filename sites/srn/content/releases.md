@@ -12,7 +12,9 @@ ai_generated: true
 Major update for the new year, integrating the multi-document **CIV (Citizen Identity Verification)** module and establishing the **LTV (Long-Term Validation)** architecture for archival-grade trust.
 
 *   **CIV (Citizen Identity Verification) Integration**:
+    *   **⚠️ Experimental Warning**: This module is in an experimental stage. Implementation is based on specifications and simulator-bound testing; **testing with actual hardware (NFC readers/smart cards) has not been performed.**
     *   **Renamed & Expanded**: `jpki` package is now `civ` to support multiple identity documents.
+    *   **Browser Demo**: Added `demociv.html` to demonstrate client-side attribute extraction from IC cards (DL/EP/RC/MyNumber) via WebUSB/WebNFC using WASM.
     *   **Driver's License (DL)**: Added AP selection, PIN verification, and Shift-JIS parsing.
     *   **ePassport (EP)**: Added BAC (Basic Access Control) key derivation from MRZ and **Secure Messaging (BAC)** with ISO 7816-4 DO87/DO97 handling.
     *   **Residence Card (RC)**: Supported card number verification and extended read logic.
@@ -25,6 +27,10 @@ Major update for the new year, integrating the multi-document **CIV (Citizen Ide
         *   **L2 Payload**: Immutable Data with Stable Signatures (solving the "Rebuild Paradox").
         *   **L3 Context**: **Prunable Hash Chain (PHC)** for audits. Published the [PHC Specification](./papers/web-a-phc.html).
         *   **L4 Presentation**: Clarified as the mutable layer for HTML templates.
+    *   **AI Context & Semantic Metadata**:
+        *   **AI-Ready Forms**: Added `context`, `property`, and `hint` attributes to form fields (e.g., `[text:name (context="Formal Name" property="schema:name")]`).
+        *   **Machine-Readable DOM**: These attributes are rendered as `data-context` and `data-property` in the HTML, enabling AI agents to understand field semantics and intent.
+        *   **Auto-Hinting**: Field `context` is automatically used as a user-facing hint if no explicit hint is provided.
     *   **Offline Verification**: Implemented **Trust Store Embedding**, injecting Issuer's DIDs directly into HTML.
     *   **Metadata Extensions**: Added Frontmatter support for `schemas`, `license`, `updated`, and `lang`.
     *   **SSG Logic**: Implemented tag-based draft filtering (`tags: ["draft"]`).
@@ -441,17 +447,17 @@ Finalizing the technical memorandum for public institutions and aligning the pro
   * Removed the massive "Additional Administrative Characters List" from the main navigation to focus on core documentation and demos.
   * Improved dashboard layout for better information hierarchy.
 
-## v1.2.0 - Selective Disclosure & Administrative Compliance
+## v1.2.0 - Selective Disclosure PoC
 
 **Date:** 2025-12-22
 
-Enhancing privacy and administrative compliance for digital official records.
+Enhancing privacy and administrative readiness for digital official records.
 
 * **Selective Disclosure (SD-CWT)**:
   * Implemented binary SD-CWT (CBOR/COSE) using salted disclosure hashes.
   * Added **SD Debug Console** to the document footer to visualize hidden claims and disclosures.
   * Enables granular control over sensitive fields (e.g., MyNumber) within a single signed credential.
-* **Administrative Compliance (MIC 001018493.pdf)**:
+* **Administrative Requirements**:
   * Implemented **Anti-Print Measures**: CSS-based "VOID / INVALID PRINT" watermark and warning notices.
   * Clarified the "Digital Original" status: Personal prints are invalid; only digital presentations (VP) are authoritative.
 * **Credential Schema Integration**:

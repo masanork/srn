@@ -12,6 +12,9 @@ ai_generated: true
 **Status:** APPROVED (PoC Phase)
 **Date:** 2026-01-01
 
+> [!WARNING]
+> **Experimental Status**: The IC card reading functionality (CIV module) is currently in an experimental stage. Implementation is based on technical specifications and simulator-based validation. **Direct testing with physical smart cards and NFC hardware has not been conducted.** Use with caution in production-like environments.
+
 ## 1. Overview
 A technical specification for a tool that reads public personal authentication (JPKI) and other IC card data (Driver's License, Residence Card, Passport) using a native bridge app, converts them into Verifiable Presentations (VP), and presents them online.
 

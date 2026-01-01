@@ -9,6 +9,7 @@ pub mod eu_eid;
 pub mod reader;
 pub mod transport;
 pub mod utils;
+pub mod wasm;
 
 #[cfg(test)]
 pub mod test_utils;

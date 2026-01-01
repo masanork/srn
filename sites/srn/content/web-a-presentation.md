@@ -110,46 +110,27 @@ ai_generated: true
 
 ---
 
-## Strength 1: Distribution Simplicity
+## Strength 1: Simplicity & Zero-Touch
 
-- Send **one file**
-- Open with **any browser**
-- Eliminate environment drift
-
----
-
-## Strength 2: Built-in Authenticity
-
-- Embedded signatures for **tamper detection**
-- Passkeys for **holder binding**
-- Verification logs baked in
+- **One File**: Send a single HTML; open with any browser.
+- **Zero Drift**: Eliminate environment and font issues.
+- **Instant Deployment**: Serve as static files on any CDN or edge.
 
 ---
 
+## Strength 2: Machine-Readable Integrity
+
+- **Structured Truth**: JSON-LD + HTML ensures data is unambiguous.
+- **Tamper Detection**: Embedded signatures prove origin and integrity.
+- **Verifiable Anywhere**: No external server required to prove the facts.
 
 ---
 
-## Strength 3: LTV Guarantee
+## Strength 3: Agentic AI Ready
 
-- **Rebuild-Safe**: Update HTML/CSS for future browsers without breaking the original data signatures.
-- **Offline**: Self-contained trust anchors (embedded DID).
-- **Long-Term Proof**: Verify independently even if the issuer vanishes.
-
----
-
-## Web/A Form
-
-- Low-frequency, high-value workflows
-- Create, sign, and submit **inside the browser**
-- Local aggregation with **HTML-based aggregator**
-
----
-
-## Web/A L2 Encryption
-
-- **No Shared Secrets**: Eliminate risky password exchange (No PPAP).
-- **Recipient-Only**: Public-key encryption guarantees privacy.
-- **Passkey-First**: Seamless experience without managing keys.
+- **Agent-First**: Built for autonomous systems, not just browsers.
+- **Semantic Sync**: Humans and AI see the exact same structured metadata.
+- **Bimodal UX**: Seamless switching between UI rendering and data processing.
 
 ---
 
@@ -166,6 +147,14 @@ ai_generated: true
 - Agents can read **structure + signatures**
 - Assist input, summarize, verify
 - Built on **Human-Machine Parity**
+
+---
+
+## Privacy by Design (The Hidden Ace)
+
+- **Password-Free**: Securely transfer data without the risk of password exchange (No PPAP).
+- **Recipient-Only**: Public-key encryption guarantees confidentiality.
+- **Passkey-First**: Seamless experience without manual key management.
 
 ---
 

@@ -7,7 +7,7 @@ layout: article
 
 <div style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 20px; text-align: center;">
   <strong>お知らせ:</strong> Web/A プロジェクトは Sorane (SRN) に統合・集約されました。<br>
-  ブックマーク等は順次 <a href="/srn/" style="font-weight: bold;">Sorane 公式サイト</a> への変更をお願いいたします。
+  最新の情報やツールは <a href="/srn/" style="font-weight: bold;">Sorane 公式サイト</a> を参照してください。
 </div>
 
 <div class="hero-section" style="background:linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 60px 20px; text-align: center; border-radius: 8px; margin-bottom: 40px;">
@@ -17,8 +17,8 @@ layout: article
     Markdownで定義し、配布・入力・集計までをローカルファーストで実現します。
   </p>
   <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-    <a href="/srn/maker.html" class="button primary" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Maker を試す</a>
-    <a href="/srn/papers/web-a-form.ja.html" class="button" style="background: white; color: #333; border: 1px solid #ccc; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Whitepaper を読む</a>
+    <a href="/srn/maker.html" class="button primary" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Maker を試す (SRN)</a>
+    <a href="/srn/papers/web-a-form.ja.html" class="button" style="background: white; color: #333; border: 1px solid #ccc; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Whitepaper (SRN)</a>
   </div>
 </div>
 
@@ -27,84 +27,7 @@ layout: article
 Web/A Form は、**「ファイル」**としてのアプリケーションです。
 専用のサーバーやアカウントは必要ありません。HTMLファイルをメールやチャットで送るだけで、誰でもフォーム入力業務を開始できます。
 
-*   **Markdown Driven**: フォームの定義はシンプルなテキストファイル。Gitでバージョン管理が可能です。
-*   **Serverless & Portable**: 動作に必要なのは Webブラウザだけ。ネット環境がないオフライン環境でも動作します。
-*   **AI Ready**: 構造化データ (JSON-LD) を内包しており、AIエージェントによる自動入力やデータ集計が容易です。
+*   **Markdown Driven**: フォームの定義はシンプルなテキストファイル。
+*   **Serverless & Portable**: 動作に必要なのは Webブラウザだけ。
+*   **AI Ready**: 構造化データ (JSON-LD) を内包しており、AIエージェントによる自動化が容易です。
 
----
-
-## コンテンツ
-
-<div class="grid-layout" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>📄 Whitepaper</h3>
-    <p>Web/A Form の詳細な仕様、利用シーン、既存の非効率なSaaS依存からの脱却シナリオについて解説します。</p>
-    <a href="/srn/papers/web-a-form.ja.html">詳細を見る →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>🔐 L2 Encryption Paper</h3>
-    <p>Web/A Layer 2 Encryption の設計と、ブラウザでの復号体験を含む実装方針を解説します。</p>
-    <a href="https://masanork.github.io/srn/papers/web-a-l2-encryption.ja.html">詳細を見る →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>🛠️ Web/A Maker</h3>
-    <p>ブラウザ上で Markdown を記述し、リアルタイムにフォームをプレビュー・生成できるツールです。</p>
-    <a href="/srn/maker.html">Maker を起動 →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>🎞️ Web/A Presentation</h3>
-    <p>記事として読めて、そのまま全画面スライドになるプレゼン資料です。</p>
-    <a href="/srn/web-a-presentation.ja.html">デモを見る →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>🏥 Demo: 医療費集計</h3>
-    <p>医療費控除の明細書をイメージした、計算式と動的テーブルを含む実用的なフォーム例です。</p>
-    <a href="/srn/examples/iryouhi.html">デモを開く →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>👩‍💻 Developer Guide</h3>
-    <p>アーキテクチャ詳細、CLIツールの使い方、ソースコードの構成など、開発者向けの情報です。</p>
-    <a href="/srn/guide.html">ガイドを読む →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>🤖 AI & Prompts</h3>
-    <p>AI を使って既存の Excel 帳票を Web/A Form に変換したり、集まったデータを集計するためのプロンプト集です。</p>
-    <a href="/srn/guide/prompts.html">プロンプト集を見る →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>💼 Web/A Folio</h3>
-    <p>データと知能を分離する。個人の履歴と鍵を束ねる「デジタル・ポートフォリオ」構想。</p>
-    <a href="/srn/papers/web-a-folio.html">構想を読む →</a>
-  </div>
-
-  <div class="card" style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-    <h3>🔌 Agent Integration</h3>
-    <p>Claude Desktop や Cursor から Web/A Folio を操作するための MCP 設定ガイド。</p>
-    <a href="/srn/guide/mcp-setup.html">設定方法を見る →</a>
-  </div>
-
-</div>
-
----
-
-## 利用シーン
-
-*   **組織横断的な申請業務**: アカウント発行が面倒な社外パートナーとのやり取りに。
-*   **低頻度・長寿命なフォーム**: 年に数回しか使わないが、数年間維持する必要がある帳票に。
-*   **セキュアなローカル環境**: 機密性が高く、外部クラウドにデータを置きたくない業務に。
-
----
-
-## 開発と貢献
-
-Web/A Form はオープンソースプロジェクトとして開発されています。
-ソースコードは [SRN Repository](https://github.com/masanork/srn) で管理されています。
-技術的な貢献やフィードバックは、Issue または Pull Request お待ちしています。
