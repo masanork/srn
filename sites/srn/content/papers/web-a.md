@@ -122,10 +122,10 @@ To uniformly handle static documents, interactive forms, and wide-area distribut
     *   **Content**: **Prunable Hash Chain (PHC)** containing timestamps, transport tags, and archival evidence (CRLs/OCSP).
     *   **Signature**: **Context Signature** (Cumulative). A linked list of signatures that proves "who held this document and when," ensuring no history is silently deleted.
 
-4.  **Layer 4: The Presentation (L4)**
+4.  **Layer 4: The Presentation**
     *   **Role**: Visual representation and current authenticity.
-    *   **Content**: **HTML Templates**, CSS, Fonts, and the container wrapping all layers up to L3.
-    *   **Nature**: **Container Signature (Ephemeral)**. Regenerated upon each rebuild. Proves the validity of the current "View" (template implementation) without altering the core L1/L2 structure.
+    *   **Entity**: The **Container** wrapping L1-L3, HTML templates, CSS, and fonts.
+    *   **Signature**: **Container Signature**. Regenerated upon each rebuild/deployment. It proves the validity of the current "View" (template implementation) and the integrity of the whole container, without altering the core L1/L2 structure.
 
 ### 6.2. Human-Machine Parity (HMP)
 Generation tools (such as Sorane) are responsible for ensuring that JSON-LD and HTML do not diverge:
