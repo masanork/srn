@@ -91,7 +91,7 @@ impl<R: CardReader> PivController<R> {
         alg: Algorithm,
         key_ref: KeyReference,
         payload: &[u8],
-        is_sign: bool, // true for SIGN (Internal Authenticate), false for Decrypt/External
+        _is_sign: bool, // true for SIGN (Internal Authenticate), false for Decrypt/External
     ) -> Result<Vec<u8>> {
         // Dynamic Authentication Template (Tag 7C)
         // For Sign (Internal Auth):
@@ -227,6 +227,80 @@ impl<R: CardReader> PivController<R> {
         } else {
             Err(anyhow::anyhow!("Card Error: SW={:02X}{:02X}", sw1, sw2))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::TestReader;
+
+    #[tokio::test]
+    async fn test_select_piv_ap() {
+        let reader = TestReader::new();
+        let mut controller = PivController::new(reader.clone());
+        reader.push_response(&[0x90, 0x00]);
+
+        let res = controller.select_piv_ap().await;
+        assert!(res.is_ok());
+
+        let apdus = reader.sent_apdus.lock().unwrap();
+        assert_eq!(apdus.len(), 1);
+        assert_eq!(apdus[0][1], 0xA4); // SELECT
+        assert_eq!(&apdus[0][5..], &file_ids::DF_PIV);
+    }
+
+    #[tokio::test]
+    async fn test_verify_pin_padding() {
+        let reader = TestReader::new();
+        let mut controller = PivController::new(reader.clone());
+        reader.push_response(&[0x90, 0x00]);
+
+        let res = controller.verify_pin("123456").await;
+        assert!(res.is_ok());
+
+        let apdus = reader.sent_apdus.lock().unwrap();
+        // Check data: "123456" + FF FF
+        let expected_data = [b'1', b'2', b'3', b'4', b'5', b'6', 0xFF, 0xFF];
+        assert_eq!(&apdus[0][5..13], &expected_data);
+    }
+
+    #[tokio::test]
+    async fn test_get_data_chuid() {
+        let reader = TestReader::new();
+        let mut controller = PivController::new(reader.clone());
+        // Mock CHUID response
+        let mock_chuid = vec![0x53, 0x03, 0x01, 0x02, 0x03, 0x90, 0x00];
+        reader.push_response(&mock_chuid);
+
+        let res = controller.read_chuid().await;
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), vec![0x53, 0x03, 0x01, 0x02, 0x03]);
+
+        let apdus = reader.sent_apdus.lock().unwrap();
+        assert_eq!(apdus[0][1], 0xCB); // GET DATA
+    }
+
+    #[tokio::test]
+    async fn test_sign_template() {
+        let reader = TestReader::new();
+        let mut controller = PivController::new(reader.clone());
+        // Response template: 7C 05 82 03 AA BB CC + 90 00
+        reader.push_response(&[0x7C, 0x05, 0x82, 0x03, 0xAA, 0xBB, 0xCC, 0x90, 0x00]);
+
+        let dummy_hash = [0x11; 32];
+        let res = controller.sign(KeyReference::PivSignKey, Algorithm::EccP256, &dummy_hash).await;
+        
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), vec![0xAA, 0xBB, 0xCC]);
+
+        let apdus = reader.sent_apdus.lock().unwrap();
+        assert_eq!(apdus[0][1], 0x87); // GENERAL AUTH
+        // Check for template tags 7C, 82, 81
+        let data = &apdus[0][5..];
+        assert_eq!(data[0], 0x7C);
+        assert!(data.iter().any(|&b| b == 0x81)); // Challenge tag
+        assert!(data.iter().any(|&b| b == 0x82)); // Response tag
     }
 }
 

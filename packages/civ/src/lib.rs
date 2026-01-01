@@ -10,6 +10,9 @@ pub mod reader;
 pub mod transport;
 pub mod utils;
 
+#[cfg(test)]
+pub mod test_utils;
+
 #[cfg(not(target_arch = "wasm32"))]
 pub mod native_reader;
 

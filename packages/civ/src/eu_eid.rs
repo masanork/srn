@@ -54,3 +54,46 @@ impl<R: CardReader> EuIdController<R> {
         self.passport.read_dg12().await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::TestReader;
+
+    #[tokio::test]
+    async fn test_select_eu_eid_ap() {
+        let reader = TestReader::new();
+        let mut controller = EuIdController::new(reader.clone());
+        reader.push_response(&[0x90, 0x00]);
+
+        let res = controller.select_eid_ap().await;
+        assert!(res.is_ok());
+
+        let apdus = reader.sent_apdus.lock().unwrap();
+        // Should select ICAO AID
+        assert_eq!(apdus[0][1], 0xA4);
+        assert_eq!(&apdus[0][5..], &[0xA0, 0x00, 0x00, 0x02, 0x47, 0x10, 0x01]);
+    }
+
+    #[tokio::test]
+    async fn test_read_face_and_details() {
+        let reader = TestReader::new();
+        let mut controller = EuIdController::new(reader.clone());
+        
+        // Mocking for Face (DG2)
+        reader.push_response(&[0x90, 0x00]); // Select DG2
+        reader.push_response(&[0xCC, 0xDD, 0x90, 0x00]); // Data
+        
+        let res = controller.read_face().await;
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), vec![0xCC, 0xDD]);
+
+        // Mocking for Details (DG11)
+        reader.push_response(&[0x90, 0x00]); // Select DG11
+        reader.push_response(&[0xEE, 0xFF, 0x90, 0x00]); // Data
+
+        let res = controller.read_additional_details().await;
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), vec![0xEE, 0xFF]);
+    }
+}
