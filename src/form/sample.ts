@@ -228,8 +228,10 @@ export const DEFAULT_MARKDOWN_EN = `# Team Dinner Poll (Sample)
 
 ## 3. Preferences
 
-- [search:cuisine (src:cuisines label:2 value:2 placeholder="Type or pick a cuisine")] Preferred cuisine
+- [search:cuisine (src:cuisines label:2 value:2 placeholder="Type or pick a cuisine" context="Preferred food genre")] Preferred cuisine
 - [number:budget (placeholder="0")] Preferred budget (JPY)
+- [checkbox:shuttle] Request Shuttle
+- [text:pickup (show_if="shuttle" placeholder="Nearest station")] Pickup Location
 - [textarea:comment (placeholder="Allergies or constraints")] Notes
 
 ---
@@ -300,8 +302,10 @@ export const DEFAULT_MARKDOWN_JA = `# 飲み会日程調整（サンプル）
 
 ## 3. 希望
 
-- [search:cuisine (src:cuisines label:2 value:2 placeholder="料理ジャンルを入力")] 料理の希望
-- [number:budget (placeholder="0")] 希望予算 (JPY)
+- [search:cuisine (src:cuisines label:2 value:2 placeholder="料理ジャンルを入力" context="希望する料理のジャンル")] 料理の希望
+- [number:budget (placeholder="0" min="0")] 希望予算 (JPY)
+- [checkbox:shuttle] 送迎を希望する
+- [text:pickup (show_if="shuttle" placeholder="最寄り駅など")] ピックアップ場所
 - [textarea:comment (placeholder="アレルギーや条件")] 備考
 
 ---

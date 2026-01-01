@@ -107,7 +107,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 label: cleanLabel,
                 type: typeStr,
                 context: contextMatch ? contextMatch[1] : undefined,
-                property: propertyMatch ? propertyMatch[1] : undefined
+                property: propertyMatch ? propertyMatch[1] : undefined,
+                show_if: (attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/))?.[1]
             });
 
             // Render tag (already produces safe HTML)
@@ -313,13 +314,15 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
                 const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
                 const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
+                const showIfMatch = attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/);
 
                 jsonStructure.fields.push({
                     key,
                     label: cleanLabel,
                     type: type || 'text',
                     context: contextMatch ? contextMatch[1] : undefined,
-                    property: propertyMatch ? propertyMatch[1] : undefined
+                    property: propertyMatch ? propertyMatch[1] : undefined,
+                    show_if: showIfMatch ? showIfMatch[1] : undefined
                 });
 
                 // Explicit dispatch to avoid dynamic property access issues

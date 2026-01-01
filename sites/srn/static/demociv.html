@@ -237,8 +237,19 @@
     </div>
 
     <script type="module">
-        // Real implementation would import from generated WASM
-        // For this demo structure, we provide a robust Mock/Bridge framework 
+        import init, { WasmJpkiController } from './wasm/civ/civ.js';
+
+        async function initializeWasm() {
+            try {
+                await init();
+                console.log("CIV WASM Initialized");
+            } catch (e) {
+                console.error("CIV WASM Init Failed", e);
+            }
+        }
+        initializeWasm();
+
+        // Robust Mock/Bridge framework 
         // to illustrate how it integrates with packages/civ/src/wasm.rs
 
         const pinInput = document.getElementById('pin');

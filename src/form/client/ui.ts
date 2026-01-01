@@ -31,7 +31,7 @@ export class UIManager {
 
         el.textContent = labels[tier];
         el.className = `security-badge tier-${tier}`;
-        
+
         // Add visual indicator (dot)
         const dot = document.createElement('span');
         dot.className = 'status-dot';
@@ -151,5 +151,103 @@ export class UIManager {
         btn.classList.add('active');
         const content = document.getElementById(tabId);
         if (content) content.classList.add('active');
+    }
+
+    public updateVisibility() {
+        document.querySelectorAll<HTMLElement>('[data-show-if]').forEach(el => {
+            const condition = el.dataset.showIf;
+            if (!condition) return;
+
+            // Target scope extraction
+            // Simple parser: key operator value
+            // Supports: key == 'value', key != 'value', key (truthy)
+            const match = condition.match(/^([a-zA-Z0-9_]+)\s*(==|!=)\s*(['"]?)(.*?)\3$/);
+
+            let visible = true;
+
+            if (match) {
+                const [_, key, op, quote, value] = match;
+                // Find input element for key
+                // Try global lookup
+                let targetInput = document.querySelector(`[data-json-path="${key}"]`) as HTMLInputElement | HTMLSelectElement;
+
+                // If not found global, try searching within the same table row if we are inside one
+                if (!targetInput) {
+                    const row = el.closest('tr');
+                    if (row) {
+                        targetInput = row.querySelector(`[data-json-path="${key}"]`) as HTMLInputElement;
+                        // Also check by name/class if json-path is not sufficient in template
+                    }
+                }
+
+                if (targetInput) {
+                    const currentVal = ((targetInput.type === 'checkbox' || targetInput.type === 'radio') && (targetInput as HTMLInputElement).checked)
+                        ? 'true'
+                        : (((targetInput.type === 'checkbox' || targetInput.type === 'radio') && !(targetInput as HTMLInputElement).checked) ? 'false' : targetInput.value);
+
+                    // For radio buttons, we need to check the checked one in the group
+                    if (targetInput.type === 'radio') {
+                        const groupName = targetInput.name;
+                        const checked = document.querySelector(`input[name="${groupName}"]:checked`) as HTMLInputElement;
+                        if (checked) {
+                            // Use the value of the checked radio
+                            // currentVal logic above is flawed for radio group
+                            // Wait, parser assigns distinct keys? No, radio share keys but different values usually?
+                            // Web/A Form parser uses `radio:groupName (value="val")`. The key passes as json-path?
+                            // Let's assume standard behavior: we check value of key.
+                        }
+                    }
+
+                    // Simplified value extraction
+                    let val = targetInput.value;
+                    if (targetInput.type === 'checkbox') {
+                        val = (targetInput as HTMLInputElement).checked ? 'true' : 'false';
+                    }
+                    if (targetInput.type === 'radio') {
+                        // Find the checked radio with this name
+                        const name = targetInput.name;
+                        const checked = document.querySelector(`input[name="${name}"]:checked`) as HTMLInputElement;
+                        val = checked ? checked.value : '';
+                    }
+
+                    if (op === '==') visible = val == value;
+                    if (op === '!=') visible = val != value;
+                } else {
+                    // Key not found, default to hidden or visible?
+                    // Let's keep visible safe if logic fails, or hidden?
+                    // Safe behavior: if dependency missing, show it? No, usually hide.
+                    visible = false;
+                }
+            } else {
+                // Boolean check (truthy/falsy)
+                const key = condition.trim();
+                let targetInput = document.querySelector(`[data-json-path="${key}"]`) as HTMLInputElement;
+                if (targetInput) {
+                    if (targetInput.type === 'checkbox') visible = (targetInput as HTMLInputElement).checked;
+                    else visible = !!targetInput.value;
+                } else {
+                    visible = false;
+                }
+            }
+
+            // Toggle visibility
+            // If the element is an input wrapper (.form-row), toggle that
+            // If it's inside a table cell, toggle the content or just the input?
+            // Usually we toggle the closest .form-row
+            const container = el.closest('.form-row') as HTMLElement;
+            if (container) {
+                container.style.display = visible ? '' : 'none';
+                // Also disable/enable inputs to prevent submission of hidden data
+                const inputs = container.querySelectorAll('input, select, textarea');
+                inputs.forEach((inp: any) => {
+                    inp.disabled = !visible;
+                });
+            } else {
+                el.style.display = visible ? '' : 'none';
+                if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+                    el.disabled = !visible;
+                }
+            }
+        });
     }
 }
