@@ -1,5 +1,15 @@
-import { postalLookup } from './postal';
 import type { PostalRecord } from './postal';
+import './postal'; // Ensure side-effects run
+
+function escapeHtml(str: string): string {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 export class SearchEngine {
     private suggestionsVisible = false;
@@ -14,10 +24,13 @@ export class SearchEngine {
 
     private async initPostalLookup() {
         try {
-            await postalLookup.autoInit();
-            this.postalReady = postalLookup.isReady();
-            if (this.postalReady) {
-                console.log('📮 Postal lookup enabled');
+            const postal = (window as any).postalLookup;
+            if (postal) {
+                await postal.autoInit();
+                this.postalReady = postal.isReady();
+                if (this.postalReady) {
+                    console.log('📮 Postal lookup enabled');
+                }
             }
         } catch (error) {
             console.warn('Postal lookup not available:', error);
@@ -87,9 +100,12 @@ export class SearchEngine {
             return;
         }
 
+        const postal = (window as any).postalLookup;
+        if (!postal) return;
+
         // 7桁完全入力の場合は完全一致検索
         if (value.length === 7) {
-            const result = postalLookup.lookup(value);
+            const result = postal.lookup(value);
             if (result) {
                 this.fillPostalData(input, result, true);
                 this.hideSuggestions();
@@ -98,7 +114,7 @@ export class SearchEngine {
         }
 
         // 3-6桁の場合は候補表示
-        const suggestions = postalLookup.suggest(value, 50);
+        const suggestions = postal.suggest(value, 50);
         if (suggestions.length > 0) {
             this.renderPostalSuggestions(input, suggestions);
         } else {
@@ -110,17 +126,16 @@ export class SearchEngine {
      * 郵便番号候補をレンダリング
      */
     private renderPostalSuggestions(input: HTMLInputElement, suggestions: PostalRecord[]) {
-        const w = window as any;
         let html = '';
 
         suggestions.forEach(record => {
             const displayZip = record.zip.substring(0, 3) + '-' + record.zip.substring(3);
             const display = `${displayZip} ${record.pref} ${record.city} ${record.town}`;
-            const dataJson = w.escapeHtml(JSON.stringify(record));
+            const dataJson = escapeHtml(JSON.stringify(record));
 
             html += `<div class="suggestion-item postal-item" data-postal="${dataJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">
                 <div style="font-weight:600; color:#3b82f6;">${displayZip}</div>
-                <div style="font-size:13px; color:#6b7280;">${w.escapeHtml(record.pref)} ${w.escapeHtml(record.city)} ${w.escapeHtml(record.town)}</div>
+                <div style="font-size:13px; color:#6b7280;">${escapeHtml(record.pref)} ${escapeHtml(record.city)} ${escapeHtml(record.town)}</div>
             </div>`;
         });
 
@@ -317,15 +332,15 @@ export class SearchEngine {
             this.hideSuggestions();
             return;
         }
-        const w = window as any;
+        
         // Basic sort: Currently simple score 10 for all. Could add advanced scoring later.
 
         const topHits = hits.slice(0, 10);
         let html = '';
         topHits.forEach(h => {
-            const rowJson = w.escapeHtml(JSON.stringify(h.row));
+            const rowJson = escapeHtml(JSON.stringify(h.row));
             const displayLabel = labelIdx >= 0 ? (h.label || h.row.join(' : ')) : h.row.join(' : ');
-            html += `<div class="suggestion-item" data-val="${w.escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${w.escapeHtml(displayLabel)}</div>`;
+            html += `<div class="suggestion-item" data-val="${escapeHtml(h.val)}" data-row="${rowJson}" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee; font-size:14px; color:#333;">${escapeHtml(displayLabel)}</div>`;
         });
 
         const box = this.getGlobalBox();
