@@ -77,10 +77,10 @@ export class SearchEngine {
      * 郵便番号フィールドかどうかを判定
      */
     private isPostalField(input: HTMLInputElement): boolean {
-        const key = (input.dataset.jsonPath || input.dataset.baseKey || '').toLowerCase();
+        const key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
         const placeholder = (input.placeholder || '').toLowerCase();
         return key.includes('zip') || key.includes('postal') ||
-            key.includes('郵便') || placeholder.includes('郵便');
+            key.includes('郵便') || placeholder.includes('郵便') || placeholder.includes('zip') || placeholder.includes('postal');
     }
 
     /**
@@ -181,7 +181,7 @@ export class SearchEngine {
 
         // 都道府県フィールドを探して自動入力
         const prefField = allInputs.find(inp => {
-            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || '').toLowerCase();
+            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
             return key.includes('pref') || key.includes('都道府県');
         });
         if (prefField && prefField !== input) {
@@ -191,7 +191,7 @@ export class SearchEngine {
 
         // 市区町村フィールドを探して自動入力
         const cityField = allInputs.find(inp => {
-            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || '').toLowerCase();
+            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
             return key.includes('city') || key.includes('市区町村');
         });
         if (cityField && cityField !== input) {
@@ -201,7 +201,7 @@ export class SearchEngine {
 
         // 町字フィールドを探して自動入力
         const townField = allInputs.find(inp => {
-            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || '').toLowerCase();
+            const key = (inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || inp.id || '').toLowerCase();
             return key.includes('town') || key.includes('address') || key.includes('町') || key.includes('字');
         });
         if (townField && townField !== input && townField !== cityField) {
@@ -339,7 +339,7 @@ export class SearchEngine {
             this.hideSuggestions();
             return;
         }
-        
+
         // Basic sort: Currently simple score 10 for all. Could add advanced scoring later.
 
         const topHits = hits.slice(0, 10);

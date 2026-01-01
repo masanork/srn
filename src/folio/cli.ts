@@ -286,6 +286,10 @@ admin
         }
     });
 
+
+import { FolioStorage } from "./core/storage";
+import { FolioManager } from "./core/manager";
+
 // --- Folio Management ---
 program
     .command("init [directory]")
@@ -297,8 +301,40 @@ program
         for (const d of dirs) {
             await fs.ensureDir(path.join(targetDir, d));
         }
+
+        // Initialize SQLite DB (KV + FTS)
+        try {
+            const storage = new FolioStorage(targetDir);
+            storage.close();
+            console.log("✅ Folio database initialized (.index/folio.db)");
+        } catch (e: any) {
+            console.error(`❌ Failed to initialize database: ${e.message}`);
+        }
+
         console.log("✅ Folio structure created.");
     });
+
+program
+    .command("index")
+    .description("Scan and re-index all documents in the Folio")
+    .action(async () => {
+        const folioDir = path.resolve(process.cwd(), program.opts().folio);
+        if (!await fs.pathExists(path.join(folioDir, ".index"))) {
+            console.error("Error: Not a valid Folio directory (missing .index/). Run 'init' first.");
+            process.exit(1);
+        }
+
+        try {
+            const manager = new FolioManager(folioDir);
+            await manager.reindex();
+            manager.close();
+            console.log("✅ Indexing complete.");
+        } catch (e: any) {
+            console.error(`❌ Indexing failed: ${e.message}`);
+            process.exit(1);
+        }
+    });
+
 
 
 

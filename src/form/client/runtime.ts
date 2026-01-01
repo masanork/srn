@@ -75,7 +75,11 @@ export function initRuntime() {
 
         // A. Postal & Address Suggestions (Datalist based)
         if (postal && postal.isReady()) {
-            const isZipField = key.match(/zip|postal|postcode|郵便/) && !key.match(/pref|city|town|address|都道府県|市区町村|住所/);
+            const key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
+            const placeholder = (input.placeholder || '').toLowerCase();
+
+            const isZipField = (key.match(/zip|postal|postcode|郵便/) && !key.match(/pref|city|town|address|都道府県|市区町村|住所/))
+                || placeholder.match(/郵便|zip|postal/);
             const isAddrField = key.match(/pref|city|town|address|都道府県|市区町村|住所/);
 
             if (isZipField || isAddrField) {
@@ -139,9 +143,9 @@ export function initRuntime() {
  * 住所自動入力ヘルパー
  */
 function fillAddress(triggerInput: HTMLInputElement, record: PostalRecord, scope: Element, includeZip = false) {
-    const inputs = Array.from(scope.querySelectorAll('input[data-json-path], select[data-json-path]')) as HTMLInputElement[];
+    const inputs = Array.from(scope.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
     inputs.forEach((input: any) => {
-        const key = (input.dataset.jsonPath || '').toLowerCase();
+        const key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
         if (input === triggerInput) return;
 
         let valToSet = '';
