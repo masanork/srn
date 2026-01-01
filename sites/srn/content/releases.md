@@ -30,6 +30,10 @@ Major update for the new year, integrating the multi-document **CIV (Citizen Ide
     *   **SSG Logic**: Implemented tag-based draft filtering (`tags: ["draft"]`).
     *   **Documentation**: Major update to the [Web/A Whitepaper](./papers/web-a.html) (v2.0).
 
+*   **Web/A Post (Event-Driven Transition)**:
+    *   **Architecture Shift**: Pivoted towards a **Pub/Sub-first Ingress** model to ensure global portability and reduce frontend complexity.
+    *   **Storage Strategy**: Prioritized Object Storage (R2/GCS/S3) for raw containers with asynchronous processing for rule evaluation and AI assistance.
+
 ## v2.7.0 - Folio POC v0.1.0: JPKI Integration
 
 **Date:** 2025-12-31
