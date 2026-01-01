@@ -169,6 +169,18 @@
       color: #64748b;
       margin-bottom: 12px;
     }
+
+    .pin-status-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pin-status-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 
@@ -213,9 +225,26 @@
       <h2>Developer Tools</h2>
 
       <div class="form-group">
-        <label>PIN Status (Input Support)</label>
+        <label>PIN Status (All Applications)</label>
         <button id="check-pin-btn" style="background:#64748b;">Check Remaining Retries</button>
-        <div id="pin-status-result" style="margin-top:8px; font-weight:bold; color:#0f172a;"></div>
+        <div id="pin-status-result" class="pin-status-list">
+          <div class="pin-status-row">
+            <span class="label">Auth PIN</span>
+            <span class="value" id="pin-auth">-</span>
+          </div>
+          <div class="pin-status-row">
+            <span class="label">Sign PIN</span>
+            <span class="value" id="pin-sign">-</span>
+          </div>
+          <div class="pin-status-row">
+            <span class="label">Input Support PIN</span>
+            <span class="value" id="pin-input-support">-</span>
+          </div>
+          <div class="pin-status-row">
+            <span class="label">Face Recognition PIN</span>
+            <span class="value" id="pin-face">-</span>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -246,6 +275,10 @@
     const dumpEfBtn = document.getElementById('dump-ef-btn');
     const efIdInput = document.getElementById('ef-id-input');
     const pinStatusResult = document.getElementById('pin-status-result');
+    const pinAuth = document.getElementById('pin-auth');
+    const pinSign = document.getElementById('pin-sign');
+    const pinInputSupport = document.getElementById('pin-input-support');
+    const pinFace = document.getElementById('pin-face');
     const dumpResult = document.getElementById('dump-result');
 
     readBtn.addEventListener('click', async () => {
@@ -286,11 +319,21 @@
 
     checkPinBtn.addEventListener('click', async () => {
       try {
-        pinStatusResult.textContent = "Checking...";
-        const status = await invoke('check_pin_status');
-        pinStatusResult.textContent = status;
+        pinAuth.textContent = "Checking...";
+        pinSign.textContent = "Checking...";
+        pinInputSupport.textContent = "Checking...";
+        pinFace.textContent = "Checking...";
+        const status = await invoke('check_all_pin_statuses');
+        pinAuth.textContent = status.auth;
+        pinSign.textContent = status.sign;
+        pinInputSupport.textContent = status.input_support;
+        pinFace.textContent = status.face_recognition;
       } catch (e) {
-        pinStatusResult.textContent = "Error: " + e;
+        pinAuth.textContent = "Error";
+        pinSign.textContent = "-";
+        pinInputSupport.textContent = "-";
+        pinFace.textContent = "-";
+        pinStatusResult.setAttribute('data-error', `Error: ${e}`);
       }
     });
 

@@ -106,6 +106,15 @@ impl<R: CardReader> JpkiController<R> {
         Self::check_sw(&res).context("Failed to select Input Support AP")
     }
 
+    /// Select the Face Recognition Application (DF)
+    pub async fn select_face_recognition_ap(&mut self) -> Result<()> {
+        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
+            .with_data(&file_ids::DF_FACE_RECOGNITION);
+
+        let res = self.reader.transmit(&apdu.to_bytes()).await?;
+        Self::check_sw(&res).context("Failed to select Face Recognition AP")
+    }
+
     /// Verify PIN
     /// pin_type: Usually 0x0018 (Auth) or 0x001B (Sign) or 0x0011 (Input Support)
     /// pin: The pin string (e.g. "1234")
@@ -290,26 +299,11 @@ impl<R: CardReader> JpkiController<R> {
              }
         }
 
-        // Parse Surface Info: Offset 0: Expiration Date (8 bytes), Offset 8: Security Code (4 bytes)
-        // Check length before slicing to avoid panic
+        // Parse Surface Info: attempt to extract YYYYMMDD and Security Code (4 digits)
         if surface_info_data.len() < 12 {
             println!("Debug: EF0005 data too short (<12 bytes), skipping face photo.");
         }
-        
-        let raw_exp_bytes = if surface_info_data.len() >= 8 { &surface_info_data[0..8] } else { &[] };
-        let raw_sc_bytes = if surface_info_data.len() >= 12 { &surface_info_data[8..12] } else { &[] };
 
-        // Debug output raw strings (might be garbage if binary)
-        let expiration_raw = String::from_utf8_lossy(raw_exp_bytes).to_string();
-        let security_code_raw = String::from_utf8_lossy(raw_sc_bytes).to_string();
-        println!("Debug: ExpirationRaw='{}', len={}", expiration_raw, expiration_raw.len());
-        println!("Debug: SCRaw='{}', len={}", security_code_raw, security_code_raw.len());
-
-        // Construct B-Number components by extracting digits only
-        // Expiration is expected to be YYYYMMDD. We need YYMMDD (pos 2..8).
-        // Since we don't know the exact format causing len=16, let's try to sanitise.
-        
-        // Helper to extract ascii digits
         let extract_digits = |bytes: &[u8]| -> String {
             bytes.iter()
                 .filter(|&&b| b >= 0x30 && b <= 0x39)
@@ -317,8 +311,61 @@ impl<R: CardReader> JpkiController<R> {
                 .collect()
         };
 
-        let exp_digits = extract_digits(raw_exp_bytes);
-        let sc_digits = extract_digits(raw_sc_bytes);
+        let extract_digit_groups = |bytes: &[u8]| -> Vec<String> {
+            let mut groups = Vec::new();
+            let mut current = String::new();
+            for &b in bytes {
+                if (0x30..=0x39).contains(&b) {
+                    current.push(b as char);
+                } else if !current.is_empty() {
+                    groups.push(current.clone());
+                    current.clear();
+                }
+            }
+            if !current.is_empty() {
+                groups.push(current);
+            }
+            groups
+        };
+
+        let raw_exp_bytes = if surface_info_data.len() >= 8 { &surface_info_data[0..8] } else { &[] };
+        let raw_sc_bytes = if surface_info_data.len() >= 12 { &surface_info_data[8..12] } else { &[] };
+
+        let expiration_raw = String::from_utf8_lossy(raw_exp_bytes).to_string();
+        let security_code_raw = String::from_utf8_lossy(raw_sc_bytes).to_string();
+        println!("Debug: ExpirationRaw='{}', len={}", expiration_raw, expiration_raw.len());
+        println!("Debug: SCRaw='{}', len={}", security_code_raw, security_code_raw.len());
+
+        let groups = extract_digit_groups(&surface_info_data);
+        println!("Debug: SurfaceInfo digit groups: {:?}", groups);
+
+        let mut exp_digits = String::new();
+        let mut sc_digits = String::new();
+        let mut exp_index = None;
+        for (idx, group) in groups.iter().enumerate() {
+            if group.len() >= 8 {
+                exp_digits = group[0..8].to_string();
+                exp_index = Some(idx);
+                break;
+            }
+        }
+
+        if let Some(idx) = exp_index {
+            for group in groups.iter().skip(idx + 1) {
+                if group.len() == 4 {
+                    sc_digits = group.clone();
+                    break;
+                }
+            }
+        }
+
+        if exp_digits.is_empty() {
+            exp_digits = extract_digits(raw_exp_bytes);
+        }
+        if sc_digits.is_empty() {
+            sc_digits = extract_digits(raw_sc_bytes);
+        }
+
         println!("Debug: ExpDigits='{}', SCDigits='{}'", exp_digits, sc_digits);
 
         // 4. Select Attributes EF and Read
@@ -387,14 +434,11 @@ impl<R: CardReader> JpkiController<R> {
 
     async fn read_face_photo_with_b_number(&mut self, b_number: &str) -> Result<Vec<u8>> {
         // 1. Select Face Recognition AP
-        let apdu = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x04, 0x0C)
-            .with_data(&file_ids::DF_FACE_RECOGNITION);
-        let res = self.reader.transmit(&apdu.to_bytes()).await?;
-        Self::check_sw(&res).context("Failed to select Face Recognition AP")?;
+        self.select_face_recognition_ap().await?;
 
         // 2. Verify B-Number (as PIN)
         // EF ID for B-Number is 0011 (same as Input Support PIN EF ID but under this AP)
-        self.verify_pin(&[0x00, 0x11], b_number).await?;
+        self.verify_pin(&file_ids::EF_FACE_RECOGNITION_PIN, b_number).await?;
 
         // 3. Read Face Photo EF
         self.read_ef_full(&file_ids::EF_FACE_PHOTO).await
