@@ -40,8 +40,11 @@ To bundle this app into a Signed Web Bundle (`.swbn`), you need the `isolated-we
     ```
 
 4.  **Install in Chrome**:
-    - Open `chrome://web-app-internals`
-    - Click "Install from Bundle" and select `civ-iwa.swbn`.
+    - **Important**: Must enable `chrome://flags/#enable-isolated-web-app-dev-mode` and restart Chrome first.
+    - Go to `chrome://web-app-internals`.
+    - Look for the **"IWA Dev Mode"** tab or "Install IWA" section (UI varies by version).
+    - If you only see JSON text, verify the flag is enabled.
+    - Select your `.swbn` file to install.
 
 ### Development
 
