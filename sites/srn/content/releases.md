@@ -32,7 +32,8 @@ Major update for the new year, integrating the multi-document **CIV (Citizen Ide
 
 *   **Web/A Post (Event-Driven Transition)**:
     *   **Architecture Shift**: Pivoted towards a **Pub/Sub-first Ingress** model to ensure global portability and reduce frontend complexity.
-    *   **Storage Strategy**: Prioritized Object Storage (R2/GCS/S3) for raw containers with asynchronous processing for rule evaluation and AI assistance.
+    *   **Claim Check Pattern**: Adopted a model where raw containers are streamed to Object Storage (R2/GCS/S3) while only lightweight pointers are passed via Pub/Sub, overcoming CSP message size constraints (128KB - 10MB).
+    *   **Storage Strategy**: Prioritized Object Storage for raw containers with asynchronous processing for rule evaluation and AI assistance.
 
 ## v2.7.0 - Folio POC v0.1.0: JPKI Integration
 
