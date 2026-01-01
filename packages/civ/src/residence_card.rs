@@ -105,15 +105,48 @@ impl<R: CardReader> ResidenceCardController<R> {
         let res_sel = self.reader.transmit(&select.to_bytes()).await?;
         Self::check_sw(&res_sel).context("Failed to select EF")?;
 
-        let read = ApduCommand::new(CLA_ISO, INS_READ_BINARY, 0x00, 0x00)
-            .with_le(0x00);
-        let res = self.reader.transmit(&read.to_bytes()).await?;
+        let mut data = Vec::new();
+        let mut offset: u16 = 0;
         
-        if res.len() >= 2 {
-            Ok(res[0..res.len()-2].to_vec())
-        } else {
-            Err(anyhow::anyhow!("Response too short"))
+        loop {
+            let p1 = (offset >> 8) as u8;
+            let p2 = (offset & 0xFF) as u8;
+            
+            let read = ApduCommand::new(CLA_ISO, INS_READ_BINARY, p1, p2)
+                .with_le(0x00); // 256 bytes
+            
+            let res = self.reader.transmit(&read.to_bytes()).await?;
+            
+            if res.len() < 2 {
+                return Err(anyhow::anyhow!("Response too short"));
+            }
+            
+            let sw1 = res[res.len() - 2];
+            let sw2 = res[res.len() - 1];
+            let chunk = &res[0..res.len()-2];
+            
+            if !chunk.is_empty() {
+                data.extend_from_slice(chunk);
+                offset += chunk.len() as u16;
+            }
+
+            if sw1 == 0x90 && sw2 == 0x00 {
+                if chunk.len() < 256 {
+                    break;
+                }
+            } else if sw1 == 0x6B {
+                 break; // Offset outside limits
+            } else if sw1 == 0x62 && sw2 == 0x82 {
+                 break; // EOF
+            } else {
+                 return Err(anyhow::anyhow!("Read Binary Error: {:02X}{:02X}", sw1, sw2));
+            }
+
+            if offset > 32768 { // Safety limit
+                break;
+            }
         }
+        Ok(data)
     }
 
     fn check_sw(res: &[u8]) -> Result<()> {

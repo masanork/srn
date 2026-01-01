@@ -15,7 +15,7 @@ This document outlines the development path for the `civ` library and the requir
 - **Secure Messaging (SM) Wrapper**: Implemented BAC 3DES ISO 7816-4 / ICAO
   9303 wrapper for encrypted APDUs. AES-based PACE SM remains pending.
 - **PACE Support**: Implement Password Authenticated Connection Establishment for newer passports and EU IDs.
-- **Extended Read Logic**: Support for large file reading across all controllers (already started for Passport/DL).
+- **Extended Read Logic**: Support for large file reading across all controllers (Passport, Driver's License, and Residence Card implemented).
 
 ### Phase 2: Authenticity Verification (Medium-term)
 - **Passive Authentication (PA)**: Verify Data Groups against the Security Object (SOD) using Document Signer certificates.
