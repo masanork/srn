@@ -131,6 +131,42 @@ impl<R: CardReader> JpkiController<R> {
         Self::check_sw(&res).context("PIN Verification Failed")
     }
 
+    /// Get PIN Retry Count
+    /// Helper to assume the correct AP is already selected and PIN EF is selected.
+    pub async fn get_pin_retry_count(&mut self, pin_ef: &[u8]) -> Result<u8> {
+        // 1. Select PIN EF
+        let select_pin = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x02, 0x0C)
+            .with_data(pin_ef);
+        let res_sel = self.reader.transmit(&select_pin.to_bytes()).await?;
+        Self::check_sw(&res_sel).context("Failed to select PIN EF")?;
+
+        // 2. VERIFY with Empty Data (Check Status)
+        let verify = ApduCommand::new(CLA_ISO, INS_VERIFY, 0x00, 0x80); 
+        // No data means "Check Status" usually
+        
+        let res = self.reader.transmit(&verify.to_bytes()).await?;
+        
+        // Check SW: 63 Cx means x retries left. 9000 means verified?
+        if res.len() >= 2 {
+            let sw1 = res[res.len()-2];
+            let sw2 = res[res.len()-1];
+            
+            if sw1 == 0x63 && (sw2 & 0xF0) == 0xC0 {
+                return Ok(sw2 & 0x0F);
+            }
+            if sw1 == 0x90 && sw2 == 0x00 {
+                // Already verified or no restriction?
+                // Some cards return 9000 if already verified.
+                return Ok(255); // Special value for "Verified/Unlimited"
+            }
+        }
+        
+        Err(anyhow::anyhow!("Unknown PIN Status SW: {:02X}{:02X}", 
+            if res.len()>=2 { res[res.len()-2] } else {0},
+            if res.len()>=2 { res[res.len()-1] } else {0}
+        ))
+    }
+
     /// Compute Digital Signature
     /// data: The digest/data to sign.
     pub async fn compute_signature(&mut self, data: &[u8]) -> Result<Vec<u8>> {
@@ -327,7 +363,7 @@ impl<R: CardReader> JpkiController<R> {
     }
 
     /// Helper to read a full EF by looping READ BINARY
-    async fn read_ef_full(&mut self, ef_id: &[u8]) -> Result<Vec<u8>> {
+    pub async fn read_ef_full(&mut self, ef_id: &[u8]) -> Result<Vec<u8>> {
         let select = ApduCommand::new(CLA_ISO, INS_SELECT_FILE, 0x02, 0x0C)
             .with_data(ef_id);
         let res_sel = self.reader.transmit(&select.to_bytes()).await?;

@@ -61,7 +61,8 @@
       color: #475569;
     }
 
-    input[type="password"] {
+    input[type="password"],
+    input[type="text"] {
       width: 100%;
       padding: 12px;
       border: 1px solid #cbd5e1;
@@ -73,7 +74,8 @@
       transition: border-color 0.2s;
     }
 
-    input[type="password"]:focus {
+    input[type="password"]:focus,
+    input[type="text"]:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
@@ -105,6 +107,21 @@
       display: none;
       border-top: 1px solid #e2e8f0;
       padding-top: 20px;
+    }
+
+    .photo-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .photo-container img {
+      width: 120px;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
     }
 
     .row {
@@ -140,6 +157,18 @@
       text-align: center;
       display: none;
     }
+
+    .dev-tools {
+      margin-top: 40px;
+      border-top: 2px dashed #e2e8f0;
+      padding-top: 20px;
+    }
+
+    .dev-tools h2 {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
   </style>
 </head>
 
@@ -159,6 +188,9 @@
     <div id="error" class="error-msg"></div>
 
     <div id="result" class="result">
+      <div class="photo-container">
+        <img id="r-photo" alt="顔写真">
+      </div>
       <div class="row">
         <span class="label">Name</span>
         <span class="value" id="r-name"></span>
@@ -176,15 +208,45 @@
         <span class="value" id="r-gender"></span>
       </div>
     </div>
+
+    <div class="dev-tools">
+      <h2>Developer Tools</h2>
+
+      <div class="form-group">
+        <label>PIN Status (Input Support)</label>
+        <button id="check-pin-btn" style="background:#64748b;">Check Remaining Retries</button>
+        <div id="pin-status-result" style="margin-top:8px; font-weight:bold; color:#0f172a;"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Dump EF (Hex ID)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="ef-id-input" placeholder="e.g. 0005" style="flex:1;">
+          <button id="dump-ef-btn" style="width: auto; background:#64748b; white-space:nowrap;">Dump</button>
+        </div>
+      </div>
+      <textarea id="dump-result" rows="4"
+        style="width:100%; font-family:monospace; font-size:0.8rem; border:1px solid #cbd5e1; border-radius:8px; padding:8px; box-sizing:border-box; resize:vertical;"
+        readonly placeholder="EF Dump Result..."></textarea>
+    </div>
   </div>
 
   <script>
     const { invoke } = window.__TAURI__.core;
+
+    // Main elements
     const pinInput = document.getElementById('pin');
     const readBtn = document.getElementById('read-btn');
     const errorDiv = document.getElementById('error');
     const resultDiv = document.getElementById('result');
     const loadingDiv = document.getElementById('loading');
+
+    // Dev Tools Elements
+    const checkPinBtn = document.getElementById('check-pin-btn');
+    const dumpEfBtn = document.getElementById('dump-ef-btn');
+    const efIdInput = document.getElementById('ef-id-input');
+    const pinStatusResult = document.getElementById('pin-status-result');
+    const dumpResult = document.getElementById('dump-result');
 
     readBtn.addEventListener('click', async () => {
       const pin = pinInput.value;
@@ -206,12 +268,44 @@
         document.getElementById('r-dob').textContent = info.birth_date;
         document.getElementById('r-gender').textContent = info.gender;
 
+        if (info.face_photo) {
+          document.getElementById('r-photo').src = `data:image/png;base64,${info.face_photo}`;
+          document.getElementById('r-photo').style.display = 'block';
+        } else {
+          document.getElementById('r-photo').style.display = 'none';
+        }
+
         resultDiv.style.display = 'block';
       } catch (err) {
         console.error(err);
         showError(err);
       } finally {
         setLoading(false);
+      }
+    });
+
+    checkPinBtn.addEventListener('click', async () => {
+      try {
+        pinStatusResult.textContent = "Checking...";
+        const status = await invoke('check_pin_status');
+        pinStatusResult.textContent = status;
+      } catch (e) {
+        pinStatusResult.textContent = "Error: " + e;
+      }
+    });
+
+    dumpEfBtn.addEventListener('click', async () => {
+      const efId = efIdInput.value.replace(/\s+/g, '');
+      if (efId.length !== 4) {
+        alert("EF ID must be 4 hex chars (e.g. 0005)");
+        return;
+      }
+      try {
+        dumpResult.value = "Reading...";
+        const hexData = await invoke('debug_dump_ef', { efHex: efId });
+        dumpResult.value = hexData;
+      } catch (e) {
+        dumpResult.value = "Error: " + e;
       }
     });
 
