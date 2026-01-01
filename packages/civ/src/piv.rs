@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use crate::apdu::{ApduCommand, CLA_ISO, INS_SELECT_FILE, INS_READ_BINARY};
 use crate::reader::CardReader;
 use anyhow::{Result, Context};

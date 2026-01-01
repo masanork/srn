@@ -1,12 +1,16 @@
 use anyhow::{Result, anyhow};
 use p256::ecdh::EphemeralSecret;
+#[allow(unused_imports)]
 use p256::{PublicKey, EncodedPoint};
 use sha2::{Sha256, Digest};
+#[allow(unused_imports)]
 use p256::elliptic_curve::sec1::ToEncodedPoint;
+#[allow(unused_imports)]
 use aes::cipher::StreamCipher;
 // Note: cipher crate traits are typically needed for AES-CBC/CMAC
 
 /// PACE Session Keys (AES-128 / AES-256)
+#[allow(dead_code)]
 pub struct PaceSession {
     pub k_enc: Vec<u8>,
     pub k_mac: Vec<u8>,
@@ -33,11 +37,14 @@ fn kdf_sha256(secret: &[u8], counter: u32) -> Vec<u8> {
 }
 
 /// Simplified PACE State Machine
+#[allow(dead_code)]
 pub struct PaceStateMachine {
     state: PaceState,
     my_secret: Option<EphemeralSecret>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(dead_code)]
 enum PaceState {
     Initial,
     EncryptedNonceExchanged,
