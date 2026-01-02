@@ -14,28 +14,7 @@ export interface FormData {
     [key: string]: any;
 }
 
-/**
- * JSONデータをサイズに応じて圧縮してスクリプトタグに変換する
- */
-function compressJson(id: string, data: any): string {
-    const json = JSON.stringify(data);
-    if (json.length > 512) {
-        const compressed = zlib.gzipSync(Buffer.from(json));
-        return `<script id="${id}" type="application/x-gzip">${compressed.toString('base64')}</script>`;
-    }
-    return `<script id="${id}" type="application/json">${json}</script>`;
-}
-
-/**
- * JSバンドルを圧縮してスクリプトタグに変換する
- */
-function compressJs(id: string, js: string): string {
-    if (!js) return '';
-    const compressed = zlib.gzipSync(Buffer.from(js));
-    return `<script id="${id}" type="application/x-weba-js-gz">${compressed.toString('base64')}</script>`;
-}
-
-export function formLayout(params: {
+export async function formLayout(params: {
     data: FormData;
     rawMarkdown: string;
     fontCss: string;
@@ -81,10 +60,31 @@ export function formLayout(params: {
         : null;
     const l2Keywrap = data.l2_keywrap ? data.l2_keywrap : null;
 
-    // Embed structure for client-side logic
-    const structureScript = compressJson('weba-structure', jsonStructure);
-    const l2ConfigScript = l2Config ? compressJson('weba-l2-config', l2Config) : '';
-    const l2KeywrapScript = l2Keywrap ? compressJson('weba-l2-keywrap', l2Keywrap) : '';
+    // Register structure and configs as Blobs in ManifestManager
+    if (manifestManager) {
+        await manifestManager.addBlob({
+            id: 'weba-structure',
+            content: JSON.stringify(jsonStructure),
+            mediaType: 'application/json',
+            description: 'Form structure metadata'
+        });
+        if (l2Config) {
+            await manifestManager.addBlob({
+                id: 'weba-l2-config',
+                content: JSON.stringify(l2Config),
+                mediaType: 'application/json',
+                description: 'Layer 2 security configuration'
+            });
+        }
+        if (l2Keywrap) {
+            await manifestManager.addBlob({
+                id: 'weba-l2-keywrap',
+                content: JSON.stringify(l2Keywrap),
+                mediaType: 'application/json',
+                description: 'Layer 2 keywrap metadata'
+            });
+        }
+    }
 
     // Manifest Injection (Postal Data)
     let postalScript = '';
@@ -97,12 +97,10 @@ export function formLayout(params: {
             const optimizedPath = path.resolve('shared/data/postal/postal-optimized.json.gz');
             
             if (fs.existsSync(manifestPath) && fs.existsSync(optimizedPath) && manifestManager) {
-                const manifestEntry = fs.readJsonSync(manifestPath);
                 const gzBuffer = fs.readFileSync(optimizedPath);
 
                 // Register with ManifestManager (Unified Blob Management)
-                // Use the pre-calculated digest from manifestEntry
-                manifestManager.addBlob({
+                await manifestManager.addBlob({
                     id: 'jp-postal',
                     content: gzBuffer,
                     mediaType: 'application/x-gzip',
@@ -111,8 +109,6 @@ export function formLayout(params: {
                 });
                 
                 postalScript = `<script>window.__needsPostal = true;</script>`;
-            } else {
-                console.warn('Postal data/manifest not found or manager missing. Run "bun scripts/build_postal_data.ts"');
             }
         } catch (e) { console.warn('Failed to register postal blob', e); }
     }
@@ -149,6 +145,35 @@ export function formLayout(params: {
         </details>
     ` : '';
 
+    // JS Bundles registration
+    const inlineScript = async (name: string, id: string) => {
+        const paths = [
+            distDir ? path.join(distDir, 'assets', name) : '',
+            path.resolve('dist/assets', name)
+        ].filter(Boolean);
+        for (const p of paths) {
+            try {
+                if (fs.existsSync(p) && manifestManager) {
+                    const buffer = fs.readFileSync(p);
+                    await manifestManager.addBlob({
+                        id: `js-${id}`,
+                        content: buffer,
+                        mediaType: 'application/javascript',
+                        fileName: name,
+                        description: `Client script: ${name}`
+                    });
+                    return true;
+                }
+            } catch (e) { }
+        }
+        return false;
+    };
+    
+    await inlineScript('form-core.js', 'weba-js-core');
+    if (needsL2) await inlineScript('form-l2.js', 'weba-js-l2');
+    if (needsPostal) await inlineScript('form-postal.js', 'weba-js-postal');
+    if (data.layout === 'aggregator' || data.layout === 'report') await inlineScript('form-aggregator.js', 'weba-js-aggregator');
+
     const content = `
         <div class="weba-form-container">
             ${html}
@@ -173,50 +198,7 @@ export function formLayout(params: {
                 </div>
             </footer>
         </div>
-        ${structureScript}
-        ${l2ConfigScript}
-        ${l2KeywrapScript}
         ${postalScript}
-        ${(() => {
-            const scripts: string[] = [];
-            const inlineScript = (name: string, id: string) => {
-                const paths = [
-                    distDir ? path.join(distDir, 'assets', name) : '',
-                    path.resolve('dist/assets', name)
-                ].filter(Boolean);
-                for (const p of paths) {
-                    try {
-                        if (fs.existsSync(p)) {
-                            scripts.push(compressJs(id, fs.readFileSync(p, 'utf-8')));
-                            return true;
-                        }
-                    } catch (e) { }
-                }
-                return false;
-            };
-            inlineScript('form-core.js', 'weba-js-core');
-            if (needsL2) inlineScript('form-l2.js', 'weba-js-l2');
-            if (needsPostal) inlineScript('form-postal.js', 'weba-js-postal');
-            if (data.layout === 'aggregator' || data.layout === 'report') inlineScript('form-aggregator.js', 'weba-js-aggregator');
-
-            scripts.push('<script id="weba-bootstrap">');
-            scripts.push('(async () => {');
-            scripts.push('  const s = document.querySelectorAll(\'script[type="application/x-weba-js-gz"]\');');
-            scripts.push('  for (const el of s) {');
-            scripts.push('    try {');
-            scripts.push('      const bin = atob(el.textContent.trim());');
-            scripts.push('      const ui8 = new Uint8Array(bin.length);');
-            scripts.push('      for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);');
-            scripts.push('      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream(\'gzip\'));');
-            scripts.push('      const text = await new Response(stream).text();');
-            scripts.push('      const ns = document.createElement(\'script\'); ns.type = \'module\'; ns.textContent = text; document.body.appendChild(ns);');
-            scripts.push('    } catch (e) { console.error("JS Boot Error", e); }');
-            scripts.push('  }');
-            scripts.push('  setTimeout(() => { if (window.initRuntime) window.initRuntime(); }, 1);');
-            scripts.push('})();');
-            scripts.push('</script>');
-            return scripts.join('\n');
-        })()}
     `;
 
     return baseLayout({
@@ -229,61 +211,55 @@ export function formLayout(params: {
     });
 }
 
-export function formReportLayout(params: {
+export async function formReportLayout(params: {
     data: FormData;
     rawMarkdown: string;
     fontCss: string;
     fontFamilies: string[];
     relPath?: string;
     distDir?: string;
+    manifestManager?: ManifestManager;
 }) {
-    const { data, rawMarkdown, fontCss, fontFamilies, relPath = '', distDir } = params;
+    const { data, rawMarkdown, fontCss, fontFamilies, relPath = '', distDir, manifestManager } = params;
     const { jsonStructure } = parseMarkdown(rawMarkdown);
     const lang = (data.lang || 'ja').toString();
     const title = data.title ? `${data.title} (集計)` : 'Web/A Form (集計)';
 
-    const structureScript = compressJson('weba-structure', jsonStructure);
+    if (manifestManager) {
+        await manifestManager.addBlob({
+            id: 'weba-structure',
+            content: JSON.stringify(jsonStructure),
+            mediaType: 'application/json',
+            description: 'Form structure metadata'
+        });
+        
+        const inlineScript = async (name: string, id: string) => {
+            const paths = [
+                distDir ? path.join(distDir, 'assets', name) : '',
+                path.resolve('dist/assets', name)
+            ].filter(Boolean);
+            for (const p of paths) {
+                if (fs.existsSync(p)) {
+                    await manifestManager.addBlob({
+                        id: `js-${id}`,
+                        content: fs.readFileSync(p),
+                        mediaType: 'application/javascript',
+                        description: `Client script: ${name}`
+                    });
+                    return true;
+                }
+            }
+            return false;
+        };
+        await inlineScript('form-core.js', 'weba-js-core');
+        await inlineScript('form-aggregator.js', 'weba-js-aggregator');
+    }
 
     const content = `
         <div class="weba-report-container">
             <h1>${title}</h1>
             <div id="weba-report-root">Loading Aggregator...</div>
         </div>
-        ${structureScript}
-        ${(() => {
-            const scripts: string[] = [];
-            const inlineScript = (name: string, id: string) => {
-                const paths = [
-                    distDir ? path.join(distDir, 'assets', name) : '',
-                    path.resolve('dist/assets', name)
-                ].filter(Boolean);
-                for (const p of paths) {
-                    if (fs.existsSync(p)) {
-                        scripts.push(compressJs(id, fs.readFileSync(p, 'utf-8')));
-                        return true;
-                    }
-                }
-                return false;
-            };
-            inlineScript('form-core.js', 'weba-js-core');
-            inlineScript('form-aggregator.js', 'weba-js-aggregator');
-
-            scripts.push('<script id="weba-bootstrap">');
-            scripts.push('(async () => {');
-            scripts.push('  const s = document.querySelectorAll(\'script[type="application/x-weba-js-gz"]\');');
-            scripts.push('  for (const el of s) {');
-            scripts.push('    const bin = atob(el.textContent.trim());');
-            scripts.push('    const ui8 = new Uint8Array(bin.length);');
-            scripts.push('    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);');
-            scripts.push('    const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream(\'gzip\'));');
-            scripts.push('    const text = await new Response(stream).text();');
-            scripts.push('    const ns = document.createElement(\'script\'); ns.textContent = text; document.body.appendChild(ns);');
-            scripts.push('  }');
-            scripts.push('  setTimeout(() => { if (window.initRuntime) window.initRuntime(); }, 1);');
-            scripts.push('})();');
-            scripts.push('</script>');
-            return scripts.join('\n');
-        })()}
     `;
 
     return baseLayout({

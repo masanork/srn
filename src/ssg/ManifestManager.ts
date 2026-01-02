@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
+import zlib from 'zlib';
 import type { L1Manifest, MasterDataRef } from '../core/weba-manifest.ts';
 
 export class ManifestManager {
@@ -23,14 +24,25 @@ export class ManifestManager {
         fileName?: string;
         description?: string;
     }): Promise<MasterDataRef> {
-        const buffer = Buffer.isBuffer(params.content) ? params.content : Buffer.from(params.content);
+        let buffer = Buffer.isBuffer(params.content) ? params.content : Buffer.from(params.content);
+        let mediaType = params.mediaType;
+
+        // Auto-compress large text/json data if not already compressed
+        const isTextual = mediaType.includes('json') || mediaType.includes('javascript') || mediaType.includes('text');
+        const isAlreadyCompressed = mediaType.includes('gzip') || mediaType.includes('woff2');
+        
+        if (buffer.length > 512 && isTextual && !isAlreadyCompressed) {
+            buffer = zlib.gzipSync(buffer);
+            mediaType = 'application/x-gzip';
+        }
+
         const digest = `sha256:${crypto.createHash('sha256').update(buffer).digest('hex')}`;
         
-        // 既に同じDigestのBlobがあればそれを返す（重複排除）
+        // 重複チェック（既に同じDigestのBlobがあればそれを返す）
         const existing = this.blobs.find(b => b.digest === digest);
         if (existing) return existing;
 
-        const ext = params.fileName ? path.extname(params.fileName) : this.getExtension(params.mediaType);
+        const ext = params.fileName ? path.extname(params.fileName) : this.getExtension(mediaType);
         const name = params.fileName || `${digest.split(':')[1]}${ext}`;
         const relativePath = `data/blobs/${name}`;
         const fullPath = path.join(this.distDir, relativePath);
@@ -41,16 +53,16 @@ export class ManifestManager {
         const ref: MasterDataRef = {
             id: params.id,
             digest,
-            mediaType: params.mediaType,
+            mediaType: mediaType,
             size: buffer.length,
             urls: [
-                `#weba-blob-${digest.split(':')[1]}`, // Primary: DOM埋め込み参照用ID
-                `./${relativePath}`                   // Secondary: 外部取得用URL
+                `#weba-blob-${digest.split(':')[1]}`, // Primary: DOM内参照
+                `./${relativePath}`                   // Secondary: 外部URL
             ],
             description: params.description
         };
 
-        // 内部にバッファを保持（後でHTMLに埋め込むため）
+        // Base64化して内部保持
         (ref as any)._content = buffer.toString('base64');
         
         this.blobs.push(ref);
@@ -61,6 +73,7 @@ export class ManifestManager {
         const map: Record<string, string> = {
             'font/woff2': '.woff2',
             'application/json': '.json',
+            'application/javascript': '.js',
             'application/x-gzip': '.gz',
             'text/plain': '.txt'
         };
@@ -78,6 +91,8 @@ export class ManifestManager {
      * HTMLに注入するためのマニフェストデータと埋め込みスクリプトを生成
      */
     generateInjectionHtml(): string {
+        if (this.blobs.length === 0) return '';
+
         const manifest = {
             blobs: this.blobs.map(b => {
                 const { _content, ...rest } = b as any;
@@ -88,57 +103,15 @@ export class ManifestManager {
         let html = `\n<!-- Web/A L1 Manifest & Blobs -->\n`;
         html += `<script>window.__WEBA_MANIFEST = ${JSON.stringify(manifest)};</script>\n`;
         
-        // 実際のデータを埋め込む (Pack phase)
+        // Blobデータの埋め込み
         for (const blob of this.blobs) {
             const b = blob as any;
-            const id = b.urls[0].substring(1); // #を除去
-            const type = b.mediaType === 'font/woff2' ? 'application/x-font-woff2-base64' : b.mediaType;
-            html += `<script id="${id}" type="${type}">${b._content}</script>\n`;
+            const id = b.urls[0].substring(1);
+            html += `<script id="${id}" type="${b.mediaType}">${b._content}</script>\n`;
         }
 
-        // Font & JS Activation Script (Small runtime to handle pruned fonts/scripts)
-        // If a font/script is pruned from DOM but exists in manifest, this script could potentially fetch it.
-        html += `<script>
-(function() {
-  const m = window.__WEBA_MANIFEST;
-  if (!m || !m.blobs) return;
-  m.blobs.forEach(b => {
-    // Fonts
-    if (b.mediaType === 'font/woff2') {
-      const family = b.id.replace('font-', '');
-      const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
-      if (el) {
-        const css = \`@font-face { font-family: '\${family}'; src: url(data:font/woff2;base64,\${el.textContent}) format('woff2'); font-display: swap; }\`;
-        const style = document.createElement('style');
-        style.textContent = css;
-        document.head.appendChild(style);
-      }
-    }
-    // JavaScript (e.g. Mermaid)
-    if (b.mediaType === 'application/javascript') {
-      const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
-      if (el) {
-        // Load from embedded
-        const script = document.createElement('script');
-        // We can't use textContent for binary-ish JS if it was base64 encoded.
-        // ManifestManager stores _content as base64.
-        // So we need to decode it to text or blob.
-        // For JS, text is fine.
-        try {
-            const code = atob(el.textContent.trim());
-            script.textContent = code;
-            document.body.appendChild(script);
-            
-            // Post-load hooks
-            if (b.id === 'js-mermaid') {
-                if (window.mermaid) window.mermaid.initialize({ startOnLoad: true });
-            }
-        } catch(e) { console.error("Failed to load embedded JS", b.id, e); }
-      }
-    }
-  });
-})();
-</script>\n`;
+        // JS/Font Activation Runtime
+        html += `<script>\n(function() {\n  const m = window.__WEBA_MANIFEST;\n  if (!m || !m.blobs) return;\n  \n  const processBlob = async (b) => {\n    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);\n    if (!el) return null;\n\n    const bin = atob(el.textContent.trim());\n    const ui8 = new Uint8Array(bin.length);\n    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);\n    \n    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {\n      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));\n      return await new Response(stream).arrayBuffer();\n    }\n    return ui8.buffer;\n  };\n\n  m.blobs.forEach(b => {\n    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {\n      processBlob(b).then(data => {\n        if (!data) return;\n        const family = b.id.replace('font-', '');\n        const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));\n        const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";\n        const style = document.createElement('style');\n        style.textContent = css;\n        document.head.appendChild(style);\n      });\n    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {\n      processBlob(b).then(data => {\n        if (!data) return;\n        const code = new TextDecoder().decode(data);\n        const script = document.createElement('script');\n        script.textContent = code;\n        document.body.appendChild(script);\n        if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });\n      });\n    }\n  });\n})();\n</script>\n`;
 
         return html;
     }

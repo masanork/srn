@@ -121,32 +121,29 @@ body {
                 }
 
                 // Register Font as Blob in Manifest
-                let fontSourceUrl: string;
                 if (manifestManager) {
-                    const blobRef = await manifestManager.addBlob({
+                    await manifestManager.addBlob({
                         id: `font-${fontFamilyName}`,
                         content: fontBuffer,
                         mediaType: 'font/woff2',
                         fileName: `${cacheKey}.woff2`,
                         description: `Subset font for ${fontName}`
                     });
-                    // For CSS, we still need a working URL. 
-                    // In single-file mode, we use data URL, but we will mark it for pruning.
-                    // Or better: use a CSS variable that the bootstrapper handles.
-                    fontSourceUrl = bufferToDataUrl(fontBuffer, 'font/woff2');
+                    // DO NOT add to fontCss here. 
+                    // ManifestManager.generateInjectionHtml() will inject a script 
+                    // that adds @font-face dynamically from the embedded blob.
                 } else {
-                    fontSourceUrl = bufferToDataUrl(fontBuffer, 'font/woff2');
-                }
-
-                fontCss += `
+                    const dataUrl = bufferToDataUrl(fontBuffer, 'font/woff2');
+                    fontCss += `
 <style>
 @font-face {
   font-family: '${fontFamilyName}';
-  src: url('${fontSourceUrl}') format('woff2');
+  src: url('${dataUrl}') format('woff2');
   font-display: swap;
 }
 </style>
 `;
+                }
                 ivsSupportCountByFamily.set(fontFamilyName, ivsRecordsCount);
             }
         }

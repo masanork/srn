@@ -105,7 +105,7 @@ export class LayoutManager {
                     }
                 }
 
-                finalHtml = formLayout({ 
+                finalHtml = await formLayout({ 
                     data, 
                     rawMarkdown: content, 
                     fontCss, 
@@ -119,7 +119,7 @@ export class LayoutManager {
                 });
 
                 // Extra output: Report page
-                const reportHtml = formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir });
+                const reportHtml = await formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir, manifestManager: this.manifestManager });
                 const reportPath = path.join(distDir, relPath.replace('.md', '.report.html'));
                 await fs.ensureDir(path.dirname(reportPath));
                 await fs.writeFile(reportPath, reportHtml);
