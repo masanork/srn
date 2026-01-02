@@ -75,7 +75,8 @@ export class ManifestManager {
             'application/json': '.json',
             'application/javascript': '.js',
             'application/x-gzip': '.gz',
-            'text/plain': '.txt'
+            'text/plain': '.txt',
+            'application/wasm': '.wasm'
         };
         return map[mime] || '.bin';
     }
@@ -100,19 +101,66 @@ export class ManifestManager {
             })
         };
 
-        let html = `\n<!-- Web/A L1 Manifest & Blobs -->\n`;
-        html += `<script>window.__WEBA_MANIFEST = ${JSON.stringify(manifest)};</script>\n`;
+        let html = `
+<!-- Web/A L1 Manifest & Blobs -->
+`;
+        html += `<script>window.__WEBA_MANIFEST = ${JSON.stringify(manifest)};</script>
+`;
         
         // Blobデータの埋め込み
         for (const blob of this.blobs) {
             const b = blob as any;
             const id = b.urls[0].substring(1);
-            html += `<script id="${id}" type="${b.mediaType}">${b._content}</script>\n`;
+            html += `<script id="${id}" type="${b.mediaType}">${b._content}</script>
+`;
         }
 
         // JS/Font Activation Runtime
-        html += `<script>\n(function() {\n  const m = window.__WEBA_MANIFEST;\n  if (!m || !m.blobs) return;\n  \n  const processBlob = async (b) => {\n    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);\n    if (!el) return null;\n\n    const bin = atob(el.textContent.trim());\n    const ui8 = new Uint8Array(bin.length);\n    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);\n    \n    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {\n      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));\n      return await new Response(stream).arrayBuffer();\n    }\n    return ui8.buffer;\n  };\n\n  m.blobs.forEach(b => {\n    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {\n      processBlob(b).then(data => {\n        if (!data) return;\n        const family = b.id.replace('font-', '');\n        const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));\n        const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";\n        const style = document.createElement('style');\n        style.textContent = css;\n        document.head.appendChild(style);\n      });\n    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {\n      processBlob(b).then(data => {\n        if (!data) return;\n        const code = new TextDecoder().decode(data);\n        const script = document.createElement('script');\n        script.textContent = code;\n        document.body.appendChild(script);\n        if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });\n      });\n    }\n  });\n})();\n</script>\n`;
+        html += `<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
 
-        return html;
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
     }
-}
+    return ui8.buffer;
+  };
+
+  // Sort blobs: Fonts first, then WASM, then JS
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.textContent = code;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
