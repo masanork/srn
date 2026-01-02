@@ -76,6 +76,51 @@ export class PostalLookup {
     }
 
     /**
+     * マニフェスト(L1)からロード
+     */
+    async loadFromManifest(): Promise<boolean> {
+        const manifest = (window as any).__WEBA_MANIFEST;
+        if (!manifest || !manifest.blobs) return false;
+        
+        const postalEntry = manifest.blobs.find((b: any) => b.id === 'jp-postal');
+        if (!postalEntry || !postalEntry.urls || postalEntry.urls.length === 0) return false;
+
+        try {
+            console.log('📮 Loading postal data from manifest:', postalEntry.urls[0]);
+            const response = await fetch(postalEntry.urls[0]);
+            if (!response.ok) throw new Error('Fetch failed: ' + response.status);
+
+            const blob = await response.blob();
+            let jsonString: string;
+
+            // Check signature (GZIP: 1F 8B)
+            const header = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+            if (header[0] === 0x1f && header[1] === 0x8b) {
+                 if (typeof DecompressionStream !== 'undefined') {
+                     const ds = new DecompressionStream('gzip');
+                     const stream = blob.stream().pipeThrough(ds);
+                     jsonString = await new Response(stream).text();
+                 } else {
+                     throw new Error('DecompressionStream not supported');
+                 }
+            } else {
+                 jsonString = await blob.text();
+            }
+
+            this.data = JSON.parse(jsonString);
+            this.initialized = true;
+            // Store digest for L2 binding
+            (this as any)._activeDigest = postalEntry.digest;
+            
+            console.log('📮 Postal lookup initialized via Manifest:', Object.keys(this.data).length, 'prefixes');
+            return true;
+        } catch (e) {
+            console.error('Failed to load postal from manifest:', e);
+            return false;
+        }
+    }
+
+    /**
      * 埋め込みデータから自動初期化
      */
     async autoInit(): Promise<void> {
@@ -85,7 +130,12 @@ export class PostalLookup {
             return;
         }
 
-        // HTML内の<script id="weba-postal-data">を探す
+        // Try Manifest first (Web/A Architecture)
+        if (await this.loadFromManifest()) {
+            return;
+        }
+
+        // HTML内の<script id="weba-postal-data">を探す (Fallback/Legacy)
         const scriptEl = document.getElementById('weba-postal-data');
         if (scriptEl && scriptEl.textContent) {
             await this.loadFromBase64(scriptEl.textContent.trim());
@@ -93,6 +143,14 @@ export class PostalLookup {
             console.warn('No postal data found in document');
         }
     }
+
+    /**
+     * アクティブなデータのDigestを取得（L2署名用）
+     */
+    getActiveDigest(): string | null {
+        return (this as any)._activeDigest || null;
+    }
+
 
     /**
      * 郵便番号から完全一致検索

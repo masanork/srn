@@ -12,6 +12,7 @@ import { writeFileSync, createReadStream, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { gzipSync } from 'zlib';
 import * as csv from 'fast-csv';
+import { createHash } from 'crypto';
 
 interface PostalRecord {
     zip: string;
@@ -121,10 +122,26 @@ async function main() {
     const base64Data = Buffer.from(optimizedStr).toString('base64');
     writeFileSync(join(OUTPUT_DIR, 'postal-embedded.txt'), base64Data);
 
+    // Calculate Digest (SHA-256 of the uncompressed JSON)
+    // This is for the L1 Manifest Binding
+    const hash = createHash('sha256');
+    hash.update(optimizedStr);
+    const digest = `sha256:${hash.digest('hex')}`;
+    
+    const manifestEntry = {
+        id: 'jp-postal',
+        digest,
+        size: optimizedSize,
+        mediaType: 'application/json',
+        generatedAt: new Date().toISOString()
+    };
+    writeFileSync(join(OUTPUT_DIR, 'postal-manifest.json'), JSON.stringify(manifestEntry, null, 2));
+
     console.log('✅ ビルド完了！');
     console.log(`   - shared/data/postal/postal-optimized.json: ${(optimizedSize / 1024).toFixed(1)} KB`);
     console.log(`   - shared/data/postal/postal-optimized.json.gz: ${(compressed.length / 1024).toFixed(1)} KB`);
     console.log(`   - shared/data/postal/postal-embedded.txt: ${(base64Data.length / 1024).toFixed(1)} KB`);
+    console.log(`   - shared/data/postal/postal-manifest.json: (Digest: ${digest.substring(0, 16)}...)`);
     
     console.log('\n💡 実行環境でのヒント:');
     console.log('   ブラウザで利用する場合、.json.gz を fetch して DecompressionStream で展開すると');

@@ -184,6 +184,12 @@ async function copyStaticAssets(siteDir: string, distDir: string, schemasDir: st
     if (await fs.pathExists(siteStyle)) await fs.copy(siteStyle, styleTarget);
     else if (await fs.pathExists(sharedStyle)) await fs.copy(sharedStyle, styleTarget);
 
+    // Copy shared data (e.g., postal codes)
+    const sharedData = path.resolve(process.cwd(), 'shared', 'data');
+    if (await fs.pathExists(sharedData)) {
+        await fs.copy(sharedData, path.join(distDir, 'data'));
+    }
+
     const staticDir = path.join(siteDir, 'static');
     if (await fs.pathExists(staticDir)) {
         await fs.copy(staticDir, distDir, { overwrite: true, filter: (src) => !src.endsWith('style.css') });

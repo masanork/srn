@@ -82,20 +82,35 @@ export function formLayout(params: {
     const l2ConfigScript = l2Config ? compressJson('weba-l2-config', l2Config) : '';
     const l2KeywrapScript = l2Keywrap ? compressJson('weba-l2-keywrap', l2Keywrap) : '';
 
-    // Embed Postal Data if any address-related fields are detected
+    // Manifest Injection (Postal Data)
     let postalScript = '';
     const needsPostal = rawMarkdown.match(/zip|postal|郵便|pref|都道府県|city|市区町村|市町村|town|町名|町字|address|住所/i);
     const needsL2 = l2Config || rawMarkdown.includes('weba-l2-') || rawMarkdown.includes('l2crypto');
 
     if (needsPostal) {
         try {
-            const postalDataPath = path.resolve('shared/data/postal/postal-optimized.json.gz');
-            if (fs.existsSync(postalDataPath)) {
-                const b64 = fs.readFileSync(postalDataPath).toString('base64');
-                postalScript = `<script id="weba-postal-data" type="application/x-gzip">${b64}</script>
-                <script>window.__needsPostal = true;</script>`;
+            const manifestPath = path.resolve('shared/data/postal/postal-manifest.json');
+            if (fs.existsSync(manifestPath)) {
+                const manifestEntry = fs.readJsonSync(manifestPath);
+                // Adjust URL for client-side consumption
+                // Assuming the .gz file is copied to 'static/data/postal-optimized.json.gz' or similar
+                // The SSG build process must ensure this copy happens.
+                // For now, we assume it's available at a standard path relative to the site root.
+                // Or better, we put it in 'assets'.
+                manifestEntry.urls = [`${getRelativePrefix(relPath)}data/postal-optimized.json.gz`];
+                
+                const manifestData = {
+                    blobs: [manifestEntry]
+                };
+                
+                postalScript = `<script>
+                    window.__WEBA_MANIFEST = ${JSON.stringify(manifestData)};
+                    window.__needsPostal = true;
+                </script>`;
+            } else {
+                console.warn('Postal manifest not found. Run "bun scripts/build_postal_data.ts"');
             }
-        } catch (e) { console.warn('Failed to embed postal data', e); }
+        } catch (e) { console.warn('Failed to inject postal manifest', e); }
     }
 
     const l2Toggle = l2Config ? `
