@@ -14,6 +14,18 @@ export interface FormData {
     [key: string]: any;
 }
 
+
+
+function getSharedStyle(): string {
+    const p = path.resolve('shared/style.css');
+    try {
+        if (fs.existsSync(p)) {
+            return fs.readFileSync(p, 'utf-8');
+        }
+    } catch { }
+    return '';
+}
+
 export async function formLayout(params: {
     data: FormData;
     rawMarkdown: string;
@@ -30,6 +42,9 @@ export async function formLayout(params: {
     const { html, jsonStructure: internalStructure } = parseMarkdown(rawMarkdown);
     const jsonStructure = params.jsonStructure || internalStructure;
     const lang = (data.lang || 'ja').toString();
+
+    // Load Shared CSS
+    const sharedCss = getSharedStyle();
 
     const layer1Ref =
         (data.l2_layer1_ref as string | undefined) ||
@@ -95,7 +110,7 @@ export async function formLayout(params: {
         try {
             const manifestPath = path.resolve('shared/data/postal/postal-manifest.json');
             const optimizedPath = path.resolve('shared/data/postal/postal-optimized.json.gz');
-            
+
             if (fs.existsSync(manifestPath) && fs.existsSync(optimizedPath) && manifestManager) {
                 const gzBuffer = fs.readFileSync(optimizedPath);
 
@@ -107,7 +122,7 @@ export async function formLayout(params: {
                     fileName: 'postal-optimized.json.gz',
                     description: 'Japan Postal Code Data (Optimized)'
                 });
-                
+
                 postalScript = `<script>window.__needsPostal = true;</script>`;
             }
         } catch (e) { console.warn('Failed to register postal blob', e); }
@@ -168,14 +183,18 @@ export async function formLayout(params: {
         }
         return false;
     };
-    
+
     await inlineScript('form-core.js', 'weba-js-core');
     if (needsL2) await inlineScript('form-l2.js', 'weba-js-l2');
     if (needsPostal) await inlineScript('form-postal.js', 'weba-js-postal');
     if (data.layout === 'aggregator' || data.layout === 'report') await inlineScript('form-aggregator.js', 'weba-js-aggregator');
 
+    const customStyle = data.style ? `<style>\n${data.style}\n</style>` : '';
+    const customScript = data.script ? `<script>\n${data.script}\n</script>` : '';
+
     const content = `
         <div class="weba-form-container">
+            ${customStyle}
             ${html}
             ${l2Toggle}
 
@@ -199,12 +218,13 @@ export async function formLayout(params: {
             </footer>
         </div>
         ${postalScript}
+        ${customScript}
     `;
 
     return baseLayout({
         title: data.title,
         content: content,
-        fontCss,
+        fontCss: fontCss + (sharedCss ? `<style>${sharedCss}</style>` : ''),
         fontFamilies,
         lang: lang,
         relPath
@@ -232,7 +252,7 @@ export async function formReportLayout(params: {
             mediaType: 'application/json',
             description: 'Form structure metadata'
         });
-        
+
         const inlineScript = async (name: string, id: string) => {
             const paths = [
                 distDir ? path.join(distDir, 'assets', name) : '',

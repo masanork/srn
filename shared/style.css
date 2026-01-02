@@ -44,17 +44,19 @@ body {
 }
 
 /* Widen layout for Web/A Forms and give them a document feel */
+
+/* Widen layout for Web/A Forms and give them a document feel */
 body:has(.weba-form-container) {
     max-width: 1200px;
-    background-color: #f1f5f9;
 }
 
 body:has(.weba-form-container) main {
-    background: #ffffff;
+    background: var(--card-bg);
     padding: 4rem;
-    border-radius: 4px; /* Sharper corners for documents */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    /* Sharper corners for documents */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
 }
 
 main {
@@ -157,6 +159,7 @@ pre code {
 .table-wrapper:has(.data-table.master) {
     display: none;
 }
+
 .data-table.master {
     display: none;
 }
@@ -213,9 +216,19 @@ td .form-input {
     border-radius: 4px;
     min-width: 100px;
 }
-td input[type="number"].form-input { min-width: 80px; }
-td input[type="date"].form-input { min-width: 140px; }
-td input[type="checkbox"].form-input { min-width: auto; width: auto; }
+
+td input[type="number"].form-input {
+    min-width: 80px;
+}
+
+td input[type="date"].form-input {
+    min-width: 140px;
+}
+
+td input[type="checkbox"].form-input {
+    min-width: auto;
+    width: auto;
+}
 
 
 .mermaid {
@@ -327,10 +340,12 @@ td .form-input {
     background: transparent;
     border-radius: 4px;
 }
+
 td .form-input:hover {
     border-color: var(--border-color);
     background: var(--bg-color);
 }
+
 td .form-input:focus {
     background: var(--card-bg);
     border-color: var(--primary-color);
@@ -343,6 +358,7 @@ td .form-input:focus {
 .weba-l2-readonly .weba-l2-toggle {
     display: none !important;
 }
+
 .weba-l2-readonly .form-input[readonly],
 .weba-l2-readonly .form-input:disabled,
 .weba-l2-readonly input[readonly],
@@ -355,6 +371,7 @@ td .form-input:focus {
     opacity: 1;
     border-color: #cbd5e1;
 }
+
 .weba-l2-readonly td .form-input,
 .weba-l2-readonly td .form-input:hover,
 .weba-l2-readonly td .form-input:focus {
@@ -373,18 +390,23 @@ td .form-input:focus {
     overflow-y: auto;
     z-index: 1000;
 }
+
 .search-suggestions div {
     padding: 0.75rem 1rem;
     cursor: pointer;
     border-bottom: 1px solid var(--border-color);
 }
+
 .search-suggestions div:hover {
     background-color: var(--bg-color);
     color: var(--primary-color);
 }
 
 /* Buttons (Toolbar) */
-button.primary, button.secondary, button.btn-clear, button.tab-btn {
+button.primary,
+button.secondary,
+button.btn-clear,
+button.tab-btn {
     appearance: none;
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
@@ -405,10 +427,11 @@ button.primary {
     color: white;
     border-color: #10b981;
 }
+
 button.primary:hover {
     background-color: #059669;
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* 作業内容を保存 (Save Progress) */
@@ -417,10 +440,11 @@ button.secondary {
     color: white;
     border-color: #0070f3;
 }
+
 button.secondary:hover {
     background-color: #0056b3;
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* クリア (Clear) - 落ち着いた灰色、ホバーで赤 */
@@ -429,6 +453,7 @@ button.btn-clear {
     border: 1px solid #e2e8f0;
     color: #64748b;
 }
+
 button.btn-clear:hover {
     background-color: #fef2f2;
     border-color: #fecaca;
@@ -445,7 +470,8 @@ button.btn-clear:hover {
     padding-bottom: 0;
     overflow-x: auto;
     position: sticky;
-    top: -2rem; /* Stick to top when scrolling */
+    top: -2rem;
+    /* Stick to top when scrolling */
     background: white;
     z-index: 100;
     margin-left: -4rem;
@@ -453,6 +479,7 @@ button.btn-clear:hover {
     padding-left: 4rem;
     padding-right: 4rem;
 }
+
 button.tab-btn {
     background: transparent;
     border: none;
@@ -464,11 +491,13 @@ button.tab-btn {
     font-size: 1rem;
     white-space: nowrap;
 }
+
 button.tab-btn.active {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
     background: rgba(37, 99, 235, 0.05);
 }
+
 button.tab-btn:hover:not(.active) {
     color: var(--text-color);
     background: #f8fafc;
@@ -477,14 +506,22 @@ button.tab-btn:hover:not(.active) {
 .tab-content {
     display: none;
 }
+
 .tab-content.active {
     display: block;
     animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Dynamic Table Actions */
@@ -499,6 +536,7 @@ button.tab-btn:hover:not(.active) {
     cursor: pointer;
     transition: all 0.2s;
 }
+
 .add-row-btn:hover {
     border-color: var(--primary-color);
     color: var(--primary-color);
@@ -508,12 +546,14 @@ button.tab-btn:hover:not(.active) {
 .remove-row-btn {
     background: transparent;
     border: none;
-    color: #ef4444; /* Red */
+    color: #ef4444;
+    /* Red */
     font-size: 1.2rem;
     cursor: pointer;
     opacity: 0.6;
     padding: 0 0.5rem;
 }
+
 .remove-row-btn:hover {
     opacity: 1;
     transform: scale(1.1);
@@ -548,6 +588,7 @@ button.tab-btn:hover:not(.active) {
     color: #166534;
     border-color: #bbf7d0;
 }
+
 .security-badge.tier-high .status-dot {
     background: #22c55e;
     box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
@@ -558,6 +599,7 @@ button.tab-btn:hover:not(.active) {
     color: #854d0e;
     border-color: #fef08a;
 }
+
 .security-badge.tier-standard .status-dot {
     background: #eab308;
 }
@@ -567,7 +609,7 @@ button.tab-btn:hover:not(.active) {
     color: #9a3412;
     border-color: #fed7aa;
 }
+
 .security-badge.tier-offline .status-dot {
     background: #f97316;
 }
-

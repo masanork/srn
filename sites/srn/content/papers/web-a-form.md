@@ -108,6 +108,35 @@ This minimizes manual re-design while preserving existing workflows.
 
 ---
 
+### 2.4 Look & Feel Compliance
+
+Web/A Forms come with a **"Premium by Default"** shared design system embedded automatically during the build process. This ensures that even a plain Markdown table looks like a professional financial document.
+
+However, form authors can fine-tune the appearance and behavior on a per-file basis using Frontmatter injections:
+
+- **`style`**: Inject custom CSS to override theme colors, hide specific elements, or adjust layout (e.g., maximizing table width).
+- **`script`**: Inject custom JavaScript to patch UI logic, add specific event handlers, or provide polyfills for older environments.
+
+This capabilities ensure that a single Web/A file remains **self-contained and self-repairing**. Even if the core runtime has a bug or lacks a specific feature, the form author can "patch" it within the file itself, without waiting for a system-wide update.
+
+```yaml
+---
+title: "LG Plan 2025"
+style: |
+  /* Custom Accent Color */
+  :root { --primary-color: #008080; }
+  /* Hide System Tabs */
+  .tab-content[data-tab-title="(System)"] { display: none !important; }
+script: |
+  // Custom Validation Logic
+  window.addEventListener('submit', (e) => {
+    if (!checkBalance()) e.preventDefault();
+  });
+---
+```
+
+---
+
 ## 3. Core Values
 
 ### 3.1 Zero Admin
