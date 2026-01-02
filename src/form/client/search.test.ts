@@ -11,7 +11,7 @@ const mockPostal = {
 };
 (global as any).postalLookup = mockPostal;
 
-// Setup global environment
+// Setup global environment (Shared DOM)
 const window = new Window();
 const document = window.document;
 (global as any).window = window;
@@ -216,6 +216,7 @@ describe("Web/A Client Runtime > Search Engine", () => {
 
         // Behavior: postal fields won't search master data
         // Since postal data is not loaded in test, it should not crash
+        // And the global box should be present (hidden)
         expect(document.getElementById('web-a-search-suggestions')).not.toBeNull();
         expect(true).toBe(true); // Test passes if no crash occurs
     });

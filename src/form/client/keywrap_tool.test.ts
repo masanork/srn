@@ -72,7 +72,7 @@ describe("Web/A L2 keywrap tool", () => {
 
     const wrapBtn = document.getElementById("kwp-wrap") as HTMLButtonElement;
     wrapBtn.click();
-    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 100));
 
     const output = document.getElementById("kwp-output") as HTMLPreElement;
     const parsed = JSON.parse(output.textContent || "{}");
@@ -96,7 +96,7 @@ describe("Web/A L2 keywrap tool", () => {
     initKeywrapTool();
     const wrapBtn = document.getElementById("kwp-wrap") as HTMLButtonElement;
     wrapBtn.click();
-    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 100));
 
     const status = document.getElementById("kwp-status") as HTMLElement;
     expect(status.textContent).toBe("Key wrap failed.");

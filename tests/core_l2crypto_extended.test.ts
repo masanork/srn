@@ -34,7 +34,13 @@ describe("ReplayGuard with JsonFileReplayStore", () => {
 
     test("handles corrupt store file", () => {
         fs.writeFileSync(testFile, "invalid-json");
-        const store = new JsonFileReplayStore(testFile); // Should not throw
-        expect(store).toBeDefined();
+        const originalError = console.error;
+        console.error = () => {}; // Suppress expected error
+        try {
+            const store = new JsonFileReplayStore(testFile); // Should not throw
+            expect(store).toBeDefined();
+        } finally {
+            console.error = originalError;
+        }
     });
 });

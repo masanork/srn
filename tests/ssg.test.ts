@@ -34,7 +34,8 @@ describe("SSG Integration", () => {
     const runBuild = async (args: string[] = []) => {
         const originalArgv = [...process.argv];
         // Always include --clean in tests to ensure full execution and coverage
-        process.argv = ["bun", "src/ssg/index.ts", "--site-config", path.join(TEST_SITE_DIR, "config.yaml"), "--clean", ...args];
+        // Add --no-lock to prevent race conditions during testing
+        process.argv = ["bun", "src/ssg/index.ts", "--site-config", path.join(TEST_SITE_DIR, "config.yaml"), "--clean", "--no-lock", ...args];
         process.env.NODE_ENV = "test";
         try {
             await build();

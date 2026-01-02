@@ -301,6 +301,9 @@ export class SearchEngine {
     }
 
     private getGlobalBox(): HTMLElement {
+        if (this.globalBox && !document.body.contains(this.globalBox)) {
+            this.globalBox = null;
+        }
         if (!this.globalBox) {
             this.globalBox = document.getElementById('web-a-search-suggestions');
             if (!this.globalBox) {
