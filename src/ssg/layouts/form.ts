@@ -8,6 +8,7 @@ import { getRelativePrefix } from '../utils.js';
 import { parseMarkdown } from '../../form/parser.js';
 import type { ManifestManager } from '../ManifestManager.ts';
 import { detectRequiredPlugins, generatePluginManifest } from '../../form/runtime/plugin-detector.js';
+import { bundlePlugins } from '../../form/runtime/bundler.js';
 
 export interface FormData {
     title: string;
@@ -76,6 +77,13 @@ export async function formLayout(params: {
         : null;
     const l2Keywrap = data.l2_keywrap ? data.l2_keywrap : null;
 
+    // Detect required plugins (needed for both manifest and bundler)
+    const pluginDetection = detectRequiredPlugins({
+        structure: jsonStructure,
+        rawMarkdown,
+        frontmatter: data
+    });
+
     // Register structure and configs as Blobs in ManifestManager
     if (manifestManager) {
         await manifestManager.addBlob({
@@ -100,13 +108,6 @@ export async function formLayout(params: {
                 description: 'Layer 2 keywrap metadata'
             });
         }
-
-        // Detect required plugins
-        const pluginDetection = detectRequiredPlugins({
-            structure: jsonStructure,
-            rawMarkdown,
-            frontmatter: data
-        });
 
         // Add plugin manifest
         await manifestManager.addBlob({
@@ -226,7 +227,34 @@ export async function formLayout(params: {
         return false;
     };
 
-    await inlineScript('form-core-plugin.js', 'weba-js-core');
+    // Generate custom bundle with only required plugins
+    if (manifestManager && pluginDetection.plugins.length > 0) {
+        try {
+            console.log(`[FormLayout] Generating custom bundle for: ${pluginDetection.plugins.join(', ')}`);
+            const bundle = await bundlePlugins({
+                plugins: pluginDetection.plugins,
+                minify: true,
+                cache: true
+            });
+
+            await manifestManager.addBlob({
+                id: 'js-weba-js-core',
+                content: Buffer.from(bundle.code, 'utf-8'),
+                mediaType: 'application/javascript',
+                fileName: `form-runtime-${bundle.hash}.js`,
+                description: `Custom plugin runtime (${pluginDetection.plugins.join(', ')})`
+            });
+
+            console.log(`[FormLayout] Custom bundle registered: ${bundle.size} bytes`);
+        } catch (error) {
+            console.warn('[FormLayout] Custom bundler failed, falling back to form-core-plugin.js:', error);
+            await inlineScript('form-core-plugin.js', 'weba-js-core');
+        }
+    } else {
+        // Fallback to standard plugin runtime
+        await inlineScript('form-core-plugin.js', 'weba-js-core');
+    }
+
     if (needsL2) await inlineScript('form-l2.js', 'weba-js-l2');
     if (data.layout === 'aggregator' || data.layout === 'report') await inlineScript('form-aggregator.js', 'weba-js-aggregator');
 
