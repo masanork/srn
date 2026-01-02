@@ -149,9 +149,10 @@ export class ManifestManager {
       const data = await processBlob(b);
       if (!data) continue;
       const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
       const script = document.createElement('script');
       script.type = 'module';
-      script.textContent = code;
+      script.src = blobUrl;
       document.body.appendChild(script);
       if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
     }

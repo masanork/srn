@@ -395,10 +395,6 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
     `;
 
-    const toolbarHtml = `<div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
-            ${toolbarButtons}
-        </div>`;
-
     if (tabs.length > 0) {
         let navHtml = '<div class="tabs-nav">';
         let visibleTabCount = 0;
@@ -411,10 +407,12 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             visibleTabCount++;
         });
 
-        // Add spacer and Save button
-        navHtml += `<div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1;">
-            ${toolbarButtons}
-        </div>`;
+        // Add Save/Clear buttons to the tab nav
+        navHtml += `
+            <div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1; padding-left: 20px;">
+                ${toolbarButtons}
+            </div>
+        `;
         navHtml += '</div>';
 
         // Find position to insert Nav: After H1
@@ -424,6 +422,9 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             html = navHtml + mainContentHtml;
         }
     } else {
+        const toolbarHtml = `<div class="no-print form-toolbar" style="display: flex; gap: 10px; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            ${toolbarButtons}
+        </div>`;
         html = mainContentHtml + toolbarHtml;
     }
 
