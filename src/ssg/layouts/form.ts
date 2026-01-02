@@ -130,8 +130,8 @@ export async function formLayout(params: {
         <details style="margin-top: 1rem;">
             <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #666; font-weight: 600;">
                 <span>✓</span>
-                <span data-i18n-ja="真正性情報 (VC)" data-i18n-en="Authenticity (VC)">真正性情報 (VC)</span>
-                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: normal;">Template Signed</span>
+                <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                <span style="font-size: 0.7rem; background: #e6f7e6; color: #2e7d32; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: normal;">Signed Template</span>
             </summary>
             <div style="padding: 1rem 0;">
                 <div style="margin-bottom: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; font-size: 0.8rem;">
