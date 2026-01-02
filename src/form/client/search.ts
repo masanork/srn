@@ -44,16 +44,61 @@ export class SearchEngine {
         await this.initPostalLookup();
 
         const w = window as any;
-        // @ts-ignore
-        if (w.generatedJsonStructure && w.generatedJsonStructure.masterData) {
-            // @ts-ignore
-            const keys = Object.keys(w.generatedJsonStructure.masterData);
-            console.log("Master Data Keys available:", keys.join(', '));
+        const jsonStructure = w.generatedJsonStructure;
+
+        // --- Master Data Loading (including Blobs) ---
+        if (jsonStructure) {
+            if (jsonStructure.masterDataRefs) {
+                await this.loadMasterDataFromBlobs(jsonStructure);
+            }
+            
+            if (jsonStructure.masterData) {
+                const keys = Object.keys(jsonStructure.masterData);
+                console.log("Master Data Keys available:", keys.join(', '));
+            }
         }
 
         this.setupEventDelegation();
         console.log("Search Engine ready. Postal enabled:", this.postalReady);
     }
+
+    /**
+     * マニフェストからBlob化されたマスターデータをロード
+     */
+    private async loadMasterDataFromBlobs(jsonStructure: any) {
+        const manifest = (window as any).__WEBA_MANIFEST;
+        if (!manifest || !manifest.blobs) return;
+
+        const refs = jsonStructure.masterDataRefs;
+        jsonStructure.masterData = jsonStructure.masterData || {};
+
+        for (const [key, digest] of Object.entries(refs)) {
+            const blobEntry = manifest.blobs.find((b: any) => b.digest === digest);
+            if (!blobEntry || !blobEntry.urls) continue;
+
+            for (const url of blobEntry.urls) {
+                try {
+                    let jsonString: string;
+                    if (url.startsWith('#')) {
+                        const el = document.querySelector(url);
+                        if (!el || !el.textContent) continue;
+                        jsonString = atob(el.textContent.trim());
+                    } else {
+                        const resp = await fetch(url);
+                        if (!resp.ok) continue;
+                        jsonString = await resp.text();
+                    }
+                    
+                    jsonStructure.masterData[key] = JSON.parse(jsonString);
+                    console.log(`📮 Master data '${key}' loaded from blob:`, digest);
+                    break; // Success
+                } catch (e) {
+                    console.warn(`Failed to load master data blob ${key} from ${url}:`, e);
+                }
+            }
+        }
+    }
+
 
     private normalize(val: string): string {
         if (!val) return '';

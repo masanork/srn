@@ -6,6 +6,7 @@ const VERSION = packageJson.version || 'unknown';
 import { baseLayout } from './base.js';
 import { getRelativePrefix } from '../utils.js';
 import { parseMarkdown } from '../../form/parser.js';
+import type { ManifestManager } from '../ManifestManager.ts';
 
 export interface FormData {
     title: string;
@@ -43,9 +44,12 @@ export function formLayout(params: {
     relPath?: string;
     config?: any;
     distDir?: string;
+    manifestManager?: ManifestManager;
+    jsonStructure?: any; // Added optional structure
 }) {
-    const { data, rawMarkdown, fontCss, fontFamilies, vc, relPath = '', config, distDir } = params;
-    const { html, jsonStructure } = parseMarkdown(rawMarkdown);
+    const { data, rawMarkdown, fontCss, fontFamilies, vc, relPath = '', config, distDir, manifestManager } = params;
+    const { html, jsonStructure: internalStructure } = parseMarkdown(rawMarkdown);
+    const jsonStructure = params.jsonStructure || internalStructure;
     const lang = (data.lang || 'ja').toString();
 
     const layer1Ref =
@@ -90,36 +94,27 @@ export function formLayout(params: {
     if (needsPostal) {
         try {
             const manifestPath = path.resolve('shared/data/postal/postal-manifest.json');
-            const embeddedPath = path.resolve('shared/data/postal/postal-embedded.txt');
+            const optimizedPath = path.resolve('shared/data/postal/postal-optimized.json.gz');
             
-            if (fs.existsSync(manifestPath) && fs.existsSync(embeddedPath)) {
+            if (fs.existsSync(manifestPath) && fs.existsSync(optimizedPath) && manifestManager) {
                 const manifestEntry = fs.readJsonSync(manifestPath);
-                const base64Data = fs.readFileSync(embeddedPath, 'utf-8');
+                const gzBuffer = fs.readFileSync(optimizedPath);
 
-                // Architecture: Pack first, prune later.
-                // 1. Primary: Embedded data (ID reference)
-                // 2. Secondary: External URL (Fallback if pruned)
-                manifestEntry.urls = [
-                    '#weba-postal-data', 
-                    `${getRelativePrefix(relPath)}data/postal-optimized.json.gz`
-                ];
+                // Register with ManifestManager (Unified Blob Management)
+                // Use the pre-calculated digest from manifestEntry
+                manifestManager.addBlob({
+                    id: 'jp-postal',
+                    content: gzBuffer,
+                    mediaType: 'application/x-gzip',
+                    fileName: 'postal-optimized.json.gz',
+                    description: 'Japan Postal Code Data (Optimized)'
+                });
                 
-                const manifestData = {
-                    blobs: [manifestEntry]
-                };
-                
-                // Inject Manifest AND Embedded Data
-                postalScript = `
-                <script>
-                    window.__WEBA_MANIFEST = ${JSON.stringify(manifestData)};
-                    window.__needsPostal = true;
-                </script>
-                <script id="weba-postal-data" type="application/x-gzip">${base64Data}</script>
-                `;
+                postalScript = `<script>window.__needsPostal = true;</script>`;
             } else {
-                console.warn('Postal data/manifest not found. Run "bun scripts/build_postal_data.ts"');
+                console.warn('Postal data/manifest not found or manager missing. Run "bun scripts/build_postal_data.ts"');
             }
-        } catch (e) { console.warn('Failed to inject postal manifest', e); }
+        } catch (e) { console.warn('Failed to register postal blob', e); }
     }
 
     const l2Toggle = l2Config ? `

@@ -5,6 +5,7 @@ import { subsetFont, bufferToDataUrl } from '../core/font.ts';
 import type { SrnConfig } from '../core/config.ts';
 import { createCoseVC } from '../core/vc.ts';
 import type { HybridKeys } from '../core/vc.ts';
+import type { ManifestManager } from './ManifestManager.ts';
 
 export class FontProcessor {
     private cacheDir: string;
@@ -30,7 +31,8 @@ export class FontProcessor {
         currentKeys: HybridKeys,
         siteDid: string,
         buildId: string,
-        allPages: any[] = []
+        allPages: any[] = [],
+        manifestManager?: ManifestManager
     ): Promise<{ fontCss: string, safeFontFamilies: string[] }> {
 
         if (process.env.NODE_ENV === 'test' || data.layout === 'form') {
@@ -87,12 +89,11 @@ body {
                 const cachePath = path.join(this.cacheDir, `${cacheKey}.woff2`);
                 const cssCachePath = path.join(this.cacheDir, `${cacheKey}.css`);
 
-                let dataUrl: string;
+                let fontBuffer: Buffer;
                 let ivsRecordsCount: number;
 
                 if (await fs.pathExists(cachePath) && await fs.pathExists(cssCachePath)) {
-                    const buffer = await fs.readFile(cachePath);
-                    dataUrl = bufferToDataUrl(buffer, 'font/woff2');
+                    fontBuffer = await fs.readFile(cachePath);
                     ivsRecordsCount = parseInt(await fs.readFile(cssCachePath, 'utf-8'));
                 } else {
                     console.log(`  Subsetting font: ${fontName} ${targetWeight ? `(Weight: ${targetWeight})` : ''} (Cache Miss)`);
@@ -116,14 +117,32 @@ body {
 
                     await fs.writeFile(cachePath, buffer);
                     await fs.writeFile(cssCachePath, ivsRecordsCount.toString());
-                    dataUrl = bufferToDataUrl(buffer, 'font/woff2');
+                    fontBuffer = buffer;
+                }
+
+                // Register Font as Blob in Manifest
+                let fontSourceUrl: string;
+                if (manifestManager) {
+                    const blobRef = await manifestManager.addBlob({
+                        id: `font-${fontFamilyName}`,
+                        content: fontBuffer,
+                        mediaType: 'font/woff2',
+                        fileName: `${cacheKey}.woff2`,
+                        description: `Subset font for ${fontName}`
+                    });
+                    // For CSS, we still need a working URL. 
+                    // In single-file mode, we use data URL, but we will mark it for pruning.
+                    // Or better: use a CSS variable that the bootstrapper handles.
+                    fontSourceUrl = bufferToDataUrl(fontBuffer, 'font/woff2');
+                } else {
+                    fontSourceUrl = bufferToDataUrl(fontBuffer, 'font/woff2');
                 }
 
                 fontCss += `
 <style>
 @font-face {
   font-family: '${fontFamilyName}';
-  src: url('${dataUrl}') format('woff2');
+  src: url('${fontSourceUrl}') format('woff2');
   font-display: swap;
 }
 </style>

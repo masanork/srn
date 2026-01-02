@@ -9,6 +9,7 @@ import { loadConfig, getAbsolutePaths } from '../core/config.js';
 import { FontProcessor } from './FontProcessor.js';
 import { IdentityManager } from './IdentityManager.js';
 import { LayoutManager } from './LayoutManager.js';
+import { ManifestManager } from './ManifestManager.ts';
 
 // Layouts
 import { normalizeDate, stripLeadingTitleHeading } from './utils.js';
@@ -79,7 +80,8 @@ async function build() {
         const fontProcessor = new FontProcessor(config, process.cwd());
         await fontProcessor.init();
 
-        const layoutManager = new LayoutManager();
+        const manifestManager = new ManifestManager(DIST_DIR);
+        const layoutManager = new LayoutManager(manifestManager);
 
         // Prepare client bundles first (to allow inlining if needed)
         await bundleClientScripts(DIST_DIR);
@@ -130,7 +132,7 @@ async function build() {
             let safeFontFamilies: string[] = [];
             if (data.embedFonts) {
                 const fontResult = await fontProcessor.processPageFonts(
-                    htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages
+                    htmlContent, data, config, idManager.currentKeys, idManager.siteDid, idManager.buildId, allPages, manifestManager
                 );
                 fontCss = fontResult.fontCss;
                 safeFontFamilies = fontResult.safeFontFamilies;
@@ -339,6 +341,12 @@ async function bundleClientScripts(distDir: string) {
 
     // 4. Aggregator (Heavy UI, Client-side parsing)
     await buildBundle('src/form/client/aggregator_browser.ts', 'form-aggregator.js');
+
+    // --- Vendor Assets ---
+    const vendorSrc = path.join(process.cwd(), 'src', 'ssg', 'assets', 'vendor');
+    if (await fs.pathExists(vendorSrc)) {
+        await fs.copy(vendorSrc, assetsDir, { overwrite: true });
+    }
 }
 
 async function generateSitemaps(pages: any[], config: any, distDir: string, hasFallbackIndex: boolean) {

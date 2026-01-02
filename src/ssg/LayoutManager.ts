@@ -13,6 +13,8 @@ import { verifierLayout } from './layouts/verifier.js';
 import { normalizeDate, stripLeadingTitleHeading } from './utils.js';
 import { buildJuminhyoJsonLd, juminhyoLayout } from './layouts/juminhyo.js';
 import type { IdentityManager } from './IdentityManager.ts';
+import type { ManifestManager } from './ManifestManager.ts';
+import { parseMarkdown } from '../form/parser.ts';
 
 
 
@@ -31,11 +33,37 @@ export interface LayoutContext {
 }
 
 export class LayoutManager {
+    private manifestManager: ManifestManager;
+
+    constructor(manifestManager: ManifestManager) {
+        this.manifestManager = manifestManager;
+    }
+
     async render(ctx: LayoutContext): Promise<{ html: string, vc?: any }> {
         const { data, config, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir, relPath } = ctx;
 
         let finalHtml = '';
         let vc: any = null;
+
+        // --- Mermaid Detection & Blob Registration ---
+        // We detect mermaid usage in raw markdown
+        const needsMermaid = content.includes('```mermaid');
+        if (needsMermaid) {
+            try {
+                const mermaidPath = path.join(distDir, 'assets', 'mermaid.min.js');
+                // Note: bundleClientScripts runs before render loop, so file should exist.
+                if (await fs.pathExists(mermaidPath)) {
+                    const buffer = await fs.readFile(mermaidPath);
+                    await this.manifestManager.addBlob({
+                        id: 'js-mermaid',
+                        content: buffer,
+                        mediaType: 'application/javascript',
+                        fileName: 'mermaid.min.js',
+                        description: 'Mermaid Diagram Renderer'
+                    });
+                }
+            } catch (e) { console.warn('Failed to register mermaid blob', e); }
+        }
 
         switch (data.layout) {
             case 'form':
@@ -53,7 +81,42 @@ export class LayoutManager {
                     updated: data.updated,
                     schemas: data.schemas
                 });
-                finalHtml = formLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, vc, relPath, config, distDir });
+
+                // --- Master Data Blob Extraction ---
+                const parsed = parseMarkdown(content);
+                const jsonStructure = parsed.jsonStructure;
+
+                if (jsonStructure.masterData) {
+                    jsonStructure.masterDataRefs = jsonStructure.masterDataRefs || {};
+                    for (const [key, mData] of Object.entries(jsonStructure.masterData)) {
+                        const json = JSON.stringify(mData);
+                        // Blobify if large (> 1KB)
+                        if (json.length > 1024) {
+                            const blobRef = await this.manifestManager.addBlob({
+                                id: `master-${key}`,
+                                content: json,
+                                mediaType: 'application/json',
+                                fileName: `master-${key}.json`,
+                                description: `Master data for ${key}`
+                            });
+                            jsonStructure.masterDataRefs[key] = blobRef.digest;
+                            delete jsonStructure.masterData[key]; // Remove from L1 core
+                        }
+                    }
+                }
+
+                finalHtml = formLayout({ 
+                    data, 
+                    rawMarkdown: content, 
+                    fontCss, 
+                    fontFamilies: safeFontFamilies, 
+                    vc, 
+                    relPath, 
+                    config, 
+                    distDir,
+                    manifestManager: this.manifestManager,
+                    jsonStructure // Pass the processed structure
+                });
 
                 // Extra output: Report page
                 const reportHtml = formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir });
@@ -242,6 +305,14 @@ ${JSON.stringify(containerVc, null, 2)}
 </script>`;
 
             finalHtml = finalHtml.replace('</body>', `${l4Script}</body>`);
+        }
+
+        // --- Manifest Injection (Fonts, Blobs, etc.) ---
+        const manifestHtml = this.manifestManager.generateInjectionHtml();
+        if (finalHtml.includes('</body>')) {
+            finalHtml = finalHtml.replace('</body>', `${manifestHtml}</body>`);
+        } else {
+            finalHtml += manifestHtml;
         }
 
         return { html: finalHtml, vc };
