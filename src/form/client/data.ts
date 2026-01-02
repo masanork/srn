@@ -20,14 +20,18 @@ export class DataManager {
     }
 
     public updateJsonLd(): any {
-        const w = window as any;
-        const data = w.generatedJsonStructure || {};
+        const data: any = {};
 
-        // ... (rest of updateJsonLd unchanged) ...
+        // 1. Static Fields
         document.querySelectorAll('[data-json-path]').forEach((input: any) => {
             const key = input.dataset.jsonPath;
             if (key) {
-                data[key] = input.value;
+                // 電話番号フィールドは数字のみを保存
+                if (input.type === 'tel') {
+                    data[key] = input.value.replace(/[^0-9]/g, '');
+                } else {
+                    data[key] = input.value;
+                }
             }
         });
 
