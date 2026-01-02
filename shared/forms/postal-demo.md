@@ -1,4 +1,6 @@
 ---
+form: "did:web:srn.site:examples#postal-demo"
+version: "1.0.1"
 title: 宅配便送り状（郵便番号自動入力デモ）
 layout: form
 ---

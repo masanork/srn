@@ -11,7 +11,9 @@ export interface FormField {
 
 export interface FormSchema {
     title: string;
-    description?: string;
+    form?: string | undefined;
+    version?: string | undefined;
+    description?: string | undefined;
     fields: FormField[];
 }
 
@@ -27,9 +29,33 @@ export class WebAParser {
     static parse(markdown: string): FormSchema {
         const fields: FormField[] = [];
 
-        // Simple frontmatter extraction (for title)
-        const titleMatch = markdown.match(/^title:\s*["']?([^"'\n]+)["']?/m);
-        const title = titleMatch ? titleMatch[1] : "Untitled Form";
+        // Simple frontmatter extraction
+        const frontmatterMatch = markdown.match(/^---\n([\s\S]+?)\n---/);
+        let extractedTitle: string | undefined;
+        let extractedForm: string | undefined;
+        let extractedVersion: string | undefined;
+
+        if (frontmatterMatch && frontmatterMatch[1]) {
+            const fm = frontmatterMatch[1];
+            if (fm) {
+                const titleM = fm.match(/^title:\s*["']?([^"'\n]+)["']?/m);
+                if (titleM && titleM[1]) extractedTitle = titleM[1];
+
+                const idM = fm.match(/^form:\s*["']?([^"'\n]+)["']?/m);
+                if (idM && idM[1]) extractedForm = idM[1];
+
+                const verM = fm.match(/^version:\s*["']?([^"'\n]+)["']?/m);
+                if (verM && verM[1]) extractedVersion = verM[1];
+            }
+        }
+
+        // Fallback or override title if not in frontmatter
+        if (!extractedTitle) {
+            const titleMatch = markdown.match(/^title:\s*["']?([^"'\n]+)["']?/m);
+            if (titleMatch && titleMatch[1]) extractedTitle = titleMatch[1];
+        }
+
+        const finalTitle = extractedTitle || "Untitled Form";
 
         // Scan for fields
         let match;
@@ -58,16 +84,21 @@ export class WebAParser {
             });
         }
 
-        return { title, fields };
+        return {
+            title: finalTitle,
+            form: extractedForm,
+            version: extractedVersion,
+            fields
+        };
     }
 
     static fill(markdown: string, data: Record<string, any>): string {
-        return markdown.replace(WebAParser.FIELD_REGEX, (fullMatch, type, id, attrString) => {
+        return markdown.replace(WebAParser.FIELD_REGEX, (_fullMatch, type, id, attrString) => {
             const value = data[id];
-            if (value === undefined || value === null) return fullMatch;
+            if (value === undefined || value === null) return _fullMatch;
 
             // Simple attribute injection
-            let newAttrs = attrString ? attrString.trim() : '';
+            let newAttrs = (attrString || '').trim();
 
             // Remove existing value attribute if present
             newAttrs = newAttrs.replace(/value=["'][^"']*["']/, '').trim();
@@ -88,13 +119,9 @@ export class WebAParser {
 
         for (const field of schema.fields) {
             // Check required
-            // Note: parseAttributes sets keys to "true" if value is missing.
             if (field.attributes && (field.attributes['required'] !== undefined)) {
                 // If required, check value
                 const val = field.attributes['value'];
-
-                // Simple empty check. 
-                // In production, we should handle checkbox "true"/"false" vs text empty string differently.
                 if (!val || val.trim() === '') {
                     errors.push({ id: field.id, message: 'Required field is empty' });
                 }
@@ -108,7 +135,7 @@ export class WebAParser {
         const regex = /([a-z0-9_-]+)(?:=["']([^"']*)["'])?/g;
         let match;
         while ((match = regex.exec(attrString)) !== null) {
-            attrs[match[1]] = match[2] !== undefined ? match[2] : 'true';
+            attrs[match[1]] = (match[2] !== undefined && match[2] !== null) ? match[2] : 'true';
         }
         return attrs;
     }

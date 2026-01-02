@@ -4,6 +4,7 @@ import * as fs from "fs-extra";
 import { glob } from "glob";
 import { FolioStorage, type FolioRecord } from "./storage";
 import { JSDOM } from "jsdom";
+import { WebAParser } from "./parser";
 
 /**
  * Core Folio Logic: Indexing and Maintenance
@@ -29,7 +30,7 @@ export class FolioManager {
         console.log("Re-indexing Folio...");
 
         // Scan target directories
-        const dirs = ['history', 'certificates', 'profile.html', 'inbox'];
+        const dirs = ['history', 'certificates', 'inbox', 'folio/history', 'folio/certificates', 'shared/forms'];
         let count = 0;
 
         for (const target of dirs) {
@@ -37,7 +38,7 @@ export class FolioManager {
             if (await fs.pathExists(fullPath)) {
                 if ((await fs.stat(fullPath)).isDirectory()) {
                     // Directory scan
-                    const files = await glob('**/*.{html,json}', { cwd: fullPath });
+                    const files = await glob('**/*.{html,json,md}', { cwd: fullPath });
                     for (const file of files) {
                         await this.indexFile(path.join(target, file));
                         count++;
@@ -75,6 +76,8 @@ export class FolioManager {
             }
         } else if (ext === '.html') {
             extracted = this.extractFromHtml(content);
+        } else if (ext === '.md') {
+            extracted = WebAParser.parse(content);
         }
 
         if (!extracted) return;
@@ -87,6 +90,10 @@ export class FolioManager {
         // Fallback for Web/A Form State
         else if (extracted.meta && extracted.data) {
             docType = 'WebAFormState';
+        }
+        // Automatic detection for Web/A Form (Markdown with fields)
+        else if (extracted.fields && extracted.fields.length > 0) {
+            docType = 'WebAForm';
         }
 
         // Generate a semantic KVS key
@@ -106,6 +113,9 @@ export class FolioManager {
             metadata: {
                 created: extracted.created || extracted.date || new Date().toISOString(),
                 title: extracted.title || safeName,
+                form: extracted.form,
+                version: extracted.version,
+                credential_type: extracted.credential_type || extracted.type,
                 // Add more extracted meta here (e.g. issuer)
             },
             raw_content: extracted,
@@ -128,7 +138,7 @@ export class FolioManager {
 
         const ldJson = doc.querySelector('script[type="application/ld+json"]');
         if (ldJson && ldJson.textContent) {
-            try { return JSON.parse(ldJson.textContent); } catch { }
+            try { return JSON.parse(ldJson.textContent as string); } catch { }
         }
 
         return null;
