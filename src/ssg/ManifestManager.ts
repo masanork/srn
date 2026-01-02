@@ -38,7 +38,7 @@ export class ManifestManager {
 
         const digest = `sha256:${crypto.createHash('sha256').update(buffer).digest('hex')}`;
         
-        // 重複チェック（既に同じDigestのBlobがあればそれを返す）
+        // 重複チェック
         const existing = this.blobs.find(b => b.digest === digest);
         if (existing) return existing;
 
@@ -56,15 +56,13 @@ export class ManifestManager {
             mediaType: mediaType,
             size: buffer.length,
             urls: [
-                `#weba-blob-${digest.split(':')[1]}`, // Primary: DOM内参照
-                `./${relativePath}`                   // Secondary: 外部URL
+                `#weba-blob-${digest.split(':')[1]}`,
+                `./${relativePath}`
             ],
             description: params.description
         };
 
-        // Base64化して内部保持
         (ref as any)._content = buffer.toString('base64');
-        
         this.blobs.push(ref);
         return ref;
     }
@@ -81,16 +79,10 @@ export class ManifestManager {
         return map[mime] || '.bin';
     }
 
-    /**
-     * 現在登録されている全Blobのリストを取得
-     */
     getBlobs(): MasterDataRef[] {
         return this.blobs;
     }
 
-    /**
-     * HTMLに注入するためのマニフェストデータと埋め込みスクリプトを生成
-     */
     generateInjectionHtml(): string {
         if (this.blobs.length === 0) return '';
 
@@ -101,22 +93,17 @@ export class ManifestManager {
             })
         };
 
-        let html = `
-<!-- Web/A L1 Manifest & Blobs -->
-`;
-        html += `<script>window.__WEBA_MANIFEST = ${JSON.stringify(manifest)};</script>
-`;
+        let html = '\n<!-- Web/A L1 Manifest & Blobs -->\n';
+        html += '<script>window.__WEBA_MANIFEST = ' + JSON.stringify(manifest) + ';</script>\n';
         
-        // Blobデータの埋め込み
         for (const blob of this.blobs) {
             const b = blob as any;
             const id = b.urls[0].substring(1);
-            html += `<script id="${id}" type="${b.mediaType}">${b._content}</script>
-`;
+            html += '<script id="' + id + '" type="' + b.mediaType + '">' + b._content + '</script>\n';
         }
 
-        // JS/Font Activation Runtime
-        html += `<script type="module">
+        // JS/Font Activation Runtime (ESM)
+        const runtimeJs = `
 (async function() {
   const m = window.__WEBA_MANIFEST;
   if (!m || !m.blobs) return;
@@ -136,7 +123,6 @@ export class ManifestManager {
     return ui8.buffer;
   };
 
-  // Sort blobs: Fonts first, then WASM, then JS
   const sortedBlobs = [...m.blobs].sort((a, b) => {
     const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
     return score(a.mediaType) - score(b.mediaType);
@@ -152,7 +138,8 @@ export class ManifestManager {
       const style = document.createElement('style');
       style.textContent = css;
       document.head.appendChild(style);
-    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {      const data = await processBlob(b);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
       if (!data) continue;
       const code = new TextDecoder().decode(data);
       const script = document.createElement('script');
@@ -163,4 +150,9 @@ export class ManifestManager {
     }
   }
 })();
-</script>
+`;
+
+        html += '<script type="module">' + runtimeJs + '</script>\n';
+        return html;
+    }
+}
