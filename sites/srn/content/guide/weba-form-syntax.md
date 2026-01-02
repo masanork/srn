@@ -19,7 +19,7 @@ Standard Markdown inline styles are supported for labels and descriptions.
 | **Bold** | `**text**` or `__text__` | **text** |
 | *Italic* | `*text*` or `_text_` | *text* |
 | `Code` | `` `code` `` | `code` |
-| Link | `[Label](URL)` | [Label](URL) |
+| Link | `[Label](URL)` | [Label](#) |
 
 ## 2. Form Tags
 Tags define interactive input fields. The general syntax is `[type:id (attributes)] Label`.

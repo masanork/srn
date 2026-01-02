@@ -33,13 +33,31 @@ let initialized = false;
 
 /**
  * Initialize the WASM crypto module.
- * @param source Optional WASM source (URL, Response, or Buffer). If omitted, tries to load from local filesystem (Node/Bun only).
+ * @param source Optional WASM source (URL, Response, or Buffer). If omitted, tries to load from manifest or local filesystem.
  */
 export async function initWasm(source?: any) {
     if (initialized) return;
 
     if (source) {
         await init(source);
+    } else if (typeof window !== 'undefined' && (window as any).__WEBA_MANIFEST) {
+        // Try to load from Manifest Blobs (Browser environment)
+        const m = (window as any).__WEBA_MANIFEST;
+        const blob = m.blobs?.find((b: any) => b.id === 'weba-crypto-wasm');
+        if (blob) {
+            const el = document.getElementById('weba-blob-' + blob.digest.split(':')[1]);
+            if (el) {
+                const bin = atob(el.textContent!.trim());
+                const ui8 = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+                await init(ui8);
+                initialized = true;
+                console.log(`WASM Crypto Initialized from Manifest: ${get_version()}`);
+                return;
+            }
+        }
+        // Fallback to embedded B64 if not in manifest
+        await initWasmFromB64();
     } else if (typeof process !== 'undefined' && process.versions && process.versions.node) {
         // Node.js / Bun environment
         const fs = await import("node:fs");
@@ -49,11 +67,16 @@ export async function initWasm(source?: any) {
         const wasmBuffer = fs.readFileSync(wasmPath);
         await init(wasmBuffer);
     } else {
-        throw new Error("WASM source must be provided in browser environment");
+        // Last resort: try B64
+        try {
+            await initWasmFromB64();
+        } catch (e) {
+            throw new Error("WASM source must be provided in browser environment");
+        }
     }
 
     initialized = true;
-    console.log(`WASM Crypto Initialized: ${get_version()}`);
+    if (!initialized) console.log(`WASM Crypto Initialized: ${get_version()}`);
 }
 
 /**

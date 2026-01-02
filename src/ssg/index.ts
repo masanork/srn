@@ -316,17 +316,39 @@ async function bundleClientScripts(distDir: string) {
     const assetsDir = path.join(distDir, 'assets');
     await fs.ensureDir(assetsDir);
 
+    // Stub out the heavy WASM base64 string for client bundles
+    const wasmStubPlugin = {
+        name: 'wasm-stub',
+        setup(build: any) {
+            build.onLoad({ filter: /wasm_binary\.ts$/ }, () => {
+                return { contents: 'export const WASM_BINARY_B64 = "";', loader: 'ts' };
+            });
+        }
+    };
+
     // Verify App (Standalone)
     const verifyEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
     if (await fs.pathExists(verifyEntry)) {
-        await Bun.build({ entrypoints: [verifyEntry], outdir: assetsDir, naming: "verify-bundle.js", minify: true });
+        await Bun.build({ 
+            entrypoints: [verifyEntry], 
+            outdir: assetsDir, 
+            naming: "verify-bundle.js", 
+            minify: true,
+            plugins: [wasmStubPlugin]
+        });
     }
 
     // --- Modular Form Bundles ---
     const buildBundle = async (entry: string, name: string) => {
         const fullPath = path.join(process.cwd(), entry);
         if (await fs.pathExists(fullPath)) {
-            await Bun.build({ entrypoints: [fullPath], outdir: assetsDir, naming: name, minify: true });
+            await Bun.build({ 
+                entrypoints: [fullPath], 
+                outdir: assetsDir, 
+                naming: name, 
+                minify: true,
+                plugins: [wasmStubPlugin]
+            });
         }
     };
 

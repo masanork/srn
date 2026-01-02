@@ -59,6 +59,29 @@ export class LayoutManager {
             } catch (e) { console.warn('Failed to register mermaid blob', e); }
         }
 
+        // --- Mermaid Detection & Blob Registration ---
+        // ... (existing mermaid logic) ...
+
+        // --- WASM Crypto Registration ---
+        // Register WASM binary if L2 or signing is needed (Forms or signed Articles)
+        const needsCrypto = data.layout === 'form' || !!vc;
+        if (needsCrypto) {
+            try {
+                // WASM source is in wasm_bindings
+                const wasmPath = path.join(process.cwd(), 'src/core/wasm_bindings/weba_crypto_wasm_bg.wasm');
+                if (await fs.pathExists(wasmPath)) {
+                    const buffer = await fs.readFile(wasmPath);
+                    await manifestManager.addBlob({
+                        id: 'weba-crypto-wasm',
+                        content: buffer,
+                        mediaType: 'application/wasm',
+                        fileName: 'weba_crypto.wasm',
+                        description: 'Web/A Cryptography WASM Core'
+                    });
+                }
+            } catch (e) { console.warn('Failed to register WASM crypto blob', e); }
+        }
+
         switch (data.layout) {
             case 'form':
                 vc = await idManager.signDocument({
