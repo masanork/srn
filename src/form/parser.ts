@@ -118,6 +118,16 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
         // Escape remaining text
         result += Renderers.escapeHtml(text.substring(lastIndex));
+
+        // Post-processing: Basic Markdown formatting
+        // Order is important: Bold before Italic
+        result = result
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/__(.*?)__/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/_(.*?)_/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
+
         return result;
     };
 
