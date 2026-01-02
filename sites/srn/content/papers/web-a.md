@@ -110,9 +110,11 @@ To uniformly handle static documents, interactive forms, and wide-area distribut
 
 1.  **Layer 1: The Schema (L1)**
     *   **Role**: Defines document type, structure, and semantics.
+    *   **Architecture**: Divided into **L1-Core** (Immutable logic/schema) and **L1-Manifest** (Mutable/Prunable resources).
     *   **Format**: **Human-readable Markdown specifications** serve as the Source of Truth.
-    *   **Content**: JSON-LD Context, JSON Schema, and validation logic derived from Markdown.
+    *   **Content**: JSON-LD Context, JSON Schema, validation logic, and references to external blobs (fonts, dictionaries).
     *   **Signer**: **Issuer**. Guarantees the "Type definition" of the fact.
+    *   *Note*: To address file size and update frequency issues, heavy assets are managed via the **[Manifest Architecture](./web-a-manifest-architecture.html)** (Pack & Prune strategy).
 
 #### 6.1.1. L1 (Schema) Definition and Derivation
 To ensure Human-Machine Parity (HMP), Web/A requires that schema definition files be human-readable and human-writable.

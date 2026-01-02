@@ -1,53 +1,53 @@
 ---
 title: "Web/A Manifest Architecture: The Pack & Prune Strategy"
-description: "Web/Aの自己完結性（Single File）と長期検証性（LTV）を両立する「マニフェスト・アーキテクチャ」の技術仕様。"
+description: "Technical specification for the Web/A Manifest Architecture, enabling both Single File self-containment and Long-Term Verifiability (LTV)."
 layout: article
 date: 2026-01-02
 author: "Masanori Kusunoki"
-lang: ja
+lang: en
 ---
 
 # Web/A Manifest Architecture: The Pack & Prune Strategy
 
 ## 1. Context & Problem Statement
 
-Web/Aの4レイヤーモデルにおいて、**Layer 1 (Template)** はアプリケーションの「定義」であり、**Layer 2 (User Data)** はその「インスタンス」です。
-しかし、高機能なフォームアプリケーションを単一のHTMLファイル（Single File Application）として配布しようとすると、以下の問題が発生します。
+In the Web/A 4-layer model, **Layer 1 (Template)** defines the application, and **Layer 2 (User Data)** is its instance.
+However, attempting to distribute high-functionality form applications as a single HTML file (Single File Application) presents several challenges:
 
-*   **Bloat (肥大化):** 郵便番号辞書、フォントファイル、レンダリングエンジン（Mermaid等）、大規模なマスターデータを含めると、ファイルサイズが数MB〜数十MBに膨れ上がる。
-*   **Update Paradox (更新のパラドックス):** 郵便番号辞書が更新されるたびに、テンプレート全体の再署名と再配布が必要になる。
-*   **Verification Rigidity (検証の硬直性):** 外部リソース（CDN等）に依存すると「数十年後の検証（LTV）」が保証できないが、全てを埋め込むと「捨てられない（Prunableでない）」データになる。
+*   **Bloat:** Including postal dictionaries, font files, rendering engines (e.g., Mermaid), and large master data increases file size to several MBs or more.
+*   **Update Paradox:** Any update to a postal dictionary requires re-signing and re-distributing the entire template.
+*   **Verification Rigidity:** Relying on external resources (CDNs) compromises Long-Term Verifiability (LTV), while embedding everything creates data that cannot be pruned.
 
 ## 2. Solution: L1-Core & L1-Manifest
 
-この問題を解決するために、L1を **「不変の核 (Core)」** と **「可変・参照可能なリソース (Manifest)」** に分離し、**ManifestManager** によって統一的に管理します。
+To resolve these issues, we separate Layer 1 into an **"Immutable Core"** and a **"Mutable/Referable Manifest"**, managed by the **ManifestManager**.
 
 ### 2.1 Architecture Overview
 
 *   **L1-Core (Minimal Template):**
-    *   スキーマ定義、バリデーションロジック、UI構造のみを含む軽量なHTML/JSON。
+    *   A lightweight HTML/JSON containing only schema definitions, validation logic, and UI structure.
 *   **L1-Manifest:**
-    *   アプリケーションが必要とする全ての「重い」リソース（Blobs）のリスト。
-    *   各Blobは **Content-Addressed (Digest)** で管理される。
+    *   A list of all "heavy" resources (Blobs) required by the application.
+    *   Each Blob is managed via **Content-Addressing (Digest)**.
 *   **Blobs (Heavy Resources):**
-    *   郵便番号辞書 (`.json.gz`)
-    *   サブセット化されたフォント (`.woff2`)
-    *   JavaScriptランタイム (`mermaid.min.js` 等)
-    *   大規模マスターデータ
+    *   Postal Dictionaries (`.json.gz`)
+    *   Subsetted Fonts (`.woff2`)
+    *   JavaScript Runtimes (`mermaid.min.js`, etc.)
+    *   Large Master Data
 
 ### 2.2 The "Pack First, Prune Later" Strategy
 
-Web/Aは「オフラインで動き、かつ長期間検証可能である」必要があります。これを実現するのが **Pack & Prune** 戦略です。
+Web/A must be operable offline and verifiable over the long term. The **Pack & Prune** strategy achieves this.
 
 1.  **Pack (Distribution Phase):**
-    *   ビルド時、全てのBlobは **Base64エンコードされ、HTML内の `<script>` タグとして埋め込まれる**。
-    *   マニフェストは `urls: ["#dom-id", "https://external/url"]` のように、**DOM内参照を優先** するよう記述される。
-    *   これにより、ユーザーは単一のHTMLファイルを受け取るだけで、ネット接続なしに完全な機能を利用できる。
+    *   During the build, all Blobs are **Base64 encoded and embedded as `<script>` tags** within the HTML.
+    *   The manifest prioritizes **in-DOM references** (e.g., `urls: ["#dom-id", "https://external/url"]`).
+    *   This ensures users receive a single HTML file that functions fully without an internet connection.
 
 2.  **Prune (Archival Phase):**
-    *   署名・完了後、ファイルサイズを削減するために **埋め込まれたBlob（`<script>`タグ）を削除（Prune）してもよい**。
-    *   削除後もマニフェスト内の `Digest` は残るため、検証性は損なわれない。
-    *   再検証や表示の際は、マニフェストの `Secondary URL`（外部アーカイブやIPFS等）からBlobを再取得することで、完全に元の状態を復元できる。
+    *   After signing/completion, the embedded Blobs (`<script>` tags) **can be deleted (Pruned)** to reduce file size.
+    *   The `Digest` in the manifest remains, preserving verifiability.
+    *   For re-verification or rendering, Blobs can be retrieved from the `Secondary URL` (external archives, IPFS, etc.) defined in the manifest, fully restoring the original state.
 
 ## 3. Data Structures
 
@@ -71,7 +71,7 @@ export interface MasterDataRef {
 
 ### 3.2 Web/A Layer 2 Context (The Binding)
 
-L2データ（ユーザー入力）は、単なる値の集合ではありません。**「どのテンプレートと、どのリソースセット（マニフェスト）を使って作成されたか」** を暗号的に束縛します。
+Layer 2 data (User Input) is not just a set of values. It cryptographically binds **"Which Template and Which Resource Set (Manifest) were used"**.
 
 ```typescript
 export interface WebALayer2Context {
@@ -90,34 +90,34 @@ export interface WebALayer2Context {
 }
 ```
 
-この `Context` が L2 Payload に含まれ、ユーザーの秘密鍵で署名されることで、**「表示・入力環境の完全性」** が保証されます。
+This `Context` is included in the Layer 2 Payload and signed by the user's private key, guaranteeing the **integrity of the rendering and input environment**.
 
 ## 4. ManifestManager Implementation
 
-SRN (Sorane) SSG に実装された `ManifestManager` は、ビルドプロセスにおいて以下の役割を担います。
+The `ManifestManager` implemented in the SRN (Sorane) SSG performs the following roles during the build process:
 
 1.  **Blob Detection:** 
-    *   Markdown内のフォント指定、Mermaid記法、郵便番号フィールド等を自動検出。
+    *   Automatically detects font specifications, Mermaid diagrams, postal code fields, etc., within Markdown.
 2.  **Deduplication & Hashing:**
-    *   リソースのSHA-256ハッシュを計算し、重複を排除して登録。
+    *   Calculates SHA-256 hashes of resources to eliminate duplicates and register them.
 3.  **Injection:**
-    *   HTMLの末尾に `window.__WEBA_MANIFEST` と、Base64化されたBlobデータを注入。
+    *   Injects `window.__WEBA_MANIFEST` and Base64 encoded Blob data at the end of the HTML.
 4.  **Runtime Bootstrapping:**
-    *   クライアントサイド（ブラウザ）で動作する軽量なランタイムを注入。
-    *   このランタイムは、マニフェストを読み込み、フォントの適用（`@font-face`）、JSの実行、辞書データのロードを動的に行う。
+    *   Injects a lightweight client-side runtime.
+    *   This runtime reads the manifest and dynamically applies fonts (`@font-face`), executes JS, and loads dictionary data.
 
 ## 5. Verification Flow
 
 ### Level 1: Lightweight Verification (Structure & Signature)
-*   L2署名の検証。
-*   `Context` 内の `templateDigest` と `manifestDigest` の形式チェック。
-*   **Blob本体がなくても検証可能。**（「何を使ったか」の記録は改ざんされていないことが保証される）
+*   Verifies the Layer 2 signature.
+*   Checks the format of `templateDigest` and `manifestDigest` within the `Context`.
+*   **Verifiable without the Blob itself.** (Guarantees that the record of "what was used" has not been tampered with).
 
 ### Level 2: Full Verification (Reproduction)
-*   マニフェストに記載された `digest` を持つBlobを、埋め込みまたは外部から取得。
-*   Blobのハッシュ値が `digest` と一致することを確認。
-*   そのBlob（正しいフォント、正しい辞書、正しいレンダラー）を用いて、画面表示や計算ロジックを完全に再現する。
+*   Retrieves the Blob with the `digest` listed in the manifest (either embedded or external).
+*   Verifies that the Blob's hash matches the `digest`.
+*   Uses that Blob (correct font, correct dictionary, correct renderer) to fully reproduce the screen display and calculation logic.
 
 ## 6. Conclusion
 
-Manifest Architecture により、Web/Aは **"Single File Distribution" (使いやすさ)** と **"Cryptographic Binding" (信頼性)**、そして **"Prunability" (持続可能性)** を同時に達成しました。これは「文書」としてのWebアプリケーションにおける、新しい標準モデルとなります。
+With the Manifest Architecture, Web/A simultaneously achieves **"Single File Distribution" (Usability)**, **"Cryptographic Binding" (Trust)**, and **"Prunability" (Sustainability)**. This sets a new standard model for "Document-based" Web Applications.
