@@ -77,6 +77,7 @@ export class PostalLookup {
 
     /**
      * マニフェスト(L1)からロード
+     * DOM埋め込み(Pack) -> 外部取得(Prune) の順で試行
      */
     async loadFromManifest(): Promise<boolean> {
         const manifest = (window as any).__WEBA_MANIFEST;
@@ -85,39 +86,55 @@ export class PostalLookup {
         const postalEntry = manifest.blobs.find((b: any) => b.id === 'jp-postal');
         if (!postalEntry || !postalEntry.urls || postalEntry.urls.length === 0) return false;
 
-        try {
-            console.log('📮 Loading postal data from manifest:', postalEntry.urls[0]);
-            const response = await fetch(postalEntry.urls[0]);
-            if (!response.ok) throw new Error('Fetch failed: ' + response.status);
+        for (const url of postalEntry.urls) {
+            try {
+                if (url.startsWith('#')) {
+                    // 1. Embedded Data (DOM ID)
+                    const el = document.querySelector(url);
+                    if (el && el.textContent) {
+                        console.log('📮 Loading postal data from embedded source:', url);
+                        await this.loadFromBase64(el.textContent.trim());
+                        // loadFromBase64 sets initialized=true
+                        if (this.initialized) {
+                             (this as any)._activeDigest = postalEntry.digest;
+                             return true;
+                        }
+                    }
+                } else {
+                    // 2. External Data (Network)
+                    console.log('📮 Loading postal data from network:', url);
+                    const response = await fetch(url);
+                    if (!response.ok) continue; // Try next URL
 
-            const blob = await response.blob();
-            let jsonString: string;
+                    const blob = await response.blob();
+                    let jsonString: string;
 
-            // Check signature (GZIP: 1F 8B)
-            const header = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
-            if (header[0] === 0x1f && header[1] === 0x8b) {
-                 if (typeof DecompressionStream !== 'undefined') {
-                     const ds = new DecompressionStream('gzip');
-                     const stream = blob.stream().pipeThrough(ds);
-                     jsonString = await new Response(stream).text();
-                 } else {
-                     throw new Error('DecompressionStream not supported');
-                 }
-            } else {
-                 jsonString = await blob.text();
+                    const header = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+                    if (header[0] === 0x1f && header[1] === 0x8b) {
+                        if (typeof DecompressionStream !== 'undefined') {
+                            const ds = new DecompressionStream('gzip');
+                            const stream = blob.stream().pipeThrough(ds);
+                            jsonString = await new Response(stream).text();
+                        } else {
+                            throw new Error('DecompressionStream not supported');
+                        }
+                    } else {
+                        jsonString = await blob.text();
+                    }
+
+                    this.data = JSON.parse(jsonString);
+                    this.initialized = true;
+                    (this as any)._activeDigest = postalEntry.digest;
+                    console.log('📮 Postal lookup initialized via Network:', Object.keys(this.data).length, 'prefixes');
+                    return true;
+                }
+            } catch (e) {
+                console.warn(`Failed to load postal from ${url}:`, e);
+                // Continue to next URL
             }
-
-            this.data = JSON.parse(jsonString);
-            this.initialized = true;
-            // Store digest for L2 binding
-            (this as any)._activeDigest = postalEntry.digest;
-            
-            console.log('📮 Postal lookup initialized via Manifest:', Object.keys(this.data).length, 'prefixes');
-            return true;
-        } catch (e) {
-            console.error('Failed to load postal from manifest:', e);
-            return false;
         }
+        
+        return false;
     }
 
     /**

@@ -90,25 +90,34 @@ export function formLayout(params: {
     if (needsPostal) {
         try {
             const manifestPath = path.resolve('shared/data/postal/postal-manifest.json');
-            if (fs.existsSync(manifestPath)) {
+            const embeddedPath = path.resolve('shared/data/postal/postal-embedded.txt');
+            
+            if (fs.existsSync(manifestPath) && fs.existsSync(embeddedPath)) {
                 const manifestEntry = fs.readJsonSync(manifestPath);
-                // Adjust URL for client-side consumption
-                // Assuming the .gz file is copied to 'static/data/postal-optimized.json.gz' or similar
-                // The SSG build process must ensure this copy happens.
-                // For now, we assume it's available at a standard path relative to the site root.
-                // Or better, we put it in 'assets'.
-                manifestEntry.urls = [`${getRelativePrefix(relPath)}data/postal-optimized.json.gz`];
+                const base64Data = fs.readFileSync(embeddedPath, 'utf-8');
+
+                // Architecture: Pack first, prune later.
+                // 1. Primary: Embedded data (ID reference)
+                // 2. Secondary: External URL (Fallback if pruned)
+                manifestEntry.urls = [
+                    '#weba-postal-data', 
+                    `${getRelativePrefix(relPath)}data/postal-optimized.json.gz`
+                ];
                 
                 const manifestData = {
                     blobs: [manifestEntry]
                 };
                 
-                postalScript = `<script>
+                // Inject Manifest AND Embedded Data
+                postalScript = `
+                <script>
                     window.__WEBA_MANIFEST = ${JSON.stringify(manifestData)};
                     window.__needsPostal = true;
-                </script>`;
+                </script>
+                <script id="weba-postal-data" type="application/x-gzip">${base64Data}</script>
+                `;
             } else {
-                console.warn('Postal manifest not found. Run "bun scripts/build_postal_data.ts"');
+                console.warn('Postal data/manifest not found. Run "bun scripts/build_postal_data.ts"');
             }
         } catch (e) { console.warn('Failed to inject postal manifest', e); }
     }
