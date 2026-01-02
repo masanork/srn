@@ -312,9 +312,12 @@ function getLayoutDependencies(layout: string) {
     return layoutPath ? [base, layoutPath] : [base];
 }
 
-async function bundleClientScripts(distDir: string) {
+export async function bundleClientScripts(distDir: string) {
     const assetsDir = path.join(distDir, 'assets');
     await fs.ensureDir(assetsDir);
+
+    // Resolve project root relative to this file (src/ssg/index.ts)
+    const projectRoot = path.resolve(import.meta.dirname, '../../');
 
     // Stub out the heavy WASM base64 string for client bundles
     const wasmStubPlugin = {
@@ -327,7 +330,7 @@ async function bundleClientScripts(distDir: string) {
     };
 
     // Verify App (Standalone)
-    const verifyEntry = path.join(process.cwd(), 'src/ssg/client/verify-app.ts');
+    const verifyEntry = path.join(projectRoot, 'src/ssg/client/verify-app.ts');
     if (await fs.pathExists(verifyEntry)) {
         await Bun.build({ 
             entrypoints: [verifyEntry], 
@@ -340,7 +343,7 @@ async function bundleClientScripts(distDir: string) {
 
     // --- Modular Form Bundles ---
     const buildBundle = async (entry: string, name: string) => {
-        const fullPath = path.join(process.cwd(), entry);
+        const fullPath = path.join(projectRoot, entry);
         if (await fs.pathExists(fullPath)) {
             await Bun.build({ 
                 entrypoints: [fullPath], 
@@ -365,7 +368,7 @@ async function bundleClientScripts(distDir: string) {
     await buildBundle('src/form/client/aggregator_browser.ts', 'form-aggregator.js');
 
     // --- Vendor Assets ---
-    const vendorSrc = path.join(process.cwd(), 'src', 'ssg', 'assets', 'vendor');
+    const vendorSrc = path.join(projectRoot, 'src', 'ssg', 'assets', 'vendor');
     if (await fs.pathExists(vendorSrc)) {
         await fs.copy(vendorSrc, assetsDir, { overwrite: true });
     }

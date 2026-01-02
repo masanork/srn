@@ -22,8 +22,7 @@ program
     .option('--site <name>', 'Site profile to use for config/fonts', 'srn')
     .action(async (inputs, options) => {
         // Resolve project root based on this script's location
-        const scriptDir = path.dirname(new URL(import.meta.url).pathname);
-        const projectRoot = path.resolve(scriptDir, '../../');
+        const projectRoot = path.resolve(import.meta.dirname, '../../');
         
         await initWasm();
         

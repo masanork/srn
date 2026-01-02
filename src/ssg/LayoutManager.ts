@@ -68,8 +68,7 @@ export class LayoutManager {
         if (needsCrypto) {
             try {
                 // WASM source is in wasm_bindings relative to this file
-                // LayoutManager is in src/ssg/, WASM is in src/core/wasm_bindings/
-                const projectRoot = path.resolve(new URL(import.meta.url).pathname, '../../../');
+                const projectRoot = path.resolve(import.meta.dirname, '../../');
                 const wasmPath = path.join(projectRoot, 'src/core/wasm_bindings/weba_crypto_wasm_bg.wasm');
                 if (await fs.pathExists(wasmPath)) {
                     const buffer = await fs.readFile(wasmPath);
