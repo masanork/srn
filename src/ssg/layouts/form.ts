@@ -103,7 +103,7 @@ export async function formLayout(params: {
 
     // Manifest Injection (Postal Data)
     let postalScript = '';
-    const needsPostal = rawMarkdown.match(/zip|postal|郵便|pref|都道府県|city|市区町村|市町村|town|町名|町字|address|住所/i);
+    const needsPostal = jsonStructure.needsPostal || false;
     const needsL2 = l2Config || rawMarkdown.includes('weba-l2-') || rawMarkdown.includes('l2crypto');
 
     if (needsPostal) {
@@ -227,7 +227,8 @@ export async function formLayout(params: {
         fontCss: fontCss + (sharedCss ? `<style>${sharedCss}</style>` : ''),
         fontFamilies,
         lang: lang,
-        relPath
+        relPath,
+        includeStyleLink: false // Web/A Forms use inline CSS
     });
 }
 
@@ -288,6 +289,7 @@ export async function formReportLayout(params: {
         fontCss,
         fontFamilies,
         lang: lang,
-        relPath
+        relPath,
+        includeStyleLink: false // Web/A Forms use inline CSS
     });
 }

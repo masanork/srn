@@ -7,6 +7,7 @@ export interface BaseLayoutProps {
     lang?: string;
     className?: string;
     relPath?: string;
+    includeStyleLink?: boolean; // Default: true. Set false for Web/A Forms with inline CSS
 }
 
 const MERMAID_ASSET_PATH = 'src/ssg/assets/vendor/mermaid.min.js';
@@ -32,11 +33,12 @@ function getMermaidDataUri(): string | null {
 }
 
 export function baseLayout(props: BaseLayoutProps): string {
-    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja', className = '', relPath } = props;
+    const { title, content, fontCss, fontFamilies, jsonLd, lang = 'ja', className = '', relPath, includeStyleLink = true } = props;
     const relativePrefix = getRelativePrefix(relPath);
     const styleHref = `${relativePrefix}style.css`;
     const sitemapHref = `${relativePrefix}sitemap.xml`;
     const llmsHref = `${relativePrefix}llms.txt`;
+    const styleLinkTag = includeStyleLink ? `<link rel="stylesheet" href="${styleHref}">` : '';
 
     // JSON-LD script block
     const jsonLdScript = jsonLd
@@ -103,7 +105,7 @@ export function baseLayout(props: BaseLayoutProps): string {
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
     <title>${title}</title>
     <link rel="icon" href="${FAVICON_DATA_URI}">
-    <link rel="stylesheet" href="${styleHref}">
+    ${styleLinkTag}
     <link rel="sitemap" type="application/xml" href="${sitemapHref}">
     <link rel="help" type="text/plain" href="${llmsHref}">
     ${fontCss}

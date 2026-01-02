@@ -82,13 +82,18 @@ export class SearchEngine {
                     if (url.startsWith('#')) {
                         const el = document.querySelector(url);
                         if (!el || !el.textContent) continue;
-                        jsonString = atob(el.textContent.trim());
+                        // Decompress gzip-compressed blob
+                        const bin = atob(el.textContent.trim());
+                        const ui8 = new Uint8Array(bin.length);
+                        for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+                        const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+                        jsonString = await new Response(stream).text();
                     } else {
                         const resp = await fetch(url);
                         if (!resp.ok) continue;
                         jsonString = await resp.text();
                     }
-                    
+
                     jsonStructure.masterData[key] = JSON.parse(jsonString);
                     console.log(`📮 Master data '${key}' loaded from blob:`, digest);
                     break; // Success
@@ -127,6 +132,13 @@ export class SearchEngine {
      * 郵便番号フィールドかどうかを判定
      */
     private isPostalField(input: HTMLInputElement): boolean {
+        // Check data-autofill attribute first (explicit annotation takes priority)
+        const autofill = input.dataset.autofill || '';
+        if (autofill.startsWith('postal:')) {
+            return true;
+        }
+
+        // Fallback to old detection logic (for backwards compatibility)
         const key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
         const placeholder = (input.placeholder || '').toLowerCase();
         const isZipKey = (key.match(/zip|postal|postcode|郵便/) && !key.match(/pref|city|town|address|都道府県|市区町村|住所/));
@@ -460,8 +472,21 @@ export class SearchEngine {
             }
         } else if (srcKey) {
             // Master Search
+            console.log('[SearchEngine] Master search requested. srcKey:', srcKey);
+            console.log('[SearchEngine] generatedJsonStructure exists?', !!w.generatedJsonStructure);
+            if (w.generatedJsonStructure) {
+                console.log('[SearchEngine] masterData exists?', !!w.generatedJsonStructure.masterData);
+                if (w.generatedJsonStructure.masterData) {
+                    console.log('[SearchEngine] Available master keys:', Object.keys(w.generatedJsonStructure.masterData));
+                }
+            }
+
+            if (!w.generatedJsonStructure || !w.generatedJsonStructure.masterData) return;
             const master = w.generatedJsonStructure.masterData;
-            if (!master || !master[srcKey]) return;
+            if (!master[srcKey]) {
+                console.log('[SearchEngine] Master key not found:', srcKey);
+                return;
+            }
 
             const allRows = master[srcKey];
             allRows.forEach((row: string[], idx: number) => {

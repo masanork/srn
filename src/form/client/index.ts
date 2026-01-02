@@ -7,7 +7,5 @@ const search = new SearchEngine();
 (window as any).SearchEngine = search;
 
 // Boot the core runtime
+// Note: SearchEngine will be initialized by runtime.ts after structure data is loaded
 initRuntime();
-
-// Initialize SearchEngine asynchronously
-search.init().catch(err => console.error('Failed to initialize SearchEngine:', err));

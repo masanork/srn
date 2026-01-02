@@ -23,15 +23,67 @@ export function initRuntime() {
     };
 
     // --- 2. Load Data Islands (Async Gzip support) ---
-    const structureScript = document.getElementById('weba-structure') as HTMLScriptElement;
-    if (structureScript) {
-        tryLoadJson(structureScript).then(s => {
-            if (s) {
-                w.generatedJsonStructure = s;
-                uim.applyI18n(); calc.recalculate(); uim.updateVisibility();
+    // Try to load from manifest first (Blob-based), then fallback to direct element
+    const loadStructureData = async () => {
+        const manifest = w.__WEBA_MANIFEST;
+        if (manifest && manifest.blobs) {
+            const structureBlob = manifest.blobs.find((b: any) => b.id === 'weba-structure');
+            if (structureBlob && structureBlob.urls) {
+                console.log('[Runtime] Found weba-structure in manifest');
+                for (const url of structureBlob.urls) {
+                    try {
+                        let jsonString: string;
+                        if (url.startsWith('#')) {
+                            const el = document.querySelector(url);
+                            if (!el || !el.textContent) continue;
+                            const bin = atob(el.textContent.trim());
+                            const ui8 = new Uint8Array(bin.length);
+                            for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+                            const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+                            jsonString = await new Response(stream).text();
+                        } else {
+                            const resp = await fetch(url);
+                            if (!resp.ok) continue;
+                            jsonString = await resp.text();
+                        }
+                        const data = JSON.parse(jsonString);
+                        console.log('[Runtime] Structure data loaded from blob. Keys:', Object.keys(data));
+                        return data;
+                    } catch (e) {
+                        console.warn('[Runtime] Failed to load structure from:', url, e);
+                    }
+                }
             }
-        });
-    }
+        }
+
+        // Fallback to direct element access
+        const structureScript = document.getElementById('weba-structure') as HTMLScriptElement;
+        if (structureScript) {
+            console.log('[Runtime] Loading structure from direct element');
+            return await tryLoadJson(structureScript);
+        }
+
+        console.warn('[Runtime] weba-structure not found in manifest or DOM');
+        return null;
+    };
+
+    loadStructureData().then(s => {
+        if (s) {
+            w.generatedJsonStructure = s;
+            console.log('[Runtime] generatedJsonStructure set');
+            uim.applyI18n(); uim.initTelFormatter(); calc.recalculate(); uim.updateVisibility();
+
+            // Initialize SearchEngine after structure data is loaded
+            if (w.SearchEngine && typeof w.SearchEngine.init === 'function') {
+                console.log('[Runtime] Calling SearchEngine.init()...');
+                w.SearchEngine.init().catch((err: any) => console.error('SearchEngine init failed:', err));
+            }
+        } else {
+            console.warn('[Runtime] Failed to load structure data');
+        }
+    }).catch(err => {
+        console.error('[Runtime] Error loading structure:', err);
+    });
     const l2ConfigEl = document.getElementById("weba-l2-config") as HTMLScriptElement;
     if (l2ConfigEl) {
         tryLoadJson(l2ConfigEl).then(c => {
@@ -80,12 +132,29 @@ export function initRuntime() {
         if (postal && postal.isReady() && !isSearchInput) {
             key = (input.dataset.jsonPath || input.dataset.baseKey || input.name || input.id || '').toLowerCase();
             const placeholder = (input.placeholder || '').toLowerCase();
+            const autofill = input.dataset.autofill || '';
 
-            const isZipField = (key.match(/zip|postal|postcode|郵便/) && !key.match(/pref|city|town|address|都道府県|市区町村|住所/))
-                || placeholder.match(/郵便|zip|postal/);
-            const isAddrField = key.match(/pref|city|town|address|都道府県|市区町村|住所/);
+            // Determine field type: prioritize autofill attribute, fallback to key/placeholder
+            let fieldType = '';
+            if (autofill.startsWith('postal:')) {
+                fieldType = autofill.replace('postal:', '');
+            } else {
+                // Fallback: auto-detect from key/placeholder
+                if ((key.match(/zip|postal|postcode|郵便/) && !key.match(/pref|city|town|address|都道府県|市区町村|住所/))
+                    || placeholder.match(/郵便|zip|postal/)) {
+                    fieldType = 'zip';
+                } else if (key.match(/pref|都道府県/)) {
+                    fieldType = 'pref';
+                } else if (key.match(/city|市区町村/)) {
+                    fieldType = 'city';
+                } else if (key.match(/town|町名|町字/)) {
+                    fieldType = 'town';
+                } else if (key.match(/address|住所/)) {
+                    fieldType = 'address';
+                }
+            }
 
-            if (isZipField || isAddrField) {
+            if (fieldType) {
                 // Ensure datalist exists (Support dynamic rows)
                 let listId = input.getAttribute('list');
                 if (!listId) {
@@ -95,7 +164,7 @@ export function initRuntime() {
                 }
                 const datalist = document.getElementById(listId);
 
-                if (isZipField) {
+                if (fieldType === 'zip') {
                     const cleanVal = val.replace(/[^0-9]/g, '');
                     if (datalist && cleanVal.length >= 3) {
                         const candidates = postal.suggest(cleanVal, 50) as PostalRecord[];
@@ -105,15 +174,25 @@ export function initRuntime() {
                         const addr = postal.lookup(cleanVal);
                         if (addr) fillAddress(input, addr, input.closest('tr') || input.closest('.dynamic-row') || input.closest('.address-group') || input.closest('table') || input.closest('form') || document.body);
                     }
-                } else if (isAddrField) {
+                } else if (fieldType === 'pref') {
+                    // 都道府県フィールド：都道府県名のみサジェスト
+                    if (datalist && val.length >= 1) {
+                        const candidates = postal.suggestByAddress(val, 50) as PostalRecord[];
+                        const uniquePrefs = [...new Set(candidates.map(c => c.pref))].slice(0, 10);
+                        datalist.innerHTML = uniquePrefs.map(pref => `<option value="${pref}">${pref}</option>`).join('');
+                    }
+                } else if (fieldType === 'city') {
+                    // 市区町村フィールド：市区町村名のみサジェスト
+                    if (datalist && val.length >= 1) {
+                        const candidates = postal.suggestByAddress(val, 50) as PostalRecord[];
+                        const uniqueCities = [...new Set(candidates.map(c => c.city))].slice(0, 20);
+                        datalist.innerHTML = uniqueCities.map(city => `<option value="${city}">${city}</option>`).join('');
+                    }
+                } else if (fieldType === 'town' || fieldType === 'address') {
+                    // 町名・住所フィールド：町名のみサジェスト
                     if (datalist && val.length >= 2) {
                         const candidates = postal.suggestByAddress(val, 30) as PostalRecord[];
-                        datalist.innerHTML = candidates.map(c => `<option value="${c.pref}${c.city}${c.town}">${c.zip} ${c.pref}${c.city}${c.town}</option>`).join('');
-                    }
-                    if (val.length >= 5) {
-                        const candidates = postal.suggestByAddress(val, 5);
-                        const exactMatch = candidates.find((c: PostalRecord) => `${c.pref}${c.city}${c.town}` === val);
-                        if (exactMatch) fillAddress(input, exactMatch, input.closest('tr') || input.closest('.dynamic-row') || input.closest('.address-group') || input.closest('table') || input.closest('form') || document.body, true);
+                        datalist.innerHTML = candidates.map(c => `<option value="${c.town}">${c.pref}${c.city}${c.town}</option>`).join('');
                     }
                 }
             }
