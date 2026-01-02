@@ -7,6 +7,7 @@ import { LayoutManager } from '../ssg/LayoutManager.ts';
 import { ManifestManager } from '../ssg/ManifestManager.ts';
 import { IdentityManager } from '../ssg/IdentityManager.ts';
 import { FontProcessor } from '../ssg/FontProcessor.ts';
+import { bundleClientScripts } from '../ssg/index.ts'; // We'll make this exportable
 import { loadConfig } from '../core/config.ts';
 import { initWasm } from '../core/wasm_core.ts';
 import { marked } from 'marked';
@@ -20,20 +21,30 @@ program
     .option('-o, --output <dir>', 'Output directory (default: same as input or ./dist)')
     .option('--site <name>', 'Site profile to use for config/fonts', 'srn')
     .action(async (inputs, options) => {
+        // Resolve project root based on this script's location
+        const scriptDir = path.dirname(new URL(import.meta.url).pathname);
+        const projectRoot = path.resolve(scriptDir, '../../');
+        
         await initWasm();
         
-        const configPath = path.resolve(`sites/${options.site}/config.yaml`);
+        const configPath = path.resolve(projectRoot, `sites/${options.site}/config.yaml`);
         if (!await fs.pathExists(configPath)) {
             console.error(`Config not found: ${configPath}`);
             process.exit(1);
         }
         const config = await loadConfig(configPath);
-        const projectRoot = process.cwd();
         
         // Correct IdentityManager initialization based on config.yaml structure
         const dataDir = path.resolve(projectRoot, config.directories.data || `sites/${options.site}/data`);
         const distDir = options.output ? path.resolve(options.output) : path.resolve(projectRoot, 'dist', options.site);
         
+        // Ensure assets are available
+        const assetsDir = path.join(distDir, 'assets');
+        if (!await fs.pathExists(path.join(assetsDir, 'form-core.js'))) {
+            console.log("Assets missing. Bundling client scripts...");
+            await bundleClientScripts(distDir);
+        }
+
         const domain = config.identity?.domain || 'localhost';
         const sitePath = config.identity?.path || '/';
         
@@ -47,6 +58,7 @@ program
         
         const allInputFiles: string[] = [];
         for (const input of inputs) {
+            // Stats check against CURRENT directory
             const stats = await fs.stat(input);
             if (stats.isDirectory()) {
                 const found = await glob('**/*.md', { cwd: input, absolute: true });

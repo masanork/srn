@@ -67,8 +67,10 @@ export class LayoutManager {
         const needsCrypto = data.layout === 'form' || !!vc;
         if (needsCrypto) {
             try {
-                // WASM source is in wasm_bindings
-                const wasmPath = path.join(process.cwd(), 'src/core/wasm_bindings/weba_crypto_wasm_bg.wasm');
+                // WASM source is in wasm_bindings relative to this file
+                // LayoutManager is in src/ssg/, WASM is in src/core/wasm_bindings/
+                const projectRoot = path.resolve(new URL(import.meta.url).pathname, '../../../');
+                const wasmPath = path.join(projectRoot, 'src/core/wasm_bindings/weba_crypto_wasm_bg.wasm');
                 if (await fs.pathExists(wasmPath)) {
                     const buffer = await fs.readFile(wasmPath);
                     await manifestManager.addBlob({
