@@ -104,6 +104,7 @@ export async function formLayout(params: {
     // Manifest Injection (Postal Data)
     let postalScript = '';
     const needsPostal = jsonStructure.needsPostal || false;
+    const needsLg = jsonStructure.needsLg || rawMarkdown.includes('autofill:lg');
     const needsL2 = l2Config || rawMarkdown.includes('weba-l2-') || rawMarkdown.includes('l2crypto');
 
     if (needsPostal) {
@@ -126,6 +127,29 @@ export async function formLayout(params: {
                 postalScript = `<script>window.__needsPostal = true;</script>`;
             }
         } catch (e) { console.warn('Failed to register postal blob', e); }
+    }
+
+    // Manifest Injection (LG Data)
+    let lgScript = '';
+    if (needsLg) {
+        try {
+            const manifestPath = path.resolve('shared/data/lg/lg-manifest.json');
+            const optimizedPath = path.resolve('shared/data/lg/lg-optimized.json.gz');
+
+            if (fs.existsSync(manifestPath) && fs.existsSync(optimizedPath) && manifestManager) {
+                const gzBuffer = fs.readFileSync(optimizedPath);
+
+                await manifestManager.addBlob({
+                    id: 'jp-lg',
+                    content: gzBuffer,
+                    mediaType: 'application/x-gzip',
+                    fileName: 'lg-optimized.json.gz',
+                    description: 'Japan Local Government Code Data (Optimized)'
+                });
+
+                lgScript = `<script>window.__needsLg = true;</script>`;
+            }
+        } catch (e) { console.warn('Failed to register LG blob', e); }
     }
 
     const l2Toggle = l2Config ? `
@@ -187,6 +211,7 @@ export async function formLayout(params: {
     await inlineScript('form-core.js', 'weba-js-core');
     if (needsL2) await inlineScript('form-l2.js', 'weba-js-l2');
     if (needsPostal) await inlineScript('form-postal.js', 'weba-js-postal');
+    if (needsLg) await inlineScript('form-lg.js', 'weba-js-lg');
     if (data.layout === 'aggregator' || data.layout === 'report') await inlineScript('form-aggregator.js', 'weba-js-aggregator');
 
     const customStyle = data.style ? `<style>\n${data.style}\n</style>` : '';
@@ -218,6 +243,7 @@ export async function formLayout(params: {
             </footer>
         </div>
         ${postalScript}
+        ${lgScript}
         ${customScript}
     `;
 

@@ -22,6 +22,13 @@ export function initRuntime() {
         }
     };
 
+    const initLg = () => {
+        if (w.lgLookup && !w.__lgInitialized) {
+            w.__lgInitialized = true;
+            w.lgLookup.autoInit().then(() => console.log("🏛️ LG lookup ready."));
+        }
+    };
+
     // --- 2. Load Data Islands (Async Gzip support) ---
     // Try to load from manifest first (Blob-based), then fallback to direct element
     const loadStructureData = async () => {
@@ -114,6 +121,7 @@ export function initRuntime() {
     if (w.initKeywrapTool) w.initKeywrapTool();
     if (w.initAggregatorBrowser) w.initAggregatorBrowser();
     initPostal();
+    initLg();
 
     // --- 5. Global Event Handling ---
     let tm: any;
@@ -198,6 +206,134 @@ export function initRuntime() {
             }
         }
 
+        // A-2. LG Code Autocomplete
+        const lg = w.lgLookup;
+        if (lg && lg.isReady() && !isSearchInput) {
+            const autofill = input.dataset.autofill || '';
+
+            // Helper: Get related fields in the same scope
+            const getRelatedLgFields = (currentInput: HTMLInputElement) => {
+                const scope = currentInput.closest('tr') || currentInput.closest('.dynamic-row') || currentInput.closest('.group') || currentInput.closest('form') || document.body;
+                const inputs = Array.from(scope.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
+
+                let codeField: HTMLInputElement | null = null;
+                let prefField: HTMLInputElement | null = null;
+                let cityField: HTMLInputElement | null = null;
+
+                inputs.forEach((inp) => {
+                    const af = inp.dataset.autofill || '';
+                    const k = (inp.dataset.jsonPath || inp.name || inp.id || '').toLowerCase();
+
+                    if (af === 'lg' || k.match(/lg_code|lgcode|自治体コード/)) {
+                        codeField = inp;
+                    } else if (af === 'lg:pref' || k.match(/pref|都道府県/)) {
+                        prefField = inp;
+                    } else if (af === 'lg:city' || k.match(/city|市区町村/)) {
+                        cityField = inp;
+                    }
+                });
+
+                return { codeField, prefField, cityField };
+            };
+
+            // Helper: Auto-fill related fields
+            const fillLgFields = (lgRecord: any, currentInput: HTMLInputElement) => {
+                const { codeField, prefField, cityField } = getRelatedLgFields(currentInput);
+
+                [
+                    { field: codeField, value: lgRecord.code },
+                    { field: prefField, value: lgRecord.pref },
+                    { field: cityField, value: lgRecord.city }
+                ].forEach(({ field, value }) => {
+                    if (field && field !== currentInput && value && field.value !== value) {
+                        field.value = value;
+                        field.dataset.dirty = 'true';
+                        field.style.backgroundColor = '#e0f2fe';
+                        setTimeout(() => { field.style.backgroundColor = ''; }, 500);
+                        field.dispatchEvent(new Event('input', { bubbles: true }));
+                        field.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            };
+
+            if (autofill === 'lg') {
+                // === LG Code Field ===
+                let listId = input.getAttribute('list');
+                if (!listId) {
+                    listId = `dl-lg-${Math.random().toString(36).substr(2, 5)}`;
+                    input.setAttribute('list', listId);
+                    const dl = document.createElement('datalist'); dl.id = listId; document.body.appendChild(dl);
+                }
+                const datalist = document.getElementById(listId);
+
+                const cleanVal = val.replace(/[^0-9]/g, '');
+
+                // Suggest by code prefix
+                if (datalist && cleanVal.length >= 2 && cleanVal.length < 6) {
+                    const candidates = lg.suggest(cleanVal, 30);
+                    datalist.innerHTML = candidates.map(c =>
+                        `<option value="${c.code}">${c.pref} ${c.city}</option>`
+                    ).join('');
+                }
+
+                // Auto-fill on exact match (6 digits)
+                if (cleanVal.length === 6) {
+                    const lgRecord = lg.lookup(cleanVal);
+                    if (lgRecord) fillLgFields(lgRecord, input);
+                }
+            } else if (autofill === 'lg:pref') {
+                // === Prefecture Field ===
+                let listId = input.getAttribute('list');
+                if (!listId) {
+                    listId = `dl-lg-pref-${Math.random().toString(36).substr(2, 5)}`;
+                    input.setAttribute('list', listId);
+                    const dl = document.createElement('datalist'); dl.id = listId; document.body.appendChild(dl);
+                }
+                const datalist = document.getElementById(listId);
+
+                if (datalist && val.length >= 1) {
+                    const allPrefs = lg.getUniquePrefectures();
+                    const filtered = allPrefs.filter(p => p.includes(val)).slice(0, 20);
+                    datalist.innerHTML = filtered.map(p => `<option value="${p}">${p}</option>`).join('');
+                }
+            } else if (autofill === 'lg:city') {
+                // === City Field ===
+                let listId = input.getAttribute('list');
+                if (!listId) {
+                    listId = `dl-lg-city-${Math.random().toString(36).substr(2, 5)}`;
+                    input.setAttribute('list', listId);
+                    const dl = document.createElement('datalist'); dl.id = listId; document.body.appendChild(dl);
+                }
+                const datalist = document.getElementById(listId);
+
+                if (datalist && val.length >= 1) {
+                    const { prefField } = getRelatedLgFields(input);
+                    const prefValue = prefField ? prefField.value.trim() : '';
+
+                    let candidates;
+                    if (prefValue) {
+                        // Filter by prefecture
+                        candidates = lg.suggestCitiesByPref(prefValue, val, 30);
+                        datalist.innerHTML = candidates.map(c =>
+                            `<option value="${c.city}">${c.city}</option>`
+                        ).join('');
+                    } else {
+                        // Show all cities with prefecture
+                        candidates = lg.suggestByCity(val, undefined, 30);
+                        datalist.innerHTML = candidates.map(c =>
+                            `<option value="${c.city}">${c.pref} ${c.city}</option>`
+                        ).join('');
+                    }
+
+                    // Auto-fill on exact match
+                    const exactMatch = candidates.find(c => c.city === val);
+                    if (exactMatch) {
+                        fillLgFields(exactMatch, input);
+                    }
+                }
+            }
+        }
+
         // B. Master Data Search (Support for Medical Expense Demo etc.)
         if (input.classList.contains('search-input') && w.SearchEngine) {
             // If SearchEngine is globally available, the individual module for search (form-search.js) 
@@ -216,6 +352,68 @@ export function initRuntime() {
         }
         calc.recalculate(); uim.updateVisibility(); dm.updateJsonLd();
         clearTimeout(tm); tm = setTimeout(() => dm.saveToLS(), 1000);
+    });
+
+    // Change event for datalist selection (LG autocomplete)
+    document.addEventListener('change', (e) => {
+        const input = e.target as HTMLInputElement;
+        if (!input || input.tagName !== 'INPUT') return;
+
+        const autofill = input.dataset.autofill || '';
+        const lg = w.lgLookup;
+
+        // LG City field: Auto-fill on selection from datalist
+        if (lg && lg.isReady() && autofill === 'lg:city') {
+            const val = input.value.trim();
+            if (!val) return;
+
+            const scope = input.closest('tr') || input.closest('.dynamic-row') || input.closest('.group') || input.closest('form') || document.body;
+            const inputs = Array.from(scope.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
+
+            let prefField: HTMLInputElement | null = null;
+            inputs.forEach((inp) => {
+                const af = inp.dataset.autofill || '';
+                const k = (inp.dataset.jsonPath || inp.name || inp.id || '').toLowerCase();
+                if (af === 'lg:pref' || k.match(/pref|都道府県/)) {
+                    prefField = inp;
+                }
+            });
+
+            const prefValue = prefField ? prefField.value.trim() : '';
+
+            // Search for matching city
+            const candidates = prefValue
+                ? lg.suggestCitiesByPref(prefValue, val, 50)
+                : lg.suggestByCity(val, undefined, 50);
+
+            const exactMatch = candidates.find(c => c.city === val);
+            if (exactMatch) {
+                // Fill related fields
+                inputs.forEach((targetInput) => {
+                    if (targetInput === input) return;
+                    const af = targetInput.dataset.autofill || '';
+                    const k = (targetInput.dataset.jsonPath || targetInput.name || targetInput.id || '').toLowerCase();
+
+                    let valueToSet = '';
+                    if (af === 'lg' || k.match(/lg_code|lgcode|自治体コード/)) {
+                        valueToSet = exactMatch.code;
+                    } else if (af === 'lg:pref' || k.match(/pref|都道府県/)) {
+                        valueToSet = exactMatch.pref;
+                    }
+
+                    if (valueToSet && targetInput.value !== valueToSet) {
+                        targetInput.value = valueToSet;
+                        targetInput.dataset.dirty = 'true';
+                        targetInput.style.backgroundColor = '#e0f2fe';
+                        setTimeout(() => { targetInput.style.backgroundColor = ''; }, 500);
+                        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+
+                calc.recalculate(); uim.updateVisibility(); dm.updateJsonLd();
+            }
+        }
     });
 
     console.log("Web/A Runtime Ready.");
