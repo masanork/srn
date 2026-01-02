@@ -6,7 +6,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     const lines = text.split('\n');
 
     let html = '';
-    let jsonStructure: any = { "@context": "https://schema.org", "@type": "CreativeWork" };
+    let jsonStructure: any = { "@context": "https://schema.org", "@type": "CreativeWork", needsPostal: false };
     const aggSpecs: any[] = [];
 
     const parseAggSpec = (raw: string): any | null => {
@@ -327,6 +327,12 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
                 const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
                 const showIfMatch = attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/);
+                const autofillMatch = attrStr.match(/autofill:([a-z]+)/);
+
+                // Check if this field needs postal data
+                if (autofillMatch && autofillMatch[1] === 'postal') {
+                    jsonStructure.needsPostal = true;
+                }
 
                 jsonStructure.fields.push({
                     key,
@@ -366,7 +372,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         // HTML Passthrough for layout
         else if (trimmed.startsWith('<')) {
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
-            appendHtml(processInlineTags(trimmed));
+            // Pure HTML tags (div, span, etc.) should pass through without escaping
+            // Only process inline form tags if they exist within the HTML
+            if (trimmed.includes('[') && trimmed.includes(']')) {
+                appendHtml(processInlineTags(trimmed));
+            } else {
+                appendHtml(trimmed);
+            }
         }
         else if (trimmed.length > 0) {
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }

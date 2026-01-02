@@ -226,10 +226,8 @@ export async function formLayout(params: {
         return false;
     };
 
-    await inlineScript('form-core.js', 'weba-js-core');
+    await inlineScript('form-core-plugin.js', 'weba-js-core');
     if (needsL2) await inlineScript('form-l2.js', 'weba-js-l2');
-    if (needsPostal) await inlineScript('form-postal.js', 'weba-js-postal');
-    if (needsLg) await inlineScript('form-lg.js', 'weba-js-lg');
     if (data.layout === 'aggregator' || data.layout === 'report') await inlineScript('form-aggregator.js', 'weba-js-aggregator');
 
     const customStyle = data.style ? `<style>\n${data.style}\n</style>` : '';

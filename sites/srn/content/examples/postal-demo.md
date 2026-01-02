@@ -13,10 +13,10 @@ layout: form
 | 項目 | 入力フィールド |
 | --- | --- |
 | お名前 | [text:delivery.name (placeholder="山田 太郎")] |
-| 郵便番号 | [search:delivery.zip (placeholder="例: 105-0011")] |
-| 都道府県 | [text:delivery.pref (placeholder="自動入力")] |
-| 市区町村 | [text:delivery.city (placeholder="自動入力")] |
-| 町名・番地 | [text:delivery.address (placeholder="自動入力 + 番地を追記")] |
+| 郵便番号 | [search:delivery.zip (autofill:postal:zip placeholder="例: 105-0011")] |
+| 都道府県 | [text:delivery.pref (autofill:postal:pref placeholder="自動入力")] |
+| 市区町村 | [text:delivery.city (autofill:postal:city placeholder="自動入力")] |
+| 町名・番地 | [text:delivery.address (autofill:postal:town placeholder="自動入力 + 番地を追記")] |
 | 建物名・部屋番号 | [text:delivery.building (placeholder="○○マンション 101号室")] |
 | 電話番号 | [text:delivery.phone (placeholder="03-1234-5678")] |
 
@@ -25,10 +25,10 @@ layout: form
 | 項目 | 入力フィールド |
 | --- | --- |
 | お名前 | [text:sender.name (placeholder="佐藤 花子")] |
-| 郵便番号 | [search:sender.zip (placeholder="例: 100-0001")] |
-| 都道府県 | [text:sender.pref (placeholder="自動入力")] |
-| 市区町村 | [text:sender.city (placeholder="自動入力")] |
-| 町名・番地 | [text:sender.address (placeholder="自動入力 + 番地を追記")] |
+| 郵便番号 | [search:sender.zip (autofill:postal:zip placeholder="例: 100-0001")] |
+| 都道府県 | [text:sender.pref (autofill:postal:pref placeholder="自動入力")] |
+| 市区町村 | [text:sender.city (autofill:postal:city placeholder="自動入力")] |
+| 町名・番地 | [text:sender.address (autofill:postal:town placeholder="自動入力 + 番地を追記")] |
 | 建物名・部屋番号 | [text:sender.building (placeholder="○○ビル 5F")] |
 | 電話番号 | [text:sender.phone (placeholder="03-9876-5432")] |
 

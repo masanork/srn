@@ -49,8 +49,8 @@ ai_generated: true
     <span data-lang-ja>エージェント対応 (Agentic AI): 人間とAIの双方が同じ情報を理解できる設計。AIエージェントによる自動的なデータ連携を可能にします。</span>
 </li>
 <li><strong>Zero-Touch Deployment</strong>
-    <span data-lang-en>Deploy as simple static files on any CDN or edge network. No specialized backend or complex database required.</span>
-    <span data-lang-ja>ゼロタッチ・デプロイ: 複雑なサーバー構成は不要。CDNや静的なホスティング環境があれば、即座にトラスト基盤を構築できます。</span>
+    <span data-lang-en>No client installation required. Just distribute the file to start using immediately. No specialized backend or complex database needed.</span>
+    <span data-lang-ja>ゼロタッチ・デプロイ: クライアントアプリは不要。ファイルを配布するだけで、端末を即座に利用開始できます。複雑なサーバー構成も必要ありません。</span>
 </li>
 </ul>
 </div>
@@ -75,7 +75,7 @@ ai_generated: true
 
 <div class="nav-subheader">Strategic Resources</div>
 <div class="spec-links-grid">
-<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Transparency Reports</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ Simulation</a>
 <a href="./papers/api-economy-vs-document-economy.html">📊 API vs Document Economy</a>
 <a href="./papers/web-a-ltv-architecture.html">🏛️ LTV Architecture (New)</a>
 </div>
@@ -98,7 +98,7 @@ ai_generated: true
 
 <div class="nav-subheader">戦略・重要資料</div>
 <div class="spec-links-grid">
-<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ 透明性報告</a>
+<a href="./governance.html" style="font-weight:bold; color:var(--highlight); border-color:var(--highlight);">⚖️ 模擬演習</a>
 <a href="./papers/api-economy-vs-document-economy.ja.html">📊 試算：API経済 vs 書類経済</a>
 <a href="./papers/web-a-ltv-architecture.html">🏛️ LTV 長期検証アーキテクチャ</a>
 </div>

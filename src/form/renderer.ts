@@ -131,6 +131,9 @@ export const Renderers: Record<string, any> = {
         const showIfMatch = attrs.match(/show_if="([^"]+)"/) || attrs.match(/show_if='([^']+)'/);
         if (showIfMatch) extra += ` data-show-if="${this.escapeHtml(showIfMatch[1])}"`;
 
+        const autofillMatch = attrs.match(/autofill:([a-z:]+)/);
+        if (autofillMatch) extra += ` data-autofill="${this.escapeHtml(autofillMatch[1])}"`;
+
         // Pass through standard validation attributes
         const validationAttrs = ['min', 'max', 'step', 'pattern', 'required', 'readonly', 'disabled', 'minlength', 'maxlength'];
         validationAttrs.forEach(attr => {

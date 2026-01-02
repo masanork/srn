@@ -42,15 +42,15 @@ export class UIManager {
         const RESOURCES: any = {
             "en": {
                 "add_row": "+ Add Row",
-                "work_save_btn": "Save Progress",
-                "clear_btn": "Clear Data",
+                "work_save_btn": "Save",
+                "clear_btn": "Clear",
                 "sign_btn": "Submit",
             },
             "ja": {
                 "add_row": "+ 行を追加",
-                "work_save_btn": "作業内容を保存",
-                "clear_btn": "クリア",
-                "sign_btn": "提出版を保存",
+                "work_save_btn": "保存",
+                "clear_btn": "消去",
+                "sign_btn": "提出",
             }
         };
         const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';
@@ -60,6 +60,71 @@ export class UIManager {
             const key = el.dataset.i18n;
             if (dict[key]) el.textContent = dict[key];
         });
+    }
+
+    /**
+     * 電話番号フォーマッター
+     * - 表示：ハイフン付き（090-1234-5678）
+     * - JSON保存：数字のみ（09012345678）
+     */
+    public initTelFormatter() {
+        document.querySelectorAll('input[type="tel"]').forEach((input: any) => {
+            // データ読み込み時：数字のみ → ハイフン付きで表示
+            if (input.value) {
+                input.value = this.formatTelDisplay(input.value);
+            }
+
+            // 入力時：自動フォーマット
+            input.addEventListener('input', (e: any) => {
+                const cursorPos = e.target.selectionStart;
+                const oldValue = e.target.value;
+                const digitsOnly = oldValue.replace(/[^0-9]/g, '');
+                const formatted = this.formatTelDisplay(digitsOnly);
+
+                if (formatted !== oldValue) {
+                    e.target.value = formatted;
+                    // カーソル位置を調整（ハイフン挿入後も適切な位置に）
+                    const diff = formatted.length - oldValue.length;
+                    e.target.setSelectionRange(cursorPos + diff, cursorPos + diff);
+                }
+            });
+
+            // blur時：データ保存用に数字のみに変換
+            input.addEventListener('blur', (e: any) => {
+                const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+                // data-json-path に保存する値は数字のみ
+                input.dataset.cleanValue = digitsOnly;
+            });
+        });
+    }
+
+    /**
+     * 電話番号を表示用にフォーマット（ハイフン挿入）
+     */
+    private formatTelDisplay(tel: string): string {
+        const digits = tel.replace(/[^0-9]/g, '');
+
+        if (digits.length === 0) return '';
+
+        // 11桁（携帯電話）: 090-1234-5678
+        if (digits.length === 11 && digits.startsWith('0')) {
+            return digits.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3');
+        }
+        // 10桁（固定電話）: 03-1234-5678 or 012-345-6789
+        else if (digits.length === 10 && digits.startsWith('0')) {
+            if (digits.startsWith('0120') || digits.startsWith('0800')) {
+                // フリーダイヤル: 0120-123-456
+                return digits.replace(/^(\d{4})(\d{3})(\d{3})$/, '$1-$2-$3');
+            } else if (['03', '04', '06'].includes(digits.substring(0, 2))) {
+                // 東京・横浜・大阪など: 03-1234-5678
+                return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, '$1-$2-$3');
+            } else {
+                // その他: 012-345-6789
+                return digits.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+            }
+        }
+        // フォーマットできない場合はそのまま返す
+        return digits;
     }
 
     public initTables() {
