@@ -83,15 +83,22 @@ export class ManifestManager {
         return this.blobs;
     }
 
-    generateInjectionHtml(): string {
-        if (this.blobs.length === 0) return '';
-
-        const manifest = {
+    /**
+     * マニフェストオブジェクトを取得する（署名や検証用）
+     */
+    getManifestObject(templateDigest: string = ''): L1Manifest {
+        return {
+            templateDigest,
             blobs: this.blobs.map(b => {
                 const { _content, ...rest } = b as any;
                 return rest;
-            })
+            }),
+            createdAt: new Date().toISOString()
         };
+    }
+
+    generateInjectionHtml(templateDigest: string = ''): string {
+        const manifest = this.getManifestObject(templateDigest);
 
         let html = '\n<!-- Web/A L1 Manifest & Blobs -->\n';
         html += '<script>window.__WEBA_MANIFEST = ' + JSON.stringify(manifest) + ';</script>\n';
@@ -154,5 +161,12 @@ export class ManifestManager {
 
         html += '<script type="module">' + runtimeJs + '</script>\n';
         return html;
+    }
+
+    /**
+     * 指定されたHTML文字列から、埋め込まれたBlobスクリプトタグを削除（Prune）する
+     */
+    static pruneHtml(html: string): string {
+        return html.replace(/<script id="weba-blob-[^>]+>.*?<\/script>\n?/g, '');
     }
 }
