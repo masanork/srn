@@ -5,6 +5,29 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v2.9.0 - Unified Manifest & Pack-and-Prune Strategy
+
+**Date:** 2026-01-02
+
+Significant architectural upgrade focusing on resource management and cryptographic binding, enabling the "Pack First, Prune Later" strategy for long-term archival.
+
+*   **Unified Manifest Architecture (Pack & Prune)**:
+    *   **ManifestManager**: Introduced a centralized manager for all document resources (Blobs), including subsetted fonts, postal dictionaries, and JavaScript bundles (e.g., Mermaid).
+    *   **Pack & Prune Strategy**: Implemented a distribution model where all resources are initially embedded as Base64 in the HTML (Pack) for 100% offline functionality, but can be stripped later (Prune) while maintaining verifiability through manifest digests and secondary URLs.
+    *   **Cryptographic Binding**: All resource digests are now included in the Layer 1 Manifest, which is bound to the Layer 2 Payload signature, ensuring the integrity of the rendering and input environment.
+
+*   **Layer 1 Refinement**:
+    *   Formally split Layer 1 into **L1-Core** (the immutable schema and logic) and **L1-Manifest** (the referrable set of heavy assets).
+    *   Updated the [Web/A Whitepaper](./papers/web-a.html) to reflect this new structural separation.
+
+*   **Form Parser & Renderer Improvements**:
+    *   **Inline Markdown Support**: Enhanced the custom form parser to support standard Markdown inline formatting (Bold, Italic, Code, and Links) within field labels and descriptions.
+    *   **Dynamic Asset Loading**: The client-side runtime now supports fetching missing Blobs from secondary URLs if they have been pruned from the HTML container.
+
+*   **Documentation & Guides**:
+    *   **New Whitepaper**: Published [Web/A Manifest Architecture](./papers/web-a-manifest-architecture.html) detailing the technical implementation of the Pack & Prune strategy.
+    *   **Syntax Guide**: Created a comprehensive [Web/A Form Syntax Guide](./guide/weba-form-syntax.html) (Tag Reference) to serve as the Source of Truth for form developers and AI agents.
+
 ## v2.8.0 - New Year Update: CIV Identity & LTV Architecture
 
 **Date:** 2026-01-01
