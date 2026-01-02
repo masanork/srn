@@ -33,13 +33,7 @@ export interface LayoutContext {
 }
 
 export class LayoutManager {
-    private manifestManager: ManifestManager;
-
-    constructor(manifestManager: ManifestManager) {
-        this.manifestManager = manifestManager;
-    }
-
-    async render(ctx: LayoutContext): Promise<{ html: string, vc?: any }> {
+    async render(ctx: LayoutContext, manifestManager: ManifestManager): Promise<{ html: string, vc?: any }> {
         const { data, config, content, htmlContent, fontCss, safeFontFamilies, allPages, idManager, distDir, relPath } = ctx;
 
         let finalHtml = '';
@@ -54,7 +48,7 @@ export class LayoutManager {
                 // Note: bundleClientScripts runs before render loop, so file should exist.
                 if (await fs.pathExists(mermaidPath)) {
                     const buffer = await fs.readFile(mermaidPath);
-                    await this.manifestManager.addBlob({
+                    await manifestManager.addBlob({
                         id: 'js-mermaid',
                         content: buffer,
                         mediaType: 'application/javascript',
@@ -92,7 +86,7 @@ export class LayoutManager {
                         const json = JSON.stringify(mData);
                         // Blobify if large (> 1KB)
                         if (json.length > 1024) {
-                            const blobRef = await this.manifestManager.addBlob({
+                            const blobRef = await manifestManager.addBlob({
                                 id: `master-${key}`,
                                 content: json,
                                 mediaType: 'application/json',
@@ -114,12 +108,12 @@ export class LayoutManager {
                     relPath, 
                     config, 
                     distDir,
-                    manifestManager: this.manifestManager,
+                    manifestManager: manifestManager,
                     jsonStructure // Pass the processed structure
                 });
 
                 // Extra output: Report page
-                const reportHtml = await formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir, manifestManager: this.manifestManager });
+                const reportHtml = await formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir, manifestManager: manifestManager });
                 const reportPath = path.join(distDir, relPath.replace('.md', '.report.html'));
                 await fs.ensureDir(path.dirname(reportPath));
                 await fs.writeFile(reportPath, reportHtml);
@@ -308,7 +302,7 @@ ${JSON.stringify(containerVc, null, 2)}
         }
 
         // --- Manifest Injection (Fonts, Blobs, etc.) ---
-        const manifestHtml = this.manifestManager.generateInjectionHtml();
+        const manifestHtml = manifestManager.generateInjectionHtml();
         if (finalHtml.includes('</body>')) {
             finalHtml = finalHtml.replace('</body>', `${manifestHtml}</body>`);
         } else {

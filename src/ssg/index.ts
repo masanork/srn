@@ -80,8 +80,7 @@ async function build() {
         const fontProcessor = new FontProcessor(config, process.cwd());
         await fontProcessor.init();
 
-        const manifestManager = new ManifestManager(DIST_DIR);
-        const layoutManager = new LayoutManager(manifestManager);
+        const layoutManager = new LayoutManager();
 
         // Prepare client bundles first (to allow inlining if needed)
         await bundleClientScripts(DIST_DIR);
@@ -93,6 +92,7 @@ async function build() {
         let processedCount = 0;
 
         for (const file of files) {
+            const manifestManager = new ManifestManager(DIST_DIR); // NEW manager for every page
             const filePath = path.join(CONTENT_DIR, file);
             const source = await fs.readFile(filePath, 'utf-8');
             const { data, content } = matter(source);
@@ -151,7 +151,7 @@ async function build() {
                 distDir: DIST_DIR,
                 relPath: file,
                 contentDir: CONTENT_DIR
-            });
+            }, manifestManager);
 
             // Write Outputs
             const outPath = path.join(DIST_DIR, file.replace('.md', '.html'));
