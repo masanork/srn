@@ -121,3 +121,19 @@ The `ManifestManager` implemented in the SRN (Sorane) SSG performs the following
 ## 6. Conclusion
 
 With the Manifest Architecture, Web/A simultaneously achieves **"Single File Distribution" (Usability)**, **"Cryptographic Binding" (Trust)**, and **"Prunability" (Sustainability)**. This sets a new standard model for "Document-based" Web Applications.
+
+---
+
+## 7. Appendix: Development Tools Integration (Form Maker)
+
+### 7.1. Dynamic Preview Strategy
+In development tools such as the **Form Maker**, the preview functionality adopts a **"Dynamic Load via Virtual Manifest"** approach to avoid the overhead of repeated Base64 encoding (Packing).
+
+*   **Simulation of "Pruned" State**:
+    *   The preview environment is intentionally constructed as a "Pruned" state where Blobs are detached.
+    *   The generated HTML does not embed large `<script>` tags. Instead, the `window.__WEBA_MANIFEST` is dynamically populated with direct HTTP URLs pointing to assets on the development server (e.g., `/assets/mermaid.min.js`).
+*   **Runtime Reuse**:
+    *   Since the standard Web/A runtime includes a fallback mechanism within the `urls` array, assets can be dynamically loaded and executed using the same production logic without requiring a custom loader for the Maker.
+
+This strategy allows developers to edit and verify production-equivalent functionality (such as postal dictionaries and rendering engines) in a lightweight and high-performance environment.
+

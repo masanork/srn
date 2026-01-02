@@ -126,7 +126,9 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             .replace(/__(.*?)__/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/_(.*?)_/g, '<em>$1</em>')
-            .replace(/`(.*?)`/g, '<code>$1</code>');
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+            .replace(/\[([^\]]+)\]\(([\.\/][^\)]+)\)/g, '<a href="$2">$1</a>');
 
         return result;
     };
