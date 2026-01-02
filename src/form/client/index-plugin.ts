@@ -8,6 +8,9 @@
 import { FormRuntime } from '../runtime/Runtime.js';
 import { PluginManager } from '../runtime/PluginManager.js';
 import type { DetectionContext } from '../runtime/types.js';
+import { parsePluginManifest } from '../runtime/plugin-detector.js';
+import { postalPlugin } from '../plugins/postal.js';
+import { lgPlugin } from '../plugins/lg.js';
 
 /**
  * Initialize plugin-based runtime
@@ -20,19 +23,51 @@ export async function initPluginRuntime() {
     const pluginManager = new PluginManager();
 
     // Register all available plugins
-    // (Will be populated as we migrate plugins)
-    const allPlugins: any[] = [];
+    const allPlugins = [
+        postalPlugin,
+        lgPlugin
+    ];
 
     pluginManager.registerAll(allPlugins);
 
-    // Detect which plugins are needed for this form
-    const context: DetectionContext = {
-        structure: w.generatedJsonStructure || {},
-        rawMarkdown: '', // Not available at runtime, will need to be passed from build
-        frontmatter: {}
-    };
+    // Load plugin manifest from embedded data
+    let requiredPluginNames: string[] = [];
 
-    const enabledPlugins = pluginManager.detect(context);
+    const manifest = w.__WEBA_MANIFEST;
+    if (manifest && manifest.blobs) {
+        const manifestBlob = manifest.blobs.find((b: any) => b.id === 'weba-plugin-manifest');
+        if (manifestBlob && manifestBlob.urls) {
+            for (const url of manifestBlob.urls) {
+                try {
+                    let manifestJson: string;
+                    if (url.startsWith('#')) {
+                        const el = document.querySelector(url);
+                        if (el && el.textContent) {
+                            manifestJson = el.textContent.trim();
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        const resp = await fetch(url);
+                        if (!resp.ok) continue;
+                        manifestJson = await resp.text();
+                    }
+
+                    const detection = parsePluginManifest(manifestJson);
+                    requiredPluginNames = detection.plugins;
+                    console.log('[PluginRuntime] Loaded plugin manifest:', detection);
+                    break;
+                } catch (error) {
+                    console.warn('[PluginRuntime] Failed to load manifest from:', url, error);
+                }
+            }
+        }
+    }
+
+    // Filter plugins based on manifest
+    const enabledPlugins = allPlugins.filter(p =>
+        requiredPluginNames.length === 0 || requiredPluginNames.includes(p.name)
+    );
 
     console.log(`[PluginRuntime] Enabled plugins: ${enabledPlugins.map(p => p.name).join(', ')}`);
 

@@ -7,6 +7,7 @@ import { baseLayout } from './base.js';
 import { getRelativePrefix } from '../utils.js';
 import { parseMarkdown } from '../../form/parser.js';
 import type { ManifestManager } from '../ManifestManager.ts';
+import { detectRequiredPlugins, generatePluginManifest } from '../../form/runtime/plugin-detector.js';
 
 export interface FormData {
     title: string;
@@ -99,6 +100,23 @@ export async function formLayout(params: {
                 description: 'Layer 2 keywrap metadata'
             });
         }
+
+        // Detect required plugins
+        const pluginDetection = detectRequiredPlugins({
+            structure: jsonStructure,
+            rawMarkdown,
+            frontmatter: data
+        });
+
+        // Add plugin manifest
+        await manifestManager.addBlob({
+            id: 'weba-plugin-manifest',
+            content: generatePluginManifest(pluginDetection),
+            mediaType: 'application/json',
+            description: 'Plugin manifest (required plugins and data blobs)'
+        });
+
+        console.log(`[FormLayout] Detected plugins: ${pluginDetection.plugins.join(', ')}`);
     }
 
     // Manifest Injection (Postal Data)
