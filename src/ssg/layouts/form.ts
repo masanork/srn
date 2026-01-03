@@ -122,8 +122,8 @@ export async function formLayout(params: {
 
     // Manifest Injection (Postal Data)
     let postalScript = '';
-    const needsPostal = jsonStructure.needsPostal || rawMarkdown.includes('autofill:postal');
-    const needsLg = jsonStructure.needsLg || rawMarkdown.includes('autofill:lg');
+    const needsPostal = pluginDetection.metadata.hasPostal;
+    const needsLg = pluginDetection.metadata.hasLg;
     const needsL2 = l2Config || rawMarkdown.includes('weba-l2-') || rawMarkdown.includes('l2crypto');
 
     if (needsPostal) {
@@ -229,32 +229,39 @@ export async function formLayout(params: {
 
     // Generate custom bundle with only required plugins
     if (manifestManager) {
-        try {
-            const pluginsToBundle = pluginDetection.plugins.length > 0
-                ? pluginDetection.plugins
-                : []; // Empty array = basic runtime only
+        let customBundleRegistered = false;
+        const pluginsToBundle = pluginDetection.plugins;
 
-            console.log(`[FormLayout] Generating custom bundle for: ${pluginsToBundle.length > 0 ? pluginsToBundle.join(', ') : '(basic runtime)'}`);
-            const bundle = await bundlePlugins({
-                plugins: pluginsToBundle,
-                minify: true,
-                cache: true
-            });
+        if (pluginsToBundle.length > 0) {
+            try {
+                console.log(`[FormLayout] Generating custom bundle for: ${pluginsToBundle.join(', ')}`);
+                const bundle = await bundlePlugins({
+                    plugins: pluginsToBundle,
+                    minify: true,
+                    cache: true
+                });
 
-            await manifestManager.addBlob({
-                id: 'js-weba-js-core',
-                content: Buffer.from(bundle.code, 'utf-8'),
-                mediaType: 'application/javascript',
-                fileName: `form-runtime-${bundle.hash}.js`,
-                description: pluginsToBundle.length > 0
-                    ? `Custom plugin runtime (${pluginsToBundle.join(', ')})`
-                    : 'Basic form runtime'
-            });
+                await manifestManager.addBlob({
+                    id: 'js-weba-js-core',
+                    content: Buffer.from(bundle.code, 'utf-8'),
+                    mediaType: 'application/javascript',
+                    fileName: `form-runtime-${bundle.hash}.js`,
+                    description: `Custom plugin runtime (${pluginsToBundle.join(', ')})`
+                });
 
-            console.log(`[FormLayout] Custom bundle registered: ${bundle.size} bytes`);
-        } catch (error) {
-            console.warn('[FormLayout] Custom bundler failed:', error);
-            // Try fallback to form-core.js (non-plugin version)
+                console.log(`[FormLayout] Custom bundle registered: ${bundle.size} bytes`);
+                customBundleRegistered = true;
+            } catch (error) {
+                console.warn('[FormLayout] Custom bundler failed:', error);
+                // Fallthrough to standard runtime
+            }
+        } else {
+            console.log('[FormLayout] No plugins needed. Using standard runtime.');
+        }
+
+        if (!customBundleRegistered) {
+            // No custom bundle (either explicitly not needed, or failed to build)
+            // Use standard form-core.js
             await inlineScript('form-core.js', 'weba-js-core');
         }
     } else {

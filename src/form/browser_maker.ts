@@ -1,5 +1,5 @@
 
-import { parseMarkdown } from '@srn/core';
+import { parseMarkdown } from '../../packages/core/src/parser';
 import { generateHtml, initRuntime, generateAggregatorHtml } from './generator';
 
 // Window global functions for HTML event handlers
@@ -212,8 +212,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 import { derivePasskeyPrf, registerPasskey } from './client/webauthn';
-import { deriveKeyPairFromPrf, b64urlEncode } from './client/l2crypto';
-import { ml_kem768 } from "@noble/post-quantum/ml-kem.js";
+import { deriveKeyPairFromPrf, b64urlEncode } from './maker_crypto';
 import { createMlKem768Provider, installBrowserPqcProvider } from './client/pqc';
 
 
@@ -244,8 +243,12 @@ async function setupEncryption() {
         };
 
         // Always generate real ML-KEM-768 key pair for Hybrid encryption
-        const pqcKeys = ml_kem768.keygen();
-        lastGeneratedKeys.recipient_pqc_private = b64urlEncode(pqcKeys.secretKey);
+        const crypto = (window as any).WebACrypto;
+        if (!crypto) throw new Error("WebACrypto not active. Please wait for preview to load.");
+
+        // WASM returns { publicKey, privateKey }
+        const pqcKeys = crypto.mlKem768GenerateKeyPair();
+        lastGeneratedKeys.recipient_pqc_private = b64urlEncode(pqcKeys.privateKey);
         lastGeneratedKeys.recipient_pqc_kem = "ML-KEM-768";
         // We temporarily store the public key to put in newConfig
         (lastGeneratedKeys as any)._temp_pqc_public = b64urlEncode(pqcKeys.publicKey);

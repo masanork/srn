@@ -32,14 +32,21 @@ describe("WASM Conditional Loading", () => {
         layoutManager = new LayoutManager();
     });
 
+    function getManifestFromHtml(html: string): any {
+        const match = html.match(/window\.__WEBA_MANIFEST = (\{.*?\});/);
+        if (match && match[1]) {
+            return JSON.parse(match[1]);
+        }
+        return { blobs: [] };
+    }
+
     test("WASM should NOT be loaded for form without L2 config", async () => {
         const manifestManager = new ManifestManager(distDir);
-
+        // ... (setup same as before) ...
         const ctx = {
             data: {
                 layout: "form",
                 title: "Simple Form",
-                // No L2 config
             },
             config: {},
             content: "# Simple Form\n\n- [text:name] Name",
@@ -55,9 +62,8 @@ describe("WASM Conditional Loading", () => {
 
         const result = await layoutManager.render(ctx, manifestManager);
 
-        // Check manifest for WASM
-        const manifest = manifestManager.getManifestObject("");
-        const wasmBlob = manifest.blobs.find(b => b.id === "weba-crypto-wasm");
+        const manifest = getManifestFromHtml(result.html);
+        const wasmBlob = manifest.blobs.find((b: any) => b.id === "weba-crypto-wasm");
 
         expect(wasmBlob).toBeUndefined();
         expect(result.html).toBeTruthy();
@@ -65,7 +71,6 @@ describe("WASM Conditional Loading", () => {
 
     test("WASM SHOULD be loaded for form with L2 config", async () => {
         const manifestManager = new ManifestManager(distDir);
-
         const ctx = {
             data: {
                 layout: "form",
@@ -88,19 +93,17 @@ describe("WASM Conditional Loading", () => {
 
         const result = await layoutManager.render(ctx, manifestManager);
 
-        // Check manifest for WASM
-        const manifest = manifestManager.getManifestObject("");
-        const wasmBlob = manifest.blobs.find(b => b.id === "weba-crypto-wasm");
+        const manifest = getManifestFromHtml(result.html);
+        const wasmBlob = manifest.blobs.find((b: any) => b.id === "weba-crypto-wasm");
 
         expect(wasmBlob).toBeDefined();
         expect(wasmBlob?.mediaType).toBe("application/wasm");
-        expect(wasmBlob?.size).toBeGreaterThan(400000); // ~454KB
+        expect(wasmBlob?.size).toBeGreaterThan(400000);
         expect(result.html).toBeTruthy();
     });
 
     test("WASM SHOULD be loaded when L2 features mentioned in content", async () => {
         const manifestManager = new ManifestManager(distDir);
-
         const ctx = {
             data: {
                 layout: "form",
@@ -120,9 +123,8 @@ describe("WASM Conditional Loading", () => {
 
         const result = await layoutManager.render(ctx, manifestManager);
 
-        // Check manifest for WASM
-        const manifest = manifestManager.getManifestObject("");
-        const wasmBlob = manifest.blobs.find(b => b.id === "weba-crypto-wasm");
+        const manifest = getManifestFromHtml(result.html);
+        const wasmBlob = manifest.blobs.find((b: any) => b.id === "weba-crypto-wasm");
 
         expect(wasmBlob).toBeDefined();
         expect(result.html).toBeTruthy();
@@ -130,7 +132,6 @@ describe("WASM Conditional Loading", () => {
 
     test("WASM SHOULD be loaded for forms with VC (signed templates)", async () => {
         const manifestManager = new ManifestManager(distDir);
-
         const ctx = {
             data: {
                 layout: "form",
@@ -148,22 +149,14 @@ describe("WASM Conditional Loading", () => {
             contentDir: testDir
         };
 
-        // This will create a VC (signed template)
         const result = await layoutManager.render(ctx, manifestManager);
 
-        // Note: Currently WASM is NOT loaded for basic forms without L2
-        // even if they generate a VC (template signature happens server-side).
-        // This is intentional to save 454KB for non-L2 forms.
-        // If client-side signature verification is needed in the future,
-        // the logic can be adjusted.
-
-        expect(result.vc).toBeDefined(); // VC is created
+        expect(result.vc).toBeDefined();
         expect(result.html).toBeTruthy();
 
-        // Check manifest - WASM should NOT be loaded for basic signed forms
-        const manifest = manifestManager.getManifestObject("");
-        const wasmBlob = manifest.blobs.find(b => b.id === "weba-crypto-wasm");
-        expect(wasmBlob).toBeUndefined(); // WASM not needed without L2
+        const manifest = getManifestFromHtml(result.html);
+        const wasmBlob = manifest.blobs.find((b: any) => b.id === "weba-crypto-wasm");
+        expect(wasmBlob).toBeUndefined();
     });
 
     test("Size comparison: with and without WASM", async () => {
@@ -182,9 +175,9 @@ describe("WASM Conditional Loading", () => {
             relPath: "form1.md",
             contentDir: testDir
         };
-        await layoutManager.render(ctx1, m1);
-        const manifest1 = m1.getManifestObject("");
-        const size1 = manifest1.blobs.reduce((sum, b) => sum + b.size, 0);
+        const r1 = await layoutManager.render(ctx1, m1);
+        const man1 = getManifestFromHtml(r1.html);
+        const size1 = man1.blobs.reduce((sum: number, b: any) => sum + b.size, 0);
 
         // With WASM
         const m2 = new ManifestManager(distDir);
@@ -208,9 +201,9 @@ describe("WASM Conditional Loading", () => {
             contentDir: testDir
         };
 
-        await layoutManager.render(ctx2, m2);
-        const manifest2 = m2.getManifestObject("");
-        const size2 = manifest2.blobs.reduce((sum, b) => sum + b.size, 0);
+        const r2 = await layoutManager.render(ctx2, m2);
+        const man2 = getManifestFromHtml(r2.html);
+        const size2 = man2.blobs.reduce((sum: number, b: any) => sum + b.size, 0);
 
 
         // WASM adds ~454KB, plus L2 runtime (form-l2.js) adds ~300KB

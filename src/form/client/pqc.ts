@@ -1,15 +1,19 @@
-import { ml_kem768 } from "@noble/post-quantum/ml-kem.js";
 import type { PqcKemProvider } from "./l2crypto";
 
 export function createMlKem768Provider(): PqcKemProvider {
   return {
     kemId: "ML-KEM-768",
     encapsulate: (recipientPublicKey: Uint8Array) => {
-      const { cipherText, sharedSecret } = ml_kem768.encapsulate(recipientPublicKey);
-      return { sharedSecret, encapsulation: cipherText };
+      const crypto = (window as any).WebACrypto;
+      if (!crypto) throw new Error("WebACrypto not initialized");
+      const { ciphertext, sharedSecret } = crypto.mlKem768Encapsulate(recipientPublicKey);
+      return { sharedSecret, encapsulation: ciphertext };
     },
     decapsulate: (recipientPrivateKey: Uint8Array, encapsulation: Uint8Array) => {
-      return ml_kem768.decapsulate(encapsulation, recipientPrivateKey);
+      const crypto = (window as any).WebACrypto;
+      if (!crypto) throw new Error("WebACrypto not initialized");
+      // WASM signature: (privateKey, ciphertext)
+      return crypto.mlKem768Decapsulate(recipientPrivateKey, encapsulation);
     },
   };
 }

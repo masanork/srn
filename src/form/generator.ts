@@ -3,7 +3,7 @@
  * generator.ts - Utility for standalone HTML generation.
  * Used by Form Maker.
  */
-import { parseMarkdown } from "@srn/core";
+import { parseMarkdown } from "../../packages/core/src/parser";
 import { CLIENT_BUNDLE } from './client/embed';
 
 export const RUNTIME_SCRIPT = CLIENT_BUNDLE;

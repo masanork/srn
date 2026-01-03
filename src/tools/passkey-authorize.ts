@@ -1,7 +1,6 @@
-import { generateHybridKeys, createDelegateCertificate } from '../vc.ts';
+import { generateHybridKeys, createDelegateCertificate, loadConfig, getAbsolutePaths } from '@srn/core';
 import path from 'path';
 import fs from 'fs-extra';
-import { loadConfig, getAbsolutePaths } from '../config.ts';
 import crypto from 'node:crypto';
 import { exec } from 'node:child_process';
 

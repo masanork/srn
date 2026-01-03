@@ -45,7 +45,7 @@ describe("PassKey (P-256) Integration", () => {
 
     test("Verification should support P-256 signatures (simulating PassKey)", async () => {
         // 1. Setup Keys
-        const hybridKeys = await generateHybridKeys();
+        const hybridKeys = await generateHybridKeys(true);
 
         const p256Priv = p256.utils.randomSecretKey();
         const p256Pub = p256.getPublicKey(p256Priv);

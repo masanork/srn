@@ -12,12 +12,12 @@ describe("Delegation Chain Tests (PassKey Architecture)", () => {
 
     test("Full Chain: Root -> Delegate -> Document", async () => {
         // 1. Root Key (Simulating PassKey or Secure Root)
-        const rootKeys = await generateHybridKeys();
+        const rootKeys = await generateHybridKeys(true);
         const rootDid = `did:web:example.com`;
         const rootPubHex = rootKeys.ed25519.publicKey;
 
         // 2. Build Key (Generated for a specific build session)
-        const buildKeys = await generateHybridKeys();
+        const buildKeys = await generateHybridKeys(true);
         const buildDid = encodeDidKey(hexToBytes(buildKeys.ed25519.publicKey), 'ed25519');
 
         // 3. Create Delegate Certificate (Root signs Build Key)
@@ -46,9 +46,9 @@ describe("Delegation Chain Tests (PassKey Architecture)", () => {
     });
 
     test("Chain should fail if delegate is not authorized by the correct root", async () => {
-        const rootKeys = await generateHybridKeys();
-        const buildKeys = await generateHybridKeys();
-        const maliciousRootKeys = await generateHybridKeys();
+        const rootKeys = await generateHybridKeys(true);
+        const buildKeys = await generateHybridKeys(true);
+        const maliciousRootKeys = await generateHybridKeys(true);
 
         const delegateCert = await createDelegateCertificate(
             buildKeys,

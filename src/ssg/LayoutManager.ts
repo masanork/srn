@@ -75,7 +75,7 @@ export class LayoutManager {
 
         // Register WASM binary only if L2 encryption is actually used
         // (Not needed for basic forms without L2, saving ~454KB)
-        const needsCrypto = hasL2Config || hasL2InContent || !!vc;
+        const needsCrypto = hasL2Config || hasL2InContent;
         if (needsCrypto) {
             try {
                 // WASM source is in wasm_bindings relative to this file

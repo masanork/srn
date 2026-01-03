@@ -381,8 +381,8 @@ export async function bundleClientScripts(distDir: string) {
     // 1. Core (Validation, basic logic, always needed)
     await buildBundle('src/form/client/index.ts', 'form-core.js');
 
-    // 2. Postal Lookup (Only for address fields)
-    await buildBundle('src/form/client/postal.ts', 'form-postal.js');
+    // 2. Postal Lookup (Handled by bundlePlugins)
+    // await buildBundle('src/form/client/postal.ts', 'form-postal.js');
 
     // 3. L2 Cryptography (Encryption, Signatures, Guest DID)
     await buildBundle('src/form/client/l2crypto.ts', 'form-l2.js');
