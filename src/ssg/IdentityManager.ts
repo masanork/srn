@@ -175,6 +175,22 @@ export class IdentityManager {
                 await phc.append('L4Rebuild', { buildId: this.buildId });
             }
 
+            // --- LTV: Pruning Strategy ---
+            const MAX_CHAIN_LENGTH = 10;
+            const KEEP_LATEST = 5;
+            const currentLinks = phc.getLinks();
+            
+            if (currentLinks.length > MAX_CHAIN_LENGTH) {
+                const keepIndices = [0]; // Always keep Genesis
+                const total = currentLinks.length;
+                // Keep Latest N
+                for (let i = total - KEEP_LATEST; i < total; i++) {
+                    if (i > 0) keepIndices.push(i);
+                }
+                phc.prune(keepIndices);
+            }
+            // -----------------------------
+
             this.contextStore[hash] = phc.toJSON();
             await this.saveStore();
             return this.signatureStore[hash];
