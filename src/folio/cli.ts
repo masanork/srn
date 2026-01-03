@@ -377,7 +377,7 @@ didCmd
 
             if (options.hybrid) {
                 const { generateHybridKeys } = await import("@srn/core");
-                const hybrid = await generateHybridKeys();
+                const hybrid = await generateHybridKeys(true);
                 did = encodeDidKey(hexToBytes(hybrid.ed25519.publicKey), "ed25519");
                 keyData = {
                     did,

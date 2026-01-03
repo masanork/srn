@@ -21,7 +21,7 @@ export class IdentityManager {
     private signatureStore: Record<string, any> = {};
     private contextStore: Record<string, any[]> = {};
     private timestampStore: Record<string, string> = {}; // sigValue -> Base64 Token
-    private tsaUrl?: string;
+    private tsaUrl: string | undefined;
 
     constructor(siteDomain: string, sitePath: string, dataDir: string, distDir: string, tsaUrl?: string) {
         const normalizedPath = sitePath.replace(/^\//, '').replace(/\/$/, '');
@@ -93,7 +93,7 @@ export class IdentityManager {
             buildId: this.buildId,
             revoked: false,
             ed25519Params: encodeDidKey(hexToBytes(this.currentKeys.ed25519.publicKey), 'ed25519'),
-            pqcParams: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey))
+            ...(this.currentKeys.pqc ? { pqcParams: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey)) } : {})
         });
 
         await fs.writeJson(historyPath, history, { spaces: 2 });
@@ -108,20 +108,28 @@ export class IdentityManager {
     private lastGeneratedDidDoc: any;
 
     private async generateDidDoc() {
+        const verificationMethod: any[] = [
+            { id: `${this.siteDid}#root-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.rootKeys.ed25519.publicKey },
+            { id: `${this.siteDid}#${this.buildId}-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.currentKeys.ed25519.publicKey }
+        ];
+
+        const assertionMethod = [`${this.siteDid}#root-ed25519`, `${this.siteDid}#${this.buildId}-ed25519`];
+
+        if (this.currentKeys.pqc) {
+            verificationMethod.push({
+                id: `${this.siteDid}#${this.buildId}-pqc`,
+                type: "JsonWebKey2020",
+                controller: this.siteDid,
+                publicKeyJwk: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey))
+            });
+            assertionMethod.push(`${this.siteDid}#${this.buildId}-pqc`);
+        }
+
         const didDoc = {
             "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"],
             "id": this.siteDid,
-            "verificationMethod": [
-                { id: `${this.siteDid}#root-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.rootKeys.ed25519.publicKey },
-                { id: `${this.siteDid}#${this.buildId}-ed25519`, type: "Ed25519VerificationKey2020", controller: this.siteDid, publicKeyHex: this.currentKeys.ed25519.publicKey },
-                {
-                    id: `${this.siteDid}#${this.buildId}-pqc`,
-                    type: "JsonWebKey2020",
-                    controller: this.siteDid,
-                    publicKeyJwk: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey))
-                }
-            ],
-            "assertionMethod": [`${this.siteDid}#root-ed25519`, `${this.siteDid}#${this.buildId}-ed25519`, `${this.siteDid}#${this.buildId}-pqc`]
+            "verificationMethod": verificationMethod,
+            "assertionMethod": assertionMethod
         };
         this.lastGeneratedDidDoc = didDoc;
         await fs.ensureDir(path.join(this.distDir, '.well-known'));

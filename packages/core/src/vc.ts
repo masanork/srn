@@ -147,22 +147,27 @@ export interface HybridProofOptions {
 
 /**
  * Generates a new Ed25519 + ML-DSA-44 key pair.
+ * @param enablePqc If true, generates PQC keys. Defaults to false (experimental opt-in).
  */
-export async function generateHybridKeys() {
+export async function generateHybridKeys(enablePqc: boolean = false) {
     await initWasm();
     // 1. Key Generation
-    const pqcKeys = mlDsa44GenerateKeyPair();
     const ed = ed25519GenerateKeyPair();
+
+    let pqcKeys;
+    if (enablePqc) {
+        pqcKeys = mlDsa44GenerateKeyPair();
+    }
 
     return {
         ed25519: {
             publicKey: bytesToHex(ed.publicKey),
             privateKey: bytesToHex(ed.privateKey)
         },
-        pqc: {
+        pqc: pqcKeys ? {
             publicKey: bytesToHex(pqcKeys.publicKey),
             privateKey: bytesToHex(pqcKeys.privateKey)
-        }
+        } : undefined
     };
 }
 
@@ -173,7 +178,7 @@ export type HybridKeys = Awaited<ReturnType<typeof generateHybridKeys>>;
  */
 export async function createHybridVC(
     document: object,
-    keys: { ed25519: { publicKey: string; privateKey: string; }; pqc?: { publicKey: string; privateKey: string; }; },
+    keys: { ed25519: { publicKey: string; privateKey: string; }; pqc?: { publicKey: string; privateKey: string; } | undefined; },
     issuerDid?: string,
     buildId?: string,
     proofOptions: HybridProofOptions = {}
@@ -396,7 +401,7 @@ export async function verifyHybridVC(
         }
 
         return {
-            isValid: (checks.ed25519 || checks.p256) && checks.pqc, // Hybrid: (Classic) AND Quantum
+            isValid: (checks.ed25519 || checks.p256) && (pqcProof ? checks.pqc : true), // Hybrid: (Classic) AND Quantum (if present)
             checks,
             decoded: payload
         };
@@ -466,7 +471,6 @@ export async function createCoseVC(
 
     // 2. Sign with Hybrid Keys (COSE_Signature entries)
     await initWasm();
-    const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
 
     const idSuffix = buildId ? buildId : 'root';
@@ -474,22 +478,27 @@ export async function createCoseVC(
     const bodyUnprotected = new Map();
 
     const edKid = createCoseKid(`${issuerDid}#${idSuffix}-ed25519`);
-    const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
-
     const edProtected = encode(new Map<number, any>([
         [COSE_HEADER_ALG, COSE_ALG_EDDSA],
         [COSE_HEADER_KID, edKid]
     ]));
-    const pqcProtected = encode(new Map<number, any>([
-        [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
-        [COSE_HEADER_KID, pqcKid]
-    ]));
 
     const edSigStructure = createCoseSigStructure(bodyProtected, edProtected, payloadBytes);
-    const pqcSigStructure = createCoseSigStructure(bodyProtected, pqcProtected, payloadBytes);
-
     const edSig = ed25519Sign(edPrivBytes, edSigStructure);
-    const pqcSig = mlDsa44Sign(pqcPrivBytes, pqcSigStructure);
+
+    const signatures = [[edProtected, new Map(), edSig]];
+
+    if (keys.pqc) {
+        const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
+        const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
+        const pqcProtected = encode(new Map<number, any>([
+            [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
+            [COSE_HEADER_KID, pqcKid]
+        ]));
+        const pqcSigStructure = createCoseSigStructure(bodyProtected, pqcProtected, payloadBytes);
+        const pqcSig = mlDsa44Sign(pqcPrivBytes, pqcSigStructure);
+        signatures.push([pqcProtected, new Map(), pqcSig]);
+    }
 
     // 3. Construct COSE_Sign structure
     // [protected, unprotected, payload, signatures]
@@ -497,10 +506,7 @@ export async function createCoseVC(
         bodyProtected,
         bodyUnprotected,
         payloadBytes,
-        [
-            [edProtected, new Map(), edSig],
-            [pqcProtected, new Map(), pqcSig]
-        ]
+        signatures
     ];
 
     const finalCbor = encode(coseStructure);
@@ -565,7 +571,8 @@ export async function createSdCoseVC(
 
     // 3. Sign (Standard Hybrid)
     await initWasm();
-    const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
+    // 3. Sign (Standard Hybrid)
+    await initWasm();
     const edPrivBytes = Uint8Array.from(Buffer.from(keys.ed25519.privateKey, 'hex'));
     const idSuffix = buildId ? buildId : 'root';
     const bodyProtected = encode(new Map<any, any>([
@@ -575,31 +582,32 @@ export async function createSdCoseVC(
     const bodyUnprotected = new Map();
 
     const edKid = createCoseKid(`${issuerDid}#${idSuffix}-ed25519`);
-    const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
-
     const edProtected = encode(new Map<number, any>([
         [COSE_HEADER_ALG, COSE_ALG_EDDSA],
         [COSE_HEADER_KID, edKid]
     ]));
-    const pqcProtected = encode(new Map<number, any>([
-        [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
-        [COSE_HEADER_KID, pqcKid]
-    ]));
-
     const edSigStructure = createCoseSigStructure(bodyProtected, edProtected, payloadBytes);
-    const pqcSigStructure = createCoseSigStructure(bodyProtected, pqcProtected, payloadBytes);
-
     const edSig = ed25519Sign(edPrivBytes, edSigStructure);
-    const pqcSig = mlDsa44Sign(pqcPrivBytes, pqcSigStructure);
+
+    const signatures = [[edProtected, new Map(), edSig]];
+
+    if (keys.pqc) {
+        const pqcPrivBytes = Uint8Array.from(Buffer.from(keys.pqc.privateKey, 'hex'));
+        const pqcKid = createCoseKid(`${issuerDid}#${idSuffix}-mldsa44`);
+        const pqcProtected = encode(new Map<number, any>([
+            [COSE_HEADER_ALG, COSE_ALG_ML_DSA_44],
+            [COSE_HEADER_KID, pqcKid]
+        ]));
+        const pqcSigStructure = createCoseSigStructure(bodyProtected, pqcProtected, payloadBytes);
+        const pqcSig = mlDsa44Sign(pqcPrivBytes, pqcSigStructure);
+        signatures.push([pqcProtected, new Map(), pqcSig]);
+    }
 
     const coseStructure = [
         bodyProtected,
         bodyUnprotected,
         payloadBytes,
-        [
-            [edProtected, new Map(), edSig],
-            [pqcProtected, new Map(), pqcSig]
-        ]
+        signatures
     ];
 
     const finalCbor = encode(coseStructure);
@@ -633,7 +641,7 @@ export async function createDelegateCertificate(
         "credentialSubject": {
             "id": encodeDidKey(hexToBytes(buildKeys.ed25519.publicKey), 'ed25519'),
             "publicKeyEd25519": buildKeys.ed25519.publicKey,
-            "publicKeyPqcJwk": encodePqcPublicKeyJwk(hexToBytes(buildKeys.pqc.publicKey))
+            ...(buildKeys.pqc ? { "publicKeyPqcJwk": encodePqcPublicKeyJwk(hexToBytes(buildKeys.pqc.publicKey)) } : {})
         }
     };
 
