@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Web/A Manifest Architecture: The Pack & Prune Strategy (JA)</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Web/A Manifest Architecture: The Pack & Prune Strategy (JA)",
+  "description": "Web/Aの自己完結性（Single File）と長期検証性（LTV）を両立する「マニフェスト・アーキテクチャ」の技術仕様。",
+  "datePublished": "2026-01-02",
+  "author": {
+    "@type": "Person",
+    "name": "Masanori Kusunoki"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Web/A Manifest Architecture: The Pack & Prune Strategy (JA)",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Web/A Manifest Architecture: The Pack & Prune Strategy (JA)</h1>
+                <div class="article-meta">
+                    <span><time datetime="2026-01-02">2026-01-02</time></span>
+                    
+                    <span>By Masanori Kusunoki</span>
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <h2>1. Context &amp; Problem Statement</h2>
+<p>Web/Aの4レイヤーモデルにおいて、<strong>Layer 1 (Template)</strong> はアプリケーションの「定義」であり、<strong>Layer 2 (User Data)</strong> はその「インスタンス」である。
+しかし、高機能なフォームアプリケーションを単一のHTMLファイル（Single File Application）として配布しようとすると、以下の問題が発生する。</p>
+<ul>
+<li><strong>Bloat (肥大化):</strong> 郵便番号辞書、フォントファイル、レンダリングエンジン（Mermaid等）、大規模なマスターデータを含めると、ファイルサイズが数MB〜数十MBに膨れ上がる。</li>
+<li><strong>Update Paradox (更新のパラドックス):</strong> 郵便番号辞書が更新されるたびに、テンプレート全体の再署名と再配布が必要になる。</li>
+<li><strong>Verification Rigidity (検証の硬直性):</strong> 外部リソース（CDN等）に依存すると「数十年後の検証（LTV）」が保証できないが、全てを埋め込むと「捨てられない（Prunableでない）」データになる。</li>
+</ul>
+<h2>2. Solution: L1-Core &amp; L1-Manifest</h2>
+<p>この問題を解決するために、L1を <strong>「不変の核 (Core)」</strong> と <strong>「可変・参照可能なリソース (Manifest)」</strong> に分離し、<strong>ManifestManager</strong> によって統一的に管理する。</p>
+<h3>2.1 Architecture Overview</h3>
+<ul>
+<li><strong>L1-Core (Minimal Template):</strong><ul>
+<li>スキーマ定義、バリデーションロジック、UI構造のみを含む軽量なHTML/JSON。</li>
+</ul>
+</li>
+<li><strong>L1-Manifest:</strong><ul>
+<li>アプリケーションが必要とする全ての「重い」リソース（Blobs）のリスト。</li>
+<li>各Blobは <strong>Content-Addressed (Digest)</strong> で管理される。</li>
+</ul>
+</li>
+<li><strong>Blobs (Heavy Resources):</strong><ul>
+<li>郵便番号辞書 (<code>.json.gz</code>)</li>
+<li>サブセット化されたフォント (<code>.woff2</code>)</li>
+<li>JavaScriptランタイム (<code>mermaid.min.js</code> 等)</li>
+<li>大規模マスターデータ</li>
+</ul>
+</li>
+</ul>
+<h3>2.2 The &quot;Pack First, Prune Later&quot; Strategy</h3>
+<p>Web/Aは「オフラインで動き、かつ長期間検証可能である」必要がある。これを実現するのが <strong>Pack &amp; Prune</strong> 戦略である。</p>
+<ol>
+<li><p><strong>Pack (Distribution Phase):</strong></p>
+<ul>
+<li>ビルド時、全てのBlobは <strong>Base64エンコードされ、HTML内の <code>&lt;script&gt;</code> タグとして埋め込まれる</strong>。</li>
+<li>マニフェストは <code>urls: [&quot;#dom-id&quot;, &quot;https://external/url&quot;]</code> のように、<strong>DOM内参照を優先</strong> するよう記述される。</li>
+<li>これにより、ユーザーは単一のHTMLファイルを受け取るだけで、ネット接続なしに完全な機能を利用できる。</li>
+</ul>
+</li>
+<li><p><strong>Prune (Archival Phase):</strong></p>
+<ul>
+<li>署名・完了後、ファイルサイズを削減するために <strong>埋め込まれたBlob（<code>&lt;script&gt;</code>タグ）を削除（Prune）してもよい</strong>。</li>
+<li>削除後もマニフェスト内の <code>Digest</code> は残るため、検証性は損なわれない。</li>
+<li>再検証や表示の際は、マニフェストの <code>Secondary URL</code>（外部アーカイブやIPFS等）からBlobを再取得することで、完全に元の状態を復元できる。</li>
+</ul>
+</li>
+</ol>
+<h2>3. Data Structures</h2>
+<h3>3.1 Master Data Reference (Blob Entry)</h3>
+<pre><code class="language-typescript">export interface MasterDataRef {
+  /** Resource ID (e.g., &quot;font-noto-sans&quot;, &quot;jp-postal&quot;) */
+  id: string;
+  /** SHA-256 Digest of the raw content */
+  digest: string;
+  /** MIME type (e.g., &quot;font/woff2&quot;, &quot;application/json&quot;) */
+  mediaType: string;
+  /** Original size in bytes */
+  size: number;
+  /** Retrieval locations (Priority order) */
+  urls: string[]; 
+  // e.g. [&quot;#weba-blob-abc...&quot;, &quot;./data/blobs/abc...&quot;]
+}
+</code></pre>
+<h3>3.2 Web/A Layer 2 Context (The Binding)</h3>
+<p>L2データ（ユーザー入力）は、単なる値の集合ではない。<strong>「どのテンプレートと、どのリソースセット（マニフェスト）を使って作成されたか」</strong> を暗号的に束縛する。</p>
+<pre><code class="language-typescript">export interface WebALayer2Context {
+  /** Reference to the L1-Core used */
+  templateRef: {
+    id: string;
+    digest: string;
+  };
+  /** Reference to the Manifest used */
+  manifestDigest: string;
+  /** 
+   * List of active blob digests actually relied upon.
+   * (e.g. The specific version of the Postal Dictionary used)
+   */
+  activeBlobDigests: string[];
+}
+</code></pre>
+<p>この <code>Context</code> が L2 Payload に含まれ、ユーザーの秘密鍵で署名されることで、<strong>「表示・入力環境の完全性」</strong> が保証される。</p>
+<h2>4. ManifestManager Implementation</h2>
+<p>SRN (Sorane) SSG に実装された <code>ManifestManager</code> は、ビルドプロセスにおいて以下の役割を担う。</p>
+<ol>
+<li><strong>Blob Detection:</strong> <ul>
+<li>Markdown内のフォント指定、Mermaid記法、郵便番号フィールド等を自動検出する。</li>
+</ul>
+</li>
+<li><strong>Deduplication &amp; Hashing:</strong><ul>
+<li>リソースのSHA-256ハッシュを計算し、重複を排除して登録する。</li>
+</ul>
+</li>
+<li><strong>Injection:</strong><ul>
+<li>HTMLの末尾に <code>window.__WEBA_MANIFEST</code> と、Base64化されたBlobデータを注入する。</li>
+</ul>
+</li>
+<li><strong>Runtime Bootstrapping:</strong><ul>
+<li>クライアントサイド（ブラウザ）で動作する軽量なランタイムを注入する。</li>
+<li>このランタイムは、マニフェストを読み込み、フォントの適用（<code>@font-face</code>）、JSの実行、辞書データのロードを動的に行う。</li>
+</ul>
+</li>
+</ol>
+<h2>5. Verification Flow</h2>
+<h3>Level 1: Lightweight Verification (Structure &amp; Signature)</h3>
+<ul>
+<li>L2署名の検証。</li>
+<li><code>Context</code> 内の <code>templateDigest</code> と <code>manifestDigest</code> の形式チェック。</li>
+<li><strong>Blob本体がなくても検証可能。</strong>（「何を使ったか」の記録は改ざんされていないことが保証される）</li>
+</ul>
+<h3>Level 2: Full Verification (Reproduction)</h3>
+<ul>
+<li>マニフェストに記載された <code>digest</code> を持つBlobを、埋め込みまたは外部から取得。</li>
+<li>Blobのハッシュ値が <code>digest</code> と一致することを確認。</li>
+<li>そのBlob（正しいフォント、正しい辞書、正しいレンダラー）を用いて、画面表示や計算ロジックを完全に再現する。</li>
+</ul>
+<h2>6. Conclusion</h2>
+<p>Manifest Architecture により、Web/Aは <strong>&quot;Single File Distribution&quot; (使いやすさ)</strong> と <strong>&quot;Cryptographic Binding&quot; (信頼性)</strong>、そして <strong>&quot;Prunability&quot; (持続可能性)</strong> を同時に達成した。これは「文書」としてのWebアプリケーションにおける、新しい標準モデルとなる。</p>
+<hr>
+<h2>7. 付録：開発ツール（Form Maker）における適用</h2>
+<h3>7.1. 仮想マニフェストによる動的プレビュー</h3>
+<p>Web/A の作成ツール (Form Maker) におけるプレビュー機能では、都度 Base64 エンコード（Pack）を行うコストを避けるため、<strong>「仮想マニフェストによる動的ロード」</strong> を採用する。</p>
+<ul>
+<li><p><strong>「Pruned（剥離）」状態のシミュレーション</strong>:</p>
+<ul>
+<li><p>プレビュー環境は、意図的に「Blob実体が削除された状態」として構築される。</p>
+</li>
+<li><p>生成される HTML には巨大な <code>&lt;script&gt;</code> タグは埋め込まず、代わりに <code>window.__WEBA_MANIFEST</code> に開発サーバー上の Asset URL（例: <code>/assets/mermaid.min.js</code>）を直接記述する。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>ランタイムの再利用</strong>:</p>
+<ul>
+<li>Web/A の標準ランタイムは <code>urls</code> のフォールバック機構（DOM参照がなければHTTP取得）を持っているため、Maker 専用のローダーを実装することなく、本番と同じロジックでアセットを動的にロード・実行できる。</li>
+</ul>
+</li>
+</ul>
+<p>これにより、開発者は軽量かつ高速に、本番同等の機能（郵便番号辞書やレンダリングエンジン）を確認しながら編集作業を行うことが可能となる。</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-02T12:06:01.926Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/web-a-manifest-architecture.ja",
+    "name": "Web/A Manifest Architecture: The Pack & Prune Strategy (JA)",
+    "contentDigest": "d4aebabf376f9e93a4a7e0e80f516407ec73886b8465f2102092cd72679387a2"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767355525912-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T12:06:01.926Z",
+      "proofValue": "z2ssBTvpabrs76dQWqjumYbRuF8CoEfDnhNKy9Qp1bu1CKFnkh2NXdw2CzZiczedU7k91Qp9CYTJkMemkrx2kUJpr"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767355525912-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T12:06:01.926Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-02T12:06:01.958Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "991c77262627d2ffce498d568cbd55c9a7866f5ee9cfbfbbf85f6a0c03aab23c",
+        "metadata": {
+          "lang": "ja"
+        }
+      }
+    },
+    "eventHash": "c3214fc13c159e57be76b978b5a9eddfbc0326ac5c69e682a7e80a73b1ba5024",
+    "chainHash": "3e4347528297039d453fffc89d72a1b81fa4f325e0bebbe15b05dab8a0e0aade"
+  },
+  {
+    "prevHash": "3e4347528297039d453fffc89d72a1b81fa4f325e0bebbe15b05dab8a0e0aade",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:19:20.793Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "183cf04a53550b9bf0f871728237c241fa70ab00231c978c7d08ce149b4dcd28",
+    "chainHash": "a12931ab4b78f39a7a5e5a37cfe270549b3cf345979d2a3274a517ce129f6a81"
+  },
+  {
+    "prevHash": "a12931ab4b78f39a7a5e5a37cfe270549b3cf345979d2a3274a517ce129f6a81",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:25:24.031Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "c7bf34def1cfedacdf97fc5e1c75ee887d41aa8b770f7a55c3887482186bf0e1",
+    "chainHash": "d4b869d311df30d67e417bcfc33c772cef264ef7e14d9b80800f1619bcd00a29"
+  },
+  {
+    "prevHash": "d4b869d311df30d67e417bcfc33c772cef264ef7e14d9b80800f1619bcd00a29",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:33.922Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "de9224781881637ae192fb23add804cc0192f54f4b081a62c95a742ab593a9b4",
+    "chainHash": "856ea2fc7825ab156b06b78de98c513d7e8de66d298de4dfab1afdd25a8da0d6"
+  },
+  {
+    "prevHash": "856ea2fc7825ab156b06b78de98c513d7e8de66d298de4dfab1afdd25a8da0d6",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:23:14.041Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "f15de26dd83932327a11a049e35820c1b227187ea0e0f1640dbecd9dcbe2bfa2",
+    "chainHash": "798525dd7816b1960c5834a656f1b9ab210298fe6ce6c555a058b62c88041ca2"
+  },
+  {
+    "prevHash": "798525dd7816b1960c5834a656f1b9ab210298fe6ce6c555a058b62c88041ca2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:35.695Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "e6881d18a356a1522eaa9bd0fcef183a707d6d1f31c9ceaf87f7ffb76275635d",
+    "chainHash": "4e8a51fd7f94299214f6fc176bddb24abe75cffe119ef5ff64bd96b22eaeb971"
+  },
+  {
+    "prevHash": "4e8a51fd7f94299214f6fc176bddb24abe75cffe119ef5ff64bd96b22eaeb971",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:27:10.724Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "6060483638c0ef4d46ed12fbaa010790bfbfb8c82713437a3059cd64679f5994",
+    "chainHash": "b4c19b67fda2812e7c51bc4e08093d7be4ee237aba32e7d6c4687b8c0d2b225f"
+  },
+  {
+    "prevHash": "b4c19b67fda2812e7c51bc4e08093d7be4ee237aba32e7d6c4687b8c0d2b225f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:46.660Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "37107d76e7d5c900ff8392f8789dbf1dd7a31c5696875abe2763edaa55464efe",
+    "chainHash": "f2c6a1a5d7d3dc9d10583687d2cf9008a24372b3d1f308fa7a6df08611c14680"
+  },
+  {
+    "prevHash": "f2c6a1a5d7d3dc9d10583687d2cf9008a24372b3d1f308fa7a6df08611c14680",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T01:38:10.078Z",
+      "payload": {
+        "buildId": "build-1767404251737"
+      }
+    },
+    "eventHash": "7b39630087b18c22ec9c966f124ee27bd828f5a845192169d16287cc5b7b4c8f",
+    "chainHash": "fc78df9666721e2812c9d6d75e4869a1edba48c2a654a3435c3a629af882b73b"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T01:38:10.148Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/web-a-manifest-architecture.ja#container",
+    "containerHash": "ce218136264e4d7f320430f5c920d53466bc6f07e61fb8a16c370ad7aa110008",
+    "buildId": "build-1767404251737",
+    "latestContextHash": "e00f5c549b1a0d7d915dc1bde17c51498e50d2a3bf4aa63112ddf2b421900a89"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:38:10.148Z",
+      "proofValue": "zkSk2UpV2DdxvwN57pEfr99LHmYZwkboBFxAywmiaYtdoR22MvcNcZaRLDRsgrxcCKCDgAjbEZap5q6uM7qvyf1Y"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:38:10.148Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T01:38:10.246Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

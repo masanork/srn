@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Technical Specification: Web/A Attribute Schema & LoA Management</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Technical Specification: Web/A Attribute Schema & LoA Management",
+  "description": "Defining hierarchical identifiers and Levels of Assurance for seamless data integration in Web/A Folio.",
+  "datePublished": "2026-01-02",
+  "author": {
+    "@type": "Person",
+    "name": "Sorane Project"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Technical Specification: Web/A Attribute Schema & LoA Management",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Technical Specification: Web/A Attribute Schema & LoA Management</h1>
+                <div class="article-meta">
+                    <span><time datetime="2026-01-02">2026-01-02</time></span>
+                    
+                    <span>By Sorane Project</span>
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <h2>1. Introduction</h2>
+<p>In the Web/A ecosystem, the <strong>Folio</strong> acts as a user-centric data container. To enable an AI Agent to assist in document workflows (e.g., pre-filling forms), we need a robust way to identify personal attributes and manage their reliability.</p>
+<p>This document defines the <strong>Web/A Attribute Schema (WAS)</strong>, a hierarchical identification system that links form fields to personal data sources while preserving the <strong>Level of Assurance (LoA)</strong>.</p>
+<h2>2. Identifier Hierarchy</h2>
+<p>Web/A adopts a &quot;DID as a Root&quot; approach, ensuring identifiers are globally unique, low-cost, and owner-verifiable.</p>
+<h3>2.1. Form Identifier (WFI)</h3>
+<p>Every Web/A Form should have a globally unique identifier.</p>
+<ul>
+<li><strong>Format</strong>: <code>did:web:&lt;domain&gt;[:path]#&lt;form-slug&gt;</code></li>
+<li><strong>Example</strong>: <code>did:web:srn.site:examples#postal-demo</code></li>
+<li><strong>Role</strong>: Identifies the type of document and its official issuer.</li>
+</ul>
+<h3>2.2. Attribute Identifier (WAI)</h3>
+<p>Attributes are identified by a path relative to a Form or a Context.</p>
+<ul>
+<li><strong>Format</strong>: <code>&lt;WFI&gt;#&lt;attribute-path&gt;</code> or <code>&lt;ContextID&gt;#&lt;attribute-path&gt;</code></li>
+<li><strong>Path structure</strong>: Hierarchical slash-separated strings (e.g., <code>delivery/address/postalCode</code>).</li>
+<li><strong>Example</strong>: <code>did:web:srn.site:examples#postal-demo#delivery/zip</code></li>
+</ul>
+<h2>3. Levels of Assurance (LoA)</h2>
+<p>The reliability of an attribute is categorized by its Level of Assurance. The storage format (Canonical Format) is determined by the required LoA.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Level</th>
+<th align="left">Name</th>
+<th align="left">Canonical Format</th>
+<th align="left">Source of Truth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>LoA 0</strong></td>
+<td align="left">AI Memory</td>
+<td align="left"><strong>Vector DB / JSON</strong></td>
+<td align="left">AI inference, conversation history, ephemeral context.</td>
+</tr>
+<tr>
+<td align="left"><strong>LoA 1</strong></td>
+<td align="left">Self-asserted</td>
+<td align="left"><strong>Markdown / YAML</strong></td>
+<td align="left">Human entry, personal notes, profile.md</td>
+</tr>
+<tr>
+<td align="left"><strong>LoA 2</strong></td>
+<td align="left">Verified</td>
+<td align="left"><strong>JSON / VC</strong></td>
+<td align="left">Digitally signed by an organization (Employer, School).</td>
+</tr>
+<tr>
+<td align="left"><strong>LoA 3</strong></td>
+<td align="left">High-Assurance</td>
+<td align="left"><strong>Signed VC</strong></td>
+<td align="left">Verified via National ID (My Number, Passport).</td>
+</tr>
+</tbody></table>
+<h3>3.1. LoA 0: AI Memory &amp; Inference</h3>
+<p>LoA 0 represents information that the AI has &quot;learned&quot; or &quot;inferred&quot; from interactions. </p>
+<ul>
+<li><strong>Nature</strong>: Temporary, potentially contains hallucinations, and lacks explicit human verification.</li>
+<li><strong>Promotion</strong>: When a user confirms LoA 0 data and saves it to a text-based file, it is promoted to <strong>LoA 1</strong>.</li>
+<li><strong>Transparency</strong>: Agents must clearly label LoA 0 data to distinguish it from facts.</li>
+</ul>
+<h3>3.2. Human-Readability and LoA</h3>
+<ul>
+<li><strong>LoA 1 Data</strong>: Prioritizes human editability. JSON summaries are derived artifacts.</li>
+<li><strong>LoA 2+ Data</strong>: Prioritizes cryptographic integrity. Human-readable views (HTML/Markdown) are derived artifacts.</li>
+<li><strong>Invalidation</strong>: If a user manually edits LoA 2+ data in a text editor, its LoA status is downgraded to LoA 1.</li>
+</ul>
+<h2>4. Mapping &amp; Automation</h2>
+<p>To enable &quot;Agentic Prefill,&quot; Web/A Forms map their flat field IDs to the hierarchical Attribute Schema.</p>
+<h3>4.1. Mapping Definition</h3>
+<p>Inside a Form&#39;s frontmatter:</p>
+<pre><code class="language-yaml">form: &quot;did:web:srn.site:examples#postal-demo&quot;
+attributes:
+  delivery/zip:
+    field: &quot;delivery.zip&quot;
+    required_loa: 1
+  sender/name:
+    field: &quot;sender.name&quot;
+    required_loa: 3
+</code></pre>
+<h3>4.2. Provenance Tracking</h3>
+<p>When an Agent fills a form, it must record the <strong>Provenance</strong> of each value:</p>
+<pre><code class="language-json">{
+  &quot;field&quot;: &quot;sender.name&quot;,
+  &quot;value&quot;: &quot;Taro Setagaya&quot;,
+  &quot;loa&quot;: 3,
+  &quot;source&quot;: &quot;folio/certificates/id-binding.json&quot;,
+  &quot;method&quot;: &quot;mcp:folio_read&quot;
+}
+</code></pre>
+<h2>5. Directory Mapping in Folio</h2>
+<p>The Folio structure reflects the LoA separation:</p>
+<ul>
+<li><code>profile.md</code>: Primary home for LoA 1 global attributes (<code>name</code>, <code>email</code>).</li>
+<li><code>certificates/</code>: Official VCs (LoA 2+).</li>
+<li><code>history/</code>: Past form submissions, acting as a contextual reference.</li>
+</ul>
+<h2>6. Conclusion</h2>
+<p>By strictly separating LoA 1 (Human-centric) and LoA 2+ (Machine-centric) while sharing a common hierarchical ID system, Web/A Folio provides a secure and intuitive workspace where AI can act as a trusted assistant for personal administration.</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-02T11:15:21.028Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/web-a-attribute-schema",
+    "name": "Technical Specification: Web/A Attribute Schema & LoA Management",
+    "contentDigest": "4735873e3acafc0ae1d5351c286d8ec6c178bae8434de1a44e66252d26f5fbd5"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767352493876-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T11:15:21.028Z",
+      "proofValue": "zVfYGgjLwcFnasfvrTgEHEF9z6k6XwDcq2HC2ECfSvkWQ6A3Wi58HX4pWJHggnnu6c6r1fAT1LRJfTMc1bUzYVnY"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767352493876-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T11:15:21.028Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-02T11:15:21.061Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "fe135db9ebee2eb6bbc037ea8e5afd50f614e42853a5729506dadcc04cb8f525",
+        "metadata": {}
+      }
+    },
+    "eventHash": "5aac21fec9687e4fe73fa42e86d2caa02afe82337b17a48e12d2fda5c1f4a62c",
+    "chainHash": "6da983bc93556b2b6e9cbd9ca113c5beeed787302e6b1c98c76f86ec3f612bad"
+  },
+  {
+    "prevHash": "6da983bc93556b2b6e9cbd9ca113c5beeed787302e6b1c98c76f86ec3f612bad",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:05:53.337Z",
+      "payload": {
+        "buildId": "build-1767355525912"
+      }
+    },
+    "eventHash": "349c5add30629ebfa1c5850f75cd58084c28f175bfd087cc0147a1a5ba4fda74",
+    "chainHash": "a9764eef2fbb669f3f2bb8ae89a48ab5345f9d73d0eb2e49e843deeb063c3d66"
+  },
+  {
+    "prevHash": "a9764eef2fbb669f3f2bb8ae89a48ab5345f9d73d0eb2e49e843deeb063c3d66",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:19:12.181Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "1ed4f0b3ad74bd90060270b206294221fca6515f9e084eb1ac088d4db3ba190f",
+    "chainHash": "6a1fab9dfe6bacf7663d3b3c684b9aeb88e6c3e4ae78b536b7497754d517fcd9"
+  },
+  {
+    "prevHash": "6a1fab9dfe6bacf7663d3b3c684b9aeb88e6c3e4ae78b536b7497754d517fcd9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:25:15.363Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "9041a4f4f61ceb190ea5a4385fac05b8e7b4d72aad4f35dcdbf381bed3a34a07",
+    "chainHash": "12387b321cd4c303bbe0ed7c4609e97c6becce5f417097f2575d95b12b49d5f5"
+  },
+  {
+    "prevHash": "12387b321cd4c303bbe0ed7c4609e97c6becce5f417097f2575d95b12b49d5f5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:25.181Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "d0426dbc6f253f51fc44ead7700a56b8a0d8222e2a120a86ab7650a39a0a93c3",
+    "chainHash": "07e080b4c0ede6bef0a98f005d363c2f38350c11e4b79a6a890c8a7e700c75b7"
+  },
+  {
+    "prevHash": "07e080b4c0ede6bef0a98f005d363c2f38350c11e4b79a6a890c8a7e700c75b7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:23:05.269Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "51a9f452006eb8de3b6966136dc45970439bb63119a69d8479911ca05aa775ff",
+    "chainHash": "f5cbb2b07bd717aae7715c3144ef113b9c662e3bbda1f7f34429812ebf2b113c"
+  },
+  {
+    "prevHash": "f5cbb2b07bd717aae7715c3144ef113b9c662e3bbda1f7f34429812ebf2b113c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:26.735Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "aa21ef9d7d020b78fbd3de7cbc1f68373849e510ecde2dcdd5a6cc41912aefa3",
+    "chainHash": "c86d196d3f79d2cbe27f3f5bb418b6a3d76278008ccdd73ecf54d90b1f1eaaf0"
+  },
+  {
+    "prevHash": "c86d196d3f79d2cbe27f3f5bb418b6a3d76278008ccdd73ecf54d90b1f1eaaf0",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:27:01.775Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "35297f5ae0a5280a4519f2e4e14b2646e2ddf7a56af741f728c60c5bd7cda565",
+    "chainHash": "b9951fe9b09ba1365b046d1f8f8f058d70eb0a1a958c130eb5d6f04c5a2f8333"
+  },
+  {
+    "prevHash": "b9951fe9b09ba1365b046d1f8f8f058d70eb0a1a958c130eb5d6f04c5a2f8333",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:37.379Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "cf662dfd09696657c5284570b56f2911ba376175242a36b3e444da4b6a90bb23",
+    "chainHash": "3225d2c396b31d11f52fb9584c44450a70360e99e114ac3e1de6eea8515555ef"
+  },
+  {
+    "prevHash": "3225d2c396b31d11f52fb9584c44450a70360e99e114ac3e1de6eea8515555ef",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T01:38:00.737Z",
+      "payload": {
+        "buildId": "build-1767404251737"
+      }
+    },
+    "eventHash": "71980435b292797802e296d0b93ed35589d0758581e1439f4d227355fb14fb02",
+    "chainHash": "f5277ded5b52457e19fb5980402caa708cd4cfec3bc3a4e199c5c1dd946a83f0"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T01:38:00.801Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/web-a-attribute-schema#container",
+    "containerHash": "310541027ace90a9935642c5d3745a87141619b4c3945c9ae049cc07436436c7",
+    "buildId": "build-1767404251737",
+    "latestContextHash": "0a4b2150883b822190f18b7e5b3c02cad495f336cb2a22337220d85264ccfb96"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:38:00.801Z",
+      "proofValue": "z55Yxf2h2j79PCXX4ZeYHDKixiMWKdTGYPPr1bzL3KdA2aDJSk7gzF5DdjtHSq3TFfCX45r83tVYkiSNWFPpfCUhy"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:38:00.801Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T01:38:00.901Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Web/A Tech & Verifiability: Two-Week Engineering Deep Dive</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Web/A Tech & Verifiability: Two-Week Engineering Deep Dive",
+  "description": "A long-form, technical presentation covering SRN verification model, security posture, and Web/A Form encryption.",
+  "datePublished": "2025-12-29",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Web/A Tech & Verifiability: Two-Week Engineering Deep Dive",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      },
+      {
+        "label": "c2pa.actions",
+        "data": {
+          "action": "c2pa.created",
+          "softwareAgent": "Antigravity",
+          "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <script>
+        (() => {
+            const runMermaid = () => {
+                const mermaid = window.mermaid;
+                if (!mermaid) return;
+
+                const fonts = [];
+                const fontFamily = fonts.join(', ');
+
+                document.querySelectorAll('pre > code.language-mermaid').forEach((code) => {
+                    const pre = code.closest('pre');
+                    if (!pre) return;
+                    const container = document.createElement('div');
+                    container.className = 'mermaid';
+                    container.textContent = code.textContent || '';
+                    pre.replaceWith(container);
+                });
+
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+                    fontFamily: fontFamily
+                });
+
+                mermaid.run({
+                    querySelector: '.mermaid'
+                });
+            };
+
+            const onReady = () => {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', runMermaid, { once: true });
+                } else {
+                    runMermaid();
+                }
+            };
+
+            const script = document.createElement('script');
+            script.src = 'data:text/javascript;base64,Y29uc29sZS5sb2coJ01lcm1haWQgTG9hZGVkJyk7IHdpbmRvdy5tZXJtYWlkID0geyBpbml0aWFsaXplOiAoYykgPT4gY29uc29sZS5sb2coJ01lcm1haWQgSW5pdCcsIGMpIH07Cg==';
+            script.onload = onReady;
+            document.head.appendChild(script);
+        })();
+    </script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article presentation-template-minimal">
+    <main>
+        
+        
+        <div class="presentation-actions no-print">
+            <button class="presentation-toggle" data-presentation-toggle data-i18n-ja="プレゼンテーション" data-i18n-en="Presentation">Presentation</button>
+        </div>
+        
+        <article class="weba-article presentation-enabled">
+            
+            <header>
+                <h1>Web/A Tech & Verifiability: Two-Week Engineering Deep Dive</h1>
+                <div class="article-meta">
+                    <span><time datetime="2025-12-29">2025-12-29</time></span>
+                    
+                    
+                    <span class="ai-badge" title="Content generated by AI (Antigravity)">🤖 AI Generated</span>
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <div class="slide-cover">
+<div class="slide-logo">SORANE</div>
+<h1>Web/A Tech & Verifiability</h1>
+<div class="slide-divider"></div>
+<p class="slide-subtitle">Two-week engineering deep dive: verification, security model, and form encryption.</p>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Session Map</div>
+<h2>The Journey (60 minutes)</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>Part 1: Vision</strong> — Beyond the PDF/XML traps</li>
+  <li><strong>Part 2: Core Architecture</strong> — 4-Layer Model & HMP</li>
+  <li><strong>Part 3: L2 Security Deep Dive</strong> — Encryption, PRF, and WASM</li>
+  <li><strong>Part 4: Data Sovereignty</strong> — Web/A Folio & LoA</li>
+  <li><strong>Part 5: Trust & Governance</strong> — Lightweight Trust & DID-lite</li>
+  <li><strong>Part 6: Engineering Details</strong> — Typography & Bimodal UX</li>
+  <li><strong>Part 7: Status & Roadmap</strong> — Red Teaming & Standardization</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Vision</div>
+<h2>What Is Sorane?</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>An open-source reference implementation for <strong>verifiable web documents</strong></li>
+  <li>Focused on <strong>long-term readability</strong> and <strong>cryptographic trust</strong></li>
+  <li>Designed for public-sector workflows where PDFs fall short</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>The Machine-Only Trap (XTX / Custom XML)</h2>
+<ul>
+  <li>Structured data becomes unreadable to humans</li>
+  <li>Semantics drift across vendors and schemas</li>
+  <li>Human trust is weakened when layout is detached</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>XML + XSLT: The Connectivity Trap</h2>
+<ul>
+  <li>Rendering depends on external stylesheets</li>
+  <li>Long-term survival is fragile without dependencies</li>
+  <li>Archival integrity becomes operationally expensive</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Signature Verification Barrier</h2>
+<ul>
+  <li>AATL and viewer lock-in create hidden trust anchors</li>
+  <li>Verification is expensive outside licensed tools</li>
+  <li>Web/A aims to remove viewer dependence</li>
+  <li>PDF is readable but hard to verify at scale</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Comparison</div>
+<h2>Web/A vs PDF/A vs XML/XTX</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="420" viewBox="0 0 760 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="compare-title compare-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="compare-title">Comparison Table</title>
+  <desc id="compare-desc">A comparison of Web/A, PDF/A, and XML/XTX across portability, verifiability, and human readability.</desc>
+  <rect x="24" y="24" width="712" height="372" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <rect x="48" y="56" width="664" height="48" rx="8" fill="#E2E8F0"/>
+  <text x="72" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">Dimension</text>
+  <text x="300" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">Web/A</text>
+  <text x="470" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">PDF/A</text>
+  <text x="620" y="86" font-family="system-ui" font-size="14" font-weight="700" fill="#334155">XML/XTX</text>
+
+  <rect x="48" y="112" width="664" height="64" rx="8" fill="white" stroke="#E2E8F0"/>
+  <text x="72" y="144" font-family="system-ui" font-size="13" font-weight="600" fill="#334155">Portability</text>
+  <text x="300" y="144" font-family="system-ui" font-size="12" fill="#0f172a">Single-file HTML</text>
+  <text x="470" y="144" font-family="system-ui" font-size="12" fill="#0f172a">File-based</text>
+  <text x="620" y="144" font-family="system-ui" font-size="12" fill="#0f172a">Depends on tooling</text>
+
+  <rect x="48" y="184" width="664" height="64" rx="8" fill="white" stroke="#E2E8F0"/>
+  <text x="72" y="216" font-family="system-ui" font-size="13" font-weight="600" fill="#334155">Verifiability</text>
+  <text x="300" y="216" font-family="system-ui" font-size="12" fill="#0f172a">Built-in signatures</text>
+  <text x="470" y="216" font-family="system-ui" font-size="12" fill="#0f172a">Viewer-dependent</text>
+  <text x="620" y="216" font-family="system-ui" font-size="12" fill="#0f172a">Schema-dependent</text>
+
+  <rect x="48" y="256" width="664" height="64" rx="8" fill="white" stroke="#E2E8F0"/>
+  <text x="72" y="288" font-family="system-ui" font-size="13" font-weight="600" fill="#334155">Human Readability</text>
+  <text x="300" y="288" font-family="system-ui" font-size="12" fill="#0f172a">First-class</text>
+  <text x="470" y="288" font-family="system-ui" font-size="12" fill="#0f172a">Strong</text>
+  <text x="620" y="288" font-family="system-ui" font-size="12" fill="#0f172a">Weak</text>
+
+  <rect x="48" y="328" width="664" height="48" rx="8" fill="#EEF2FF" stroke="#C7D2FE"/>
+  <text x="72" y="358" font-family="system-ui" font-size="12" font-weight="700" fill="#4338CA">Summary</text>
+  <text x="300" y="358" font-family="system-ui" font-size="12" fill="#4338CA">Portable + Verifiable</text>
+  <text x="470" y="358" font-family="system-ui" font-size="12" fill="#4338CA">Portable, low semantics</text>
+  <text x="620" y="358" font-family="system-ui" font-size="12" fill="#4338CA">Structured, fragile</text>
+</svg>
+</div>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Why We Built SRN</h2>
+<ul>
+  <li>Precision typography is a security problem: layout must be verifiable</li>
+  <li>Documents should be readable <strong>and</strong> provable for decades</li>
+  <li>Encryption must work without server lock-in</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Core Architecture</div>
+<h2>4-Layer Trust Model</h2>
+<div class="slide-divider"></div>
+<div class="slide-split">
+<div>
+<ul>
+  <li><strong>Layer 1: The Template</strong> — Definitions, questions, and schemas</li>
+  <li><strong>Layer 2: The Data</strong> — Concrete evidence and user records</li>
+  <li><strong>Layer 3: The Context</strong> — Metadata, transport tags, and binding</li>
+  <li><strong>Layer 4: The Presentation</strong> — UI, fonts, and display logic</li>
+</ul>
+</div>
+<div class="presentation-figure">
+<svg width="600" height="420" viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#6366F1" />
+    </marker>
+  </defs>
+  <rect width="600" height="420" fill="#F8FAFC"/>
+  <rect x="40" y="30" width="520" height="360" rx="12" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+  <text x="60" y="55" font-family="system-ui" font-size="14" font-weight="700" fill="#64748B">Web/A Document (.html)</text>
+
+  <!-- Layer 4: Presentation -->
+  <rect x="60" y="70" width="480" height="40" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+  <text x="75" y="90" font-family="system-ui" font-size="11" font-weight="700" fill="#475569">Layer 4: Presentation (View / UI)</text>
+  <text x="75" y="103" font-family="system-ui" font-size="9" fill="#64748B">CSS, Fonts, minimal JS</text>
+
+  <!-- Layer 3: Context -->
+  <rect x="60" y="115" width="480" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="75" y="132" font-family="system-ui" font-size="11" font-weight="700" fill="#92400E">Layer 3: Context (Metadata / Routing)</text>
+  <text x="75" y="145" font-family="system-ui" font-size="9" fill="#92400E">Transport Tag, Expiry, Nonce, Policy Ref</text>
+
+  <!-- Layer 2: Data -->
+  <rect x="60" y="165" width="480" height="65" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="75" y="185" font-family="system-ui" font-size="11" font-weight="700" fill="#047857">Layer 2: Data (Evidence / Fact)</text>
+  <text x="75" y="202" font-family="system-ui" font-size="9" fill="#065F46">Encrypted payload, signed fact record</text>
+
+  <!-- Link to Layer 1 -->
+  <path d="M300 230V240" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Layer 1: Template -->
+  <rect x="60" y="240" width="480" height="130" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="75" y="265" font-family="system-ui" font-size="11" font-weight="700" fill="#4338CA">Layer 1: Template (Definition / Schema)</text>
+
+  <rect x="80" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="90" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">Human Readable</text>
+  <text x="90" y="312" font-family="system-ui" font-size="9" fill="#64748B">HTML / Template</text>
+
+  <!-- Semantic Mapping -->
+  <path d="M280 302H320" stroke="#6366F1" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)"/>
+  <text x="300" y="297" font-family="system-ui" font-size="8" fill="#6366F1" text-anchor="middle" font-weight="bold">Bound</text>
+
+  <rect x="320" y="280" width="200" height="45" rx="4" fill="white" stroke="#6366F1"/>
+  <text x="330" y="295" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA">Machine Readable</text>
+  <text x="330" y="312" font-family="system-ui" font-size="9" fill="#64748B">JSON-LD / Logic</text>
+
+  <rect x="80" y="335" width="440" height="25" rx="4" fill="#6366F1" fill-opacity="0.1"/>
+  <text x="300" y="352" font-family="system-ui" font-size="10" font-weight="700" fill="#4338CA" text-anchor="middle">Issuer Signature: Ed25519 + PQC</text>
+</svg>
+</div>
+</div>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Verifiability</div>
+<h2>Human-Machine Parity (HMP)</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Human-readable HTML + machine-readable JSON-LD are bound</li>
+  <li>Signatures guarantee both views describe the same artifact</li>
+  <li>Verification is built into every generated document</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Conformance</div>
+<h2>Web/A Conformance Levels</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="conformance-title conformance-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="conformance-title">Web/A Conformance Levels</title>
+  <desc id="conformance-desc">Three conformance tiers: 1s semantic, 1u universal, 1p provenance.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="72" width="200" height="210" rx="12" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Web/A-1s</text>
+  <text x="80" y="130" font-family="system-ui" font-size="12" fill="#4338CA">Semantic</text>
+  <text x="80" y="156" font-family="system-ui" font-size="11" fill="#334155">HTML + CSS</text>
+  <text x="80" y="176" font-family="system-ui" font-size="11" fill="#334155">JSON-LD embedded</text>
+  <text x="80" y="196" font-family="system-ui" font-size="11" fill="#334155">Basic signature</text>
+
+  <rect x="280" y="72" width="200" height="210" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Web/A-1u</text>
+  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">Universal</text>
+  <text x="300" y="156" font-family="system-ui" font-size="11" fill="#334155">All assets embedded</text>
+  <text x="300" y="176" font-family="system-ui" font-size="11" fill="#334155">Subsetted fonts</text>
+  <text x="300" y="196" font-family="system-ui" font-size="11" fill="#334155">CLS 0 target</text>
+
+  <rect x="500" y="72" width="200" height="210" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Web/A-1p</text>
+  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">Provenance</text>
+  <text x="520" y="156" font-family="system-ui" font-size="11" fill="#334155">C2PA manifest</text>
+  <text x="520" y="176" font-family="system-ui" font-size="11" fill="#334155">HMP claim</text>
+  <text x="520" y="196" font-family="system-ui" font-size="11" fill="#334155">High-trust archive</text>
+</svg>
+</div>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">L2 Security</div>
+<h2>Web/A Form Security Highlights</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Layer 1 template is signed and hash-bound</li>
+  <li>Layer 2 payload uses Ed25519 signature</li>
+  <li>Encryption binds AAD to layer1_ref (Anti-splicing)</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">L2 Encryption</div>
+<h2>Architecture Overview</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">flowchart TD
+    User[&quot;User Input&quot;] --&gt; Plain[&quot;L2 Plaintext&quot;]
+    
+    subgraph browser [&quot;Browser Client&quot;]
+        Plain --&gt; Sign[&quot;Signer (Ed25519)&quot;]
+        Sign --&gt; Signed[&quot;L2 Signed Payload&quot;]
+        Signed --&gt; Encrypt[&quot;Encrypter (HPKE / WASM)&quot;]
+    end
+    
+    Encrypt --&gt; Envelope[&quot;L2 Encrypted Envelope&quot;]
+    
+    Envelope --&gt; Storage[&quot;Transport (Local / WebA Post)&quot;]
+    
+    subgraph aggregator [&quot;Aggregator Issuer&quot;]
+        Storage --&gt; Decrypt[&quot;Decrypter (Strict Replay Check)&quot;]
+        Decrypt --&gt; Verify[&quot;Signature Verifier&quot;]
+        Verify --&gt; Data[&quot;Validated Data&quot;]
+    end
+</code></pre>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Ecosystem</div>
+<h2>The Web/A Five Components</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">graph TD
+    Maker[Web/A Maker] --&gt;|1. Foundry| Form[Web/A Form]
+    Maker --&gt;|1. Foundry| Doc[Web/A Doc]
+    
+    Form --&gt;|2. Input &amp; Sign| Doc
+    Doc --&gt;|3. Ownership| Folio[Web/A Folio]
+    
+    Folio &lt;--&gt;|4. Transport| Post[Web/A Post]
+    Post --&gt;|5. Analytics| Aggregator[Aggregator]
+</code></pre>
+<ul>
+  <li><strong>Foundry (Maker/Aggregator)</strong>: Forging trust and aggregating results</li>
+  <li><strong>Interface (Form/Doc)</strong>: Bimodal containers for humans and machines</li>
+  <li><strong>Infrastructure (Folio/Post)</strong>: Sovereign ownership and routing</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">L2 Encryption</div>
+<h2>Hierarchical Key Derivation</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">flowchart TD
+    Instance[&quot;SRN Master Key&quot;] --&gt;|HKDF org-root| Root[&quot;Org Root Key&quot;]
+    Root --&gt;|HKDF campaign+layer1| Campaign[&quot;Campaign/Form Key&quot;]
+    
+    subgraph per_form [&quot;Per Form&quot;]
+    Campaign --&gt; Pub[&quot;Public Key (embedded in Form)&quot;]
+    Campaign --&gt; Priv[&quot;Private Key (used by Aggregator)&quot;]
+    end
+</code></pre>
+<ul>
+  <li>Zero-touch key rotation</li>
+  <li>Isolation between campaigns and forms</li>
+  <li>Aggregator escrow without master key exposure</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">L2 Encryption</div>
+<h2>WebAuthn PRF Unlock</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant Browser
+    participant Auth as WebAuthn/Authenticator
+    
+    User-&gt;&gt;Browser: Click &quot;Unlock with Passkey&quot;
+    Browser-&gt;&gt;Auth: get() with PRF extension
+    Auth--&gt;&gt;Browser: PRF Output (Seed)
+    Browser-&gt;&gt;Browser: HKDF(Seed) -&gt; Wrap Key
+    Browser-&gt;&gt;Browser: AES-Decrypt(Wrapped Private Key)
+    Browser-&gt;&gt;Browser: Decrypt L2 Envelope
+    Browser-&gt;&gt;User: Show Plaintext Data
+</code></pre>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Encryption</div>
+<h2>L2 Envelope Lifecycle</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">sequenceDiagram
+  participant User
+  participant Browser
+  participant Issuer
+  User-&gt;&gt;Browser: Fill form
+  Browser-&gt;&gt;Browser: Sign payload (Ed25519)
+  Browser-&gt;&gt;Browser: Encrypt (HPKE-like)
+  Browser-&gt;&gt;Issuer: Send envelope
+  Issuer-&gt;&gt;Issuer: Decrypt + verify
+</code></pre>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">L2 Security</div>
+<h2>Replay Protection</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Nonce is stored and strictly checked per envelope</li>
+  <li><strong>Security Audit v3 Requirement</strong>: Mandatory replay guard for all L2 decryptions</li>
+  <li>CLI: JsonFileReplayStore / Browser: LocalStorageReplayStore</li>
+</ul>
+
+<div class="presentation-figure">
+
+<pre><code class="language-mermaid">flowchart TB
+  S[Envelope] --&gt; N{Nonce seen?}
+  N -- No --&gt; A[Accept + Store]
+  N -- Yes --&gt; R[Reject]
+</code></pre>
+</div>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Traffic Analysis Mitigation</h2>
+<ul>
+  <li>Bucket padding (1KB / 4KB / 16KB / ...)</li>
+  <li>Obscures payload size class</li>
+  <li>Decoy traffic planned for high-sensitivity cases</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>WASM Crypto Core Completed</h2>
+<ul>
+  <li>Ed25519 / X25519 / ML-KEM / ML-DSA / AES-GCM / SHA2 in Rust/WASM</li>
+  <li><strong>Zero JS-dependent crypto</strong>: Improved performance and side-channel resistance</li>
+  <li>Validated as a standalone, side-loadable security module</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Safety</div>
+<h2>Pilot Safety & Support Framework</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>Pilot Safety Guide</strong>: Published boundaries for risk and responsibility</li>
+  <li><strong>Human Support Layer</strong>: Countermeasures for technical edge cases (backups, etc.)</li>
+  <li><strong>Experimental Status</strong>: Incremental trust via verified HMP evidence</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Forward Secrecy</div>
+<h2>Pre-Key Infrastructure Draft</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>One-time recipient keys via prekey_url</li>
+  <li>Offline submission preserved</li>
+  <li>Fallback to static keys with warnings</li>
+</ul>
+</div>
+
+<hr>
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">LTV Architecture</div>
+<h2>Long-Term Validation (LTV)</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>Rebuild Paradox Solved</strong>: How to fix a typo in 2030 without breaking the 2025 signature?</li>
+  <li><strong>Offline Verification</strong>: Trust anchors embedded in the file itself.</li>
+  <li><strong>Context Freezing</strong>: Self-contained semantic verification (no 404s).</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Layered Signatures: Solving the Rebuild Paradox</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="280" viewBox="0 0 760 280" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <rect x="24" y="24" width="712" height="232" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <!-- Layer 2 Payload -->
+  <rect x="60" y="60" width="280" height="100" rx="8" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="80" y="90" font-family="system-ui" font-size="14" font-weight="700" fill="#047857">L2: Verified Payload</text>
+  <text x="80" y="115" font-family="system-ui" font-size="12" fill="#065F46">User Data + Schema</text>
+  <text x="80" y="135" font-family="system-ui" font-size="12" fill="#065F46">Signed: 2025-01-01</text>
+  
+  <!-- Layer 4 Container -->
+  <rect x="420" y="60" width="280" height="100" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="440" y="90" font-family="system-ui" font-size="14" font-weight="700" fill="#4338CA">L4: Visual Container</text>
+  <text x="440" y="115" font-family="system-ui" font-size="12" fill="#334155">HTML/CSS/Fonts</text>
+  <text x="440" y="135" font-family="system-ui" font-size="12" fill="#334155">Signed: 2030-05-20 (Rebuild)</text>
+
+  <!-- Arrow -->
+  <path d="M340 110H420" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-tech)"/>
+  <defs>
+    <marker id="arrow-tech" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+
+  <rect x="60" y="180" width="640" height="40" rx="4" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="380" y="205" font-family="system-ui" font-size="12" font-weight="700" fill="#92400E" text-anchor="middle">LTV Benefit: L2 Timestamp is preserved even if L4 is updated.</text>
+</svg>
+</div>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Offline Verification: Trust Store Embedding</h2>
+<ul>
+  <li><strong>Problem</strong>: Issuer's website (DID) might be offline in 50 years.</li>
+  <li><strong>Solution</strong>: Embed the <strong>Issuer's DID Document</strong> and <strong>CRLs</strong> directly into the HTML.</li>
+  <li><strong>Result</strong>: The file verifies itself without network access.</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">L3 Outlook</div>
+<h2>Layer 3: Web/A Folio</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="folio-title folio-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="folio-title">Web/A Folio Outlook</title>
+  <desc id="folio-desc">A conceptual view of Web/A Folio enabling verifiable presentations and identity-bound proofs.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="80" width="220" height="200" rx="14" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="116" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Web/A Folio</text>
+  <text x="80" y="142" font-family="system-ui" font-size="11" fill="#334155">Identity-bound container</text>
+  <text x="80" y="162" font-family="system-ui" font-size="11" fill="#334155">History + proofs + claims</text>
+  <text x="80" y="182" font-family="system-ui" font-size="11" fill="#334155">Portable, offline-capable</text>
+
+  <rect x="320" y="80" width="200" height="90" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="340" y="115" font-family="system-ui" font-size="12" font-weight="700" fill="#047857">Verifiable Presentation</text>
+  <text x="340" y="140" font-family="system-ui" font-size="11" fill="#334155">Selective disclosure</text>
+
+  <rect x="320" y="190" width="200" height="90" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="340" y="225" font-family="system-ui" font-size="12" font-weight="700" fill="#92400E">Authorization Flow</text>
+  <text x="340" y="250" font-family="system-ui" font-size="11" fill="#334155">Consent + delegation</text>
+
+  <rect x="560" y="130" width="160" height="120" rx="12" fill="#E0F2FE" stroke="#38BDF8"/>
+  <text x="580" y="165" font-family="system-ui" font-size="12" font-weight="700" fill="#0C4A6E">Relying Party</text>
+  <text x="580" y="190" font-family="system-ui" font-size="11" fill="#334155">Service verifier</text>
+
+  <path d="M280 150H320" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <path d="M280 210H320" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <path d="M520 150H560" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <path d="M520 230H560" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <defs>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Folio Design</div>
+<h2>Trust Levels & LoA</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>LoA 1 (Self-Asserted)</strong>: Canonical = Human-Readable. JSON is derived.</li>
+  <li><strong>LoA 2+ (Verified)</strong>: Canonical = Machine-Readable. Human view is derived.</li>
+  <li><strong>Validation</strong>: Editing LoA 2+ data invalidates verified status.</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Folio Internals</div>
+<h2>The Submission Bundle</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">graph TD
+    B[Submission Bundle] --&gt; M[Manifest.json]
+    B --&gt; D[Docs/ HTML]
+    B --&gt; A[Attachments/ PDF]
+    B --&gt; V[VP/ Scoped Claims]
+    B --&gt; R[Verification Report]
+    
+    M --&gt;|Signed| S[Manifest.sig]
+    R --&gt;|Covers| B
+</code></pre>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Folio CLI</div>
+<h2>Toolkit Architecture</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">graph TD
+    MD[Form.markdown] --&gt;|parse| Schema[Schema.json]
+    Data[Data.json] --&gt;|fill| Filled[Filled.html]
+    MD --&gt;|validate| Result[Validation Result]
+    Key[Passkey] --&gt;|sign| Signed[Signed.html]
+</code></pre>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Folio Conformance</div>
+<h2>Policy DSL (Draft)</h2>
+<div class="slide-divider"></div>
+<pre><code>profile: onboarding
+requires:
+  - manifest.bundle_id
+  - subject.id
+rules:
+  - id: vp_required_for_l3
+    when: claims.level == 3
+    assert: vp.exists == true</code></pre>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Ecosystem Strategy: AI Agent-First</h2>
+<ul>
+  <li>Agents can read, verify, and summarize Web/A</li>
+  <li>Structured data enables safe automation</li>
+  <li>Humans remain the final trust anchor</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">AI Integration</div>
+<h2>Bring Your Own AI Agent (BYOA)</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><strong>MCP (Model Context Protocol)</strong>: Agents access Folio records directly</li>
+  <li><strong>Verified Context</strong>: AI reasons and interacts based on "Hard Evidence"</li>
+  <li><strong>Agency & Liberty</strong>: Use your preferred AI without platform lock-in</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Trust & Governance</div>
+<h2>The "Lightweight Trust" Model</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Lower entry cost with strong verification</li>
+  <li>Designed for gradual migration from legacy PKI</li>
+  <li>Supports PQC transition without new infrastructure</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Tiered Authority: Passkey-to-Build Delegation</h2>
+<ul>
+  <li>Root authority delegates build-time signing</li>
+  <li>Passkeys provide hardware-backed trust</li>
+  <li>Enables automation without exposing root keys</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Ephemeral Issuance</h2>
+<ul>
+  <li>Fresh signing keys per build reduce blast radius</li>
+  <li>Encourages frequent rotation</li>
+  <li>Fits offline, file-first workflows</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Identity via Transparency (DID-lite)</h2>
+<ul>
+  <li>Trust derived from web publication and transparency</li>
+  <li>Lower friction than heavy certificate hierarchies</li>
+  <li>Fingerprint publication provides a "Known Good" list</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Cryptographic Agility</h2>
+<ul>
+  <li>Dynamic Root of Trust and continuity</li>
+  <li>Hybrid signatures (classical Ed25519 + PQC ML-DSA-44)</li>
+  <li>Safety-first migration for the quantum era</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Legal Positioning</h2>
+<ul>
+  <li>From "will" to "evidence"</li>
+  <li>Focus on provable intent and auditability</li>
+  <li>Pragmatic distance from rigid national act PKI</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Deployment Safety</div>
+<h2>Client Safety: Draft State</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Draft HTML embeds recovery state</li>
+  <li>Restore across devices without data loss</li>
+  <li>Draft files treated as sensitive artifacts</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Engineering</div>
+<h2>Advanced Typography Requirements</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Administrative glyph coverage (IVS/SVS)</li>
+  <li>Faithful reproduction of official layouts (Grid fidelity)</li>
+  <li>Zero layout shift as a security constraint</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Challenges in Form Reproduction</h2>
+<ul>
+  <li>Rendering engine variance vs millimeter precision</li>
+  <li>Layout-dependent semantics</li>
+  <li>Signed views must remain stable over time</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Bimodal Presentation (Mobile + Desktop)</h2>
+<ul>
+  <li><strong>Archive View</strong>: Fixed layout for official verification</li>
+  <li><strong>Wallet View</strong>: Responsive card view for quick reference</li>
+  <li>Switchable from single signed payload via CSS</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Conservation Profiles</h2>
+<ul>
+  <li>Define a safe subset of web tech (Evergreen)</li>
+  <li>Prevent browser drift from breaking archives</li>
+  <li>Long-term readability guaranteed by profile validation</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Status</div>
+<h2>Web/A Evolution (Summary)</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="320" viewBox="0 0 760 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="history-title history-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="history-title">Web/A Evolution Timeline</title>
+  <desc id="history-desc">A concise timeline showing key milestones in Web/A development.</desc>
+  <rect x="24" y="24" width="712" height="272" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <line x1="80" y1="170" x2="680" y2="170" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+
+  <circle cx="150" cy="170" r="8" fill="#6366F1"/>
+  <text x="120" y="130" font-family="system-ui" font-size="11" fill="#334155">4-Layer Trust</text>
+  <text x="120" y="146" font-family="system-ui" font-size="10" fill="#64748B">Forms supported</text>
+
+  <circle cx="360" cy="170" r="8" fill="#10B981"/>
+  <text x="320" y="130" font-family="system-ui" font-size="11" fill="#334155">Layer 2 Encryption</text>
+  <text x="320" y="146" font-family="system-ui" font-size="10" fill="#64748B">Confidential payloads</text>
+
+  <circle cx="570" cy="170" r="8" fill="#F59E0B"/>
+  <text x="520" y="130" font-family="system-ui" font-size="11" fill="#334155">Audit Loop</text>
+  <text x="520" y="146" font-family="system-ui" font-size="10" fill="#64748B">Remediation tracking</text>
+</svg>
+</div>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Timeline</div>
+<h2>Engineering Progress</h2>
+<div class="slide-divider"></div>
+
+<pre><code class="language-mermaid">flowchart LR
+  A[L2 Feasibility] --&gt; B[Encrypted Form]
+  B --&gt; C[ReplayGuard Hardening]
+  C --&gt; D[WASM Migration Complete]
+  D --&gt; E[Red Team Evaluation v8]
+  E --&gt; F[Safety Guide Release]
+  F --&gt; G[Infrastructure Scale-up]
+</code></pre>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Red Teaming</div>
+<h2>Iterative Feedback Loop</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+
+<pre><code class="language-mermaid">sequenceDiagram
+  participant Dev as Web/A Team
+  participant RT as Red Team
+  participant Spec as Spec + Docs
+  RT-&gt;&gt;Dev: Findings (v2)
+  Dev-&gt;&gt;Spec: Remediation Plan
+  Dev-&gt;&gt;RT: Implementation Report
+  RT-&gt;&gt;Dev: Re-Assessment (v3)
+  Dev-&gt;&gt;Spec: Hardening Notes
+</code></pre>
+</div>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Adoption</div>
+<h2>Phased Adoption Strategy</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="adoption-title adoption-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="adoption-title">Phased Adoption Strategy</title>
+  <desc id="adoption-desc">Three-stage adoption plan across Layer 1, Layer 2, and Layer 3.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="72" width="200" height="210" rx="12" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Layer 1</text>
+  <text x="80" y="130" font-family="system-ui" font-size="12" fill="#4338CA">Public Documents</text>
+  <text x="80" y="158" font-family="system-ui" font-size="11" fill="#334155">Certificates, notices</text>
+  <text x="80" y="178" font-family="system-ui" font-size="11" fill="#334155">Auditability first</text>
+  <text x="80" y="198" font-family="system-ui" font-size="11" fill="#334155">Current SRN scope</text>
+
+  <rect x="280" y="72" width="200" height="210" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Layer 2 + 3</text>
+  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">Confidential Data & Tags</text>
+  <text x="300" y="158" font-family="system-ui" font-size="11" fill="#334155">L2 encryption</text>
+  <text x="300" y="178" font-family="system-ui" font-size="11" fill="#334155">Replay protection (L3)</text>
+  <text x="300" y="198" font-family="system-ui" font-size="11" fill="#334155">Selective access</text>
+
+  <rect x="500" y="72" width="200" height="210" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Layer 4</text>
+  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">Identity & Presentation</text>
+  <text x="520" y="158" font-family="system-ui" font-size="11" fill="#334155">Verifiable presentation</text>
+  <text x="520" y="178" font-family="system-ui" font-size="11" fill="#334155">Holder binding</text>
+  <text x="520" y="198" font-family="system-ui" font-size="11" fill="#334155">Future scope</text>
+</svg>
+</div>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Roadmap</div>
+<h2>Document Typology</h2>
+<div class="slide-divider"></div>
+<div class="presentation-figure">
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="typology-title typology-desc" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+  <title id="typology-title">Document Typology</title>
+  <desc id="typology-desc">Three document tiers mapped to Web/A layers and preservation requirements.</desc>
+  <rect x="24" y="24" width="712" height="312" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <rect x="60" y="72" width="200" height="210" rx="12" fill="#EEF2FF" stroke="#6366F1"/>
+  <text x="80" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#4338CA">Tier 1</text>
+  <text x="80" y="130" font-family="system-ui" font-size="12" fill="#4338CA">Public Assets</text>
+  <text x="80" y="158" font-family="system-ui" font-size="11" fill="#334155">Gazettes, reports</text>
+  <text x="80" y="178" font-family="system-ui" font-size="11" fill="#334155">Universal access</text>
+  <text x="80" y="198" font-family="system-ui" font-size="11" fill="#334155">Public trust</text>
+
+  <rect x="280" y="72" width="200" height="210" rx="12" fill="#ECFDF5" stroke="#10B981"/>
+  <text x="300" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#047857">Tier 2</text>
+  <text x="300" y="130" font-family="system-ui" font-size="12" fill="#047857">Individual Records</text>
+  <text x="300" y="158" font-family="system-ui" font-size="11" fill="#334155">Receipts, notices</text>
+  <text x="300" y="178" font-family="system-ui" font-size="11" fill="#334155">Confidentiality primary</text>
+  <text x="300" y="198" font-family="system-ui" font-size="11" fill="#334155">Direct delivery</text>
+
+  <rect x="500" y="72" width="200" height="210" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="520" y="106" font-family="system-ui" font-size="13" font-weight="700" fill="#92400E">Tier 3</text>
+  <text x="520" y="130" font-family="system-ui" font-size="12" fill="#92400E">Identity Credentials</text>
+  <text x="520" y="158" font-family="system-ui" font-size="11" fill="#334155">Resident records, IDs</text>
+  <text x="520" y="178" font-family="system-ui" font-size="11" fill="#334155">Anti-personation required</text>
+  <text x="520" y="198" font-family="system-ui" font-size="11" fill="#334155">Holder binding</text>
+</svg>
+</div>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Challenges</div>
+<h2>Standardization Challenges</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Cross-device and in-person transfer protocols</li>
+  <li>Practical holder binding in browser sandboxes</li>
+  <li>Native browser verification support</li>
+  <li>Long-term validation (LTV)</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Resource</div>
+<h2>Key Papers</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li><a href="./papers/web-a.html">Web/A Whitepaper</a></li>
+  <li><a href="./papers/web-a-l2-encryption.html">Web/A L2 Encryption</a></li>
+  <li><a href="./papers/web-a-folio.html">Web/A Folio Concept</a></li>
+  <li><a href="./governance/web-a-l2-security-audit-v3.html">Re-Assessment v3</a></li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-card">
+<h2>Next Steps</h2>
+<ul>
+  <li>Pre-Key server PoC + test harness</li>
+  <li>Formal review of WASM bindings</li>
+  <li>Decoy traffic strategy</li>
+  <li>Publish CSP/SRI templates for deployments</li>
+</ul>
+</div>
+
+<hr>
+<div class="slide-section">
+<div class="slide-kicker">Final Thoughts</div>
+<h2>Why This Matters</h2>
+<div class="slide-divider"></div>
+<ul>
+  <li>Web/A turns documents into verifiable artifacts, not just files</li>
+  <li>Trust is portable across time, devices, and institutions</li>
+  <li>The goal is interoperability with transparent security, not lock-in</li>
+</ul>
+</div>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-01T01:16:28.831Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/web-a-tech-presentation",
+    "name": "Web/A Tech & Verifiability: Two-Week Engineering Deep Dive",
+    "contentDigest": "8e8e425e67079b74ae6e1ecaaeef316a9adb7bf50c539a4ee7188fa677580442"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767230180299-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T01:16:28.831Z",
+      "proofValue": "z3J9sA1qapdfb4XF1gW4JVvvH3zh6cX4UajPCHPK3c9BKGkfv5592w59C9CA6zkMYruJnoVJ1qcBhrL8hBdr5WfZ3"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767230180299-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T01:16:28.831Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+        <style>.presentation-actions { position: sticky; top: 1rem; display: flex; justify-content: flex-end; margin-bottom: 1rem; z-index: 5; }
+.presentation-toggle { border: 1px solid #111; background: #111; color: #fff; padding: 0.5rem 0.9rem; border-radius: 999px; font-size: 0.85rem; cursor: pointer; letter-spacing: 0.02em; }
+.presentation-toggle:hover { background: #333; }
+.presentation-enabled .article-body hr { border: none; border-top: 1px dashed #e5e7eb; margin: 2.5rem 0; }
+body.presentation-mode { overflow: hidden; }
+
+.presentation-overlay {
+  --presentation-bg: #0b0b0d;
+  --presentation-text: #f9fafb;
+  --presentation-muted: #cbd5f5;
+  --presentation-kicker: #64748b;
+  --presentation-accent: #60a5fa;
+  --presentation-accent-soft: #93c5fd;
+  --presentation-card-bg: rgba(15, 23, 42, 0.6);
+  --presentation-card-border: #1f2937;
+  --presentation-bullet: #60a5fa;
+  --presentation-toolbar-border: #94a3b8;
+  background: var(--presentation-bg);
+  color: var(--presentation-text);
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  z-index: 2000;
+}
+
+.presentation-overlay.active { display: flex; }
+.presentation-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem 0; font-size: 0.85rem; color: var(--presentation-muted); }
+.presentation-toolbar button { border: 1px solid var(--presentation-toolbar-border); background: transparent; color: var(--presentation-text); padding: 0.4rem 0.8rem; border-radius: 999px; cursor: pointer; }
+.presentation-slide-container { flex: 1; display: flex; align-items: stretch; justify-content: center; overflow: auto; }
+.presentation-slide { display: none; width: 100%; height: auto; max-height: 100%; padding: 5vh 6vw; box-sizing: border-box; overflow: auto; }
+.presentation-slide.active { display: flex; flex-direction: column; justify-content: center; gap: 2.2rem; }
+.presentation-slide h1 { font-size: clamp(3.2rem, 7.5vw, 6.2rem); line-height: 1.05; margin: 0; color: var(--presentation-text); }
+.presentation-slide h2 { font-size: clamp(2.4rem, 5.5vw, 4.4rem); margin: 0; color: var(--presentation-text); }
+.presentation-slide h3 { font-size: clamp(1.6rem, 3.6vw, 2.8rem); margin: 0; color: var(--presentation-muted); }
+.presentation-slide p { font-size: clamp(1.3rem, 2.6vw, 2rem); line-height: 1.5; color: var(--presentation-text); }
+.presentation-slide ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
+.presentation-slide li { font-size: clamp(1.3rem, 2.5vw, 1.9rem); color: var(--presentation-text); position: relative; padding-left: 1.6rem; }
+.presentation-slide li::before { content: "◆"; position: absolute; left: 0; top: 0.2rem; color: var(--presentation-bullet); font-size: 1rem; }
+.presentation-slide .presentation-figure { display: flex; justify-content: center; align-items: center; }
+.presentation-slide .presentation-figure svg { max-width: 90vw; max-height: 60vh; width: 100%; height: auto; }
+.presentation-slide .slide-cover { display: flex; flex-direction: column; justify-content: center; gap: 1.6rem; min-height: 70vh; }
+.presentation-slide .slide-logo { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; letter-spacing: 0.08em; color: var(--presentation-accent-soft); }
+.presentation-slide .slide-subtitle { font-size: clamp(1.4rem, 2.6vw, 2rem); color: var(--presentation-muted); max-width: 70%; }
+.presentation-slide .slide-kicker { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.3em; color: var(--presentation-kicker); }
+.presentation-slide .slide-section { display: flex; flex-direction: column; gap: 1rem; justify-content: center; min-height: 70vh; }
+.presentation-slide .slide-section h2 { font-size: clamp(3rem, 6vw, 5rem); }
+.presentation-slide .slide-statement { font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; color: var(--presentation-text); }
+.presentation-slide .slide-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: 2.5rem; align-items: center; }
+.presentation-slide .slide-card { border: 1px solid var(--presentation-card-border); border-radius: 18px; padding: 1.5rem 1.75rem; background: var(--presentation-card-bg); box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2); }
+.presentation-slide .slide-card strong { color: var(--presentation-accent-soft); }
+.presentation-slide .slide-divider { width: 120px; height: 4px; background: var(--presentation-accent); border-radius: 999px; }
+body.presentation-mode .presentation-slide { padding: 4vh 5vw; gap: 2.6rem; }
+body.presentation-mode .presentation-slide h1 { font-size: clamp(3.8rem, 9vw, 7.2rem); color: var(--presentation-text); }
+body.presentation-mode .presentation-slide h2 { font-size: clamp(2.8rem, 6.5vw, 5.2rem); color: var(--presentation-text); }
+body.presentation-mode .presentation-slide h3 { font-size: clamp(1.9rem, 4.2vw, 3.4rem); color: var(--presentation-muted); }
+body.presentation-mode .presentation-slide p { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+body.presentation-mode .presentation-slide li { font-size: clamp(1.6rem, 2.9vw, 2.3rem); }
+body.presentation-mode .presentation-slide .presentation-figure svg { max-height: 70vh; }
+.presentation-slide .mermaid { width: 100%; justify-content: center; margin: 1.5rem 0; }
+.presentation-slide .mermaid svg { max-width: 92vw; max-height: 68vh; width: 100%; height: auto; }
+.presentation-slide .mermaid .label,
+.presentation-slide .mermaid .edgeLabel,
+.presentation-slide .mermaid .nodeLabel { font-size: clamp(0.95rem, 1.8vw, 1.25rem); line-height: 1.2; }
+.presentation-slide .mermaid foreignObject,
+.presentation-slide .mermaid foreignObject * { color: var(--presentation-text) !important; }
+.presentation-overlay .mermaid text { fill: var(--presentation-text) !important; }
+.presentation-overlay .mermaid .label,
+.presentation-overlay .mermaid .edgeLabel,
+.presentation-overlay .mermaid .nodeLabel { color: var(--presentation-text) !important; }
+.presentation-footer { padding: 0 2rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--presentation-kicker); }
+.presentation-progress { display: flex; gap: 0.35rem; align-items: center; }
+.presentation-dot { width: 6px; height: 6px; border-radius: 999px; background: #1f2937; }
+.presentation-dot.active { background: var(--presentation-accent); }
+
+.presentation-overlay.presentation-template-minimal {
+  --presentation-bg: #f8fafc;
+  --presentation-text: #0f172a;
+  --presentation-muted: #334155;
+  --presentation-kicker: #94a3b8;
+  --presentation-accent: #2563eb;
+  --presentation-accent-soft: #1d4ed8;
+  --presentation-card-bg: #ffffff;
+  --presentation-card-border: #e2e8f0;
+  --presentation-bullet: #2563eb;
+  --presentation-toolbar-border: #94a3b8;
+}
+
+.presentation-overlay.presentation-template-minimal .presentation-dot { background: #e2e8f0; }
+</style>
+        <script>
+            (() => {
+                const toggle = document.querySelector('[data-presentation-toggle]');
+                if (!toggle) return;
+                const articleBody = document.querySelector('.article-body');
+                if (!articleBody) return;
+                const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+
+                let overlay = null;
+                let slides = [];
+                let slideIndex = 0;
+                let active = false;
+
+                const buildSlides = () => {
+                    if (overlay) return;
+                    overlay = document.createElement('div');
+                    overlay.className = 'presentation-overlay presentation-template-minimal';
+                    overlay.innerHTML = `
+                        <div class="presentation-toolbar">
+                            <div>Web/A Tech & Verifiability: Two-Week Engineering Deep Dive</div>
+                            <button type="button" data-presentation-exit data-i18n-ja="終了" data-i18n-en="Exit">Exit</button>
+                        </div>
+                        <div class="presentation-slide-container"></div>
+                        <div class="presentation-footer">
+                            <div class="presentation-counter"></div>
+                            <div class="presentation-progress"></div>
+                        </div>
+                    `;
+                    document.body.appendChild(overlay);
+                    const exitBtn = overlay.querySelector('[data-presentation-exit]');
+                    if (exitBtn) {
+                        exitBtn.textContent = isJa ? '終了' : 'Exit';
+                    }
+                    const container = overlay.querySelector('.presentation-slide-container');
+                    const nodes = Array.from(articleBody.childNodes);
+                    let current = [];
+                    const pushSlide = () => {
+                        const hasContent = current.some((node) => node.nodeType !== Node.TEXT_NODE || node.textContent.trim() !== '');
+                        if (!hasContent) { current = []; return; }
+                        const slide = document.createElement('section');
+                        slide.className = 'presentation-slide';
+                        current.forEach((node) => slide.appendChild(node.cloneNode(true)));
+                        container.appendChild(slide);
+                        current = [];
+                    };
+                    nodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'HR') {
+                            pushSlide();
+                        } else {
+                            current.push(node);
+                        }
+                    });
+                    pushSlide();
+                    slides = Array.from(container.querySelectorAll('.presentation-slide'));
+                };
+
+                const updateProgress = () => {
+                    const counter = overlay.querySelector('.presentation-counter');
+                    const progress = overlay.querySelector('.presentation-progress');
+                    if (!counter || !progress) return;
+                    counter.textContent = `${slideIndex + 1} / ${slides.length}`;
+                    progress.innerHTML = slides.map((_, idx) => `<span class="presentation-dot ${idx === slideIndex ? 'active' : ''}"></span>`).join('');
+                };
+
+                const showSlide = (index) => {
+                    if (slides.length === 0) return;
+                    slideIndex = Math.min(Math.max(index, 0), slides.length - 1);
+                    slides.forEach((slide, idx) => slide.classList.toggle('active', idx === slideIndex));
+                    updateProgress();
+                };
+
+                const enterPresentation = async () => {
+                    if (active) return;
+                    buildSlides();
+                    if (slides.length === 0) return;
+                    active = true;
+                    document.body.classList.add('presentation-mode');
+                    overlay.classList.add('active');
+                    showSlide(0);
+                    try { await overlay.requestFullscreen?.(); } catch { /* noop */ }
+                };
+
+                const exitPresentation = async () => {
+                    if (!active) return;
+                    active = false;
+                    document.body.classList.remove('presentation-mode');
+                    overlay.classList.remove('active');
+                    if (document.fullscreenElement) {
+                        try { await document.exitFullscreen?.(); } catch { /* noop */ }
+                    }
+                };
+
+                toggle.addEventListener('click', enterPresentation);
+                document.addEventListener('click', (event) => {
+                    if (event.target && event.target.matches('[data-presentation-exit]')) {
+                        exitPresentation();
+                    }
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (!active) return;
+                    if (event.key === 'Escape') {
+                        exitPresentation();
+                        return;
+                    }
+                    if (['ArrowRight', 'PageDown', ' '].includes(event.key)) {
+                        event.preventDefault();
+                        showSlide(slideIndex + 1);
+                    }
+                    if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+                        event.preventDefault();
+                        showSlide(slideIndex - 1);
+                    }
+                });
+
+                // Touch Swipe Navigation
+                let touchStartX = 0;
+                let touchStartY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    if (!active) return;
+                    touchStartX = e.changedTouches[0].screenX;
+                    touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    if (!active) return;
+                    const touchEndX = e.changedTouches[0].screenX;
+                    const touchEndY = e.changedTouches[0].screenY;
+                    const diffX = touchEndX - touchStartX;
+                    const diffY = touchEndY - touchStartY;
+
+                    // Ignore vertical scrolls
+                    if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+                    // Threshold 50px
+                    if (Math.abs(diffX) > 50) {
+                        if (diffX < 0) {
+                            showSlide(slideIndex + 1); // Swipe Left -> Next
+                        } else {
+                            showSlide(slideIndex - 1); // Swipe Right -> Prev
+                        }
+                    }
+                }, { passive: true });
+
+                // Tap Zone Navigation
+                document.addEventListener('click', (e) => {
+                    if (!active) return;
+                    // Ignore clicks on controls
+                    if (e.target.closest('.presentation-toolbar') || e.target.closest('button') || e.target.closest('a')) return;
+
+                    const width = window.innerWidth;
+                    const x = e.clientX;
+
+                    // Tap Right 30% -> Next
+                    if (x > width * 0.7) {
+                        showSlide(slideIndex + 1);
+                    }
+                    // Tap Left 30% -> Prev
+                    else if (x < width * 0.3) {
+                        showSlide(slideIndex - 1);
+                    }
+                });
+
+                document.addEventListener('fullscreenchange', () => {
+                    if (active && !document.fullscreenElement) {
+                        exitPresentation();
+                    }
+                });
+            })();
+        </script>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "type": "WebAContextLink",
+    "prevHash": "genesis",
+    "targetHash": "d2c68bb7d592a5aa410fb7ddd77ec5f818ea5c638218240ab5f573582b7bdbf8",
+    "signer": "did:web:masanork.github.io:srn",
+    "timestamp": "2026-01-01T01:16:28.863Z",
+    "proof": {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767230180299-ed25519",
+      "proofValue": "mock_signature_for_poc"
+    }
+  },
+  {
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-01T04:12:20.840Z",
+      "payload": {
+        "metadata": {
+          "lang": "en"
+        },
+        "buildId": "build-1767240723633",
+        "reason": "Frontmatter updated in SSG"
+      }
+    },
+    "eventHash": "a7e996d77ee088c0ceba005924f9dd8bdef1fc44c5a808f0518a37f13a05d1ed",
+    "chainHash": "d34406dfc011e4f59801f0a764312fae9b9fb7dfa9799b7aefa2eb14977a9fc9"
+  },
+  {
+    "prevHash": "d34406dfc011e4f59801f0a764312fae9b9fb7dfa9799b7aefa2eb14977a9fc9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:20:53.097Z",
+      "payload": {
+        "buildId": "build-1767241235576"
+      }
+    },
+    "eventHash": "e7cd552aa5374316f73f3f0c25e4ec0a77104dcacbce6fa6d727a02ad645a17e",
+    "chainHash": "8957b79ca43f738adc84d34614348678e5703a64d77dff5de7369e5d7a045aad"
+  },
+  {
+    "prevHash": "8957b79ca43f738adc84d34614348678e5703a64d77dff5de7369e5d7a045aad",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:28:47.567Z",
+      "payload": {
+        "buildId": "build-1767241710058"
+      }
+    },
+    "eventHash": "64d09a165201c4622db43803a616430702e7b22277330a62f7293212bd09738a",
+    "chainHash": "8f7429d00b57180d8d64b50e23f8944f2ce0db3a204746e7b758c1d54844eea7"
+  },
+  {
+    "prevHash": "8f7429d00b57180d8d64b50e23f8944f2ce0db3a204746e7b758c1d54844eea7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:34:44.795Z",
+      "payload": {
+        "buildId": "build-1767242067086"
+      }
+    },
+    "eventHash": "5dbb35eb83418742b810a979db2c8f4a9d47d198bb2b739ec6664c7c7b566dbc",
+    "chainHash": "c4775f38973be211d93ba6e4c7152e69626d5bc4309bbe9b3c7b96a376a2f931"
+  },
+  {
+    "prevHash": "c4775f38973be211d93ba6e4c7152e69626d5bc4309bbe9b3c7b96a376a2f931",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:39:58.291Z",
+      "payload": {
+        "buildId": "build-1767242380816"
+      }
+    },
+    "eventHash": "eef5b37558feada4362025b187760b60426f1c385e27fede46fbd6b409d67443",
+    "chainHash": "1757862d6349cc9d5e9307aee96f5ac51b1dd2dc03e9449eb9aae1741ab68e4e"
+  },
+  {
+    "prevHash": "1757862d6349cc9d5e9307aee96f5ac51b1dd2dc03e9449eb9aae1741ab68e4e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T06:01:32.444Z",
+      "payload": {
+        "buildId": "build-1767247274826"
+      }
+    },
+    "eventHash": "a7e0068ba1739dc7654b5b46cbed225697b5d51d8d551c62c7f1734b6bf130e7",
+    "chainHash": "00ea6f0160ce333897164d011c3970f453866b9a1679a5b38f866f95e2c5e379"
+  },
+  {
+    "prevHash": "00ea6f0160ce333897164d011c3970f453866b9a1679a5b38f866f95e2c5e379",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:08:42.382Z",
+      "payload": {
+        "buildId": "build-1767262105333"
+      }
+    },
+    "eventHash": "a95c0c8d16190f7b2cdfdf373c8591e6c511f76c6ad70547c8f39dd3d169d58e",
+    "chainHash": "337d68cbf96cd8ee0d5fae90cfb46f491d35d4e28ca0a7577b14a7ea13c17ccc"
+  },
+  {
+    "prevHash": "337d68cbf96cd8ee0d5fae90cfb46f491d35d4e28ca0a7577b14a7ea13c17ccc",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:15:49.188Z",
+      "payload": {
+        "buildId": "build-1767262532262"
+      }
+    },
+    "eventHash": "0c916934d13830ebaedd6a127ed6e64721daafb0585a95f0b74b81184896ea24",
+    "chainHash": "f257c16aff583d2392941e43d37af9a49e4502319bd21ff7916d9caa28704fca"
+  },
+  {
+    "prevHash": "f257c16aff583d2392941e43d37af9a49e4502319bd21ff7916d9caa28704fca",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:22:47.113Z",
+      "payload": {
+        "buildId": "build-1767262950176"
+      }
+    },
+    "eventHash": "c679b27a1f406bfc7cfb52a030417190fda99a88497a775548331e25f5431913",
+    "chainHash": "94f028f04b45d0136f57e5719fadaf46f52cba170f46ebdad73f1ceb43b8a779"
+  },
+  {
+    "prevHash": "94f028f04b45d0136f57e5719fadaf46f52cba170f46ebdad73f1ceb43b8a779",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:26:28.761Z",
+      "payload": {
+        "buildId": "build-1767263170289"
+      }
+    },
+    "eventHash": "10a19c02d9bd5adafe5728ada387a48dbcf35124ba93c1ef1a5d91820ebe5c9d",
+    "chainHash": "8acdf55b6855bc4bef04ec9747068586d2888782699b2da4271cf6babfe2462b"
+  },
+  {
+    "prevHash": "8acdf55b6855bc4bef04ec9747068586d2888782699b2da4271cf6babfe2462b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:30:02.594Z",
+      "payload": {
+        "buildId": "build-1767263379942"
+      }
+    },
+    "eventHash": "77ddaa548c7947f9ac18c8cf520ffc3242e1454744d54ddcb35c055ad0ea40ce",
+    "chainHash": "b6f8bc2ccaebe29e74511b74f8783869ce800d4d96418efc6bca2a6c9d9f0590"
+  },
+  {
+    "prevHash": "b6f8bc2ccaebe29e74511b74f8783869ce800d4d96418efc6bca2a6c9d9f0590",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:31:14.114Z",
+      "payload": {
+        "buildId": "build-1767263450152"
+      }
+    },
+    "eventHash": "6dc81b29373253b99e87f258a13b2896a184914861b143f20d145e0a66d64201",
+    "chainHash": "35ecc8990f598f888d025f93be05715e6f752e1b83e8c6c900cf85ed7e43893e"
+  },
+  {
+    "prevHash": "35ecc8990f598f888d025f93be05715e6f752e1b83e8c6c900cf85ed7e43893e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:56:28.058Z",
+      "payload": {
+        "buildId": "build-1767264970597"
+      }
+    },
+    "eventHash": "d72325cd607fe5d1e8e5ecb70620c7429f98d931e3b1fea5e9acb4ff338319ca",
+    "chainHash": "d72ced8a2394a401f8123755c4ea2abae522dae9a3d4913f25d3efa0c58646fd"
+  },
+  {
+    "prevHash": "d72ced8a2394a401f8123755c4ea2abae522dae9a3d4913f25d3efa0c58646fd",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:57:09.076Z",
+      "payload": {
+        "buildId": "build-1767265011181"
+      }
+    },
+    "eventHash": "6e985e6f4878c5e4d7f8b9631aefb6540577963300e6f3e2bdad6b7ea11aea95",
+    "chainHash": "a14fe4eb317b70c533da876ad13f633cd27111782d29dba6d8abc463f45b631f"
+  },
+  {
+    "prevHash": "a14fe4eb317b70c533da876ad13f633cd27111782d29dba6d8abc463f45b631f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:14:18.225Z",
+      "payload": {
+        "buildId": "build-1767266040927"
+      }
+    },
+    "eventHash": "1bc176fc9992d9cb4ba24cf5ee657cfba57c0b4211c9dbacc32cfa425d6ca64e",
+    "chainHash": "579848787da7147a8b34944372d7d43396467bb3eb97a3a0e5061c16fe95bad0"
+  },
+  {
+    "prevHash": "579848787da7147a8b34944372d7d43396467bb3eb97a3a0e5061c16fe95bad0",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:17:42.070Z",
+      "payload": {
+        "buildId": "build-1767266242469"
+      }
+    },
+    "eventHash": "08032a2ff6e59678806cc110fd1099d1ca0497ba4372dfc10a18ae7d281f1756",
+    "chainHash": "1373170f380b6fd110dccff10431e8028d3ee244920d09d5417746653337d219"
+  },
+  {
+    "prevHash": "1373170f380b6fd110dccff10431e8028d3ee244920d09d5417746653337d219",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:30:34.426Z",
+      "payload": {
+        "buildId": "build-1767267017288"
+      }
+    },
+    "eventHash": "88d99baf1468fd281de30109655e168258039f52f4508110e631111557421c96",
+    "chainHash": "873705779934e5b27505b929f5744215c47bb8d2d10d64c7e030f0d659097bf9"
+  },
+  {
+    "prevHash": "873705779934e5b27505b929f5744215c47bb8d2d10d64c7e030f0d659097bf9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:34:26.484Z",
+      "payload": {
+        "buildId": "build-1767267249416"
+      }
+    },
+    "eventHash": "34276add70ed2b672592fb0c95da921f885eb5a8fdb68bfa4112e6e89c11d2f9",
+    "chainHash": "92cafd4ced1fad7bd30ee49cbf20fd3722d1baa1a62e461c60024379eba27f7e"
+  },
+  {
+    "prevHash": "92cafd4ced1fad7bd30ee49cbf20fd3722d1baa1a62e461c60024379eba27f7e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:40:26.046Z",
+      "payload": {
+        "buildId": "build-1767267609379"
+      }
+    },
+    "eventHash": "24c373180fd7867ef6bb6226e2a13a2351f020a19cff8216a04e405415385b67",
+    "chainHash": "029be9aa68e807208f67f9c6391df5d9228831ed70e02340d04ddf6125b5b50f"
+  },
+  {
+    "prevHash": "029be9aa68e807208f67f9c6391df5d9228831ed70e02340d04ddf6125b5b50f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:58:52.068Z",
+      "payload": {
+        "buildId": "build-1767268714878"
+      }
+    },
+    "eventHash": "eac2c9b797072dfaec634a509809e2703191426fa5cf48e0c96b22426e410850",
+    "chainHash": "7fe54a8cd1791e9fb0d9accfe88076348c2fd8cd89e43982ed11540e0eab5c46"
+  },
+  {
+    "prevHash": "7fe54a8cd1791e9fb0d9accfe88076348c2fd8cd89e43982ed11540e0eab5c46",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:04:03.389Z",
+      "payload": {
+        "buildId": "build-1767269026282"
+      }
+    },
+    "eventHash": "23dbced9a8b46f53ad62914b184ff91d87558ad73538629fc6de62a967261ed8",
+    "chainHash": "d5cf68be02fc08740b840430b8fa0b5c7f283491f8c34708d103c18aa39e8f07"
+  },
+  {
+    "prevHash": "d5cf68be02fc08740b840430b8fa0b5c7f283491f8c34708d103c18aa39e8f07",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:42:54.061Z",
+      "payload": {
+        "buildId": "build-1767271356932"
+      }
+    },
+    "eventHash": "d2caca0c48a09f3810b44fa794a7b4efd5246439c1bd5df2ce07337ac2eb6fe5",
+    "chainHash": "ba5e91c7aa95108a3836954a9c962c651de52fa8d5f3a4927a465a389abeee98"
+  },
+  {
+    "prevHash": "ba5e91c7aa95108a3836954a9c962c651de52fa8d5f3a4927a465a389abeee98",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:50:26.334Z",
+      "payload": {
+        "buildId": "build-1767271809300"
+      }
+    },
+    "eventHash": "b02ccce9ad336113e4f884b6eee69851c91d01037ddc2457986d61c17a14f58a",
+    "chainHash": "08be4372be44d8fae3b0758f9baa0d8fb7a1e2712e56ccc139de219be554bdf2"
+  },
+  {
+    "prevHash": "08be4372be44d8fae3b0758f9baa0d8fb7a1e2712e56ccc139de219be554bdf2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:55:25.558Z",
+      "payload": {
+        "buildId": "build-1767272123565"
+      }
+    },
+    "eventHash": "9ac8efef8a004f657b076c90dcb875c4cdfe8a350bf9cc5802ce943a1c3b3ac4",
+    "chainHash": "eb93c3ed006efc375c544818c2864a5ef75bdeff2de65e4fb72da94d4dcbb06e"
+  },
+  {
+    "prevHash": "eb93c3ed006efc375c544818c2864a5ef75bdeff2de65e4fb72da94d4dcbb06e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:59:21.974Z",
+      "payload": {
+        "buildId": "build-1767272360638"
+      }
+    },
+    "eventHash": "e8e5d7ff2d43620c4d02824b27099e5fc623e08677d3338591e96c9bff23f405",
+    "chainHash": "ed5f54e6526a7fadc29b65c24a62bea73daa14a886fa76ff75170d21cee1da1a"
+  },
+  {
+    "prevHash": "ed5f54e6526a7fadc29b65c24a62bea73daa14a886fa76ff75170d21cee1da1a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:01:43.387Z",
+      "payload": {
+        "buildId": "build-1767272502016"
+      }
+    },
+    "eventHash": "e6fc305a4114cbc785675c48fc8be3f2e6e7ffed55fd3f62da75891d912286d8",
+    "chainHash": "58852e81bebb0632ee6a4b9055a82ae568a2af89b6f54f1f5fe6fc2804a8bf55"
+  },
+  {
+    "prevHash": "58852e81bebb0632ee6a4b9055a82ae568a2af89b6f54f1f5fe6fc2804a8bf55",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:20:17.368Z",
+      "payload": {
+        "buildId": "build-1767273615905"
+      }
+    },
+    "eventHash": "344870119cae115b7dc8acfdff20954bdf37d8ad46bb56df4ed3fe52345926bc",
+    "chainHash": "a19aa363f3dde4aefac2bbaf496044e5896383f656aaa7dad6d1575e1f074922"
+  },
+  {
+    "prevHash": "a19aa363f3dde4aefac2bbaf496044e5896383f656aaa7dad6d1575e1f074922",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:21:49.126Z",
+      "payload": {
+        "buildId": "build-1767273703292"
+      }
+    },
+    "eventHash": "c32a7e9a8fb4d65441e5c66d42bb15e5e4dc064a54d736d26fc195e65b2b001b",
+    "chainHash": "4e6de2d9aa75b856776ef77eb466cb1a38995f3bbc52708c4e9c330583d4ce26"
+  },
+  {
+    "prevHash": "4e6de2d9aa75b856776ef77eb466cb1a38995f3bbc52708c4e9c330583d4ce26",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:22:34.909Z",
+      "payload": {
+        "buildId": "build-1767273749152"
+      }
+    },
+    "eventHash": "d4a7c302bc431190a8e0ca8f5852333b84e3d906b939331865cc0573a7ca8d0f",
+    "chainHash": "5e0afecfb4ad9e41ddb4a7923518391aead88ad5e63d6e80ced6d70ac3d3f710"
+  },
+  {
+    "prevHash": "5e0afecfb4ad9e41ddb4a7923518391aead88ad5e63d6e80ced6d70ac3d3f710",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:29:58.464Z",
+      "payload": {
+        "buildId": "build-1767274192422"
+      }
+    },
+    "eventHash": "b47d8ee4fb4c58c38502447e23b918c7cea9557f929d8f4377ea51eeca5d9029",
+    "chainHash": "84307c46afb55046d1a53bc0888240e797c63a5f96743eb65d247269ef3d9299"
+  },
+  {
+    "prevHash": "84307c46afb55046d1a53bc0888240e797c63a5f96743eb65d247269ef3d9299",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:12.523Z",
+      "payload": {
+        "buildId": "build-1767274205386"
+      }
+    },
+    "eventHash": "ac40baf1b070105439affe8cad558b75ef5bdb79aeec4c1933fdaf9cda55b636",
+    "chainHash": "5b22c06e5a2cdc100a40cf233c27e4a8055f299343f9d41675152632da571515"
+  },
+  {
+    "prevHash": "5b22c06e5a2cdc100a40cf233c27e4a8055f299343f9d41675152632da571515",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:49.792Z",
+      "payload": {
+        "buildId": "build-1767274242907"
+      }
+    },
+    "eventHash": "bc81bb9d56f4503bca0db07512649fceeb7bb4f6f2577d3036e6331e652a5951",
+    "chainHash": "ee66d97eb267a1bacf78ed85329a6e53ab3f1388ea1ea1af83cd1127657c061c"
+  },
+  {
+    "prevHash": "ee66d97eb267a1bacf78ed85329a6e53ab3f1388ea1ea1af83cd1127657c061c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:31:13.905Z",
+      "payload": {
+        "buildId": "build-1767274266761"
+      }
+    },
+    "eventHash": "b04a1701748179aa22442ec5c475885659392d2dae2407b815bcd9ee73a863cc",
+    "chainHash": "949724d5c94f8c56df3ff6b8e43a4a680c44b70bc67280900a222a5015e1c303"
+  },
+  {
+    "prevHash": "949724d5c94f8c56df3ff6b8e43a4a680c44b70bc67280900a222a5015e1c303",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:36:44.282Z",
+      "payload": {
+        "buildId": "build-1767274598466"
+      }
+    },
+    "eventHash": "21b7485802257a03e3d3a9c1ae6ad0ba8132fb7e36ff055ac8e1987b61eb018c",
+    "chainHash": "d6142a69f98d722ccd6ab6a08c198ccbc7213a65a29e0a9c7ed6af4eab7dea6a"
+  },
+  {
+    "prevHash": "d6142a69f98d722ccd6ab6a08c198ccbc7213a65a29e0a9c7ed6af4eab7dea6a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T14:01:10.921Z",
+      "payload": {
+        "buildId": "build-1767276065034"
+      }
+    },
+    "eventHash": "d88d818a84090666877efeba6ac50523e072ae24359aee6a92089e67f7743bd2",
+    "chainHash": "ad431c1eab6a0e3a4079228d8fd8553b21eaf41edb1caa5d878946d755ad1c85"
+  },
+  {
+    "prevHash": "ad431c1eab6a0e3a4079228d8fd8553b21eaf41edb1caa5d878946d755ad1c85",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:01:48.805Z",
+      "payload": {
+        "buildId": "build-1767279702726"
+      }
+    },
+    "eventHash": "4f33267170bcc44985b061e748b284b1b3bcdfc67e5adfa1deb778e662e39dfc",
+    "chainHash": "2ddee007b4b473247f77fbbf4e419436323657b5c6c4a65f1939db6401cd1214"
+  },
+  {
+    "prevHash": "2ddee007b4b473247f77fbbf4e419436323657b5c6c4a65f1939db6401cd1214",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:17:08.735Z",
+      "payload": {
+        "buildId": "build-1767280622690"
+      }
+    },
+    "eventHash": "e650702c6efb75560a246947ed48e8f4479f3169aa49909e580e98c8f0aac3a5",
+    "chainHash": "7cd6d054b9aab5b8d8dfffc0ce78a1a4b800c9c341e66f6042513111d48c980c"
+  },
+  {
+    "prevHash": "7cd6d054b9aab5b8d8dfffc0ce78a1a4b800c9c341e66f6042513111d48c980c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:12:47.544Z",
+      "payload": {
+        "buildId": "build-1767305561689"
+      }
+    },
+    "eventHash": "a779d81a4d307dd1995b22ee1d1c2799806001e274558a595b7e4ed581d67b47",
+    "chainHash": "88f492e6fc8adceb99d4bf75efdd87dd480e33bf1771925ea35b776c49e10746"
+  },
+  {
+    "prevHash": "88f492e6fc8adceb99d4bf75efdd87dd480e33bf1771925ea35b776c49e10746",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:36:51.730Z",
+      "payload": {
+        "buildId": "build-1767307006040"
+      }
+    },
+    "eventHash": "ccbf34b02240ee8b215c7539684f0ddf8408201ff62d9e620df1369482f518b7",
+    "chainHash": "ce26f1a9cd0b3f8d1ec26353d075d4ebfb9b4441600a627d7a17df480a2c358f"
+  },
+  {
+    "prevHash": "ce26f1a9cd0b3f8d1ec26353d075d4ebfb9b4441600a627d7a17df480a2c358f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:46:12.793Z",
+      "payload": {
+        "buildId": "build-1767307567034"
+      }
+    },
+    "eventHash": "f9e1075bddd8fc555ad68c9cbfbe3a835c9cef82c49d3351be99f5c64ff45a75",
+    "chainHash": "162f370320691d1e897be920a3b4c6f39e95d50ef1a0ff81f1d20a90df8f8e15"
+  },
+  {
+    "prevHash": "162f370320691d1e897be920a3b4c6f39e95d50ef1a0ff81f1d20a90df8f8e15",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:49:55.581Z",
+      "payload": {
+        "buildId": "build-1767307789914"
+      }
+    },
+    "eventHash": "a7e5051ea248bd5f3462a2ad9c7111165a80909be1208c5f00ec6c0a2b8158f2",
+    "chainHash": "ece7e32616074894fccc727ab3a333d5b4fca99c1816950dad491feb01ce315e"
+  },
+  {
+    "prevHash": "ece7e32616074894fccc727ab3a333d5b4fca99c1816950dad491feb01ce315e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T11:14:59.705Z",
+      "payload": {
+        "buildId": "build-1767352493876"
+      }
+    },
+    "eventHash": "da0a9bfed3cf3684bdf9dca5fb23b5cc3f0083cd12ae63cfd9bcf9e5ce92a012",
+    "chainHash": "0c09a40a2026ff28a83ce86c5ed606a2eb38a2cdff20e6916ed45dc5a4f164d5"
+  },
+  {
+    "prevHash": "0c09a40a2026ff28a83ce86c5ed606a2eb38a2cdff20e6916ed45dc5a4f164d5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:05:31.904Z",
+      "payload": {
+        "buildId": "build-1767355525912"
+      }
+    },
+    "eventHash": "24fd89abbb57ccda4d13736dce85e17e24182535303e995a5dcb92588f5a3f47",
+    "chainHash": "7528eb0f1d13db9c5e294c03b6daf9ec25349f3c8446e9f438ecadf1f353805b"
+  },
+  {
+    "prevHash": "7528eb0f1d13db9c5e294c03b6daf9ec25349f3c8446e9f438ecadf1f353805b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:18:55.376Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "38cd8bddb093763206f3117c08edbac724b3df42f2d15f5539dbd1312d5c639c",
+    "chainHash": "119e5214871a8e870646a4abe737f6c941c325da259693ff0c308b47b9cdb9fe"
+  },
+  {
+    "prevHash": "119e5214871a8e870646a4abe737f6c941c325da259693ff0c308b47b9cdb9fe",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:22:10.813Z",
+      "payload": {
+        "buildId": "build-1767356524824"
+      }
+    },
+    "eventHash": "34bda53930b3ff2800390386722cc9308be9dc5e4e166d30835ed128704f4079",
+    "chainHash": "fa318ac15c3e3a0147aab33e4a066d80af677eb181993a197f3843f3b7b49b70"
+  },
+  {
+    "prevHash": "fa318ac15c3e3a0147aab33e4a066d80af677eb181993a197f3843f3b7b49b70",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:24:53.414Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "60524f9ac63d9c77fe93863743e506e4dbea0435cf10c0a697edb3f9a12ffa85",
+    "chainHash": "e8eab79e671924cc70d484e0135f2e4b857040dd1e21deaa9387bb536c029205"
+  },
+  {
+    "prevHash": "e8eab79e671924cc70d484e0135f2e4b857040dd1e21deaa9387bb536c029205",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:03.566Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "3e4480e5ab3228172e4e2a47430fe72e2e9ce61e8384c3c3048b58741fc0687b",
+    "chainHash": "2273550cbab72a4ff2bb98c17ffbe805c72939cb3842e7d8d4f49c9843afb2b7"
+  },
+  {
+    "prevHash": "2273550cbab72a4ff2bb98c17ffbe805c72939cb3842e7d8d4f49c9843afb2b7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:22:42.415Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "a41d132a4cfd67c1aad8bb0a7d236c3a5533849d3ca9b439c109ed07ce1c5442",
+    "chainHash": "4bf8b32ba3fb8ce6c8736971146ebf2d554cccf026b0100cdfe1b9b542df87c4"
+  },
+  {
+    "prevHash": "4bf8b32ba3fb8ce6c8736971146ebf2d554cccf026b0100cdfe1b9b542df87c4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:09.596Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "40d479321bece6df629dc20606810bfd7bb56ae0f07d992e5fa3d5ac328a45c5",
+    "chainHash": "1ab9cd53617f03c85762ae847d64358aee0fa0837b45916cea95325e70399f74"
+  },
+  {
+    "prevHash": "1ab9cd53617f03c85762ae847d64358aee0fa0837b45916cea95325e70399f74",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:26:45.881Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "82b5d68383dc62173f97b2ef6774e49dc4f0d8470e495a2c427fbe62deeb065b",
+    "chainHash": "06af7d2c555ce460326008e83a8b484eb8e946215959c2b80cc8d5a64eea6afb"
+  },
+  {
+    "prevHash": "06af7d2c555ce460326008e83a8b484eb8e946215959c2b80cc8d5a64eea6afb",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:14.687Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "758d94f72aa863e408765a7f7bf977e329fde59806116655999e9851b8b85ba7",
+    "chainHash": "9dcbc0e73f975076cfcbec86160596c5d024da6c6326df78e6a8e20b21dbbe9e"
+  },
+  {
+    "prevHash": "9dcbc0e73f975076cfcbec86160596c5d024da6c6326df78e6a8e20b21dbbe9e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T01:37:38.549Z",
+      "payload": {
+        "buildId": "build-1767404251737"
+      }
+    },
+    "eventHash": "aa1d5ea63acc3b85f6830b6ed8b58b8592a998045d799526bdbeb31901302cef",
+    "chainHash": "4dad748e19891ac5b8c37678b809b12065d6799fabd508fd0cf10453ce8b4a53"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T01:37:38.619Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/web-a-tech-presentation#container",
+    "containerHash": "11cdadadabe84ccdebdd43f01361a13261163455314a96eac667bab894b51696",
+    "buildId": "build-1767404251737",
+    "latestContextHash": "5b286740bd1116212359f243f136b6f022f80efa2f26bf11b1043001b156ee15"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:37:38.619Z",
+      "proofValue": "z3ufTSWTcEiJPomXYERu8MveC8PZjfqfzCh5B2Cqqp7q3dZ2t4MbeB5xyXn3Y1R6LapVMwSCHBMJYrBuQ8cCr8AGW"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:37:38.619Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[{"id":"js-mermaid","digest":"sha256:94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec","mediaType":"application/javascript","size":103,"urls":["#weba-blob-94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec","./data/blobs/mermaid.min.js"],"description":"Mermaid Diagram Renderer"}],"createdAt":"2026-01-03T01:37:38.718Z"};</script>
+<script id="weba-blob-94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec" type="application/javascript">Y29uc29sZS5sb2coJ01lcm1haWQgTG9hZGVkJyk7IHdpbmRvdy5tZXJtYWlkID0geyBpbml0aWFsaXplOiAoYykgPT4gY29uc29sZS5sb2coJ01lcm1haWQgSW5pdCcsIGMpIH07Cg==</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

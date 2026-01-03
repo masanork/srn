@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Trial Calculation: API Economy vs. Document Economy - Structural Change in Connectivity Costs</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Trial Calculation: API Economy vs. Document Economy - Structural Change in Connectivity Costs",
+  "description": "",
+  "datePublished": "2025-12-31",
+  "author": {
+    "@type": "Person",
+    "name": "Sorane Project Strategy Team"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Trial Calculation: API Economy vs. Document Economy - Structural Change in Connectivity Costs",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      },
+      {
+        "label": "c2pa.actions",
+        "data": {
+          "action": "c2pa.created",
+          "softwareAgent": "Antigravity",
+          "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <script>
+        (() => {
+            const runMermaid = () => {
+                const mermaid = window.mermaid;
+                if (!mermaid) return;
+
+                const fonts = [];
+                const fontFamily = fonts.join(', ');
+
+                document.querySelectorAll('pre > code.language-mermaid').forEach((code) => {
+                    const pre = code.closest('pre');
+                    if (!pre) return;
+                    const container = document.createElement('div');
+                    container.className = 'mermaid';
+                    container.textContent = code.textContent || '';
+                    pre.replaceWith(container);
+                });
+
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+                    fontFamily: fontFamily
+                });
+
+                mermaid.run({
+                    querySelector: '.mermaid'
+                });
+            };
+
+            const onReady = () => {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', runMermaid, { once: true });
+                } else {
+                    runMermaid();
+                }
+            };
+
+            const script = document.createElement('script');
+            script.src = 'data:text/javascript;base64,Y29uc29sZS5sb2coJ01lcm1haWQgTG9hZGVkJyk7IHdpbmRvdy5tZXJtYWlkID0geyBpbml0aWFsaXplOiAoYykgPT4gY29uc29sZS5sb2coJ01lcm1haWQgSW5pdCcsIGMpIH07Cg==';
+            script.onload = onReady;
+            document.head.appendChild(script);
+        })();
+    </script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Trial Calculation: API Economy vs. Document Economy - Structural Change in Connectivity Costs</h1>
+                <div class="article-meta">
+                    <span><time datetime="2025-12-31">2025-12-31</time></span>
+                    
+                    <span>By Sorane Project Strategy Team</span>
+                    <span class="ai-badge" title="Content generated by AI (Antigravity)">🤖 AI Generated</span>
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <blockquote>
+<p><strong>SIMULATION NOTICE:</strong> This document (calculation, comparison, analysis) is part of an AI-driven role-playing simulation conducted for project quality and governance testing. It does not constitute a formal legal or economic forecast by any official entity.</p>
+</blockquote>
+<h2>1. Executive Summary: The Evolutionary Spiral of Data Exchange</h2>
+<p>In modern digitalization, &quot;connectivity cost&quot; remains the primary bottleneck. However, we must not forget history. The transition from the grueling manual coordination of fixed-length files and CSVs to the current <strong>API Economy</strong> was a &quot;Great Liberation&quot; for the information society.</p>
+<p>This paper looks back at the historical evolution of data exchange and analyzes why the &quot;Document/Semantic-driven Economy&quot;—which previously failed to go mainstream—is now poised for a resurgence through Web/A, from an economic standpoint.</p>
+<h2>2. Historical Context: The Three Phases</h2>
+<h3>Phase 0: Tight Coupling &amp; Batch Processing (Fixed-length / CSV / EDI)</h3>
+<p>Starting in the 1970s, connecting systems required months of negotiation and individual implementation at the binary/byte level.</p>
+<ul>
+<li><strong>Characteristics</strong>: Extreme rigidity, expensive leased lines, and batch processing.</li>
+<li><strong>Cost</strong>: Astronomical coordination overhead.</li>
+</ul>
+<h3>Phase 0.5: The Spreadsheet Revolution (VisiCalc / 1-2-3 / Excel)</h3>
+<p>Before the API Economy took center stage, the true revolution in administrative digitalization was the spreadsheet.</p>
+<ul>
+<li><strong>Achievements</strong>: For the first time, office workers—not just specialized engineers—could build their own aggregation and business logic (formulas, macros). This was the &quot;Democratization of Computing&quot; and the root of modern &quot;No-Code&quot; culture.</li>
+<li><strong>Challenges</strong>: Data remained localized and locked in silos. It lacked &quot;Verifiability&quot; as official evidence and couldn&#39;t support a cross-organizational &quot;Chain of Trust.&quot;</li>
+</ul>
+<h3>Phase 0.8: The Heavyweight Vision (SOAP / SOA)</h3>
+<p>Around 2000, the industry attempted strict standardization for enterprise integration using XML-based SOAP and WSDL.</p>
+<ul>
+<li><strong>Achievements</strong>: Established robust integration based on &quot;Contracts (WSDL)&quot; and security standards like WS-Security. A spiritual predecessor to the &quot;Verifiable Trust&quot; Web/A aims for.</li>
+<li><strong>Failures</strong>: Overly complex specifications (&quot;XML Hell&quot;) and rigid dependency on transport protocols. It proved brittle to change, lost developer support, and was overtaken by the lightweight REST.</li>
+</ul>
+<h3>Phase 1: The Victory of the API Economy (REST / JSON)</h3>
+<p>Since the 2000s, the API Economy realized &quot;real-time loose coupling&quot; and dramatically improved the Developer Experience (DX).</p>
+<ul>
+<li><strong>Achievements</strong>: Standardized connectivity, the explosion of Cloud/Microservices, and interconnected ecosystems.</li>
+<li><strong>Current Challenges</strong>: Maintenance costs grow $O(N)$ with every new partner. Excessive reliance on central Hubs leads to loss of data sovereignty.</li>
+</ul>
+<h3>Phase 2: Return to the Document Economy (Web/A)</h3>
+<p>The ideals that SGML, XML, and the Semantic Web once pursued—leaving a &quot;trail of failed attempts&quot; due to their complexity—are now being redefined with <strong>Verifiable Technologies (DID/VC)</strong> and <strong>AI</strong>.</p>
+<ul>
+<li><strong>Inevitability</strong>: Instead of trusting a partner&#39;s server, we trust the &quot;evidence&quot; embedded within the document. A world of zero marginal cost where you only &quot;verify,&quot; not &quot;connect.&quot;</li>
+</ul>
+<h2>3. Comparative Simulation: Connecting 1,000 Organizations</h2>
+<p>Comparing network topologies reveals how costs scale. In the API model, &quot;Connections (Lines)&quot; multiply costs. In the Document model, &quot;Nodes (Points)&quot; remain autonomous.</p>
+<pre><code class="language-mermaid">graph LR
+    subgraph &quot;Phase 1: API Economy (Hub &amp; Spoke)&quot;
+        H((Hub Server))
+        A[Company A] &lt;--&gt;|$$ Cost| H
+        B[Company B] &lt;--&gt;|$$ Cost| H
+        C[Company C] &lt;--&gt;|$$ Cost| H
+        D[Company D] &lt;--&gt;|$$ Cost| H
+        style H fill:#f9f,stroke:#333,stroke-width:2px
+        linkStyle 0,1,2,3 stroke:#f00,stroke-width:2px;
+    end
+
+    subgraph &quot;Phase 2: Document Economy (Autonomous)&quot;
+        WA[Company A] --&gt;|Publish| DA(Web/A Doc)
+        WB[Company B] --&gt;|Publish| DB(Web/A Doc)
+        WC[Company C] --&gt;|Publish| DC(Web/A Doc)
+        
+        U[User / AI] -.-&gt;|Verify| DA
+        U -.-&gt;|Verify| DB
+        U -.-&gt;|Verify| DC
+        
+        style DA fill:#bbf,stroke:#333
+        style DB fill:#bbf,stroke:#333
+        style DC fill:#bbf,stroke:#333
+        linkStyle 4,5,6 stroke:#0f0,stroke-width:2px;
+    end
+</code></pre>
+<p>Total societal cost for enabling data exchange between 1,000 systems.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Item</th>
+<th align="left"><strong>Phase 1: API Economy (Hub Model)</strong></th>
+<th align="left"><strong>Phase 2: Document Economy (Web/A)</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Nature of Link</strong></td>
+<td align="left">&quot;Line&quot; contract (Auth needed per link)</td>
+<td align="left">&quot;Point&quot; autonomy (Verifiable files)</td>
+</tr>
+<tr>
+<td align="left"><strong>Total Initial Cost Est.</strong></td>
+<td align="left"><strong>~$20 Million</strong> ($20k × 1,000)</td>
+<td align="left"><strong>~$10 Million</strong> ($100k × 1,000)</td>
+</tr>
+<tr>
+<td align="left"><strong>Annual Maintenance</strong></td>
+<td align="left"><strong>~$4 Million/year</strong> (Key rotation/Auth)</td>
+<td align="left"><strong>Near Zero</strong> (Spec maintenance only)</td>
+</tr>
+<tr>
+<td align="left"><strong>AI Compatibility</strong></td>
+<td align="left">Must learn/adapt to individual APIs</td>
+<td align="left"><strong>Universal verification logic</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Scalability</strong></td>
+<td align="left">Limited by Hub capacity</td>
+<td align="left"><strong>Infinite (No handshake needed)</strong></td>
+</tr>
+</tbody></table>
+<p><em>Note: While API Economy significantly improved over Phase 0 through Hub aggregation, the &quot;Hub Rent&quot; and the &quot;Last Mile&quot; cost of individual hub integration remain.</em></p>
+<h2>4. Why &quot;Now&quot; for the Document Economy?</h2>
+<p>Previous attempts like XML and the Semantic Web failed because cryptographic authenticity (L2 Encryption/PQC) was immature, and the &quot;Intelligent Agents (AI)&quot; to process the data did not yet exist. Web/A&#39;s Phase 2 overcomes these past failures through several factors:</p>
+<ol>
+<li><strong>Freedom from Handshakes</strong>: Even if the issuer&#39;s server is down, the document&#39;s authenticity can be verified locally.</li>
+<li><strong>Elimination of Switching Costs</strong>: No longer locked into specific SaaS or API providers; systems can be swapped freely as long as they speak the &quot;Common Currency&quot; of Web/A documents.</li>
+<li><strong>AI-Ready</strong>: Moving from an era where humans read manuals to connect APIs, to an era where AI reads Web/A and automatically configures workflows.</li>
+</ol>
+<h2>5. More Than Cost: Time and Inclusion</h2>
+<p>Cost reduction is merely a financial metric. The true transformation of the Document Economy lies in speed and inclusivity.</p>
+<h3>5.1. Dramatic Reduction in Time-to-Value</h3>
+<p>API integration typically requires weeks or months of lead time for contract signing, spec coordination, security reviews, and connection testing.</p>
+<ul>
+<li><strong>Web/A</strong>: From the moment a document is received (Day 0), AI agents and verification tools can confirm its legitimacy and trigger business processes. It eliminates the &quot;Waiting to Connect&quot; period, capturing business opportunities instantly.</li>
+</ul>
+<h3>5.2. Digitalizing the Long Tail</h3>
+<p>Small-scale procedures and infrequent certificates—often left as paper or PDF because their ROI didn&#39;t justify API development—can now join the digital ecosystem effortlessly via Web/A.</p>
+<ul>
+<li>This empowers not just enterprise &quot;backbones&quot; but also SMEs, freelancers, and local government counters to connect seamlessly on the same &quot;Foundation of Trust.&quot;</li>
+</ul>
+<h2>6. Conclusion</h2>
+<p>The API Economy built the &quot;Network Cables&quot; of information. The Document Economy is building the &quot;Currency (Media)&quot; that can carry trust over those cables—or even without them.</p>
+<h2>While respecting the progress brought by APIs, we must overcome the limits of the &quot;Connectivity Trap&quot; through the verifiable, autonomous documents of Web/A. This is an inevitable return to <strong>&quot;From Connectivity to Autonomy&quot;</strong> in the history of digitalization.</h2>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-01T03:22:49.950Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/api-economy-vs-document-economy",
+    "name": "Trial Calculation: API Economy vs. Document Economy - Structural Change in Connectivity Costs",
+    "contentDigest": "d4f324dd8416951328b4cdd1ee5534abe1e72eec20c06cc4701192f1d07cac98"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T03:22:49.950Z",
+      "proofValue": "z4kx1TETHw4yRozkQ3oJLi18E36CiW7sTm787gWGvrz4W5KWmxRHr6E9DAJLEj4z3ZT6aNV2M7iuJdC9aUUpAWXmX"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T03:22:49.950Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+        "did:web:masanork.github.io:srn#build-1767404251737-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "type": "WebAContextLink",
+    "prevHash": "genesis",
+    "targetHash": "d56e49b951a394ce62b24ea599cc5b9b1e3cef193aae6e20120e692e3e89a2e7",
+    "signer": "did:web:masanork.github.io:srn",
+    "timestamp": "2026-01-01T03:22:49.982Z",
+    "proof": {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-ed25519",
+      "proofValue": "mock_signature_for_poc"
+    }
+  },
+  {
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-01T04:12:48.874Z",
+      "payload": {
+        "metadata": {},
+        "buildId": "build-1767240723633",
+        "reason": "Frontmatter updated in SSG"
+      }
+    },
+    "eventHash": "040a63a3d7ee28370dead80f3bec112090419c44464482c0174237018b9599c6",
+    "chainHash": "7b6e3e59ad6ad8b256a02f803ad192c993bd684fe0e29375a04829c1f0ce93d4"
+  },
+  {
+    "prevHash": "7b6e3e59ad6ad8b256a02f803ad192c993bd684fe0e29375a04829c1f0ce93d4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:21:28.296Z",
+      "payload": {
+        "buildId": "build-1767241235576"
+      }
+    },
+    "eventHash": "5bf242091d377305f58a99750a16df95ae6fce46091ec69f43c94fc1f871e6e4",
+    "chainHash": "3c77282fd4467cf87dde718f2c1f9ce7363f822007d803882b52e1c1cdeb1fa2"
+  },
+  {
+    "prevHash": "3c77282fd4467cf87dde718f2c1f9ce7363f822007d803882b52e1c1cdeb1fa2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:30:42.187Z",
+      "payload": {
+        "buildId": "build-1767241710058"
+      }
+    },
+    "eventHash": "20af7ad48b017c869018991384a156fd62b2e964659a510c5df08a12c39d8275",
+    "chainHash": "93043c6ea885f5a2bd2f4f11a3c9332ff32272d2f32ec9662119fdafba03c5c0"
+  },
+  {
+    "prevHash": "93043c6ea885f5a2bd2f4f11a3c9332ff32272d2f32ec9662119fdafba03c5c0",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:36:48.153Z",
+      "payload": {
+        "buildId": "build-1767242067086"
+      }
+    },
+    "eventHash": "887588c840adcc37ea902ee479d932b158dda5389b3ac0615358cdd8d736720d",
+    "chainHash": "2f8296b6ff9a9c8d51e9f0c85381e25157ef3f2ca29b606ce3a700a5802e0ec4"
+  },
+  {
+    "prevHash": "2f8296b6ff9a9c8d51e9f0c85381e25157ef3f2ca29b606ce3a700a5802e0ec4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:42:03.841Z",
+      "payload": {
+        "buildId": "build-1767242380816"
+      }
+    },
+    "eventHash": "b68f19a4c49c677f4097c9a577c0870b616a6e6f23b56074ebdb9b0264ce168d",
+    "chainHash": "488e0967bf13b89d2d264a64db8ee89d61353b017bcfcc8ec72da64fcd06202b"
+  },
+  {
+    "prevHash": "488e0967bf13b89d2d264a64db8ee89d61353b017bcfcc8ec72da64fcd06202b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T06:03:38.392Z",
+      "payload": {
+        "buildId": "build-1767247274826"
+      }
+    },
+    "eventHash": "451713b17b505fe1538f8a206ecbcc071aec6adeab6e5c48cb0a9a3a322db24f",
+    "chainHash": "dfb608e63302cabba10ebd32b661e24a3f8e566acf52ce9311be444ac01b7e12"
+  },
+  {
+    "prevHash": "dfb608e63302cabba10ebd32b661e24a3f8e566acf52ce9311be444ac01b7e12",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:10:49.255Z",
+      "payload": {
+        "buildId": "build-1767262105333"
+      }
+    },
+    "eventHash": "d27e8e1a8d3a3ba69ee4542daca1a36ad03f2b23c61778fbd98a2a6b698fccc1",
+    "chainHash": "3cd633a7f8d3468a980c75ac2cde9a277572d83a30c61dac7fcc66a605cfddba"
+  },
+  {
+    "prevHash": "3cd633a7f8d3468a980c75ac2cde9a277572d83a30c61dac7fcc66a605cfddba",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:17:45.637Z",
+      "payload": {
+        "buildId": "build-1767262532262"
+      }
+    },
+    "eventHash": "e2fa75443c3dd49008db325503964c32343fd49aab514645dadb96d5dcb27b1c",
+    "chainHash": "01b69aa4ed2880d8a45d650cc9175e853e92a17448efd9e70192aacf4564dede"
+  },
+  {
+    "prevHash": "01b69aa4ed2880d8a45d650cc9175e853e92a17448efd9e70192aacf4564dede",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:23:22.027Z",
+      "payload": {
+        "buildId": "build-1767262950176"
+      }
+    },
+    "eventHash": "3340123fdaa1cf2f71c4dd54984f835b665f94b6d4a94af677e1d0e3bf5832cb",
+    "chainHash": "bece74b6c97c67bae0687b6299ab89a4aa0703703cac113201dcbc0600b1dc68"
+  },
+  {
+    "prevHash": "bece74b6c97c67bae0687b6299ab89a4aa0703703cac113201dcbc0600b1dc68",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:28:36.613Z",
+      "payload": {
+        "buildId": "build-1767263170289"
+      }
+    },
+    "eventHash": "0186fca6a384cd4e040439b8c74034c20ffafd4a3abc163e32dc6a4425705d54",
+    "chainHash": "106347d777398881c98ca019576cda0c8d0592d16408a387e02eb3b8b17855f0"
+  },
+  {
+    "prevHash": "106347d777398881c98ca019576cda0c8d0592d16408a387e02eb3b8b17855f0",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:43:04.089Z",
+      "payload": {
+        "buildId": "build-1767263450152"
+      }
+    },
+    "eventHash": "8ebbcde5e30f31747abcc345695429821f09a909ac49a68c84d7e0147033d2aa",
+    "chainHash": "ff41d3278a9498b15e410b09994b939bce16869e8b8f1de4058e0f70b159067e"
+  },
+  {
+    "prevHash": "ff41d3278a9498b15e410b09994b939bce16869e8b8f1de4058e0f70b159067e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:59:22.972Z",
+      "payload": {
+        "buildId": "build-1767265011181"
+      }
+    },
+    "eventHash": "cb85786a108ee6daee5d4c54e3c32c644140dc3c943040a2e08acf8b4a3c11c5",
+    "chainHash": "93e60a476d62868dfee35c7d759b7e95248c35443d43dc9436bc768e7fbb4e53"
+  },
+  {
+    "prevHash": "93e60a476d62868dfee35c7d759b7e95248c35443d43dc9436bc768e7fbb4e53",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:16:20.210Z",
+      "payload": {
+        "buildId": "build-1767266040927"
+      }
+    },
+    "eventHash": "d52f94bdc72268436fc143b6f48d468ee61df4671c640f28f0ae8c31bbcd0473",
+    "chainHash": "208eb64b1695ecae378e85870e430b2d89ef8305eacaff329518507f90ff9bb1"
+  },
+  {
+    "prevHash": "208eb64b1695ecae378e85870e430b2d89ef8305eacaff329518507f90ff9bb1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:20:00.343Z",
+      "payload": {
+        "buildId": "build-1767266242469"
+      }
+    },
+    "eventHash": "8df3f9b0f815e8c5ae12cc18f7092ceef58eaf1ee7d31758fb45cf101273ee02",
+    "chainHash": "bc0ad54cac73e52134abac777147a4e5135739b4d947fb832717d0353ee58946"
+  },
+  {
+    "prevHash": "bc0ad54cac73e52134abac777147a4e5135739b4d947fb832717d0353ee58946",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:32:28.679Z",
+      "payload": {
+        "buildId": "build-1767267017288"
+      }
+    },
+    "eventHash": "9362334cdeba122bfccaef09ba5f110128be6bf9ac601b7985023fdca554725c",
+    "chainHash": "db3beff82b47ddda72a5208c5d56d114d628d945c7d04916ca82887c5c303b5b"
+  },
+  {
+    "prevHash": "db3beff82b47ddda72a5208c5d56d114d628d945c7d04916ca82887c5c303b5b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:36:20.772Z",
+      "payload": {
+        "buildId": "build-1767267249416"
+      }
+    },
+    "eventHash": "d29d6c6bc05d532d27c0608d0755085c1123cb8f12856b902d5a931b7e0b20b6",
+    "chainHash": "c86d7dbe14cba9880a35fa707c6241718227e56efa4ac3f0a7100b2da2ac750e"
+  },
+  {
+    "prevHash": "c86d7dbe14cba9880a35fa707c6241718227e56efa4ac3f0a7100b2da2ac750e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:42:20.020Z",
+      "payload": {
+        "buildId": "build-1767267609379"
+      }
+    },
+    "eventHash": "8c21b8dc7918d534043b1eaddf7db9da718dfb9ac31acd8a93c06ad352fe09dd",
+    "chainHash": "82f9701ce0924e37fa9e70ca9443d070b674853f313441bfd2549d533567fab3"
+  },
+  {
+    "prevHash": "82f9701ce0924e37fa9e70ca9443d070b674853f313441bfd2549d533567fab3",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:00:53.220Z",
+      "payload": {
+        "buildId": "build-1767268714878"
+      }
+    },
+    "eventHash": "2a9171fb118a17abf776866150ab5701614f35a8eafe7be94cef3bc782ee0594",
+    "chainHash": "db2d0b1ea82da7debe4d2f49507e09a4e8cb9f8edba8fb8c576a96f1b52a2139"
+  },
+  {
+    "prevHash": "db2d0b1ea82da7debe4d2f49507e09a4e8cb9f8edba8fb8c576a96f1b52a2139",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:05:57.893Z",
+      "payload": {
+        "buildId": "build-1767269026282"
+      }
+    },
+    "eventHash": "9706aacdd22aa5b006a4648d370ba8614805e60ce338c2d17329d91485b91c23",
+    "chainHash": "9eae94bfc0fdb8099e26f964e6a62f2fc7d1d383efb8501a402367f48a5c2651"
+  },
+  {
+    "prevHash": "9eae94bfc0fdb8099e26f964e6a62f2fc7d1d383efb8501a402367f48a5c2651",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:43:21.669Z",
+      "payload": {
+        "buildId": "build-1767271356932"
+      }
+    },
+    "eventHash": "c34a6b3f743741a3a46929f484512202f7afe0a7bb156ae0ecf12a59a4a7cb7c",
+    "chainHash": "11c48e4b8b96c2a3c1daf0c15b7af1a18ddf09f955d8f8acdae9d66d3d12e288"
+  },
+  {
+    "prevHash": "11c48e4b8b96c2a3c1daf0c15b7af1a18ddf09f955d8f8acdae9d66d3d12e288",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:52:21.505Z",
+      "payload": {
+        "buildId": "build-1767271809300"
+      }
+    },
+    "eventHash": "af9cd9fc13e3cec4c08df05a56c54ab57aef3caef1e6ab0c5307bfcb9fab15e0",
+    "chainHash": "db9264d9eadc57462f873355bbf25f0308b713e220e49efe6cd8094b18396e2f"
+  },
+  {
+    "prevHash": "db9264d9eadc57462f873355bbf25f0308b713e220e49efe6cd8094b18396e2f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:55:28.385Z",
+      "payload": {
+        "buildId": "build-1767272123565"
+      }
+    },
+    "eventHash": "0c28457ced8e8665cd15d07961490a07bc3a55a11da856e07021c309ea808c10",
+    "chainHash": "b4ef3afa66a5d214cc481e7eac8feddea29054468bba40f2ed8fa30c6f4a44b9"
+  },
+  {
+    "prevHash": "b4ef3afa66a5d214cc481e7eac8feddea29054468bba40f2ed8fa30c6f4a44b9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:59:28.851Z",
+      "payload": {
+        "buildId": "build-1767272360638"
+      }
+    },
+    "eventHash": "159353f61728dc8911be1009110fcdcbaa9df764e15905a15e76fab3fe3eaddf",
+    "chainHash": "1b4e145a0c29122917c3311b0f6f0936ff1396756e386c99c94d32e1d368f573"
+  },
+  {
+    "prevHash": "1b4e145a0c29122917c3311b0f6f0936ff1396756e386c99c94d32e1d368f573",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:01:50.321Z",
+      "payload": {
+        "buildId": "build-1767272502016"
+      }
+    },
+    "eventHash": "9f9ae482e9c93b00e2f2ebca5230d57b8d2bf3df9936af7c386dc78ad479c6f1",
+    "chainHash": "ecd6cd248dffeb225c52b4ccd4db15458b952dd3ee654e5191f6f923c2350347"
+  },
+  {
+    "prevHash": "ecd6cd248dffeb225c52b4ccd4db15458b952dd3ee654e5191f6f923c2350347",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:20:25.265Z",
+      "payload": {
+        "buildId": "build-1767273615905"
+      }
+    },
+    "eventHash": "4c8d51721fed8401b7350d819de9da10b88f0e3e55cf81cb5dc7ab07134638c6",
+    "chainHash": "0d52f133589f86b73791faa0a52c9d24e5306cccb51f79423839e051e6b8efc1"
+  },
+  {
+    "prevHash": "0d52f133589f86b73791faa0a52c9d24e5306cccb51f79423839e051e6b8efc1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:22:03.438Z",
+      "payload": {
+        "buildId": "build-1767273703292"
+      }
+    },
+    "eventHash": "c2f9bba68be1186c17343d1e051a2e9e88e712a3b0344166111e4e439418fde6",
+    "chainHash": "c109fad38bdfeb6950bed6293d89c905852e45c7426cf69a25090bd396e974dd"
+  },
+  {
+    "prevHash": "c109fad38bdfeb6950bed6293d89c905852e45c7426cf69a25090bd396e974dd",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:22:49.452Z",
+      "payload": {
+        "buildId": "build-1767273749152"
+      }
+    },
+    "eventHash": "b4c13cc9556d44c348d40dbbf6a1d71ccd9b61bfc6fd9c1c429bee7b7f920c41",
+    "chainHash": "32941519b9fe2369bb483ac20e3a0390e1519731f9407870eb397663f1513ef5"
+  },
+  {
+    "prevHash": "32941519b9fe2369bb483ac20e3a0390e1519731f9407870eb397663f1513ef5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:30.238Z",
+      "payload": {
+        "buildId": "build-1767274205386"
+      }
+    },
+    "eventHash": "2641ef9ce7b3f956bb4848997326650ff07cdc91bf70dbcceb5daca42265554e",
+    "chainHash": "935e08c6994e1d3c43856c986d8e09e0f318b3d85e5b80dd165f5cdc72176690"
+  },
+  {
+    "prevHash": "935e08c6994e1d3c43856c986d8e09e0f318b3d85e5b80dd165f5cdc72176690",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:31:03.984Z",
+      "payload": {
+        "buildId": "build-1767274242907"
+      }
+    },
+    "eventHash": "e69aeefa7c0e5b2064197520e606c6b6fa735001d8491eed43f57a4d8a0de503",
+    "chainHash": "fe31ab481f9812ffbe2751b9ff24adfd0f71ace975b627fd78c3d5f4cb31f807"
+  },
+  {
+    "prevHash": "fe31ab481f9812ffbe2751b9ff24adfd0f71ace975b627fd78c3d5f4cb31f807",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:36:58.885Z",
+      "payload": {
+        "buildId": "build-1767274598466"
+      }
+    },
+    "eventHash": "663b148ab1c095df72aefeb645473746ff1e9990bdd54b9a3a99869dc456427d",
+    "chainHash": "b5573c21f13990fefbe9ea31f8f4f7de86aa2e3bf14044cda63038778ccb740b"
+  },
+  {
+    "prevHash": "b5573c21f13990fefbe9ea31f8f4f7de86aa2e3bf14044cda63038778ccb740b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T14:01:25.934Z",
+      "payload": {
+        "buildId": "build-1767276065034"
+      }
+    },
+    "eventHash": "28143a1f35e884302a3152fe04fcac6e28a5596ea944f7f00b96da2a698234ab",
+    "chainHash": "3f2b7c18638adb0f44dd2042af4fecc7e2ffe686a8717a8a69fd506ef651e37f"
+  },
+  {
+    "prevHash": "3f2b7c18638adb0f44dd2042af4fecc7e2ffe686a8717a8a69fd506ef651e37f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:02:08.605Z",
+      "payload": {
+        "buildId": "build-1767279702726"
+      }
+    },
+    "eventHash": "9090c7aa387e012396312adc58e6abdf936e3ba5b79e3ec219672401617e2521",
+    "chainHash": "e7471789041ddaf01539e519252c9a4c1ae7505a27016eef0d0a5d11453a671c"
+  },
+  {
+    "prevHash": "e7471789041ddaf01539e519252c9a4c1ae7505a27016eef0d0a5d11453a671c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:17:28.699Z",
+      "payload": {
+        "buildId": "build-1767280622690"
+      }
+    },
+    "eventHash": "63def6e8665e9842d7444c1a58ee21735c51344348aaef61203f1c262af3c96f",
+    "chainHash": "79d840bbc8090ec3bb55b1e85014d987e55ec76181c33f08624da361388afb82"
+  },
+  {
+    "prevHash": "79d840bbc8090ec3bb55b1e85014d987e55ec76181c33f08624da361388afb82",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:13:07.418Z",
+      "payload": {
+        "buildId": "build-1767305561689"
+      }
+    },
+    "eventHash": "84c6f1e45d7723b42c9fc2c1c47d090f206db451c6e7ce6ec1cd28be6c082a9d",
+    "chainHash": "73ba7f9b77bdbff0b3c75a5cfd196e5cf903c78d8ffe50fdc7fd88a295078234"
+  },
+  {
+    "prevHash": "73ba7f9b77bdbff0b3c75a5cfd196e5cf903c78d8ffe50fdc7fd88a295078234",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:37:11.600Z",
+      "payload": {
+        "buildId": "build-1767307006040"
+      }
+    },
+    "eventHash": "9f50d36f62bb7e854f10d33e85f471dedbe8adf9072bffa874ea1f4f2190a449",
+    "chainHash": "5794b7f2989aba27887b767bbd770723d8ec3cb9b90f82312b78e5f4912c06a9"
+  },
+  {
+    "prevHash": "5794b7f2989aba27887b767bbd770723d8ec3cb9b90f82312b78e5f4912c06a9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:46:26.856Z",
+      "payload": {
+        "buildId": "build-1767307567034"
+      }
+    },
+    "eventHash": "f303e838745363eb809e98fef9c73e4fa5dcc5956b0a17d362549e4741cf2744",
+    "chainHash": "1ad7d0dc01bffb99130bd872a603ce2416c03a9625816c720f5dbbd2f37778e3"
+  },
+  {
+    "prevHash": "1ad7d0dc01bffb99130bd872a603ce2416c03a9625816c720f5dbbd2f37778e3",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:50:15.563Z",
+      "payload": {
+        "buildId": "build-1767307789914"
+      }
+    },
+    "eventHash": "256c64dc7e9ea8030e3e69d2afdedd015cee76099484d222db84dd70b4afed78",
+    "chainHash": "c270234f000b43c6b5f2d241d4f23a42f6b2d4494dc0cdf9465926bc5b8a359d"
+  },
+  {
+    "prevHash": "c270234f000b43c6b5f2d241d4f23a42f6b2d4494dc0cdf9465926bc5b8a359d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T11:15:20.016Z",
+      "payload": {
+        "buildId": "build-1767352493876"
+      }
+    },
+    "eventHash": "32dbfcddb47193564ef25e9eb3fcefeae0e0362d555543f70b9a1502aa1b3797",
+    "chainHash": "65af243fc8f50fb52482d6a5da7454370f0984f0b3f63dfb804fe9ccef8fe9a2"
+  },
+  {
+    "prevHash": "65af243fc8f50fb52482d6a5da7454370f0984f0b3f63dfb804fe9ccef8fe9a2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:05:52.337Z",
+      "payload": {
+        "buildId": "build-1767355525912"
+      }
+    },
+    "eventHash": "fc716508e669487e204e4e4b914edde5d99cbae51603d670d3856a11fdedd810",
+    "chainHash": "54158296e89d7471414c34221613bb9c0616198740b9d70d56367ed5abeee510"
+  },
+  {
+    "prevHash": "54158296e89d7471414c34221613bb9c0616198740b9d70d56367ed5abeee510",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:19:11.159Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "b1a42fa8a36634baf476b2ad0537922e807e350594851f37487e774367b6fb48",
+    "chainHash": "4a283a07b3c4138d1aced9190bcfa8b3ef7c8cc3366e9fd7669facf3e2ab8fba"
+  },
+  {
+    "prevHash": "4a283a07b3c4138d1aced9190bcfa8b3ef7c8cc3366e9fd7669facf3e2ab8fba",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:22:30.466Z",
+      "payload": {
+        "buildId": "build-1767356524824"
+      }
+    },
+    "eventHash": "61e1b6b434790ceb6ef9417167a62cdba4d64baa57b8dc7b388da73ee765c532",
+    "chainHash": "94e6dbfbfa513dd4dffd47cb310ce3eee86ccfbec079eac2afd92e29396a1812"
+  },
+  {
+    "prevHash": "94e6dbfbfa513dd4dffd47cb310ce3eee86ccfbec079eac2afd92e29396a1812",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:25:13.964Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "6ff9a1667d25b3806e4af9db4a8f88699d7544912cce98dce85f0f1f794066ce",
+    "chainHash": "92ccc6382129da9d0210b8d626f151cb1766706b2af7cfe5f8874b004723ea80"
+  },
+  {
+    "prevHash": "92ccc6382129da9d0210b8d626f151cb1766706b2af7cfe5f8874b004723ea80",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:24.172Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "299f945f72480e6c4c7ad87d95841b53e831c8eeb876ce8fdbb481da627c98a3",
+    "chainHash": "f83a50dc2b32c68bb045f5403eb3bb90dea327cfef988654768b6ae9fd5ac946"
+  },
+  {
+    "prevHash": "f83a50dc2b32c68bb045f5403eb3bb90dea327cfef988654768b6ae9fd5ac946",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:23:04.255Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "0b5b0c2536ed82fc4f2848bd39069d4978c6375a194de2ad584c76054cdcd15b",
+    "chainHash": "48dad4739716f318443bffe746a4c9d7fcae504e21332972d60e11203fb12784"
+  },
+  {
+    "prevHash": "48dad4739716f318443bffe746a4c9d7fcae504e21332972d60e11203fb12784",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:25.681Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "311e15540c7d36d1bfe55e9b59cae5ff8316d3df0062f9f5b07b3cdd4dc99ba0",
+    "chainHash": "7406c573b14517f089a461f93e02b3aba3efd2f8ab227769a67cb82d931a96d2"
+  },
+  {
+    "prevHash": "7406c573b14517f089a461f93e02b3aba3efd2f8ab227769a67cb82d931a96d2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:27:00.687Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "de827712c97195b5e8942b93af80e5bee116b33a3fd10258683defdfc5ede94c",
+    "chainHash": "a5660f7725bacbba2f179a8f563cffa85362414dd410434803180528918df6b1"
+  },
+  {
+    "prevHash": "a5660f7725bacbba2f179a8f563cffa85362414dd410434803180528918df6b1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:36.258Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "af8d34c080eeac92f836e0bfea7eb98c3cd14f179f1cdde9b95b3152c393551c",
+    "chainHash": "b53bd61aac06602749bd569753cca7d07db989682875d94f5649e0123dbaf3ea"
+  },
+  {
+    "prevHash": "b53bd61aac06602749bd569753cca7d07db989682875d94f5649e0123dbaf3ea",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T01:37:59.583Z",
+      "payload": {
+        "buildId": "build-1767404251737"
+      }
+    },
+    "eventHash": "8f422d229ed4853f498839980074a88646a5fcb1cf02b02b53a751c9e5860661",
+    "chainHash": "0ce8a02c5d19c67d38b5660b6587420882a4a94c0dd271ffdb67a44f6ce83529"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T01:37:59.650Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/api-economy-vs-document-economy#container",
+    "containerHash": "aee072b825040b181a23799dce89d3722dde55a4232dcf036eddc3b1b72d3ddd",
+    "buildId": "build-1767404251737",
+    "latestContextHash": "7d8e55f012e53b69bd7444c6f348f0bf8a0555aaa261913a2ac4ac0244ba4c81"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:37:59.650Z",
+      "proofValue": "z3rJZocwXWLSKBEkq1QAvNdcbZrrSJR6o324o27E2euRsFqCMMMbeXMNbJXF4F8i6NdMaPAbGdfLSaFMpFPbXA6Ui"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767404251737-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T01:37:59.650Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[{"id":"js-mermaid","digest":"sha256:94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec","mediaType":"application/javascript","size":103,"urls":["#weba-blob-94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec","./data/blobs/mermaid.min.js"],"description":"Mermaid Diagram Renderer"}],"createdAt":"2026-01-03T01:37:59.747Z"};</script>
+<script id="weba-blob-94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec" type="application/javascript">Y29uc29sZS5sb2coJ01lcm1haWQgTG9hZGVkJyk7IHdpbmRvdy5tZXJtYWlkID0geyBpbml0aWFsaXplOiAoYykgPT4gY29uc29sZS5sb2coJ01lcm1haWQgSW5pdCcsIGMpIH07Cg==</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>
