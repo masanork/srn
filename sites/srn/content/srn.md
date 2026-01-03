@@ -49,8 +49,8 @@ ai_generated: true
     <span data-lang-ja>エージェント対応 (Agentic AI): 人間とAIの双方が同じ情報を理解できる設計。AIエージェントによる自動的なデータ連携を可能にします。</span>
 </li>
 <li><strong>Zero-Touch Deployment</strong>
-    <span data-lang-en>No client installation required. Just distribute the file to start using immediately. No specialized backend or complex database needed.</span>
-    <span data-lang-ja>ゼロタッチ・デプロイ: クライアントアプリは不要。ファイルを配布するだけで、端末を即座に利用開始できます。複雑なサーバー構成も必要ありません。</span>
+    <span data-lang-en>No client installation required. Just distribute the file to start using immediately. No expensive servers needed.</span>
+    <span data-lang-ja>ゼロタッチ・デプロイ: クライアントアプリは不要。ファイルを配布するだけで、端末を即座に利用開始できます。高価なサーバーも不要です。</span>
 </li>
 </ul>
 </div>
