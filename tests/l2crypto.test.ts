@@ -9,9 +9,9 @@ import {
   encryptLayer2,
   decryptLayer2,
   verifyLayer2Signature,
-} from "../src/core/l2crypto.ts";
-import type { Layer2Payload } from "../src/core/l2crypto.ts";
-import { createMlKem768Provider, generateMlKem768KeyPair } from "../src/core/pqc";
+  type Layer2Payload
+} from "@srn/core";
+import { createMlKem768Provider, generateMlKem768KeyPair } from "@srn/core";
 
 describe("Web/A Layer 2 Crypto", () => {
   test("Canonical JSON should be deterministic", () => {

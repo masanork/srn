@@ -5,7 +5,7 @@ import matter from 'gray-matter';
 import { marked } from 'marked';
 import { glob } from 'glob';
 
-import { loadConfig, getAbsolutePaths } from '../core/config.js';
+import { loadConfig, getAbsolutePaths } from "@srn/core";
 import { FontProcessor } from './FontProcessor.js';
 import { IdentityManager } from './IdentityManager.js';
 import { LayoutManager } from './LayoutManager.js';
@@ -75,9 +75,9 @@ async function build() {
 
         // Initialize Managers
         const idManager = new IdentityManager(
-            config.identity.domain, 
-            config.identity.path, 
-            DATA_DIR, 
+            config.identity.domain,
+            config.identity.path,
+            DATA_DIR,
             DIST_DIR,
             config.identity.tsaUrl
         );
@@ -344,10 +344,10 @@ export async function bundleClientScripts(distDir: string) {
     // Verify App (Standalone)
     const verifyEntry = path.join(projectRoot, 'src/ssg/client/verify-app.ts');
     if (await fs.pathExists(verifyEntry)) {
-        await Bun.build({ 
-            entrypoints: [verifyEntry], 
-            outdir: assetsDir, 
-            naming: "verify-bundle.js", 
+        await Bun.build({
+            entrypoints: [verifyEntry],
+            outdir: assetsDir,
+            naming: "verify-bundle.js",
             minify: true,
             plugins: [wasmStubPlugin]
         });
@@ -357,10 +357,10 @@ export async function bundleClientScripts(distDir: string) {
     const buildBundle = async (entry: string, name: string) => {
         const fullPath = path.join(projectRoot, entry);
         if (await fs.pathExists(fullPath)) {
-            await Bun.build({ 
-                entrypoints: [fullPath], 
-                outdir: assetsDir, 
-                naming: name, 
+            await Bun.build({
+                entrypoints: [fullPath],
+                outdir: assetsDir,
+                naming: name,
                 minify: true,
                 plugins: [wasmStubPlugin]
             });

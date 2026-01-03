@@ -8,8 +8,8 @@ import { ManifestManager } from '../ssg/ManifestManager.ts';
 import { IdentityManager } from '../ssg/IdentityManager.ts';
 import { FontProcessor } from '../ssg/FontProcessor.ts';
 import { bundleClientScripts } from '../ssg/index.ts'; // We'll make this exportable
-import { loadConfig } from '../core/config.ts';
-import { initWasm } from '../core/wasm_core.ts';
+import { loadConfig } from '@srn/core';
+import { initWasm } from '@srn/core';
 import { marked } from 'marked';
 
 const program = new Command();
@@ -23,20 +23,20 @@ program
     .action(async (inputs, options) => {
         // Resolve project root based on this script's location
         const projectRoot = path.resolve(import.meta.dirname, '../../');
-        
+
         await initWasm();
-        
+
         const configPath = path.resolve(projectRoot, `sites/${options.site}/config.yaml`);
         if (!await fs.pathExists(configPath)) {
             console.error(`Config not found: ${configPath}`);
             process.exit(1);
         }
         const config = await loadConfig(configPath);
-        
+
         // Correct IdentityManager initialization based on config.yaml structure
         const dataDir = path.resolve(projectRoot, config.directories.data || `sites/${options.site}/data`);
         const distDir = options.output ? path.resolve(options.output) : path.resolve(projectRoot, 'dist', options.site);
-        
+
         // Ensure assets are available
         const assetsDir = path.join(distDir, 'assets');
         if (!await fs.pathExists(path.join(assetsDir, 'form-core.js'))) {
@@ -46,7 +46,7 @@ program
 
         const domain = config.identity?.domain || 'localhost';
         const sitePath = config.identity?.path || '/';
-        
+
         const idManager = new IdentityManager(domain, sitePath, dataDir, distDir);
         await idManager.init();
 
@@ -54,7 +54,7 @@ program
         await fontProcessor.init();
 
         const layoutManager = new LayoutManager();
-        
+
         const allInputFiles: string[] = [];
         for (const input of inputs) {
             // Stats check against CURRENT directory
@@ -76,10 +76,10 @@ program
             const targetPath = path.join(outDir, relPath.replace('.md', '.html'));
 
             console.log(`  Processing: ${relPath}`);
-            
+
             const source = await fs.readFile(fullPath, 'utf-8');
             const { data, content } = matter(source);
-            
+
             // Set reasonable defaults for standalone conversion
             data.layout = data.layout || 'form';
             data.embedFonts = data.embedFonts ?? true;

@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
-import { subsetFont, bufferToDataUrl } from '../core/font.ts';
-import type { SrnConfig } from '../core/config.ts';
-import { createCoseVC } from '../core/vc.ts';
-import type { HybridKeys } from '../core/vc.ts';
+import { subsetFont, bufferToDataUrl } from "@srn/core";
+import type { SrnConfig } from "@srn/core";
+import { createCoseVC } from "@srn/core";
+import type { HybridKeys } from "@srn/core";
 import type { ManifestManager } from './ManifestManager.ts';
 
 export class FontProcessor {

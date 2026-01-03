@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
 import zlib from 'zlib';
-import type { L1Manifest, MasterDataRef } from '../core/weba-manifest.ts';
+import type { L1Manifest, MasterDataRef } from "@srn/core";
 
 export class ManifestManager {
     private blobs: MasterDataRef[] = [];
@@ -30,7 +30,7 @@ export class ManifestManager {
         // Auto-compress large text/json data if not already compressed
         const isTextual = mediaType.includes('json') || mediaType.includes('javascript') || mediaType.includes('text');
         const isAlreadyCompressed = mediaType.includes('gzip') || mediaType.includes('woff2');
-        
+
         if (buffer.length > 512 && isTextual && !isAlreadyCompressed) {
             buffer = zlib.gzipSync(buffer);
             mediaType = 'application/x-gzip';
@@ -110,7 +110,7 @@ export class ManifestManager {
 
         let html = '\n<!-- Web/A L1 Manifest & Blobs -->\n';
         html += '<script>window.__WEBA_MANIFEST = ' + JSON.stringify(manifest) + ';</script>\n';
-        
+
         for (const blob of this.blobs) {
             const b = blob as any;
             const id = b.urls[0].substring(1);

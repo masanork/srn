@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeAll } from "bun:test";
-import { 
-  computeDigest, 
-  createWebALayer2Payload, 
+import {
+  computeDigest,
+  createWebALayer2Payload,
   verifyWebALayer2ContextIntegrity,
   verifyWebALayer2Dependencies,
   type L1Manifest,
   type MasterDataRef,
   type VerificationSource
-} from "../src/core/weba-manifest";
-import { initWasm } from "../src/core/wasm_core";
+} from "@srn/core";
+import { initWasm } from "@srn/core";
 
 describe("Web/A Manifest & Binding", () => {
   beforeAll(async () => {
@@ -20,10 +20,10 @@ describe("Web/A Manifest & Binding", () => {
     id: "template-v1",
     content: { schema: "v1", field: "name" }
   };
-  
+
   const blob1Content = new TextEncoder().encode("Blob 1 Data");
   const blob2Content = new TextEncoder().encode("Blob 2 Data");
-  
+
   let l1Digest: string;
   let blob1Digest: string;
   let blob2Digest: string;
@@ -71,9 +71,9 @@ describe("Web/A Manifest & Binding", () => {
 
   it("should support partial blob activation", async () => {
     const payload = await createWebALayer2Payload(
-      { name: "Charlie" }, 
-      l1Core, 
-      manifest, 
+      { name: "Charlie" },
+      l1Core,
+      manifest,
       ["blob1"] // Only use blob1
     );
 

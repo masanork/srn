@@ -1,6 +1,6 @@
 import { expect, test, describe, beforeAll } from "bun:test";
-import { initWasm, ed25519PublicKeyToX25519PublicKey, ed25519GenerateKeyPair } from "../src/core/wasm_core.ts";
-import { decodeDidKey, resolveDidDocument } from "../src/core/did.ts";
+import { initWasm, ed25519PublicKeyToX25519PublicKey, ed25519GenerateKeyPair } from "@srn/core";
+import { decodeDidKey, resolveDidDocument } from "@srn/core";
 
 describe("DID Key Ed25519 to X25519 Conversion Tests", () => {
     beforeAll(async () => {
@@ -30,7 +30,7 @@ describe("DID Key Ed25519 to X25519 Conversion Tests", () => {
         multi.set(publicKey, 2);
 
         // Simple base58btc encoder (can't easily reference src/core/encoding if it's too complex, but let's try)
-        const { bytesToMultibaseBase58btc } = await import("../src/core/encoding");
+        const { bytesToMultibaseBase58btc } = await import("@srn/core");
         const did = `did:key:${bytesToMultibaseBase58btc(multi)}`;
 
         const { code, publicKey: decodedPub } = decodeDidKey(did);
@@ -50,7 +50,7 @@ describe("DID Key Ed25519 to X25519 Conversion Tests", () => {
         multi[1] = 0x01;
         multi.set(dummyX25519, 2);
 
-        const { bytesToMultibaseBase58btc } = await import("../src/core/encoding");
+        const { bytesToMultibaseBase58btc } = await import("@srn/core");
         const did = `did:key:${bytesToMultibaseBase58btc(multi)}`;
 
         const { code, publicKey: decodedPub } = decodeDidKey(did);
@@ -59,7 +59,7 @@ describe("DID Key Ed25519 to X25519 Conversion Tests", () => {
     });
 
     test("encryptLayer2 should support alg: 'none' when userSk is empty", async () => {
-        const { encryptLayer2 } = await import("../src/core/l2crypto");
+        const { encryptLayer2 } = await import("@srn/core");
         const recipientPub = new Uint8Array(32).fill(0xbb);
 
         const payload = {
@@ -79,7 +79,7 @@ describe("DID Key Ed25519 to X25519 Conversion Tests", () => {
         // Or we can use decryptLayer2 with the dummy key we know (though x25519 doesn't have a constant dummy)
 
         // Actually, let's just use a real recipient key so we can decrypt it
-        const { generateRecipientKeyPair, decryptLayer2 } = await import("../src/core/l2crypto");
+        const { generateRecipientKeyPair, decryptLayer2 } = await import("@srn/core");
         const kp = await generateRecipientKeyPair();
 
         const encrypted2 = await encryptLayer2(

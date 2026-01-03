@@ -6,7 +6,7 @@ import {
   getPaddingTargetSize as wasmGetPaddingTargetSize,
   hkdfSha256,
   x25519GetPublicKey
-} from "../../core/wasm_core";
+} from "@srn/core";
 import { createMlKem768Provider, installBrowserPqcProvider } from './pqc';
 import './guest_did';
 import { initL2Viewer } from './l2viewer';

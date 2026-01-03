@@ -4,8 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cheerio from 'cheerio';
 import * as csv from 'fast-csv';
-import { decryptLayer2, deriveOrgX25519KeyPair, type OrgKeyPolicy, ReplayGuard } from '../core/l2crypto';
-import { createMlKem768Provider } from '../core/pqc';
+import { decryptLayer2, deriveOrgX25519KeyPair, type OrgKeyPolicy, ReplayGuard, createMlKem768Provider } from "@srn/core";
 
 export type L2KeyFile = {
     recipient_kid?: string;
@@ -74,7 +73,7 @@ export async function extractPlainFromHtml(
         if (l2Keys.recipient_kid && l2Envelope.layer2?.recipient && l2Keys.recipient_kid !== l2Envelope.layer2.recipient) {
             const isEpochMatch = l2Keys.epoch_keystore?.keys.some(k => k.kid === l2Envelope.layer2.recipient);
             const isPrekeyMatch = l2Keys.prekey_keystore?.keys[l2Envelope.layer2.recipient];
-            
+
             if (!isEpochMatch && !isPrekeyMatch) {
                 throw new Error(`recipient_kid mismatch (${l2Envelope.layer2.recipient})`);
             }
@@ -115,7 +114,7 @@ export async function extractPlainFromHtml(
                 keyPolicy: l2Keys.org_key_policy || l2Envelope.meta?.key_policy,
             });
             recipientSk = derived.privateKey;
-        } 
+        }
         // 4. Try Static Key (Tier 1)
         else if (!recipientSk && l2Keys.recipient_x25519_private) {
             recipientSk = fromBase64Url(l2Keys.recipient_x25519_private);
@@ -129,12 +128,12 @@ export async function extractPlainFromHtml(
             kem: createMlKem768Provider(),
             recipientPrivateKey: pqcSk
         } : (l2Keys.recipient_pqc_private && l2Keys.recipient_pqc_kem === 'ML-KEM-768'
-                ? {
-                    kem: createMlKem768Provider(),
-                    recipientPrivateKey: fromBase64Url(l2Keys.recipient_pqc_private),
-                }
-                : undefined);
-        
+            ? {
+                kem: createMlKem768Provider(),
+                recipientPrivateKey: fromBase64Url(l2Keys.recipient_pqc_private),
+            }
+            : undefined);
+
         const payload = await decryptLayer2(
             l2Envelope,
             recipientSk,
@@ -230,7 +229,7 @@ program
 
         let replayStore;
         if (options.replayStore) {
-            const { JsonFileReplayStore } = await import('../core/l2crypto');
+            const { JsonFileReplayStore } = await import("@srn/core");
             replayStore = new JsonFileReplayStore(path.resolve(options.replayStore));
         }
 

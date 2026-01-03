@@ -2,7 +2,7 @@ import { describe, expect, test, beforeAll } from "bun:test";
 import { LayoutManager } from "../src/ssg/LayoutManager.ts";
 import { ManifestManager } from "../src/ssg/ManifestManager.ts";
 import { IdentityManager } from "../src/ssg/IdentityManager.ts";
-import { initWasm } from "../src/core/wasm_core.ts";
+import { initWasm } from "@srn/core";
 import fs from "fs-extra";
 import path from "path";
 
@@ -17,7 +17,7 @@ describe("WASM Conditional Loading", () => {
         await initWasm();
         await fs.ensureDir(distDir);
         await fs.ensureDir(dataDir);
-        
+
         // Create dummy form-l2.js (~300KB) to match test expectations
         const assetsDir = path.join(distDir, "assets");
         await fs.ensureDir(assetsDir);
@@ -207,7 +207,7 @@ describe("WASM Conditional Loading", () => {
             relPath: "form2.md",
             contentDir: testDir
         };
-        
+
         await layoutManager.render(ctx2, m2);
         const manifest2 = m2.getManifestObject("");
         const size2 = manifest2.blobs.reduce((sum, b) => sum + b.size, 0);
@@ -219,8 +219,8 @@ describe("WASM Conditional Loading", () => {
         expect(sizeDiff).toBeGreaterThan(700000); // At least 700KB
         expect(sizeDiff).toBeLessThan(900000); // Less than 900KB
 
-        console.log(`Size without L2: ${(size1/1024).toFixed(1)} KB`);
-        console.log(`Size with L2 (WASM + L2 runtime): ${(size2/1024).toFixed(1)} KB`);
-        console.log(`Difference: ${(sizeDiff/1024).toFixed(1)} KB`);
+        console.log(`Size without L2: ${(size1 / 1024).toFixed(1)} KB`);
+        console.log(`Size with L2 (WASM + L2 runtime): ${(size2 / 1024).toFixed(1)} KB`);
+        console.log(`Difference: ${(sizeDiff / 1024).toFixed(1)} KB`);
     });
 });

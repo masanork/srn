@@ -38,7 +38,8 @@ describe("Folio CLI Integration Tests", () => {
     });
 
     test("did create: should create a new DID and output keys", async () => {
-        const { stdout, exitCode } = await runCli(["did", "create"]);
+        const { stdout, stderr, exitCode } = await runCli(["did", "create"]);
+        if (exitCode !== 0) console.error("CLI Error:", stderr);
         expect(exitCode).toBe(0);
         expect(stdout).toContain("DID: did:key:z");
         expect(stdout).toContain("Public Key (Hex):");

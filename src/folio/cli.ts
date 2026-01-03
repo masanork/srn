@@ -339,9 +339,9 @@ program
 
 
 // --- DID Operations ---
-import { resolveDidDocument, encodeDidKey } from "../core/did";
-import { bytesToHex, hexToBytes } from "../core/encoding";
-import { initWasm, ed25519GenerateKeyPair } from "../core/wasm_core";
+import { resolveDidDocument, encodeDidKey } from "@srn/core";
+import { bytesToHex, hexToBytes } from "@srn/core";
+import { initWasm, ed25519GenerateKeyPair } from "@srn/core";
 
 const didCmd = program.command("did").description("DID operations");
 
@@ -376,7 +376,7 @@ didCmd
             let did: string;
 
             if (options.hybrid) {
-                const { generateHybridKeys } = await import("../core/vc");
+                const { generateHybridKeys } = await import("@srn/core");
                 const hybrid = await generateHybridKeys();
                 did = encodeDidKey(hexToBytes(hybrid.ed25519.publicKey), "ed25519");
                 keyData = {

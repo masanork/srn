@@ -1,14 +1,14 @@
 import { describe, expect, test, beforeAll } from "bun:test";
 import { ManifestManager } from "../src/ssg/ManifestManager.ts";
-import { createWebALayer2Payload, computeDigest } from "../src/core/weba-manifest.ts";
-import { initWasm } from "../src/core/wasm_core.ts";
+import { createWebALayer2Payload, computeDigest } from "@srn/core";
+import { initWasm } from "@srn/core";
 import crypto from "node:crypto";
 import fs from "fs-extra";
 import path from "path";
 
 describe("Web/A Manifest Architecture Integration (Pack & Prune)", () => {
     const distDir = "tests/fixtures/manifest-test";
-    
+
     beforeAll(async () => {
         await initWasm();
         await fs.ensureDir(distDir);
@@ -16,14 +16,14 @@ describe("Web/A Manifest Architecture Integration (Pack & Prune)", () => {
 
     test("Scenario: Pack -> Prune -> Verify integrity", async () => {
         const manager = new ManifestManager(distDir);
-        
+
         // 1. PACK Phase: Register some blobs
         const blob1 = await manager.addBlob({
             id: "test-blob",
             content: "Hello Manifest",
             mediaType: "text/plain"
         });
-        
+
         const l1CoreContent = { title: "Test Form", version: 1 };
         const l1CoreDigest = await computeDigest(l1CoreContent);
 
@@ -48,7 +48,7 @@ describe("Web/A Manifest Architecture Integration (Pack & Prune)", () => {
 
         // 3. PRUNE Phase: Use ManifestManager.pruneHtml
         const prunedHtml = ManifestManager.pruneHtml(injectionHtml);
-        
+
         expect(prunedHtml).not.toContain('SGVsbG8gTWFuaWZlc3Q=');
         expect(prunedHtml).toContain('window.__WEBA_MANIFEST');
 
@@ -59,7 +59,7 @@ describe("Web/A Manifest Architecture Integration (Pack & Prune)", () => {
 
         // Verify that the PRUNED document's manifest matches the SIGNED context
         expect(extractedManifestDigest).toBe(l2Payload.context.manifestDigest);
-        
+
         console.log("Verified: Pruned document integrity matches the L2 signature binding.");
     });
 });

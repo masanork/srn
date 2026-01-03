@@ -4,9 +4,9 @@ import {
     createHybridVC,
     createDelegateCertificate,
     verifyDelegateChain
-} from "../src/core/vc.ts";
-import { encodeDidKey } from "../src/core/did.ts";
-import { hexToBytes } from "../src/core/encoding.ts";
+} from "@srn/core";
+import { encodeDidKey } from "@srn/core";
+import { hexToBytes } from "@srn/core";
 
 describe("Delegation Chain Tests (PassKey Architecture)", () => {
 

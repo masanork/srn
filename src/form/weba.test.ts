@@ -1,8 +1,7 @@
 
 import { describe, expect, test } from "bun:test";
-import { parseMarkdown } from "./parser";
+import { parseMarkdown, Renderers } from "@srn/core";
 import { generateHtml } from "./generator";
-import { Renderers } from "./renderer";
 
 describe("Web/A Parser", () => {
     test("parses basic text input", () => {
@@ -59,12 +58,12 @@ describe("Web/A Parser", () => {
     test("toolbar buttons are in correct order", () => {
         const md = `# Test Form\n- [text:foo] Bar`;
         const result = parseMarkdown(md);
-        
+
         // Check order: btn-clear should appear before secondary (Save Progress)
         const clearIdx = result.html.indexOf('class="btn-clear"');
         const saveIdx = result.html.indexOf('class="secondary"');
         const primaryIdx = result.html.indexOf('class="primary"');
-        
+
         expect(clearIdx).toBeGreaterThan(-1);
         expect(saveIdx).toBeGreaterThan(clearIdx);
         expect(primaryIdx).toBeGreaterThan(saveIdx);
@@ -123,7 +122,7 @@ Page 2 Content`;
         const result = parseMarkdown(md);
         expect(result.jsonStructure.masterData.vendors).toBeDefined();
         // Current parser includes header, separator, and data rows in masterData array
-        expect(result.jsonStructure.masterData.vendors.length).toBe(3); 
+        expect(result.jsonStructure.masterData.vendors.length).toBe(3);
         expect(result.jsonStructure.masterData.vendors[1][1]).toBe("Vendor A");
     });
 

@@ -5,7 +5,7 @@ const packageJson = fs.readJsonSync(path.resolve('package.json'));
 const VERSION = packageJson.version || 'unknown';
 import { baseLayout } from './base.js';
 import { getRelativePrefix } from '../utils.js';
-import { parseMarkdown } from '../../form/parser.js';
+import { parseMarkdown } from '@srn/core';
 import type { ManifestManager } from '../ManifestManager.ts';
 import { detectRequiredPlugins, generatePluginManifest } from '../../form/runtime/plugin-detector.js';
 import { bundlePlugins } from '../../form/runtime/bundler.js';

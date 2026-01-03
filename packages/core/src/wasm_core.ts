@@ -280,9 +280,6 @@ export function hkdfSha256(ikm: Uint8Array, salt: Uint8Array | undefined, info: 
     return wasm_hkdf(ikm, salt || new Uint8Array(0), info, length);
 }
 
-/**
- * Bucket-based padding target size calculation in WASM.
- */
 export function getPaddingTargetSize(currentSize: number): number {
     if (!initialized) throw new Error("WASM not initialized");
     return wasm_get_padding(currentSize);

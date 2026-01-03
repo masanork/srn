@@ -14,7 +14,7 @@ import { normalizeDate, stripLeadingTitleHeading } from './utils.js';
 import { buildJuminhyoJsonLd, juminhyoLayout } from './layouts/juminhyo.js';
 import type { IdentityManager } from './IdentityManager.ts';
 import type { ManifestManager } from './ManifestManager.ts';
-import { parseMarkdown } from '../form/parser.ts';
+import { parseMarkdown } from "@srn/core";
 
 
 
@@ -80,7 +80,7 @@ export class LayoutManager {
             try {
                 // WASM source is in wasm_bindings relative to this file
                 const projectRoot = path.resolve(import.meta.dirname, '../../');
-                const wasmPath = path.join(projectRoot, 'src/core/wasm_bindings/weba_crypto_wasm_bg.wasm');
+                const wasmPath = path.join(projectRoot, 'packages/core/src/wasm_bindings/weba_crypto_wasm_bg.wasm');
                 if (await fs.pathExists(wasmPath)) {
                     const buffer = await fs.readFile(wasmPath);
                     await manifestManager.addBlob({

@@ -1,5 +1,5 @@
 
-import { initWasm, ed25519Sign } from "../core/wasm_core";
+import { initWasm, ed25519Sign } from "@srn/core";
 
 interface AdminOptions {
     remoteUrl: string;
@@ -82,8 +82,7 @@ export async function addUser(options: AdminOptions, newDid: string, role: strin
     }
 }
 
-import { createHybridVC } from "../core/vc";
-import type { HybridKeys } from "../core/vc";
+import { createHybridVC, type HybridKeys } from "@srn/core";
 
 export async function issueAccessPass(adminKeys: HybridKeys, adminDid: string, userDid: string, scope: string = "post"): Promise<object> {
     const subject = {

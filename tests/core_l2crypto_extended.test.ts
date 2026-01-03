@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from "bun:test";
-import { ReplayGuard, JsonFileReplayStore } from "../src/core/l2crypto";
+import { ReplayGuard, JsonFileReplayStore } from "@srn/core";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -35,7 +35,7 @@ describe("ReplayGuard with JsonFileReplayStore", () => {
     test("handles corrupt store file", () => {
         fs.writeFileSync(testFile, "invalid-json");
         const originalError = console.error;
-        console.error = () => {}; // Suppress expected error
+        console.error = () => { }; // Suppress expected error
         try {
             const store = new JsonFileReplayStore(testFile); // Should not throw
             expect(store).toBeDefined();

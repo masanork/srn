@@ -14,7 +14,7 @@ import {
   deriveOrgX25519KeyPair,
   signLayer2,
   type Layer2Payload,
-} from "../core/l2crypto";
+} from "@srn/core";
 
 describe("Web/A Aggregator", () => {
   test("extracts JSON-LD when present", async () => {

@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { toWareki, toFullWidth, toLegalFormat } from "../src/core/utils.ts";
+import { toWareki, toFullWidth, toLegalFormat } from "@srn/core";
 
 describe("Core Utils", () => {
     describe("toWareki", () => {

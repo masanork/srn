@@ -1,6 +1,6 @@
 
-import { verifyHybridVC } from '../../core/vc.ts';
-import { resolveDidDocument } from '../../core/did.ts';
+import { verifyHybridVC } from "@srn/core";
+import { resolveDidDocument } from "@srn/core";
 
 // Main entry point for browser-side verification
 document.addEventListener('DOMContentLoaded', () => {

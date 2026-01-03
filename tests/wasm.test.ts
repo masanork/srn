@@ -12,7 +12,7 @@ import {
     mlKem768GenerateKeyPair,
     mlKem768Encapsulate,
     mlKem768Decapsulate,
-} from "../src/core/wasm_core.ts";
+} from "@srn/core";
 
 describe("WASM Crypto Core", () => {
     beforeAll(async () => {

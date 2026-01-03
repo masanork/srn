@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import * as fs from "fs-extra";
-import { initWasm, ed25519Sign } from "../core/wasm_core";
+import { initWasm, ed25519Sign } from "@srn/core";
 
 export interface SyncOptions {
     folioDir: string;

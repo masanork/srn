@@ -7,6 +7,7 @@
         "@apollo/server": "^5.2.0",
         "@noble/curves": "^2.0.1",
         "@noble/hashes": "^2.0.0",
+        "@srn/core": "workspace:*",
         "apollo-server-cloud-functions": "^3.13.0",
         "asn1js": "^3.0.7",
         "body-parser": "^2.2.1",
@@ -51,6 +52,21 @@
       },
       "peerDependencies": {
         "typescript": "^5.0.0",
+      },
+    },
+    "packages/core": {
+      "name": "@srn/core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@noble/curves": "^2.0.1",
+        "@noble/hashes": "^2.0.0",
+        "canonicalize": "^2.0.0",
+        "cbor-x": "^1.5.3",
+        "cheerio": "1.0.0-rc.12",
+        "js-yaml": "^4.1.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
       },
     },
     "packages/folio-cli": {
@@ -235,6 +251,8 @@
     "@protobufjs/pool": ["@protobufjs/pool@1.1.0", "", {}, "sha512-0kELaGSIDBKvcgS4zkjz1PeddatrjYcmMWOlAuAPwAeccUrPHdUqo/J6LiymHHEiJT5NrF1UVwxY14f+fy4WQw=="],
 
     "@protobufjs/utf8": ["@protobufjs/utf8@1.1.0", "", {}, "sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw=="],
+
+    "@srn/core": ["@srn/core@workspace:packages/core"],
 
     "@srn/folio-cli": ["@srn/folio-cli@workspace:packages/folio-cli"],
 

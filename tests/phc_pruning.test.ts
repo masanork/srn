@@ -1,9 +1,9 @@
 import { describe, expect, test, beforeAll } from "bun:test";
 import { IdentityManager } from "../src/ssg/IdentityManager.ts";
-import { initWasm } from "../src/core/wasm_core.ts";
+import { initWasm } from "@srn/core";
 import fs from "fs-extra";
 import path from "path";
-import { PrunableHashChain } from "../src/core/phc.js";
+import { PrunableHashChain } from "@srn/core";
 
 describe("PHC Automatic Pruning", () => {
     const testDir = path.resolve("tests/fixtures/phc-pruning");
@@ -22,27 +22,27 @@ describe("PHC Automatic Pruning", () => {
         await idManager.init();
 
         const payload = { title: "Test Doc", content: "Stable content" };
-        
+
         // 1. Initial Signing (Genesis)
         // Length: 1
-        await idManager.signDocument(payload); 
+        await idManager.signDocument(payload);
 
         // 2. Simulate 15 rebuilds (Total 16 events: Genesis + 15 L4Rebuild)
         // We assume the implementation will prune when length > 10, keeping Genesis + Latest 5.
         for (let i = 0; i < 15; i++) {
-             await idManager.signDocument(payload);
+            await idManager.signDocument(payload);
         }
 
         // 3. One more to get the latest VC and verify
         // Total 17 events (Indices 0..16)
-        const vc = await idManager.signDocument(payload); 
-        
+        const vc = await idManager.signDocument(payload);
+
         const chainJson = idManager.getContextChain(vc);
         expect(chainJson).not.toBeNull();
-        
+
         const phc = PrunableHashChain.fromJSON(chainJson);
         const links = phc.getLinks();
-        
+
         expect(links.length).toBe(17);
 
         // Check Genesis (Index 0) - Should be kept

@@ -2,9 +2,9 @@ import { expect, test, describe } from "bun:test";
 import { p256 } from "@noble/curves/nist.js";
 import { ml_dsa44 } from "@noble/post-quantum/ml-dsa.js";
 import canonicalize from 'canonicalize';
-import { verifyHybridVC, generateHybridKeys } from "../src/core/vc.ts";
-import { encodeDidKey } from "../src/core/did.ts";
-import { hexToBytes } from "../src/core/encoding.ts";
+import { verifyHybridVC, generateHybridKeys } from "@srn/core";
+import { encodeDidKey } from "@srn/core";
+import { hexToBytes } from "@srn/core";
 
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 

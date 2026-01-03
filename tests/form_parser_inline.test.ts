@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseMarkdown } from "../src/form/parser";
+import { parseMarkdown } from "@srn/core";
 
 describe("Web/A Parser Inline Formatting", () => {
     test("supports bold text with **", () => {

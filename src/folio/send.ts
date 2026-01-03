@@ -1,7 +1,7 @@
 
 import { resolveTransport } from "./transport";
-import { encryptLayer2, signLayer2, toBase64Url, fromBase64Url } from "../core/l2crypto";
-import { initWasm } from "../core/wasm_core";
+import { encryptLayer2, signLayer2, toBase64Url, fromBase64Url } from "@srn/core";
+import { initWasm } from "@srn/core";
 
 interface SendOptions {
     did: string;        // Recipient DID
@@ -37,7 +37,7 @@ export async function sendMessage(options: SendOptions) {
     // Fallback: If transport resolution was implicit (did:key) or failed to return a document,
     // try determining document locally for did:key.
     if (!doc && options.did.startsWith("did:key:")) {
-        const { resolveDidDocument } = await import("../core/did");
+        const { resolveDidDocument } = await import("@srn/core");
         doc = await resolveDidDocument(options.did);
         // Did we find a doc?
         if (doc) {
@@ -82,7 +82,7 @@ export async function sendMessage(options: SendOptions) {
         const method = doc.verificationMethod[0];
         // In local resolveDidDocument, for did:key, we set type 'Multikey' and 'publicKeyMultibase'.
         // We need to extract bytes.
-        const { extractPublicKeyBytes } = await import("../core/did");
+        const { extractPublicKeyBytes } = await import("@srn/core");
         const pubBytes = extractPublicKeyBytes(method);
 
         // Check if this is Ed25519 (32 bytes)
@@ -233,7 +233,7 @@ export async function sendMessage(options: SendOptions) {
     // Sign Nonce (for API auth)
     // We reuse encryption key (senderKey) as Ed25519 signing key here? 
     // Yes, for simple setup, we assume senderKey is Ed25519.
-    const { ed25519Sign } = await import("../core/wasm_core"); // dynamic import to avoid load issues if initWasm not fully done
+    const { ed25519Sign } = await import("@srn/core"); // dynamic import to avoid load issues if initWasm not fully done
     const sigBytes = ed25519Sign(senderKey, new TextEncoder().encode(nonce));
     // Remote expects HEX signature (see verifyAuth in index.ts)
     const authSig = Buffer.from(sigBytes).toString('hex');

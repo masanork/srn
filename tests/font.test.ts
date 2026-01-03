@@ -6,7 +6,7 @@ import {
   getGlyphAsSvg,
   injectCustomTables,
   subsetFont,
-} from "../src/core/font";
+} from "@srn/core";
 
 const FONT_PATH = path.resolve("shared/fonts/ReggaeOne-Regular.ttf");
 

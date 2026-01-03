@@ -3,75 +3,9 @@ import canonicalize from 'canonicalize';
 import { decode } from 'cbor-x';
 import { registerPasskey, signWithPasskey, derivePasskeyPrf } from './webauthn';
 
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+import { encodeDidKey, bytesToHex, hexToBytes, bytesToMultibaseBase58btc } from "@srn/core";
+
 const EDDSA_JCS_2022 = 'eddsa-jcs-2022';
-const MULTICODEC_ED25519_PUB = 0xed;
-const MULTICODEC_P256_PUB = 0x1200;
-
-// Hex Helpers
-function bytesToHex(bytes: Uint8Array): string {
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-function hexToBytes(hex: string): Uint8Array {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-    }
-    return bytes;
-}
-
-function bytesToBase58(bytes: Uint8Array): string {
-    if (bytes.length === 0) return '';
-    const digits: number[] = [0];
-    for (const byte of bytes) {
-        let carry = byte;
-        for (let i = 0; i < digits.length; i++) {
-            const value = digits[i] * 256 + carry;
-            digits[i] = value % 58;
-            carry = Math.floor(value / 58);
-        }
-        while (carry > 0) {
-            digits.push(carry % 58);
-            carry = Math.floor(carry / 58);
-        }
-    }
-
-    let zeros = 0;
-    for (const byte of bytes) {
-        if (byte !== 0) break;
-        zeros += 1;
-    }
-
-    let result = BASE58_ALPHABET[0].repeat(zeros);
-    for (let i = digits.length - 1; i >= 0; i--) {
-        result += BASE58_ALPHABET[digits[i]];
-    }
-    return result;
-}
-
-function bytesToMultibaseBase58btc(bytes: Uint8Array): string {
-    return `z${bytesToBase58(bytes)}`;
-}
-
-function encodeUvarint(value: number): Uint8Array {
-    const output: number[] = [];
-    let remaining = value;
-    while (remaining >= 0x80) {
-        output.push((remaining & 0x7f) | 0x80);
-        remaining >>= 7;
-    }
-    output.push(remaining);
-    return new Uint8Array(output);
-}
-
-function encodeDidKey(publicKey: Uint8Array, keyType: 'ed25519' | 'p256'): string {
-    const codec = keyType === 'p256' ? MULTICODEC_P256_PUB : MULTICODEC_ED25519_PUB;
-    const prefix = encodeUvarint(codec);
-    const multicodec = new Uint8Array(prefix.length + publicKey.length);
-    multicodec.set(prefix, 0);
-    multicodec.set(publicKey, prefix.length);
-    return `did:key:${bytesToMultibaseBase58btc(multicodec)}`;
-}
 
 export class Signer {
     private usePasskey: boolean = true;
@@ -171,7 +105,7 @@ export class Signer {
     }
 
     private async generateEdKey() {
-        const { initWasm, ed25519GenerateKeyPair } = await import('../../core/wasm_core');
+        const { initWasm, ed25519GenerateKeyPair } = await import("@srn/core");
         await initWasm(fetch('/assets/weba_crypto_wasm_bg.wasm'));
         const { privateKey, publicKey } = ed25519GenerateKeyPair();
         this.edPrivateKey = privateKey;
@@ -221,7 +155,7 @@ export class Signer {
             };
         } else {
             if (!this.edPrivateKey) await this.generateEdKey();
-            const { initWasm, ed25519Sign } = await import('../../core/wasm_core');
+            const { initWasm, ed25519Sign } = await import("@srn/core");
             await initWasm(fetch('/assets/weba_crypto_wasm_bg.wasm'));
             const signature = ed25519Sign(this.edPrivateKey!, dataBytes);
             return {

@@ -1,5 +1,4 @@
-import { verifyWebALtv } from '../core/verify-ltv.ts';
-import { initWasm } from '../core/wasm_core.ts';
+import { verifyWebALtv, initWasm } from "@srn/core";
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -10,7 +9,7 @@ import path from 'path';
 
 async function main() {
     await initWasm();
-    
+
     const args = process.argv.slice(2);
     const target = args.find(arg => !arg.startsWith('-'));
     const checkHmp = args.includes('--hmp');
@@ -92,9 +91,9 @@ Options:
         const hmpIcon = result.hmp.valid ? '✅' : '❌';
         console.log(`[HMP] Human-Machine Parity: ${hmpIcon} ${result.hmp.valid ? 'VALID' : 'INVALID'}`);
         result.hmp.details.forEach(d => {
-             const mark = d.match ? 'OK' : 'FAIL';
-             const color = d.match ? '\x1b[32m' : '\x1b[31m';
-             console.log(`     [${color}${mark}\x1b[0m] ${d.field}: ${d.htmlValue} vs ${d.jsonValue}`);
+            const mark = d.match ? 'OK' : 'FAIL';
+            const color = d.match ? '\x1b[32m' : '\x1b[31m';
+            console.log(`     [${color}${mark}\x1b[0m] ${d.field}: ${d.htmlValue} vs ${d.jsonValue}`);
         });
     }
 

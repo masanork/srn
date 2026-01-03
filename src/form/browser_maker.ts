@@ -1,5 +1,5 @@
 
-import { parseMarkdown } from './parser';
+import { parseMarkdown } from '@srn/core';
 import { generateHtml, initRuntime, generateAggregatorHtml } from './generator';
 
 // Window global functions for HTML event handlers

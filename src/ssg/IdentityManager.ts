@@ -3,12 +3,12 @@ import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
 import canonicalize from 'canonicalize';
-import { createHybridVC, generateHybridKeys, createStatusListVC } from '../core/vc.ts';
-import type { HybridKeys } from '../core/vc.ts';
-import { encodeDidKey, encodePqcPublicKeyJwk } from '../core/did.ts';
-import { hexToBytes } from '../core/encoding.ts';
-import { PrunableHashChain } from '../core/phc.js';
-import type { PHCEventType } from '../core/phc.js';
+import { createHybridVC, generateHybridKeys, createStatusListVC } from "@srn/core";
+import type { HybridKeys } from "@srn/core";
+import { encodeDidKey, encodePqcPublicKeyJwk } from "@srn/core";
+import { hexToBytes } from "@srn/core";
+import { PrunableHashChain } from "@srn/core";
+import type { PHCEventType } from "@srn/core";
 import { getTimestamp } from '../tools/tsa_client.ts';
 
 export class IdentityManager {

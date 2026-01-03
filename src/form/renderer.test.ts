@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { Renderers } from "./renderer";
+import { Renderers } from "@srn/core";
 
 describe("Web/A Renderer (Advanced Coverage)", () => {
 

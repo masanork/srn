@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
-import { PrunableHashChain } from '../src/core/phc';
-import { initWasm } from '../src/core/wasm_core';
+import { PrunableHashChain } from '@srn/core';
+import { initWasm } from '@srn/core';
 
 describe('Prunable Hash Chain (PHC)', () => {
     beforeAll(async () => {

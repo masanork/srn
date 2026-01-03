@@ -165,7 +165,7 @@ export type OrgKeyPolicy = "campaign" | "campaign+layer1";
  * Calculate target size for padding based on a bucket strategy to mitigate traffic analysis.
  * Uses jumps (1KB, 4KB, 16KB, 64KB, 256KB, 1MB) to hide exact payload size for larger data.
  */
-export function getPaddingTargetSize(currentSize: number): number {
+function getPaddingTargetSize(currentSize: number): number {
   return wasmGetPadding(currentSize);
 }
 

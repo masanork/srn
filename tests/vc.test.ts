@@ -6,9 +6,9 @@ import {
     createStatusListVC,
     createCoseVC,
     createSdCoseVC
-} from "../src/core/vc.ts";
+} from '@srn/core';
 import { decode, encode } from "cbor-x";
-import { initWasm, ed25519Verify, mlDsa44Verify } from "../src/core/wasm_core.ts";
+import { initWasm, ed25519Verify, mlDsa44Verify } from '@srn/core';
 
 const COSE_HEADER_ALG = 1;
 const COSE_HEADER_KID = 4;

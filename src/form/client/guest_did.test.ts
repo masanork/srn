@@ -3,7 +3,7 @@ import { describe, expect, test, mock, beforeEach, beforeAll } from "bun:test";
 import { getOrCreateGuestDid, fetchGuestInbox } from "./guest_did";
 
 // Mock L2 Crypto (to avoid WASM loading issues)
-mock.module("../../core/l2crypto", () => ({
+mock.module("@srn/core", () => ({
     generateRecipientKeyPair: async () => ({
         publicKey: new Uint8Array(32),
         privateKey: new Uint8Array(32)
@@ -13,10 +13,7 @@ mock.module("../../core/l2crypto", () => ({
     x25519GenerateKeyPair: async () => ({
         publicKey: new Uint8Array(32),
         privateKey: new Uint8Array(32)
-    })
-}));
-
-mock.module("../../core/wasm_core", () => ({
+    }),
     initWasm: async () => { }
 }));
 
