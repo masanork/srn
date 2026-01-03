@@ -63,8 +63,19 @@ export class LayoutManager {
         // ... (existing mermaid logic) ...
 
         // --- WASM Crypto Registration ---
-        // Register WASM binary if L2 or signing is needed (Forms or signed Articles)
-        const needsCrypto = data.layout === 'form' || !!vc;
+        // Check if L2 encryption is configured
+        const hasL2Config = data.layout === 'form' && Boolean(
+            data.l2_encrypt &&
+            data.l2_recipient_kid &&
+            data.l2_recipient_x25519
+        );
+
+        // Also check if L2-related features are mentioned in content
+        const hasL2InContent = content.includes('weba-l2-') || content.includes('l2crypto');
+
+        // Register WASM binary only if L2 encryption is actually used
+        // (Not needed for basic forms without L2, saving ~454KB)
+        const needsCrypto = hasL2Config || hasL2InContent || !!vc;
         if (needsCrypto) {
             try {
                 // WASM source is in wasm_bindings relative to this file
