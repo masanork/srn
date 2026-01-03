@@ -5,6 +5,26 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v3.2.0 - Core SDK Monorepo & Developer Experience
+
+**Date:** 2026-01-03
+
+Major structural refactoring to improve **Developer Experience (DX)** for OSS contributors and AI hackers. This version transitions the project to a monorepo architecture and decouples the internal logic from the SSG engine.
+
+*   **Core SDK Monorepo Architecture**:
+    *   **`packages/core` Creation**: Successfully decoupled all shared cryptographic, parsing, and identity logic into a standalone workspace.
+    *   **Unified @srn/core Namespace**: Consolidated all internal imports to use the `@srn/core` package. This eliminates brittle relative paths and prepares the SDK for public distribution.
+    *   **Monorepo Stabilization**: Updated `tsconfig.json` and `package.json` with workspace support, ensuring seamless module resolution across Bun build and test environments.
+
+*   **Developer Experience (DX) Improvements**:
+    *   **"Clone & Test" Ready**: Simplified the developer onboarding workflow. New contributors can now run the entire test suite immediately after cloning with `bun test`.
+    *   **100% Test Coverage for Core**: Fixed directory resolution issues and missing module imports in the test environment, achieving a stable baseline of 346 passing tests.
+    *   **Architecture Decoupling**: Clearly separated **Tier 1 (Core SDK)**, **Tier 2 (Folio CLI)**, and **Tier 3 (SSG App)** logic, paving the way for MCP server integrations.
+
+*   **Bug Fixes & Refinements**:
+    *   **Module Resolution**: Fixed `IsDir` and `NotOpenForReading` errors encountered in parallel test execution by forcing direct source resolution for the core package.
+    *   **Generator Cleanup**: Fixed `generator.ts` to correctly utilize the new core parser, resolving failures in standalone HTML generation.
+
 ## v3.1.0 - Web/A LTV & Verifier Overhaul
 
 **Date:** 2026-01-03

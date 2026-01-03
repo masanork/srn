@@ -82,3 +82,17 @@ Core SDK と CLI を利用する、「一利用者」としてのアプリケー
 *   **For AI Developers**: MCPサーバー開発において、「PDFパーサー」の代わりに「Web/A SDK」を選択肢に入れやすくなる。
 *   **For Maintainers**: コアロジックとサイトロジックが分離されるため、テスト容易性が向上し、意図せぬデグレを防げる。
 *   **For Ecosystem**: 第三者が「Python版Web/A SDK」や「Java版検証ツール」を作りやすくなる（仕様の明確化）。
+
+---
+
+## 5. 進捗状況 (2026-01-03)
+
+### 達成済み (Phase A Progress)
+*   **[DONE] コアロジックのモノレポ化**: `packages/core` を新設し、Crypto, Parser, Renderer, VC/DID 処理を完全に独立したワークスペースとして切り出し完了。
+*   **[DONE] 全域での依存関係統合**: プロジェクト内の全コンポーネント（SSG, CLI, Client Runtime）の参照を `@srn/core` パッケージに統一。
+*   **[DONE] テスト自動化の安定化**: パス解決問題をクリアし、モノレポ構成において全 346 テストがパスする状態を確立。
+
+### 今後の残作業 (Remaining Tasks)
+1.  **Folio CLI のパッケージ化 (Tier 2)**: `src/folio` を `packages/folio` へ移行し、SDK を利用するリファレンスツールとしての独立性を高める。
+2.  **Web/A MCP Server の実装**: AIエージェント（Claude/ChatGPT等）が Web/A データの検証や検索を直接行えるようにするための MCP サーバーデモを `Folio` に統合する。
+3.  **SDK ドキュメント化**: `npm install @srn/core` で利用を開始するための手順書と、最小構成のコードサンプル作成。
