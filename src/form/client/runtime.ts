@@ -167,7 +167,7 @@ export function initRuntime() {
                 // Ensure datalist exists (Support dynamic rows)
                 let listId = input.getAttribute('list');
                 if (!listId) {
-                    listId = `dl-${Math.random().toString(36).substr(2, 5)}`;
+                    listId = `dl-${Math.random().toString(36).substring(2, 7)}`;
                     input.setAttribute('list', listId);
                     const dl = document.createElement('datalist'); dl.id = listId; document.body.appendChild(dl);
                 }
@@ -261,7 +261,7 @@ export function initRuntime() {
                 // === LG Code Field ===
                 let listId = input.getAttribute('list');
                 if (!listId) {
-                    listId = `dl-lg-${Math.random().toString(36).substr(2, 5)}`;
+                    listId = `dl-lg-${Math.random().toString(36).substring(2, 7)}`;
                     input.setAttribute('list', listId);
                     const dl = document.createElement('datalist'); dl.id = listId; document.body.appendChild(dl);
                 }
@@ -286,7 +286,7 @@ export function initRuntime() {
                 // === Prefecture Field ===
                 let listId = input.getAttribute('list');
                 if (!listId) {
-                    listId = `dl-lg-pref-${Math.random().toString(36).substr(2, 5)}`;
+                    listId = `dl-lg-pref-${Math.random().toString(36).substring(2, 7)}`;
                     input.setAttribute('list', listId);
                     const dl = document.createElement('datalist'); dl.id = listId; document.body.appendChild(dl);
                 }
@@ -301,7 +301,7 @@ export function initRuntime() {
                 // === City Field ===
                 let listId = input.getAttribute('list');
                 if (!listId) {
-                    listId = `dl-lg-city-${Math.random().toString(36).substr(2, 5)}`;
+                    listId = `dl-lg-city-${Math.random().toString(36).substring(2, 7)}`;
                     input.setAttribute('list', listId);
                     const dl = document.createElement('datalist'); dl.id = listId; document.body.appendChild(dl);
                 }

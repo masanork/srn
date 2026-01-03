@@ -122,7 +122,7 @@ export async function formLayout(params: {
 
     // Manifest Injection (Postal Data)
     let postalScript = '';
-    const needsPostal = jsonStructure.needsPostal || false;
+    const needsPostal = jsonStructure.needsPostal || rawMarkdown.includes('autofill:postal');
     const needsLg = jsonStructure.needsLg || rawMarkdown.includes('autofill:lg');
     const needsL2 = l2Config || rawMarkdown.includes('weba-l2-') || rawMarkdown.includes('l2crypto');
 
@@ -305,9 +305,12 @@ export async function formLayout(params: {
         ${customScript}
     `;
 
+    // Generate manifest and blob injection HTML
+    const manifestHtml = manifestManager ? manifestManager.generateInjectionHtml() : '';
+
     return baseLayout({
         title: data.title,
-        content: content,
+        content: content + manifestHtml,
         fontCss: fontCss + (sharedCss ? `<style>${sharedCss}</style>` : ''),
         fontFamilies,
         lang: lang,
@@ -367,9 +370,12 @@ export async function formReportLayout(params: {
         </div>
     `;
 
+    // Generate manifest and blob injection HTML
+    const manifestHtml = manifestManager ? manifestManager.generateInjectionHtml() : '';
+
     return baseLayout({
         title: `${data.title} (Report)`,
-        content: content,
+        content: content + manifestHtml,
         fontCss,
         fontFamilies,
         lang: lang,
