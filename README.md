@@ -103,6 +103,23 @@ srn/
 
 ---
 
+## For AI Agents & Developers
+
+This project maintains strict technical conventions and a "Simulated Governance" framework. Both human developers and AI agents must follow the structured rules located in the `.agent/rules/` directory.
+
+- **`ROLES.md`**: Specialized sub-agents and simulated organization roles (Red Team, Committee).
+- **`CONVENTIONS.md`**: Coding standards, Markdown styles, and build command reference.
+- **`WORKFLOW.md`**: Process for TDD, release management, and document staging.
+- **`INVARIANTS.md`**: Non-negotiable architectural principles (e.g., Web/A Self-Containment).
+- **`GOVERNANCE.md`**: Rules for the governance simulation and mandatory disclaimers.
+
+**Quick Command Reference:**
+- **Test**: `bun test` / `bun test --coverage`
+- **Build**: `bun run build:srn` (main site)
+- **SSG Core**: `bun run src/ssg/index.ts --site srn`
+
+---
+
 ## Documentation (Papers)
 
 Key papers are in `sites/srn/content/papers/` and built into the SRN site.
