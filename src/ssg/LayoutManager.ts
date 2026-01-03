@@ -123,21 +123,23 @@ export class LayoutManager {
                     }
                 }
 
-                finalHtml = await formLayout({ 
-                    data, 
-                    rawMarkdown: content, 
-                    fontCss, 
-                    fontFamilies: safeFontFamilies, 
-                    vc, 
-                    relPath, 
-                    config, 
+                finalHtml = await formLayout({
+                    data,
+                    rawMarkdown: content,
+                    fontCss,
+                    fontFamilies: safeFontFamilies,
+                    vc,
+                    relPath,
+                    config,
                     distDir,
                     manifestManager: manifestManager,
                     jsonStructure // Pass the processed structure
                 });
 
-                // Extra output: Report page
-                const reportHtml = await formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir, manifestManager: manifestManager });
+                // Extra output: Report page (use separate ManifestManager to avoid blob duplication)
+                const { ManifestManager: MM } = await import('./ManifestManager.js');
+                const reportManifestManager = new MM(distDir);
+                const reportHtml = await formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir, manifestManager: reportManifestManager });
                 const reportPath = path.join(distDir, relPath.replace('.md', '.report.html'));
                 await fs.ensureDir(path.dirname(reportPath));
                 await fs.writeFile(reportPath, reportHtml);

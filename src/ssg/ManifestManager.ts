@@ -37,10 +37,18 @@ export class ManifestManager {
         }
 
         const digest = `sha256:${crypto.createHash('sha256').update(buffer).digest('hex')}`;
-        
-        // 重複チェック
-        const existing = this.blobs.find(b => b.digest === digest);
-        if (existing) return existing;
+
+        // 重複チェック（digestベース）
+        const existingByDigest = this.blobs.find(b => b.digest === digest);
+        if (existingByDigest) return existingByDigest;
+
+        // ID重複チェック（警告のみ、異なるコンテンツの場合）
+        const existingById = this.blobs.find(b => b.id === params.id);
+        if (existingById && existingById.digest !== digest) {
+            console.warn(`[ManifestManager] Warning: Duplicate ID "${params.id}" with different content`);
+            console.warn(`  Existing: ${existingById.description} (${existingById.size} bytes)`);
+            console.warn(`  New: ${params.description} (${buffer.length} bytes)`);
+        }
 
         const ext = params.fileName ? path.extname(params.fileName) : this.getExtension(mediaType);
         const name = params.fileName || `${digest.split(':')[1]}${ext}`;
