@@ -310,10 +310,16 @@ describe("Manifest Blob Processing Integration", () => {
             expect(base64Content).not.toContain('{');
             expect(base64Content).not.toContain('plugins');
 
-            // The fix: decode and decompress first
+            // The fix: decode and conditionally decompress
             const decoded = Buffer.from(base64Content, 'base64');
-            const decompressed = zlib.gunzipSync(decoded);
-            const jsonString = decompressed.toString();
+            let jsonString: string;
+
+            if (blob.mediaType === 'application/x-gzip' || blob.mediaType.includes('gzip')) {
+                const decompressed = zlib.gunzipSync(decoded);
+                jsonString = decompressed.toString();
+            } else {
+                jsonString = decoded.toString();
+            }
 
             // Now it's valid JSON
             expect(jsonString).toContain('{');
