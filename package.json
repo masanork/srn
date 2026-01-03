@@ -13,7 +13,7 @@
     "build": "bun run build:wasm && bun run build:blog && bun run build:srn && bun run build:weba",
     "build:wasm": "if command -v wasm-pack >/dev/null; then cd packages/civ && wasm-pack build --target web --out-dir ../../sites/srn/static/wasm/civ; else echo 'wasm-pack not found, skipping WASM build'; fi",
     "build:blog": "bun run src/ssg/index.ts --site my-blog",
-    "build:srn": "bun build src/form/browser_maker.ts --outfile sites/srn/static/mkform.js --banner=\"window.__WEBA_BUILD_TIME__='$(date -u +%Y-%m-%dT%H:%M:%SZ)';\" && cp src/form/index.html sites/srn/static/maker.html && bun run src/ssg/index.ts --site srn",
+    "build:srn": "rm -rf .cache/plugin-bundles && bun build src/form/browser_maker.ts --outfile sites/srn/static/mkform.js --banner=\"window.__WEBA_BUILD_TIME__='$(date -u +%Y-%m-%dT%H:%M:%SZ)';\" && cp src/form/index.html sites/srn/static/maker.html && bun run src/ssg/index.ts --site srn",
     "build:weba": "bun build src/form/client/index.ts --outfile dist/assets/form-core.js --minify && bun build src/form/client/index-plugin.ts --outfile dist/assets/form-core-plugin.js --minify && bun build src/form/client/postal.ts --outfile dist/assets/form-postal.js --minify && bun build src/form/client/lg.ts --outfile dist/assets/form-lg.js --minify && bun build src/form/client/l2crypto.ts --outfile dist/assets/form-l2.js --minify",
     "convert": "bun run src/bin/weba-convert.ts",
     "test": "bun test",

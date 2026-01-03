@@ -22,19 +22,21 @@ export interface BundleResult {
     hash: string;
 }
 
-const CACHE_DIR = path.resolve('.cache/plugin-bundles');
-const SRC_DIR = path.resolve('src/form');
+export const CACHE_DIR = path.resolve('.cache/plugin-bundles');
+export const SRC_DIR = path.resolve('src/form');
 
 // Use absolute paths for imports
-const PLUGIN_IMPORTS: Record<string, string> = {
-    'postal': `import { postalPlugin } from '${path.join(SRC_DIR, 'plugins/postal.js')}';`,
-    'lg': `import { lgPlugin } from '${path.join(SRC_DIR, 'plugins/lg.js')}';`,
+export const PLUGIN_IMPORTS: Record<string, string> = {
+    'postal': `import { postalPlugin } from '${path.join(SRC_DIR, 'plugins/postal.js')}';
+import '${path.join(SRC_DIR, 'client/postal.js')}';`,
+    'lg': `import { lgPlugin } from '${path.join(SRC_DIR, 'plugins/lg.js')}';
+import '${path.join(SRC_DIR, 'client/lg.js')}';`,
     'validation-email': `// TODO: import { emailValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-email.js')}';`,
     'validation-tel': `// TODO: import { telValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-tel.js')}';`,
     'validation-required': `// TODO: import { requiredValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-required.js')}';`,
 };
 
-const PLUGIN_EXPORTS: Record<string, string> = {
+export const PLUGIN_EXPORTS: Record<string, string> = {
     'postal': 'postalPlugin',
     'lg': 'lgPlugin',
     'validation-email': '// emailValidationPlugin',
@@ -45,7 +47,7 @@ const PLUGIN_EXPORTS: Record<string, string> = {
 /**
  * Generate a hash for the plugin combination
  */
-function generatePluginHash(plugins: string[]): string {
+export function generatePluginHash(plugins: string[]): string {
     const sorted = [...plugins].sort();
     return crypto.createHash('sha256').update(sorted.join(',')).digest('hex').slice(0, 16);
 }
@@ -53,11 +55,15 @@ function generatePluginHash(plugins: string[]): string {
 /**
  * Generate entry point code for the given plugins
  */
-function generateEntryPoint(plugins: string[]): string {
+export function generateEntryPoint(plugins: string[]): string {
     const imports = [
         `import { FormRuntime } from '${path.join(SRC_DIR, 'runtime/Runtime.js')}';`,
         `import { PluginManager } from '${path.join(SRC_DIR, 'runtime/PluginManager.js')}';`,
         `import { parsePluginManifest } from '${path.join(SRC_DIR, 'runtime/plugin-detector.js')}';`,
+        `import { Calculator } from '${path.join(SRC_DIR, 'client/calculator.js')}';`,
+        `import { DataManager } from '${path.join(SRC_DIR, 'client/data.js')}';`,
+        `import { UIManager } from '${path.join(SRC_DIR, 'client/ui.js')}';`,
+        `import { SearchEngine } from '${path.join(SRC_DIR, 'client/search.js')}';`,
         "",
         "// Plugin imports",
         ...plugins.map(p => PLUGIN_IMPORTS[p] || `// Unknown plugin: ${p}`),
@@ -76,6 +82,11 @@ export async function initPluginRuntime() {
     const w = window as any;
     const runtime = new FormRuntime();
     const pluginManager = new PluginManager();
+
+    // Initialize core managers (for UI functions)
+    const calc = new Calculator();
+    const dm = new DataManager();
+    const uim = new UIManager(calc, dm);
 
     // Register available plugins
     const allPlugins = [
@@ -97,7 +108,19 @@ export async function initPluginRuntime() {
                     if (url.startsWith('#')) {
                         const el = document.querySelector(url);
                         if (el && el.textContent) {
-                            manifestJson = el.textContent.trim();
+                            // Decode Base64
+                            const bin = atob(el.textContent.trim());
+                            const ui8 = new Uint8Array(bin.length);
+                            for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+
+                            // Decompress GZIP only if mediaType indicates compression
+                            if (manifestBlob.mediaType === 'application/x-gzip' || manifestBlob.mediaType.includes('gzip')) {
+                                const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+                                manifestJson = await new Response(stream).text();
+                            } else {
+                                // Not compressed, just decode UTF-8
+                                manifestJson = new TextDecoder().decode(ui8);
+                            }
                         } else {
                             continue;
                         }
@@ -138,9 +161,104 @@ export async function initPluginRuntime() {
     // Start the runtime (legacy compatibility)
     runtime.start();
 
+    // Load structure data and initialize SearchEngine
+    const loadStructureData = async () => {
+        const manifest = w.__WEBA_MANIFEST;
+        if (manifest && manifest.blobs) {
+            const structureBlob = manifest.blobs.find((b: any) => b.id === 'weba-structure');
+            if (structureBlob && structureBlob.urls) {
+                console.log('[CustomRuntime] Found weba-structure in manifest');
+                for (const url of structureBlob.urls) {
+                    try {
+                        let jsonString: string;
+                        if (url.startsWith('#')) {
+                            const el = document.querySelector(url);
+                            if (!el || !el.textContent) continue;
+                            const bin = atob(el.textContent.trim());
+                            const ui8 = new Uint8Array(bin.length);
+                            for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+
+                            // Check if GZIP compressed
+                            if (structureBlob.mediaType === 'application/x-gzip' || structureBlob.mediaType.includes('gzip')) {
+                                const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+                                jsonString = await new Response(stream).text();
+                            } else {
+                                jsonString = new TextDecoder().decode(ui8);
+                            }
+                        } else {
+                            const resp = await fetch(url);
+                            if (!resp.ok) continue;
+                            jsonString = await resp.text();
+                        }
+                        const data = JSON.parse(jsonString);
+                        console.log('[CustomRuntime] Structure data loaded. Keys:', Object.keys(data));
+                        return data;
+                    } catch (e) {
+                        console.warn('[CustomRuntime] Failed to load structure from:', url, e);
+                    }
+                }
+            }
+        }
+
+        // Fallback to direct element access
+        const structureScript = document.getElementById('weba-structure') as HTMLScriptElement;
+        if (structureScript && structureScript.textContent) {
+            try {
+                return JSON.parse(structureScript.textContent);
+            } catch (e) {
+                console.warn('[CustomRuntime] Failed to parse structure from element:', e);
+            }
+        }
+
+        console.warn('[CustomRuntime] weba-structure not found');
+        return null;
+    };
+
+    loadStructureData().then(s => {
+        if (s) {
+            w.generatedJsonStructure = s;
+            console.log('[CustomRuntime] generatedJsonStructure set');
+            uim.applyI18n();
+            calc.recalculate();
+            uim.updateVisibility();
+
+            // Initialize SearchEngine after structure data is loaded
+            if (!w.SearchEngine) {
+                w.SearchEngine = new SearchEngine();
+            }
+            if (typeof w.SearchEngine.init === 'function') {
+                console.log('[CustomRuntime] Calling SearchEngine.init()...');
+                w.SearchEngine.init().catch((err: any) => console.error('SearchEngine init failed:', err));
+            }
+        } else {
+            console.warn('[CustomRuntime] Failed to load structure data');
+        }
+    }).catch(err => {
+        console.error('[CustomRuntime] Error loading structure:', err);
+    });
+
+    // Expose global functions (UI Manager API)
+    w.addTableRow = (btn, tableKey) => uim.addTableRow(btn, tableKey);
+    w.removeTableRow = (btn) => uim.removeTableRow(btn);
+    w.switchTab = (btn, tabId) => uim.switchTab(btn, tabId);
+    w.saveDraft = () => dm.saveDraft();
+    w.submitDocument = () => dm.submitDocument();
+    w.signAndDownload = () => dm.signAndDownload();
+    w.clearData = () => dm.clearData();
+    w.recalculate = () => calc.recalculate();
+
+    // Initialize UI and restore data
+    dm.restoreFromLS();
+    uim.applyI18n();
+    uim.initTables();
+    calc.recalculate();
+
     // Expose to window for debugging
     w.__pluginRuntime = runtime;
     w.__pluginManager = pluginManager;
+    w.__calc = calc;
+    w.__dm = dm;
+    w.__uim = uim;
 
     console.log('[CustomRuntime] Ready');
 }

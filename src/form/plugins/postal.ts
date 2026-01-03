@@ -28,16 +28,12 @@ export const postalPlugin: FormPlugin = {
             return;
         }
 
-        // Wait for postal data to be ready
-        const checkReady = () => {
-            if (!postal.isReady()) {
-                console.log('[PostalPlugin] Waiting for postal data...');
-                setTimeout(checkReady, 100);
-                return;
-            }
+        // Initialize data loading
+        postal.autoInit().then(() => {
             console.log('[PostalPlugin] Postal data ready');
-        };
-        checkReady();
+        }).catch((error: Error) => {
+            console.error('[PostalPlugin] Failed to initialize:', error);
+        });
 
         // Register input handler for postal autofill
         runtime.on('input', (e, input) => {

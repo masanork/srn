@@ -43,7 +43,19 @@ export async function initPluginRuntime() {
                     if (url.startsWith('#')) {
                         const el = document.querySelector(url);
                         if (el && el.textContent) {
-                            manifestJson = el.textContent.trim();
+                            // Decode Base64
+                            const bin = atob(el.textContent.trim());
+                            const ui8 = new Uint8Array(bin.length);
+                            for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+
+                            // Decompress GZIP only if mediaType indicates compression
+                            if (manifestBlob.mediaType === 'application/x-gzip' || manifestBlob.mediaType.includes('gzip')) {
+                                const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+                                manifestJson = await new Response(stream).text();
+                            } else {
+                                // Not compressed, just decode UTF-8
+                                manifestJson = new TextDecoder().decode(ui8);
+                            }
                         } else {
                             continue;
                         }

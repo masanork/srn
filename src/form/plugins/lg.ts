@@ -30,16 +30,12 @@ export const lgPlugin: FormPlugin = {
             return;
         }
 
-        // Wait for LG data to be ready
-        const checkReady = () => {
-            if (!lg.isReady()) {
-                console.log('[LgPlugin] Waiting for LG data...');
-                setTimeout(checkReady, 100);
-                return;
-            }
+        // Initialize data loading
+        lg.autoInit().then(() => {
             console.log('[LgPlugin] LG data ready');
-        };
-        checkReady();
+        }).catch((error: Error) => {
+            console.error('[LgPlugin] Failed to initialize:', error);
+        });
 
         // Helper: Get related fields in the same scope
         const getRelatedLgFields = (currentInput: HTMLInputElement) => {
