@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>AJAXの本質と次の課題</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AJAXの本質と次の課題",
+  "description": "",
+  "datePublished": "2006-08-06",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "AJAXの本質と次の課題",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>AJAXの本質と次の課題</h1>
+                <div class="article-meta">
+                    <span><time datetime="2006-08-06">2006-08-06</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>いまさら確認するのも何だが<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>って別に新技術ではない．DHTMLが設計された頃から念頭に置かれていたし，細々とあちこちのサイトで実装されていた．びっくりしたことに，僕が最近通った自動車学校のWeb予約システムも<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>になってた．MyWebOSなんて99年だっけ．<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>という造語というか，そういう定義を生んだ<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>の戦略がすごいのは，<a class="keyword" href="http://d.hatena.ne.jp/keyword/gmail">gmail</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/google">google</a> mapで<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>を奇貨に市場をひっくり返した点だ．けれども<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>にも限界はあるし，次の課題へ向けて面白い競争が展開されることになるだろう．
+
+<br />
+だから日本の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D9%A5%F3%A5%C1%A5%E3%A1%BC">ベンチャー</a>が「サービスの<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>対応をしたいのだが，技術者がいなくて」的にコボすのは二重の意味で恥ずかしい．即ち既存の技術者が<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>程度に枯れた技術にもキャッチアップできない<a href="#f-c3c7c328" name="fn-c3c7c328" title="と少なくとも経営層は感じている">*1</a>ことと，既存のビジネスで<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>をフォローアップしようとしているだけで，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>のように成熟した市場をひっくり返しに行こうとしている訳ではなく，流行に乗り遅れまいと流されていることを意図せず認めることになってしまっている．<br />
+なかなか難しい立場にあるのは今更<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>に梶を切ったことになっている<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%BD%A5%D5%A5%C8">マイクロソフト</a>だ．少なくともIE4でDHTMLを提示した段階で，<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>的なWebブラウザの使われ方を開発者自身が念頭に置いていたにも関わらず，Web開発環境やMSNは全くこれを意識できていなかった．<a class="keyword" href="http://d.hatena.ne.jp/keyword/IE">IE</a>の開発者が<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>に転籍して初めて，彼らがブラウザ設計者として撒いた種を，みんなに注目してもらえた訳だ．<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSS">RSS</a>も同様でIE4のActive DesktopでCDFという<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSS">RSS</a>と同じ<a class="keyword" href="http://d.hatena.ne.jp/keyword/RDF">RDF</a>由来の技術を提案していたにも関わらず，普及に失敗し，いまや<a class="keyword" href="http://d.hatena.ne.jp/keyword/IE7">IE7</a>やOffice 2007での<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSS">RSS</a>対応を売りにする有様だ．<a class="keyword" href="http://d.hatena.ne.jp/keyword/Firefox">Firefox</a>の売りであるLive Bookmark機能はIE4からCDF向けに実装されていたのだが，<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSS">RSS</a>購読に対応した<a class="keyword" href="http://d.hatena.ne.jp/keyword/IE7">IE7</a>は<a class="keyword" href="http://d.hatena.ne.jp/keyword/Firefox">Firefox</a>的な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E9%A5%A4%A5%D6%A5%D6%A5%C3%A5%AF%A5%DE%A1%BC%A5%AF">ライブブックマーク</a>をサポートしていない．だから日常的にアンテナや<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A4%CF%A4%C6%A5%D6">はてブ</a>を巡回するのに僕は<a class="keyword" href="http://d.hatena.ne.jp/keyword/Firefox">Firefox</a>を使っている．<br />
+結局のところ<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%BD%A5%D5%A5%C8">マイクロソフト</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>を活かせず，同じエンジニアが<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>に行った途端にその技術が脚光を浴びたのには理由がある．即ち<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%BD%A5%D5%A5%C8">マイクロソフト</a>は<a class="keyword" href="http://d.hatena.ne.jp/keyword/API">API</a>やブラウザの仕様を自由にいじれるけれども，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>はそうでないということだ．<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>がUser Experienceを乗っ取るには，既存インフラ上で，インフラ提供者の意図から独立したUser Experience抽象化Layerを別に構築するのが手っ取り早い．それが<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>であり，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google%20Desktop">Google Desktop</a>であり，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Firefox">Firefox</a>への寄与や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Opera">Opera</a>の支援なのだ．だから<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>が市場のルールを変え脚光を浴びたことの本質は，クライアント・プラットフォームを持たざる者としての戦略性の妙である．<br />
+けれども<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>はPlatform Passingの手段として極めて戦略的といえる一方で，技術的には無理がある．<a class="keyword" href="http://d.hatena.ne.jp/keyword/XHTML">XHTML</a>の表現力による制約は大きいし，現実にはブラウザ実装に対する依存性は高く，<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C7%A5%D0%A5%C3%A5%B0">デバッグ</a>やテストは難しい．もっと直行した拡張性のある技術が求められよう．<a class="keyword" href="http://d.hatena.ne.jp/keyword/XForms">XForms</a>(<a class="keyword" href="http://d.hatena.ne.jp/keyword/W3C">W3C</a>), Appolo(<a class="keyword" href="http://d.hatena.ne.jp/keyword/Adobe">Adobe</a>) ,<a class="keyword" href="http://d.hatena.ne.jp/keyword/WPF">WPF</a>/E(MS)，UIEngine(UIEvolution)等がpost <a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>或いはenhanced <a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>の地位を狙っているのだろう．<br />
+これらの技術が<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>ほど注目を浴びるかどうかは疑問だ．<a class="keyword" href="http://d.hatena.ne.jp/keyword/google">google</a> mapのように<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>を武器に成熟市場を次々とひっくり返したようなスペクタクルが展開される見込みがないからだ．現実にPC上では，これら技術が<a class="keyword" href="http://d.hatena.ne.jp/keyword/ActiveX">ActiveX</a>なり<a class="keyword" href="http://d.hatena.ne.jp/keyword/Firefox">Firefox</a> Extensionとしてブラウザによって統合され，シームレスに使われることになるだろう．そうすると主戦場はそもそもpost <a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>にないか，<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>でも組込市場ということになる．TVポータルがどんな風になるかも微妙に気もするし，どうせテレビで双方向という発想そのものが外しているとすれば，むしろケータイのUser Experienceがこれからどうなっていくかの方が重要かも知れない．ただケータイって<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>すらキーワードになってないし，ケータイ的<a class="keyword" href="http://d.hatena.ne.jp/keyword/Web%202.0">Web 2.0</a>ってどんなだろうというのも，よく分からないというのが正直なところ．<br />
+かつてUser ExperienceはOSなりデスクトップ環境が決めるという先入観があった．90年代に入って<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mosaic">Mosaic</a>と<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>は，OS上層でUser Experience Platformをつくれることを世に示した．けれどもそこに目を奪われた途端，NetcasterやNetwork Computerの例を引くまでもなく沈没した．<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>で<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>がUser Experienceの主導権を握ったことは，歴史的にみてすごい所業であるし，詳細に分析すべき華麗なる<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%EB%A1%BC%A5%AA%A1%BC%A5%B7%A5%E3%A5%F3">ブルーオーシャン</a>戦略である気がする．<br />
+ひところ<a class="keyword" href="http://d.hatena.ne.jp/keyword/Googlezon">Googlezon</a>の登場を予見する<a class="keyword" href="http://d.hatena.ne.jp/keyword/EPIC2014">EPIC2014</a>という<a class="keyword" href="http://d.hatena.ne.jp/keyword/Flash">Flash</a>アニメが話題となったが，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Web%202.0">Web 2.0</a>的に<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>と<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>は事業統合しなくとも一貫したUser Experienceを提供できるし，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>の物流機構を所有ないし支配することによる<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B7%A5%CA%A5%B8%A1%BC">シナジー</a>があるとは考えづらい．<a href="#f-3a7440a8" name="fn-3a7440a8" title="閲覧や検索キーワードだけでなく，購買行動そのものを追跡することによって広告効果を更に高めるという路線は考えられる．であればAmazonだけでなく，ポイント機能付きPOS ASPサービスとかもセットで展開すると面白そうだ．">*2</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/Googlezon">Googlezon</a>的サービスを祖結合な<a class="keyword" href="http://d.hatena.ne.jp/keyword/Web%A5%B5%A1%BC%A5%D3%A5%B9">Webサービス</a>で実現することは，そう難しくない．つまり<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B7%A5%CA%A5%B8%A1%BC">シナジー</a>獲得のために<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B7%D0%B1%C4%C5%FD%B9%E7">経営統合</a>の必要性は薄いのだ．<br />
+むしろクライアント側のユーザー体験を管理しようとした時に，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google%20Desktop">Google Desktop</a>の配布や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Firefox">Firefox</a>への寄与だけでは物足りなくなる可能性が高い．とすると組込系も含めて端末系のUser Experienceを掌握でき，開発者から高い支持を得ている開発ツールを抱えている点で，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Adobe">Adobe</a>は<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>にとって極めて魅力的な買収対象となるのではないだろうか．電子文書と操作性の両面でプラットフォーム独立のプラットフォームを持つ一方で，Cold Fusionはじめ多くのサーバー製品を持つ企業を買収しながら，相変わらずサーバー系に弱い<a class="keyword" href="http://d.hatena.ne.jp/keyword/Adobe">Adobe</a>は「あちら側の世界」についてしかアセットを持たない<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>にとって極めて魅力的な協業先，買収案件であることは想像に難くない．もちろん全て，僕の妄想だけどさ．</p>
+<div class="footnote">
+<p class="footnote"><a href="#fn-c3c7c328" name="f-c3c7c328" class="footnote-number">*1</a><span class="footnote-delimiter">:</span><span class="footnote-text">と少なくとも経営層は感じている</span></p>
+<p class="footnote"><a href="#fn-3a7440a8" name="f-3a7440a8" class="footnote-number">*2</a><span class="footnote-delimiter">:</span><span class="footnote-text">閲覧や検索キーワードだけでなく，購買行動そのものを追跡することによって広告効果を更に高めるという路線は考えられる．であれば<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>だけでなく，ポイント機能付きPOS <a class="keyword" href="http://d.hatena.ne.jp/keyword/ASP">ASP</a>サービスとかもセットで展開すると面白そうだ．</span></p>
+</div>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:24:14.628Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-08-06-ajax",
+    "name": "AJAXの本質と次の課題",
+    "contentDigest": "a2db1b607e410fdbb0f721ec2005236f76bb0025c8b96083f6652ee7ad4cee97"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:14.628Z",
+      "proofValue": "z3oHpise2NACt1QTEdTGamu3gk7LrxS4Q1qeMUS52oqUYrSxRZTahpmVvbpJuCEuKAdd7Q5VkooYTYe586ZCSSAbw"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:14.628Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:24:14.662Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "7229a92dd7f8c3495144db87e8f802bc6f6b4cbe253f2d2995c8f4d01e490b5a",
+        "metadata": {}
+      }
+    },
+    "eventHash": "a088bf6756b86ea115357a534b0049bbc92fe6f989ff32d70391e3b85cabaa31",
+    "chainHash": "d2dfeffe2a7ce74144953bb89a5c96295a238a1def66b9bd9a7c0c148b95838b"
+  },
+  {
+    "prevHash": "d2dfeffe2a7ce74144953bb89a5c96295a238a1def66b9bd9a7c0c148b95838b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:25:24.779Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "64d113fc87dd8acd4dbaf34625d4ca67a4c8e6afb7be4cc0c1a3673d0a31d98a",
+    "chainHash": "21d1a5fd39e470661b599294e0ec411ab7fb556f9865a157e6b6071f184e1f34"
+  },
+  {
+    "prevHash": "21d1a5fd39e470661b599294e0ec411ab7fb556f9865a157e6b6071f184e1f34",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:29:39.994Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "1bbe7c9045d3db695be3149f9e2a8252017c99beec618cca7e2e50de5a1058ce",
+    "chainHash": "35d6058f70b906be57b2cde44615aba9db52731e82ab6023a1a912fa1cce8678"
+  },
+  {
+    "prevHash": "35d6058f70b906be57b2cde44615aba9db52731e82ab6023a1a912fa1cce8678",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:34:30.238Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "f0d07e28540fb2f08331cd7cd9ccd2ee7fe3f5119b1c33dfd98c0fee961fdefd",
+    "chainHash": "6eccb08e0a6ea20888c0af62381243e77776fd234e9f52c18943c0fd2e187589"
+  },
+  {
+    "prevHash": "6eccb08e0a6ea20888c0af62381243e77776fd234e9f52c18943c0fd2e187589",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:15:43.559Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "a7d0ba3b9de2abf8dca31a176360287de4388183f64571903f7c9e85dd7faea8",
+    "chainHash": "c65ff9354a55dc5bcc261a137004bdd6f605611dcbe3e4b69ad7b286fda1f37d"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:15:43.617Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-08-06-ajax#container",
+    "containerHash": "205a06af674e2678d0568474beca6dbd06c6d6f9f985787a72434664d7350902",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "5efb7eee79854233c19c7854ac153723857ff3ac0b97aee1c38a538c9fc0d45b"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:15:43.617Z",
+      "proofValue": "z47Ltzf4HshB9BecdcLsr4hkXKjnKDZ6YE6CSLHXArhXVbp4tdhLAXqk1jVcDQzKLdXcg3Lcu2o3yKy4gCnpVpAVv"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:15:43.617Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:15:43.707Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

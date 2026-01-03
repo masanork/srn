@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>提案：Web/A Governance workflow (WGW)</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="sitemap" type="application/xml" href="../../sitemap.xml">
+    <link rel="help" type="text/plain" href="../../llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "提案：Web/A Governance workflow (WGW)",
+  "description": "Web/A技術を用いた、Web/Aプロジェクト自体のガバナンス（承認プロセス）のコード化と自動化に関する提案。",
+  "datePublished": "2026-01-01",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "提案：Web/A Governance workflow (WGW)",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>提案：Web/A Governance workflow (WGW)</h1>
+                <div class="article-meta">
+                    <span><time datetime="2026-01-01">2026-01-01</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p><strong>ステータス</strong>: ドラフト (Draft)
+<strong>日付</strong>: 2026年1月1日
+<strong>起案者</strong>: 開発チーム</p>
+<h2>1. 背景と課題</h2>
+<p>Sorane プロジェクトは「真正性のあるWeb文書」を提唱しているが、そのプロジェクト自体のウェブサイト更新や仕様変更といった重要な意思決定プロセスは、GitHub 上の「いいね」やチャットログといった、<strong>中央集権的かつ永続性の乏しい手段</strong> に依存している。</p>
+<p>特に、以下のようなリスク管理において、開発者のセルフチェックのみに依存する現状のフローには限界がある：</p>
+<ul>
+<li><strong>コンプライアンス</strong>: 「50年保証」といった過大な表現や、不適切な用語の使用。</li>
+<li><strong>セキュリティ</strong>: 監査未了の仕様へのリンク公開。</li>
+<li><strong>透明性</strong>: 「誰が」「いつ」その変更を承認したかの証跡が、プラットフォーム（GitHub）にロックインされている。</li>
+</ul>
+<h2>2. 提案内容：Approval as Code</h2>
+<p>我々が開発している <strong>Web/A (Web Archive format)</strong> 技術そのものを、組織のガバナンス・プロセスに適用する（ドッグフーディング）。
+具体的には、サイト更新や仕様変更の「承認プロセス」を、<strong>Web/A 形式の『稟議書』の流通</strong> として再定義する。</p>
+<h3>2.1. ワークフロー概要</h3>
+<ol>
+<li><strong>申請 (Request)</strong>:<ul>
+<li>開発者は変更内容（Git diff等）を含む <strong>「変更申請書 Web/A」</strong> を生成する。</li>
+<li>これには開発者の署名 (L2) が付与される。</li>
+</ul>
+</li>
+<li><strong>回覧と承認 (Review &amp; Approve)</strong>:<ul>
+<li>ガバナンス委員は、送付された HTML ファイルをブラウザで開く。</li>
+<li>内容を確認し、問題なければブラウザ上の「承認」ボタンを押下する。</li>
+<li>委員の Passkey (WebAuthn) を用いて、新たな署名を含む <strong>「承認証明書 (Verifiable Presentation)」</strong> が生成される。</li>
+</ul>
+</li>
+<li><strong>執行 (Execution)</strong>:<ul>
+<li>CI/CD パイプラインは、リポジトリに提出された「承認証明書」を検証する。</li>
+<li>有効な承認署名が含まれている場合のみ、本番環境へのデプロイ（マージ）を自動実行する。</li>
+</ul>
+</li>
+</ol>
+<h2>3. 技術的構成要素</h2>
+<h3>3.1. Web/A Form for Governance</h3>
+<p>既存の <code>Web/A Form</code> 技術を応用し、以下の機能を持つテンプレートを開発する：</p>
+<ul>
+<li><strong>Diff Viewer</strong>: 変更前後の差分をグラフィカルに表示するコンポーネント。</li>
+<li><strong>Multi-Sig Logic</strong>: 規定数（例：2名以上）の承認署名を集めるためのロジック。</li>
+</ul>
+<h3>3.2. Headless Verifier (CI/CD)</h3>
+<p>GitHub Actions 上で動作する検証器。</p>
+<ul>
+<li>提出された Web/A ファイルから署名を抽出し、事前に登録された「ガバナンス委員公開鍵リスト (DID)」と照合する。</li>
+</ul>
+<h2>4. 期待される効果</h2>
+<ol>
+<li><strong>ドッグフーディングの加速</strong>: 自組織の運営自体が、Web/A の強力なユースケース実証となる。</li>
+<li><strong>ガバナンスのポータビリティ</strong>: 承認履歴が単一の HTML ファイルとして保存されるため、GitHub がサービス終了しても「意思決定の歴史」が失われない。</li>
+<li><strong>非エンジニアの参加</strong>: CLI や Markdown を扱えない委員でも、ブラウザさえあれば承認プロセスに参加可能となる。</li>
+</ol>
+<h2>5. ロードマップ</h2>
+<ul>
+<li><strong>Phase 1 (Manual)</strong>: リリース判定会議用の「議事録兼承認書」を手動で作成し、Web/A として署名・保管する運用を開始。</li>
+<li><strong>Phase 2 (Automated Gen)</strong>: Pull Request から自動的に申請書 HTML を生成する Action の実装。</li>
+<li><strong>Phase 3 (Enforcement)</strong>: 本番デプロイ時における Web/A 承認署名の必須化（強制）。</li>
+</ul>
+<hr>
+<p>本提案は、「Web/A が世界をどう変えるか」を、まず「我々自身がどう変わるか」によって証明する試みである。</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-01T02:18:28.953Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/governance/proposals/web-a-governance-workflow.ja",
+    "name": "提案：Web/A Governance workflow (WGW)",
+    "contentDigest": "7afae278f1b0a0fb96e235ab9478caa6e283388ac2e2f487e0e84c76252110b3"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767233875345-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T02:18:28.953Z",
+      "proofValue": "z3tvbxWNaKBRRTbvkY2hGsTF2Y6Hkm7x4S98bR3ExPDkP1MkEZNs4tLVKzxHrpGQjyMGoi5BjxuMCS5axGDvnLkGu"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767233875345-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T02:18:28.953Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "type": "WebAContextLink",
+    "prevHash": "genesis",
+    "targetHash": "b92e8c3ea122e2d8e97965df782454284a019357c60918e81e1f03d49ed59d98",
+    "signer": "did:web:masanork.github.io:srn",
+    "timestamp": "2026-01-01T02:18:28.984Z",
+    "proof": {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767233875345-ed25519",
+      "proofValue": "mock_signature_for_poc"
+    }
+  },
+  {
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-01T04:16:11.502Z",
+      "payload": {
+        "metadata": {},
+        "buildId": "build-1767240723633",
+        "reason": "Frontmatter updated in SSG"
+      }
+    },
+    "eventHash": "b3b8ef5697900ff80aa62396e961ab38231d9b00315686f3db3eb57bdc7ddb15",
+    "chainHash": "824125f23f8a2d46237de25418114cf99acca810d289ad37b0879ddfbb554341"
+  },
+  {
+    "prevHash": "824125f23f8a2d46237de25418114cf99acca810d289ad37b0879ddfbb554341",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:24:45.195Z",
+      "payload": {
+        "buildId": "build-1767241235576"
+      }
+    },
+    "eventHash": "553e063cf46426b8686eeb6466c7de637f6c8c35e81f01611af18f5524793594",
+    "chainHash": "654bb3baa71a68a55897392d614b31eeaf62f95a8e5848b36e3d67d2dd635db8"
+  },
+  {
+    "prevHash": "654bb3baa71a68a55897392d614b31eeaf62f95a8e5848b36e3d67d2dd635db8",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:32:40.879Z",
+      "payload": {
+        "buildId": "build-1767241710058"
+      }
+    },
+    "eventHash": "1ec98cf86f56696b93aa0f37bff2505d8afd82934900b9ab00804dadf7b51250",
+    "chainHash": "6682f067e3dbe5cd83e988b224416a62154452d558239a1241ca650a39004904"
+  },
+  {
+    "prevHash": "6682f067e3dbe5cd83e988b224416a62154452d558239a1241ca650a39004904",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:38:43.355Z",
+      "payload": {
+        "buildId": "build-1767242067086"
+      }
+    },
+    "eventHash": "7eba14f0ce4596e614bf3222c385389c8cd8c4983e33558037a0f4903924b85f",
+    "chainHash": "a2aa74f64ee7e6c4c0c98835f23ab55ca0e8f32d720b3821c71837aade109651"
+  },
+  {
+    "prevHash": "a2aa74f64ee7e6c4c0c98835f23ab55ca0e8f32d720b3821c71837aade109651",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:43:56.929Z",
+      "payload": {
+        "buildId": "build-1767242380816"
+      }
+    },
+    "eventHash": "0dd88529deabc7dacf2736e31ed0bdcf1ae802cee22666b40e4c0cf293127bb5",
+    "chainHash": "650bd518222afdb6364c7c1ec7195394cfb39604d9cd3dc9d3ddf13623278333"
+  },
+  {
+    "prevHash": "650bd518222afdb6364c7c1ec7195394cfb39604d9cd3dc9d3ddf13623278333",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T06:05:32.686Z",
+      "payload": {
+        "buildId": "build-1767247274826"
+      }
+    },
+    "eventHash": "92312a6e6055e47ab82bdfa578613facbd4374f5a119b6d9829b70617db14f89",
+    "chainHash": "cab9e5776e6beaf5464d4a28e2c9ffc1482fbd85edf39d209282024cf50f4bd4"
+  },
+  {
+    "prevHash": "cab9e5776e6beaf5464d4a28e2c9ffc1482fbd85edf39d209282024cf50f4bd4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:12:47.212Z",
+      "payload": {
+        "buildId": "build-1767262105333"
+      }
+    },
+    "eventHash": "5aecf75b807e18236881dbc805e98753c9b15fc642166f2dcd48fb2e4106d8b1",
+    "chainHash": "704a4234276dbc20e4196d0233e06fed7a1d7ffa60132aaaf3767ef66c7cc0a3"
+  },
+  {
+    "prevHash": "704a4234276dbc20e4196d0233e06fed7a1d7ffa60132aaaf3767ef66c7cc0a3",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:19:46.540Z",
+      "payload": {
+        "buildId": "build-1767262532262"
+      }
+    },
+    "eventHash": "a0caaa0ecec8d40c6723e68d17f49ca2dbe83fc07391d9aba6a23472edec5474",
+    "chainHash": "7b6e8b3cc7543d25febe11b2de5e0559c826844929e53c497f3528ee12954b6f"
+  },
+  {
+    "prevHash": "7b6e8b3cc7543d25febe11b2de5e0559c826844929e53c497f3528ee12954b6f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:51:33.399Z",
+      "payload": {
+        "buildId": "build-1767263450152"
+      }
+    },
+    "eventHash": "34236881936542f22b08c1873084f8496ac306c9cb0503e95e96849cca441c1f",
+    "chainHash": "76221fd0467fe0c759b21da26d72eda7d66b7fe12538b11be6fb84d133b5d45e"
+  },
+  {
+    "prevHash": "76221fd0467fe0c759b21da26d72eda7d66b7fe12538b11be6fb84d133b5d45e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:01:27.561Z",
+      "payload": {
+        "buildId": "build-1767265011181"
+      }
+    },
+    "eventHash": "1ebf2c8ba9c7a0398ee6c3cfed5180110e4d18da00eccfe1795bb031d5ab86c9",
+    "chainHash": "316bd26c799b6cbab0ed2dcc839b76f989419ab35043326dcdec9b2eea1ae354"
+  },
+  {
+    "prevHash": "316bd26c799b6cbab0ed2dcc839b76f989419ab35043326dcdec9b2eea1ae354",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:22:07.974Z",
+      "payload": {
+        "buildId": "build-1767266242469"
+      }
+    },
+    "eventHash": "68368e6d2ea0252efc9b941cb24ec7e3e09fd7c7216330b27c7cfe29af3938e0",
+    "chainHash": "60033ad9d1037750d8b52d61680e45fe74dce98d1363d7575791c662fcf1e5e2"
+  },
+  {
+    "prevHash": "60033ad9d1037750d8b52d61680e45fe74dce98d1363d7575791c662fcf1e5e2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:38:18.200Z",
+      "payload": {
+        "buildId": "build-1767267249416"
+      }
+    },
+    "eventHash": "ffb82f75517a782bdce6c6c652255f0bb0fe1548b498e6bfc852d42192396a59",
+    "chainHash": "f7caac5baa4e04b8beea165647ad880217160afddf290cc4fcfeac922d42d55f"
+  },
+  {
+    "prevHash": "f7caac5baa4e04b8beea165647ad880217160afddf290cc4fcfeac922d42d55f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:44:18.997Z",
+      "payload": {
+        "buildId": "build-1767267609379"
+      }
+    },
+    "eventHash": "4077f39ca8d85925d5d063cc45f5eccd171a6e621217bdbd18f19c17b08f6c1e",
+    "chainHash": "2f489d72847d5f351aba93963c8367b5d3ea9cb3eaba312d3639e5ed41420864"
+  },
+  {
+    "prevHash": "2f489d72847d5f351aba93963c8367b5d3ea9cb3eaba312d3639e5ed41420864",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:02:45.192Z",
+      "payload": {
+        "buildId": "build-1767268714878"
+      }
+    },
+    "eventHash": "edab4b558f7fdc984285595c1e62188f28adc5927e8cf370a2cf0a4dab2731d2",
+    "chainHash": "939f314a2714417beceb2fc9d6e03c1d254c2f4ae28a790cb2830505e6a039b5"
+  },
+  {
+    "prevHash": "939f314a2714417beceb2fc9d6e03c1d254c2f4ae28a790cb2830505e6a039b5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:07:57.217Z",
+      "payload": {
+        "buildId": "build-1767269026282"
+      }
+    },
+    "eventHash": "e0d2873db2805838ddd3face4ad9799ac8f5440cb2f52d415218300564e43105",
+    "chainHash": "5e7cdd221cd91bf877e030c05669b64033c31e04ef4847fe9506bee39a88740a"
+  },
+  {
+    "prevHash": "5e7cdd221cd91bf877e030c05669b64033c31e04ef4847fe9506bee39a88740a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:46:45.596Z",
+      "payload": {
+        "buildId": "build-1767271356932"
+      }
+    },
+    "eventHash": "d1e0ede56fde4d56a350259599af16d65888b655d02ae3f8349d6b4f3d76de0e",
+    "chainHash": "22120bf5800809419de3fc19010f9e58f18ec9a91ac65be2120407b8c930d809"
+  },
+  {
+    "prevHash": "22120bf5800809419de3fc19010f9e58f18ec9a91ac65be2120407b8c930d809",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:54:19.834Z",
+      "payload": {
+        "buildId": "build-1767271809300"
+      }
+    },
+    "eventHash": "e68ac14ff03d9f10bf490639b670d07779defa47e396e3c77fcdf299779def3e",
+    "chainHash": "81ea39700d50a006649349c13030fc720412ae1030e7aebd3004e195395a6109"
+  },
+  {
+    "prevHash": "81ea39700d50a006649349c13030fc720412ae1030e7aebd3004e195395a6109",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:55:36.814Z",
+      "payload": {
+        "buildId": "build-1767272123565"
+      }
+    },
+    "eventHash": "7ebe5b8deed5e9adff922b36d3802d2a198c2c8687d1b213644c3ad2084ff84f",
+    "chainHash": "020f29b12d72e5615858e10d166b85f32657ae093f5b218ae704cad2d9fba1da"
+  },
+  {
+    "prevHash": "020f29b12d72e5615858e10d166b85f32657ae093f5b218ae704cad2d9fba1da",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:59:34.723Z",
+      "payload": {
+        "buildId": "build-1767272360638"
+      }
+    },
+    "eventHash": "41c59846c0dc17060d1314c0ba23beba6f8cabd005b3584a4d83c064a6bfc58e",
+    "chainHash": "9b4ad1a87fa6f1d074bc62be52b5bbd2eefb4c75b975df634a6b1c9061b52808"
+  },
+  {
+    "prevHash": "9b4ad1a87fa6f1d074bc62be52b5bbd2eefb4c75b975df634a6b1c9061b52808",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:01:56.218Z",
+      "payload": {
+        "buildId": "build-1767272502016"
+      }
+    },
+    "eventHash": "ab94b27a1ba669886fcdd56a6b976beb50cfebb3d731f827d2d454c056324683",
+    "chainHash": "94a4f1c325a59c82082f9451cde4cbef470c54bb800740c833d7683be90d249b"
+  },
+  {
+    "prevHash": "94a4f1c325a59c82082f9451cde4cbef470c54bb800740c833d7683be90d249b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:20:30.840Z",
+      "payload": {
+        "buildId": "build-1767273615905"
+      }
+    },
+    "eventHash": "f50023d67ab334d8cdafb1644ff12652fd81a944526a182d2184e4e6efd230b6",
+    "chainHash": "5cca3385bf89bf76eb94c341414ef1bdb04f4f027cac7d4f15021fb1d12c5347"
+  },
+  {
+    "prevHash": "5cca3385bf89bf76eb94c341414ef1bdb04f4f027cac7d4f15021fb1d12c5347",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:22:17.410Z",
+      "payload": {
+        "buildId": "build-1767273703292"
+      }
+    },
+    "eventHash": "9ffbba3c95439bd5cfb026b7788fc893f6522adde82973eba8c80a621ed18497",
+    "chainHash": "97b7973588196ecfc6518e4781439e62f4b5fd1d6f1eaa01039948f979e2ffd8"
+  },
+  {
+    "prevHash": "97b7973588196ecfc6518e4781439e62f4b5fd1d6f1eaa01039948f979e2ffd8",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:23:03.517Z",
+      "payload": {
+        "buildId": "build-1767273749152"
+      }
+    },
+    "eventHash": "fb8bfa0f51bfe18f25d551c2d4758fd377851b13ab0f3ebe64b0941edf24b6ee",
+    "chainHash": "b5c36a0e786c7717830450b1e5a334bc4589f709680be0bc73f2aae5df4d19b6"
+  },
+  {
+    "prevHash": "b5c36a0e786c7717830450b1e5a334bc4589f709680be0bc73f2aae5df4d19b6",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:37:13.347Z",
+      "payload": {
+        "buildId": "build-1767274598466"
+      }
+    },
+    "eventHash": "3c4223e721ee75f39e73cca62ede7e5e9bb0c83c21d09a7413fa0a81cc2c15c4",
+    "chainHash": "3325b345d6a095c91c0063d3b251d73390407d9ce6692b9ac677e5e1b731d344"
+  },
+  {
+    "prevHash": "3325b345d6a095c91c0063d3b251d73390407d9ce6692b9ac677e5e1b731d344",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T14:01:40.753Z",
+      "payload": {
+        "buildId": "build-1767276065034"
+      }
+    },
+    "eventHash": "0ce18af843d472a36e325adc98c67474dfdde9a55c27e076900d3d4d94b9eddf",
+    "chainHash": "1954f7ce5f35c6154fb48de56da33b8d1185cdadbcc93881a3c1c20f3a780a88"
+  },
+  {
+    "prevHash": "1954f7ce5f35c6154fb48de56da33b8d1185cdadbcc93881a3c1c20f3a780a88",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:02:19.198Z",
+      "payload": {
+        "buildId": "build-1767279702726"
+      }
+    },
+    "eventHash": "1bd147c672d701e8bd57c41690ac45f11268b7c3a2c77787e5a2670fb2da3f02",
+    "chainHash": "421e70ff5c395d3e316709394ee226ff5c594fe368f23b3168a3ca357ebd4013"
+  },
+  {
+    "prevHash": "421e70ff5c395d3e316709394ee226ff5c594fe368f23b3168a3ca357ebd4013",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:17:39.146Z",
+      "payload": {
+        "buildId": "build-1767280622690"
+      }
+    },
+    "eventHash": "2dcead1611423d9a82987b09e9eff9319ac719b235fb7ad08a0167c0b85e338c",
+    "chainHash": "a142acad21c88820e07e9ccb2fea058ead6bf4f396c11dab376b604ce881c957"
+  },
+  {
+    "prevHash": "a142acad21c88820e07e9ccb2fea058ead6bf4f396c11dab376b604ce881c957",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:13:17.861Z",
+      "payload": {
+        "buildId": "build-1767305561689"
+      }
+    },
+    "eventHash": "27c8de5304c6a18d802de17a62db254f80ed19bd849ce7af61b3191e46626377",
+    "chainHash": "13273f98d054da8e4e624507aab6d8dfdc1cafd710211d897f7ed2413b843292"
+  },
+  {
+    "prevHash": "13273f98d054da8e4e624507aab6d8dfdc1cafd710211d897f7ed2413b843292",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:37:23.010Z",
+      "payload": {
+        "buildId": "build-1767307006040"
+      }
+    },
+    "eventHash": "8a7a05ede29f66005c4a1b57b720312c8c500ab032660056bb50e7461932fb90",
+    "chainHash": "ac18fc4fa9e3d1c23048fef99740c2367f2d9bd36d76d11895b68c312f5db000"
+  },
+  {
+    "prevHash": "ac18fc4fa9e3d1c23048fef99740c2367f2d9bd36d76d11895b68c312f5db000",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:46:43.616Z",
+      "payload": {
+        "buildId": "build-1767307567034"
+      }
+    },
+    "eventHash": "9699abe3da30a29d02f7c7a0b4c9b5b3b3175713d8b56f263ba2b9286f7a8bf3",
+    "chainHash": "60dd84c4579fa376bcd1bf3239820fe3e3e468f1e38a9edb72167745e27689ef"
+  },
+  {
+    "prevHash": "60dd84c4579fa376bcd1bf3239820fe3e3e468f1e38a9edb72167745e27689ef",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:50:27.140Z",
+      "payload": {
+        "buildId": "build-1767307789914"
+      }
+    },
+    "eventHash": "b51434662d40e625362621021a763ce13169a75e3df2bd980b3f9c58a6c10ae6",
+    "chainHash": "6a9ff4bd7d9fa5f7fe53455f914b5734586c5c3c17d574af59928648dccd667b"
+  },
+  {
+    "prevHash": "6a9ff4bd7d9fa5f7fe53455f914b5734586c5c3c17d574af59928648dccd667b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T11:15:32.404Z",
+      "payload": {
+        "buildId": "build-1767352493876"
+      }
+    },
+    "eventHash": "19e3ce1b7ef1c601477816b1d70779213688d8cd1206f519c5d3a4bca7501b8c",
+    "chainHash": "34fe8d4197a9733c109b7bf2ba925b3084992ac525f214880f90160cc4f3576f"
+  },
+  {
+    "prevHash": "34fe8d4197a9733c109b7bf2ba925b3084992ac525f214880f90160cc4f3576f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:06:05.573Z",
+      "payload": {
+        "buildId": "build-1767355525912"
+      }
+    },
+    "eventHash": "886fd26d75f32fa6e121c8ca7df68168b5acefa5a1d7f189860b294884d049aa",
+    "chainHash": "9d0f0fe3976c5bf7734ff76dd52be7bb5a84122459f6fb869d22447bdebe3598"
+  },
+  {
+    "prevHash": "9d0f0fe3976c5bf7734ff76dd52be7bb5a84122459f6fb869d22447bdebe3598",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:19:29.518Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "e13206b1e76473331ec8359a4cdb8e3a7497addadde1325957e6014d5833e578",
+    "chainHash": "733551305227c38e5c2f4981062cfd1dd70eaaa422a1381ad148249f090bde61"
+  },
+  {
+    "prevHash": "733551305227c38e5c2f4981062cfd1dd70eaaa422a1381ad148249f090bde61",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:22:43.400Z",
+      "payload": {
+        "buildId": "build-1767356524824"
+      }
+    },
+    "eventHash": "258f849276f587c63a991205bbc8f1ea2aa5de529916c8bcf78ae0ec807e672f",
+    "chainHash": "091d72254214117edda81f81b30f025e26c1ab00e8054d3bbb37c5bb62a0631b"
+  },
+  {
+    "prevHash": "091d72254214117edda81f81b30f025e26c1ab00e8054d3bbb37c5bb62a0631b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:25:27.642Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "8c125ef58ddb5c2bfb52828e2c64572991f0aeaabf8ff7ed6dcf33255140a1d4",
+    "chainHash": "43c0c54518d984454c206cc15a0db3ba4230940e717f3c41ffeef99016ef1552"
+  },
+  {
+    "prevHash": "43c0c54518d984454c206cc15a0db3ba4230940e717f3c41ffeef99016ef1552",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:37.700Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "c77ba457f0f05054b875d330ff0378d7ea5ab31478c0463fc8d76b6a89687e1e",
+    "chainHash": "0420e15b4b9b388d4729993d3fef033e12c53d28505cce47de625731d38738ec"
+  },
+  {
+    "prevHash": "0420e15b4b9b388d4729993d3fef033e12c53d28505cce47de625731d38738ec",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:23:16.835Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "53fd684bc26e07d3a4a4611320f4d7636ad3ebd2c4fdb1451f6e14e19263ee2b",
+    "chainHash": "2be31f7d5058464e055086552d0e1f03343a3cd8f0b136d776d301f9b407f4e7"
+  },
+  {
+    "prevHash": "2be31f7d5058464e055086552d0e1f03343a3cd8f0b136d776d301f9b407f4e7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:44.936Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "e0f21aa52027b6dc6180b37ba8c819e96ecc4b2ea001d660fcff1a748026f615",
+    "chainHash": "cc703c083737a3873254a856176d44876c62d7559522698d73a5fa409273268e"
+  },
+  {
+    "prevHash": "cc703c083737a3873254a856176d44876c62d7559522698d73a5fa409273268e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:27:21.043Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "f5cc4131d7663fcbe7c4eded03357c8d4f5d650e529a5dd5df08eb3d9aea7c61",
+    "chainHash": "5dea6d1725b10a036cf68159342ae045969024459eb0e7e1d9cd205beec4779d"
+  },
+  {
+    "prevHash": "5dea6d1725b10a036cf68159342ae045969024459eb0e7e1d9cd205beec4779d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:50.754Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "213151c1b7c2f3938f9a94c23636c58572c00d4ef7279394e3574f2d9cd74975",
+    "chainHash": "98c163e92b52977b2e7e8e39e4a4c00d7289f85b2147af1c78e097e0f3f906b7"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T00:18:50.817Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/governance/proposals/web-a-governance-workflow.ja#container",
+    "containerHash": "f47b0db4e1ed3607ef85534530c182ea9393b36c84b1bf1b4a659b68c6e21299",
+    "buildId": "build-1767399488154",
+    "latestContextHash": "fed7ec4c915bdca21e31458b57956066f1cd18870f7168c0a170663ccdd87f21"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:50.817Z",
+      "proofValue": "z4q716cJHf8dsuczkzLizecgSAiZ6C85HHCKfQgsgJsg6Rs9d4QrPYV4L95eEaVTpP7bzZivieitzzaNxkzMDo14f"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:50.817Z",
+      "proofValue": "z4q43a22CHcaGpN9tTxMghM2QBnLAJTrcWySRwwEm6gfB8mpafU2Yju8pUJcu1GjMfSzRGbqYxzNk6Vo8yWfAA98CuSnPHYYfWJwS2prNeB58vvZEmZnt7gRKjiS8YMbR1FrBgL1VDibddNrpWEUJGwedMnJHeHRoq9ixngWKtvz2n9FMKEHkDfPXGMsvBdbNEYbyJpxZy1LJyiAPAMgnAnwWZuGpbuJ8dKxtiJcxhYJeJtEWe4pcC5u7EXS8YyGSqHjmBY7Cu8U1GFfBwgEWf8Px9kU326hougQQmQWp4mLt3dzcY5qnNMPHgffzThh3rWSCLvGNJmct59tbwCcSa1ye1UDx2hJurokS5SEXURuXD1w2gc4TnG5M1JjCrwLZoXEup2p7qFYVTs4WhdzJsmnMqdWZLgtnVQPZnsT6WbLcAnsanF1yB83cwKBf79R9MV8NRayfeRTjMdWQbQgHKtBMfXBqJ7rcRnfBHkbmeLGXKdYM1U1R1cQBi45R59EMom6saUi2RSY7SRLpWom2uNogtpe7Cb22QHVFQqgundfeJdui8DfM7sTbr4CNx7HA1UwKyad7s2ojHiGdA5g5uejUShQvumbhxYNFfhGxRKHTpykxMRUqAL7BnnoNFmidApXw8hB5MTeT3RPJEhE1TepK7UStx7xVJyoBX8N8aipbziGJR2ztsiFWtAMxyrBUyDNnAHuupk5VXkujMATQ7D3WreXU3FSm6m2uKNoVgRyvuGULZ2kuQt1jD3n2waUpZNNWVS6QnKSbzJzRq1rH2sqxwtAAcDMkKYaN7a4cVTNiDLsUSBJhQGJWhpxzC39NdSGAUM9kUm4mUm6iWoXNiNTLhYjPKXn6Ez1goHSyK471atwQqYmbbCfdE1xprNM3jdssgVovBEyQWbur7JmxawVLxDZkvW7r9rTcBxUV8r4FWNujecgeqbTFuCoxLff3tE348WwZGFcSXJK12vmtpgF6zDrv68kBYHHaYB2y4be2QkhQhSxKaYqUxPAtc4bW8e8k911Ux4tmJYrJt3eLdUJVueiFZ2WjMD8vAjYbhTUWPyAo6mJDBao8C8Un74pB9HGzjvysCDMMh3RJCTovLViFUY29mMbff15tfj5pvmPenNbbc2m6xEUa5XyC6BYYjXMiF1zhGGGiZpE2M1Mk4XzJH9W7g8hk5gnpvJWCuYrZid5TqX6bevAHuCj6D7AtgcsbgY8a5ZXH4PVc8qvZb5eAaGtfwNrgxvjx1xkkyfQMLAVfHMromjwJdftzkGSxKL9uwmjZp23wScobF43BtAuDgqTsKsMwQVP8RsPB2u1F1Z4bzfkWonyWcsif5Hipvuh4UnvzDG5k9R1siztaxWbAkgJpDejFdmkXm2gWpMXK3bZoTNb5K35nD3EF6Rsmp1YfVKTqdyb5ZArqwd5LRt1UqQ8Zf5yYY85c2gt9gnTbjRSrm9EMrzxA9fuMsoEx2BwJAhpThkuPZFF2Y99YYS3m5HQbYHqigy51R7ehzZVMreEVRwJMtWfb8AgzJkzk17aFuHRtjtCfmTKsYH6UYE8FTiF119KE1Zwp2HLjw7mX1nv59VVYyBqepetzwkNe4iXeW4t7ALGE3ujb28SWLVX9GtLEXpBcauQEi6bRjJpRji8eCh4asfRRwn1eNau47rmzC2ZKao2KAzvchqWC4iaSQqLupJKHfNzxY69dSiNntDHmYWeXci5N2AMKC4ECj4SmpzzT8kVyyomiPNGBxifCvz8dVbWuEKR5qtMRBHWtJvoUyNa3sF6kP21M9zG7eZCxsFt3Cb4Aq8L711rvuQ9Lso7Exkpq9PewLhVfXMU4SqK3Jb1BnYhfwfSk6EB31mLijFMiHgiarkCrKz3HtVhRuqcvuZPAizuY9KrhUzZPPan22ta5AJ8R5wJmpqrx2RZLrGiaUuVwkkgKUGsCBNZanaad52LYMYZ2eqk2VeB4BtEcMdR45sed3mdrr7n9VAq6w7Bjajg9K316tam6JSXQ35X7HSj1hVPGyCb5yTX2moUZYkb5JpmkS67cVKzreYmx2mkBp6r5roUhSkc9VQa7KCR77mQ3YbeJQKnG8UbMQuaV7aKjo3TxD8KYXPUw647asAZDYSZ24Bv19rfjiQhRaS5mfthwKLxZLykkYZjgykexbxBhmFJdR1Yyq3WK3hHgQjRU8Zei4RAhfZm19yHDMEyjqn9o53NqrhLRYc99t5U4Kuzg6m23ZZ5zK8DJZKjSwKTKHkUGe19SmyekcxmUsMCKyXCd5VsVeyfvTjec2NJAUmEpNh5MFmcp61y8dwd5gpQQD2GPSwuw8L8HrdF4BjB2xyGGALhBWZ7ZAFdFLkeeoweQ6CSfxVoNBxFkNoxoQuseBmeydckqVpsmoLfxjcyqpmn5jeqAsueXWVpJ3MNEfbEjxgo5yyyx1fKeoyCu9Tjmd8oj7ujxj62imp75Qo7rshiAwpo8fsESuQESk7U9u4LCq2CL9Hugrz8gkmEuzzFEjsjmSJsJiYhpx8tqjULn7JFKPREgcDQSoNCS3cGQCAZXEmYq1xZ61vkukk8MqUZJZCDRPwSq2ojxx8TMSMQuu9L8k1ZfyPPmtCVBXrsrAabZDpafM9SHFGLb1n9jGAkjrbFRx4dngdbgciiznXUgGa1siiGZW5DrtBQHmqWsJkhazkjVdpSm2pyPtceYHc4773RmWvdgTtiioAAiRXtXGpzmCGE3tPvnMUbUrCxd9WdYLCXV3hSCXAGjmqZAHX6tvAG3hErjYiMUhwA3qYeBshAwaB3KVNrnQB6H683PWEDZNW6LsHwszXhPt66ytwQqevKgtyhuTHeKWnV26k6WjdKPbHsMYkU3AXcCvytrnd1zAs4zdUwmb3ubGL9KK7apF44Df5rrtw5jHXTsEUD8NWCEBMnjHkKdc4snGJR12zh8qoyufc8rFBKsPmdJmrstnfC2pyXDsEQ8enBseLcCxKyojcSXdc8zATu9tbESATj7hxqxrdRdSQ4GJjL879gyUxnf7f1rqDT3EY4EbyvAqPxESmaAy7br2CMCMR18Hz77Beoy8MPD3cRyem7WupfSJpvGq1HsuZfscA31ufGwrkjsLbcMNWp1vgwY5AuFCnbpSJcvkParDJvD7NkczSLdZDpMyV96HDhQjyGEJ2HgawdnJgsuNNQfYZ8KtMP7SmDzymgwMrJ9iqYNuQRZCVvWDPwtJ54eijCZtfVuvsT1SR8ZEqfSCuZT95AN89XFPZwcxUAMaQhHr2M6GjxX8fBsTBjdVh38QuoFLTNo7Z6pd8cYicygdjgPT"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:18:50.917Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

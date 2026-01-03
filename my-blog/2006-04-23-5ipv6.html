@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>5年ぶりにIPv6論争の季節がやってきましたよ</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "5年ぶりにIPv6論争の季節がやってきましたよ",
+  "description": "",
+  "datePublished": "2006-04-23",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "5年ぶりにIPv6論争の季節がやってきましたよ",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>5年ぶりにIPv6論争の季節がやってきましたよ</h1>
+                <div class="article-meta">
+                    <span><time datetime="2006-04-23">2006-04-23</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>池田先生が<a class="keyword" href="http://d.hatena.ne.jp/keyword/Teredo">Teredo</a>と地域IP網問題をごっちゃに論じているところへ，小飼さんは「<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>ではマルチホームが当たり前」という素っ頓狂な反論をしている．清々しいすれ違いっぷりである．<br />
+池田先生の懸念するように<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%20Vista">Windows Vista</a>では<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>アド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>が最初からついているが，これは<a class="keyword" href="http://d.hatena.ne.jp/keyword/Teredo">Teredo</a>という<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv4">IPv4</a>網上で<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>をオーバーレイする仕組みで，実は<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%20XP">Windows XP</a> SP1 Netpackから普通に使われている．<a class="keyword" href="http://d.hatena.ne.jp/keyword/threedegrees">threedegrees</a>とかインストールすれば有効になっているはずだし，展開してかれこれ3年になるので，そこそこ枯れた技術である．address prefixをみれば<a class="keyword" href="http://d.hatena.ne.jp/keyword/Teredo">Teredo</a>の通信とNative <a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>の通信とは区別できるから，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Teredo">Teredo</a>がdefault enableになったからといって，<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a> enableな網で問題が起こることはない．<a class="keyword" href="http://d.hatena.ne.jp/keyword/teredo">teredo</a>ホストとは<a class="keyword" href="http://d.hatena.ne.jp/keyword/teredo">teredo</a>アド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>で話し，native <a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>ホストとはnative <a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>ホストで話すので，特に問題は起こらない．<br />
+一部の方々が懸念されているのは，小飼さんの考えている一般的なマルチホームの問題ではなくて，NTT東西の地域IP網で<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>が使われていて，こちらはNTT法の絡みで県域で閉じているから何か問題が起こるかも知れないね，という話である．優先順位が変わって影響を<a class="okeyword" href="g:mohican:keyword:受け">受け</a>るのは<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv4">IPv4</a>のglobal connectivityがあって<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>だけlimited connectivityしかない場合で，こういう環境での利用はそれほど多くないと推察するのだけれど，この場合も<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>での接続に失敗したら<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv4">IPv4</a>にフォールバックすれば，ちゃんと動くような気もしないでもない．個別には色々なケースがあるだろうから試してみて，問題があれば技術的に正しい解決方法をとればいいんじゃないかな．その方向で関係者は奔走されてるはずなんだけどな．<del datetime="2006-04-25T10:40:57+09:00">よくわからないのはglobal connectivityがないならglobal addressではなくsite-local addressを使うべきであって，その辺の整理がどうなっているかは気になるところではある．</del> (4月25日<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C4%C9%B5%AD">追記</a>: <a href="http://blog.hatena.ne.jp/otsune/">id:otsune</a>さんがコメント欄でご<a class="okeyword" href="g:mohican:keyword:指摘">指摘</a>のように，Site-local addressはRFC3879で廃止されていました．ではどう実装するのが正しいかというと，よく分からないのでこれから勉強します)<br />
+とゆー訳で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BB%F6%BC%C2%C7%A7%BC%B1">事実認識</a>で微妙に違いはあれど，池田先生の「要素技術に政府が介入するとろくなことにならないという好例」小飼さんの「今までの<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%CF%C0%B5%C4">論議</a>は、あまりに<a class="keyword" href="http://d.hatena.ne.jp/keyword/Geek">Geek</a>よりだった」という結びはほぼ同じことを問題にしていて，私も同感である．<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>の必要性そのものについてはアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>の消費ペースは思ったより早いようだし，仮にアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>枯渇問題がなかったとしても網構成を柔軟に再構成する上で<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>は有用であって，放っておいても遠からず普及するのだろう．そういう意味で振興行政の<a class="okeyword" href="g:mohican:keyword:ネタ">ネタ</a>としては，いささかセンスの悪さを感じる．<br />
+こういう議論は高度に政治的であるにも関わらず結論が趨勢に対して何ら影響を及ぼさないのであって，水掛け論に参加しても火の粉が飛んでくるだけでありまして，当事者であるにも関わらず，そんなとこにノコノコとやってくる俺はたぶん酔っぱらっているだけなのだろう．</p>
+<blockquote cite="http://blog.goo.ne.jp/ikedanobuo/e/800223c4fbd2e00422744716a596b70f" title="池田信夫 blog：IPv6"><p><a class="keyword" href="http://d.hatena.ne.jp/keyword/%C1%ED%CC%B3%BE%CA">総務省</a>の委託でインテックネットコアなどが調べた<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>の普及度調査の結果が、ウェブサイトに出ている。それによれば、図のように、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C8%A5%E9%A5%D5%A5%A3%A5%C3%A5%AF">トラフィック</a>は2002年の2.5％をピークとして減少し、今年は0.1％にも満たない。<br />
+(略)<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%20Vista">Windows Vista</a>には、出荷時からv6のアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>がつく予定だが、これは混乱のもとになる。NTTや<a class="keyword" href="http://d.hatena.ne.jp/keyword/IIJ">IIJ</a>などの一部のv6専用サービス（閉じたネットワーク）ですでにv6のアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>をもっているユーザーは、1つのホストに2つのグローバル・アド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>をもつことになるからだ。ローカルのサーバにアクセスしたら<a class="keyword" href="http://d.hatena.ne.jp/keyword/Vista">Vista</a>のアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>で同定されてはじかれる、といったトラブルが起こるおそれが強い。これは<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%BD%A5%D5%A5%C8">マイクロソフト</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/Vista">Vista</a>の仕様で複数のv6アド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>の優先順位を決めるなどの対応をするしかないが、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%BD%A5%D5%A5%C8">マイクロソフト</a>はその気はないという。<br />
+(略)<br />
+あるとき某省の審議官にv6についてのレクチャーを求められ、「v6はv4と完全互換ではない。v4のサイトからv6のアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>は見えない」と説明したら、審議官が「それは本当か」と驚いていた。こんな初歩的なことも知らないでv6に100億円以上の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CA%E4%BD%F5%B6%E2">補助金</a>をつける無謀さには、こっちが驚いた。v6をめぐる混乱は、要素技術に政府が介入するとろくなことにならないという好例である。</p>
+</blockquote><blockquote cite="http://blog.livedoor.jp/dankogai/archives/50467223.html" title="404 Blog Not Found:IPv6は忘れた頃に普及する"><p>複数のグローバルアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>を持つなんて、<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv4">IPv4</a>時代でもいくらでもある。実際<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CC%B5%C0%FELAN">無線LAN</a>にも有線LANにも接続しているパソコンは、その時点で有効なアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>を２つ持っている。<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv4">IPv4</a>が希少となった昨今では、これらのアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>はたいていの場合プライベートアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>ではあるだろうが、すでに一つのホストが複数のIPアド<a class="okeyword" href="g:mohican:keyword:レス">レス</a>を持つなど当たり前の時代である。<br />
+(略)<br />
+ただ、やはり留意して欲しいのは、その100億円をどう配分するか。今までの<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%CF%C0%B5%C4">論議</a>は、あまりに<a class="keyword" href="http://d.hatena.ne.jp/keyword/Geek">Geek</a>よりだった。その一部は、<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>への懐疑 --本当に別の手はないのか--だとか、「くらしための<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>」--<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>がどうくらしに役立つのか--という点にきちんと回るようにしてもらいたい。技術面に関しては、すでに<a class="keyword" href="http://d.hatena.ne.jp/keyword/IPv6">IPv6</a>は安定を通り越して「枯れた」といってもいいのだから。これらの点においては、失礼ながら村井先生をはじめとする WIDEの各位はあまりいい仕事をしてこなかったと思う。というよりその能力が欠如していたというべきか。こういうことはもっともっと若い世代に丸投げしていいのである。</p>
+</blockquote>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:23:43.612Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-04-23-5ipv6",
+    "name": "5年ぶりにIPv6論争の季節がやってきましたよ",
+    "contentDigest": "a1d0004f43198f7f9848c468d730522c27272e11fea9326c9a0bc7b5ae13e77c"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:43.612Z",
+      "proofValue": "z2FWheApmz4neiyyiNR9VR97YqzQGechhoJ8o9L4JYAtvSexLbVHg2QAmF69uezQnQwPfgfSuLS6uLdF7FzooTXDh"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:43.612Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:23:43.644Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "c58f08705b70e226b77914ddaf62973557b23f2b132dfe8c8430f5032b725e7c",
+        "metadata": {}
+      }
+    },
+    "eventHash": "d6c16a2a03f2faa29adc427eddd547d6c6374d0d2d0b75d0f7cff267fc6bfbab",
+    "chainHash": "3f0de56fbfeb3d42fc396c5af75ffb51df717b45dadb0c639616f63c08b4af3c"
+  },
+  {
+    "prevHash": "3f0de56fbfeb3d42fc396c5af75ffb51df717b45dadb0c639616f63c08b4af3c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:25:05.172Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "5d44d8bf6d4de9cd7d1b55608626a5fbb7c416bc5db1da47f2ea32bf57403ef4",
+    "chainHash": "8e1a5bca132b4be47a35a094ca2d0bb0f5e0b2e0d906ead69c7a544f2c386664"
+  },
+  {
+    "prevHash": "8e1a5bca132b4be47a35a094ca2d0bb0f5e0b2e0d906ead69c7a544f2c386664",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:29:17.887Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "22cd666f4ab939e0fb1730597abb348b045bdc375c007c41fc640678f2963b43",
+    "chainHash": "5f5fd833d4c7326be800285f4573dd29a9fdb458ef507811a1cc66a75e867a6a"
+  },
+  {
+    "prevHash": "5f5fd833d4c7326be800285f4573dd29a9fdb458ef507811a1cc66a75e867a6a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:34:05.279Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "318000ce842f5e0438ed1f586192e16f606ce5aca81715fd82019afae5e5b00d",
+    "chainHash": "d6f4b2d6b9d926fe857e9735c505407776a58347901b3a29156a077b12c628a7"
+  },
+  {
+    "prevHash": "d6f4b2d6b9d926fe857e9735c505407776a58347901b3a29156a077b12c628a7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T23:48:39.703Z",
+      "payload": {
+        "buildId": "build-1767397680032"
+      }
+    },
+    "eventHash": "4f98120a0fc543c760d45a80e8149e6de0e39303c03fd416d40affc094c5b467",
+    "chainHash": "7b643f4bed13501695d4e2afa24bf010f08f655a4a5072bc9b8e6b7ebe9f737b"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-02T23:48:39.756Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-04-23-5ipv6#container",
+    "containerHash": "58321f7aa24fc4ddf7e7bdac9364e397b951a1c67eaf771552f4712c70fcaa5f",
+    "buildId": "build-1767397680032",
+    "latestContextHash": "e5b64640a089a3a4eef6392816537d251183490b0a6536f52bfca5a20b75e590"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:39.756Z",
+      "proofValue": "z28S8aLRsDXhK9HU8KRGwyG2J73ZVAfa6zuJNXJDZaNXx4MPZWui67cHtU9T8Cz1sTMCSAjkPYVueq3ngVza4QSuU"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:39.756Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-02T23:48:39.842Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

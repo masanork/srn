@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Web/A Form Syntax Guide</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Web/A Form Syntax Guide",
+  "description": "Comprehensive reference for the Markdown-based form definition syntax used in Web/A.",
+  "datePublished": "2026-01-02",
+  "author": {
+    "@type": "Person",
+    "name": "Sorane Project"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Web/A Form Syntax Guide",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Web/A Form Syntax Guide</h1>
+                <div class="article-meta">
+                    <span><time datetime="2026-01-02">2026-01-02</time></span>
+                    
+                    <span>By Sorane Project</span>
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>Web/A Form uses a specialized Markdown &quot;dialect&quot; to define interactive forms that are both human-readable and machine-verifiable. This guide provides a complete reference for all supported tags and formatting.</p>
+<h2>1. Basic Formatting</h2>
+<p>Standard Markdown inline styles are supported for labels and descriptions.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Style</th>
+<th align="left">Syntax</th>
+<th align="left">Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Bold</strong></td>
+<td align="left"><code>**text**</code> or <code>__text__</code></td>
+<td align="left"><strong>text</strong></td>
+</tr>
+<tr>
+<td align="left"><em>Italic</em></td>
+<td align="left"><code>*text*</code> or <code>_text_</code></td>
+<td align="left"><em>text</em></td>
+</tr>
+<tr>
+<td align="left"><code>Code</code></td>
+<td align="left"><code>`code`</code></td>
+<td align="left"><code>code</code></td>
+</tr>
+<tr>
+<td align="left">Link</td>
+<td align="left"><code>[Label](URL)</code></td>
+<td align="left"><a href="#">Label</a></td>
+</tr>
+</tbody></table>
+<h2>2. Form Tags</h2>
+<p>Tags define interactive input fields. The general syntax is <code>[type:id (attributes)] Label</code>.</p>
+<h3>2.1. Basic Input Types</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Type</th>
+<th align="left">Syntax Example</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>text</code></td>
+<td align="left"><code>[text:name] Full Name</code></td>
+<td align="left">Standard text input.</td>
+</tr>
+<tr>
+<td align="left"><code>number</code></td>
+<td align="left"><code>[number:age] Age</code></td>
+<td align="left">Numeric input (right-aligned).</td>
+</tr>
+<tr>
+<td align="left"><code>date</code></td>
+<td align="left"><code>[date:birthday] Birth Date</code></td>
+<td align="left">Browser-native date picker.</td>
+</tr>
+<tr>
+<td align="left"><code>textarea</code></td>
+<td align="left"><code>[textarea:memo] Notes</code></td>
+<td align="left">Multi-line text area.</td>
+</tr>
+</tbody></table>
+<h3>2.2. Advanced Types</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Type</th>
+<th align="left">Syntax Example</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>search</code></td>
+<td align="left"><code>[search:v src:vendors] Vendor</code></td>
+<td align="left">Autocomplete using master data.</td>
+</tr>
+<tr>
+<td align="left"><code>calc</code></td>
+<td align="left"><code>[calc:total formula=&quot;SUM(amount)&quot;]</code></td>
+<td align="left">Automatic calculations (Excel-like).</td>
+</tr>
+<tr>
+<td align="left"><code>checkbox</code></td>
+<td align="left"><code>[checkbox:agree] Approved</code></td>
+<td align="left">Boolean toggle.</td>
+</tr>
+<tr>
+<td align="left"><code>radio</code></td>
+<td align="left"><code>- [radio:rank] Rank</code></td>
+<td align="left">See Section 3 for list syntax.</td>
+</tr>
+</tbody></table>
+<h2>3. Lists &amp; Choices</h2>
+<h3>3.1. Radio Buttons</h3>
+<p>Radio buttons are defined as an indented list under a <code>radio</code> tag.</p>
+<pre><code class="language-markdown">- [radio:satisfaction] How satisfied are you?
+  - Very Satisfied
+  - [x] Satisfied (Default)
+  - Unsatisfied
+</code></pre>
+<h2>4. Tables</h2>
+<h3>4.1. Static Tables</h3>
+<p>Standard Markdown tables are rendered as visual grids.</p>
+<pre><code class="language-markdown">| Month | Target |
+|---|---|
+| Jan | 100 |
+</code></pre>
+<h3>4.2. Dynamic Tables</h3>
+<p>Allows users to add/remove rows dynamically.</p>
+<pre><code class="language-markdown">[dynamic-table:items]
+| No | Item Name | Price |
+|---|---|---|
+| [autonum:no] | [text:item] | [number:price] |
+</code></pre>
+<h3>4.3. Master Data Tables</h3>
+<p>Defined at the bottom of the document to provide data for <code>search</code> fields.</p>
+<pre><code class="language-markdown">[master:vendors]
+| ID | Name |
+|---|---|
+| V01 | Apple Inc |
+| V02 | Google LLC |
+</code></pre>
+<h2>5. Attributes (Modifiers)</h2>
+<p>Attributes are written inside parentheses <code>(...)</code> after the ID.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Attribute</th>
+<th align="left">Example</th>
+<th align="left">Effect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>placeholder</code></td>
+<td align="left"><code>(placeholder=&quot;YYYY/MM/DD&quot;)</code></td>
+<td align="left">Shows ghost text in the field.</td>
+</tr>
+<tr>
+<td align="left"><code>align</code></td>
+<td align="left"><code>(align:R)</code></td>
+<td align="left">Text alignment (L, C, R).</td>
+</tr>
+<tr>
+<td align="left"><code>copy</code></td>
+<td align="left"><code>(copy:source_id)</code></td>
+<td align="left">Auto-copies value from another field.</td>
+</tr>
+<tr>
+<td align="left"><code>suggest</code></td>
+<td align="left"><code>(suggest:column)</code></td>
+<td align="left">Suggests values based on previous entries.</td>
+</tr>
+<tr>
+<td align="left"><code>formula</code></td>
+<td align="left"><code>(formula=&quot;a + b&quot;)</code></td>
+<td align="left">Define logic for <code>calc</code> fields.</td>
+</tr>
+</tbody></table>
+<h2>6. Page Structure</h2>
+<p>Use standard headers to organize your form into tabs or sections.</p>
+<ul>
+<li><code># H1</code>: Form Title</li>
+<li><code>## H2</code>: Tab Name (Creates a tabbed navigation if multiple H2s exist)</li>
+<li><code>### H3</code> and below: Section headers within a page.</li>
+</ul>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-02T12:06:04.599Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/guide/weba-form-syntax",
+    "name": "Web/A Form Syntax Guide",
+    "contentDigest": "aa2d87b951c0c410da022d62193375f854590812036449d8a622d6a116cd605f"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767355525912-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T12:06:04.599Z",
+      "proofValue": "z3bS2zS2uAmoXDyqCaFUirJrexj4rL8nAgTGZoUS9HZRvWEzbZ72nJp3XZfmFX4qMAunZurqQgqGkNfiV3E2zAKRv"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767355525912-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T12:06:04.599Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-02T12:06:04.632Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "bf4861b446e98065339e4d9ce841d8b75ba6abe26caa29963fd08a43a3f70769",
+        "metadata": {
+          "lang": "en"
+        }
+      }
+    },
+    "eventHash": "b27d73686d500b28857b79fa3671cac6a20af6db3c5d29c459d7a76d5253da93",
+    "chainHash": "651d6ad1cfb85986ce6dda2c746c6db639df601b15e5b827464db5cd1cd6a111"
+  },
+  {
+    "prevHash": "651d6ad1cfb85986ce6dda2c746c6db639df601b15e5b827464db5cd1cd6a111",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:19:08.676Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "74b95da659d2daba9801b81c5740f9c72825a282e70822b73eb0274c3fd30b32",
+    "chainHash": "e82d8f9218a88862f50983eb3e021d811de0548cce3380862fa33bd11a9691d6"
+  },
+  {
+    "prevHash": "e82d8f9218a88862f50983eb3e021d811de0548cce3380862fa33bd11a9691d6",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:25:26.737Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "bc04106c29d7498779be0e9288b5b535b80d1f543ba69b75c0d455d5a866dc7f",
+    "chainHash": "05a9e34a2b9df8d359ab5493e1914ba3a9465785a91f6e5530dd44b1eac279cf"
+  },
+  {
+    "prevHash": "05a9e34a2b9df8d359ab5493e1914ba3a9465785a91f6e5530dd44b1eac279cf",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:28:23.785Z",
+      "payload": {
+        "buildId": "build-1767356894320"
+      }
+    },
+    "eventHash": "bfb26c66384bc14631025c1f300d9cbe9e660ca4ceefe526fa731983b75cf09d",
+    "chainHash": "189592f4e69bae284398d72920d823e614f63ff00a42a0b1ad1363f8e17bbfa5"
+  },
+  {
+    "prevHash": "189592f4e69bae284398d72920d823e614f63ff00a42a0b1ad1363f8e17bbfa5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:36.781Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "deae8cf0cf7275194bc527c82459dde371c2ff5a18012184fd96946cff44bc23",
+    "chainHash": "86caaa9f7b93b28318fa655d4b5438e2450d75afd07de14b6c305a03613a2a7d"
+  },
+  {
+    "prevHash": "86caaa9f7b93b28318fa655d4b5438e2450d75afd07de14b6c305a03613a2a7d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:23:01.719Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "284006ffb7742c25230fe426848813fcfd8d39ddc8d453f15d18acc75d49edbb",
+    "chainHash": "77734df823c9b80339c789eff1a1be5481b6d5ae487de6e41396a9d58daca55a"
+  },
+  {
+    "prevHash": "77734df823c9b80339c789eff1a1be5481b6d5ae487de6e41396a9d58daca55a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:22.355Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "2cc7e96611bf4cfa46f3a800db884c1a4901fda4ca071a4b9f947045194c2c89",
+    "chainHash": "f876b34dc5c6e2ccc111ec22b9b3ca6c24f7c99883a28447f034262819bb6a95"
+  },
+  {
+    "prevHash": "f876b34dc5c6e2ccc111ec22b9b3ca6c24f7c99883a28447f034262819bb6a95",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:27:20.078Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "f0cf3de0a87db0d48e64b5cbaf395e6f9f3b3cb8b8f6058c2312c60f016dda81",
+    "chainHash": "a169ed12cbf4533d24aad3d4b96e4e0f64b32aeb676f8977b79d750c484b35ee"
+  },
+  {
+    "prevHash": "a169ed12cbf4533d24aad3d4b96e4e0f64b32aeb676f8977b79d750c484b35ee",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:49.757Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "10a81480d830d28db60cc544e9a472386d35dd3d538aa281b90e209b4dcc621a",
+    "chainHash": "fd743b3ba6589b6102f9ff88a5d686461bd0e3db5bc2872c27f00cd644f6dbe4"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T00:18:49.822Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/guide/weba-form-syntax#container",
+    "containerHash": "9ff352a1781ebd18355c95f88b0d05247c67fe6194f88e874ee68b805c2d5230",
+    "buildId": "build-1767399488154",
+    "latestContextHash": "d3eba2fc3a9b93d310542dc7cb066542e5ba89e76e2f229b9a0e7cec176654b8"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:49.822Z",
+      "proofValue": "z2sJfDso8qFwTz59koSmn2k22DBDaEZPgQwoS3WV4QrNVQaqg8NQ4gnUfCxAMitEVZ7go5pmiVYh3B8Zh9xLaWKUr"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:49.822Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:18:49.923Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

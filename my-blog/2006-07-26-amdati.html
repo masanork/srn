@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>AMDによるATI合併の背景</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AMDによるATI合併の背景",
+  "description": "",
+  "datePublished": "2006-07-26",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "AMDによるATI合併の背景",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>AMDによるATI合併の背景</h1>
+                <div class="article-meta">
+                    <span><time datetime="2006-07-26">2006-07-26</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p><a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%E5%C6%A3%B9%B0%CC%D0">後藤弘茂</a>氏が<a href="http://pc.watch.impress.co.jp/docs/2006/0725/kaigai290.htm">&#x79C0;&#x9038;&#x306A;&#x5206;&#x6790;</a>をしている．書き足すとしたらモバイルを強化する上で消費電力の低いビデオチップ統合<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C1%A5%C3%A5%D7%A5%BB%A5%C3%A5%C8">チップセット</a>が不可欠であること，Fab 36の稼働で増える製造キャパ分の<a class="keyword" href="http://d.hatena.ne.jp/keyword/MPU">MPU</a>を売り切れなかった場合に余ったラインを<a class="keyword" href="http://d.hatena.ne.jp/keyword/GPU">GPU</a>製造に回せることくらいか．
+
+<br />
+気になるのは<a class="keyword" href="http://d.hatena.ne.jp/keyword/Intel">Intel</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BC%A1%A4%CE%B0%EC%BC%EA">次の一手</a>．<a class="keyword" href="http://d.hatena.ne.jp/keyword/ATI">ATI</a>と伍するところまで<a class="keyword" href="http://d.hatena.ne.jp/keyword/GPU">GPU</a>への投資を強化するくらいなら，<a class="keyword" href="http://d.hatena.ne.jp/keyword/nVidia">nVidia</a>を救済するのが手っ取り早いかも．<a class="keyword" href="http://d.hatena.ne.jp/keyword/nVidia">nVidia</a>の打てる手は限られているので今なら安く買い叩けるかも．しかしプロセッサ統合のことを考えるとGeneric Shaderで先行する<a class="keyword" href="http://d.hatena.ne.jp/keyword/ATI">ATI</a>の方が買いだよな．数年後には<a class="keyword" href="http://d.hatena.ne.jp/keyword/x86">x86</a>系がきそうな組込系プロセッサで，両社がどういう動きをするかも見物．</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:23:29.729Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-07-26-amdati",
+    "name": "AMDによるATI合併の背景",
+    "contentDigest": "1da22ede3ab21e9b96d1abd397d06d9dc713bdac1645aa54215e24b1254a2831"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:29.729Z",
+      "proofValue": "z47euML6AsgEjQbyGJkzJuaTkMLst1f3ciCM8ZzqrHfkk8vfudCHE6isfJ9isLGs4ZPB1BTKX42XYLqDSZfZSCLt5"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:29.729Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:23:29.761Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "73ae8dd230613f2228252ade6a790ae2b00de86302bc95d13a5f36cc97da2f03",
+        "metadata": {}
+      }
+    },
+    "eventHash": "e6f7da3e9e89ed28ce3584cd09cc64e659ad0b4d3be38c48f3cafa146183bcd8",
+    "chainHash": "24e395ae35994edaa33afe4d851ce4aca67f11785c26a487c532d6b04cf938e5"
+  },
+  {
+    "prevHash": "24e395ae35994edaa33afe4d851ce4aca67f11785c26a487c532d6b04cf938e5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:24:52.792Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "4649cf93ba129e8002b33631ea9920c8a921693158e7b3abd97035e3b105e273",
+    "chainHash": "ef28edf2bd8d8a639a8a1fae20a51ac313166830078007a161cd998f2a8ff912"
+  },
+  {
+    "prevHash": "ef28edf2bd8d8a639a8a1fae20a51ac313166830078007a161cd998f2a8ff912",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:29:03.266Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "c30415823e59f03de20e359b33d07d0d5b64bfcb620fbe07e2a5d08573c8d08f",
+    "chainHash": "1e2f2f9f74124ce81261d9308cff537699ac9b6f1ca9e184a1e9e35d1b8630a8"
+  },
+  {
+    "prevHash": "1e2f2f9f74124ce81261d9308cff537699ac9b6f1ca9e184a1e9e35d1b8630a8",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:33:49.045Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "a78d15a49ecf6a38b7ee0f54bea397545bd41ec873ac5530f29450b9d5fd0bae",
+    "chainHash": "4c017c32fc4f82df11489b686d380958f9964aa2e487af9f153b126c79852092"
+  },
+  {
+    "prevHash": "4c017c32fc4f82df11489b686d380958f9964aa2e487af9f153b126c79852092",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T23:48:20.344Z",
+      "payload": {
+        "buildId": "build-1767397680032"
+      }
+    },
+    "eventHash": "47938c0491baf34d36c9845ee98d5ba20cd39d89b56c4721596c50011ed826f8",
+    "chainHash": "699970779243936b42b0ab07aed73fe5634362e6289f88a0237bdac37d25647a"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-02T23:48:20.398Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-07-26-amdati#container",
+    "containerHash": "799363965b18f7b6b69b1d2bd7df4cd402e19ed9e31d2b66bbe50b13e2439871",
+    "buildId": "build-1767397680032",
+    "latestContextHash": "79d13ebcb1f59a4893bf696d0f8d1167f6296788c3c5802773474464e55e462c"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:20.398Z",
+      "proofValue": "z2onrd4Qc7pKjBvhtgkyNUYEZaZ9jFGYGs6C6JQX5VTqsDHxqP9Pkbiq8pZWrV7Hq62Xe8HSw7nfzReanftPbXp1Q"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:20.398Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-02T23:48:20.485Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

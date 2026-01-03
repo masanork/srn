@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>20年後の通信技術とか</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "20年後の通信技術とか",
+  "description": "",
+  "datePublished": "2008-06-17",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "20年後の通信技術とか",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>20年後の通信技術とか</h1>
+                <div class="article-meta">
+                    <span><time datetime="2008-06-17">2008-06-17</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>20年後といえば僕は51歳で、下の子がストレートなら学部を卒業して就職が決まってるかも知れない時期か。<a class="keyword" href="http://d.hatena.ne.jp/keyword/2038%C7%AF%CC%E4%C2%EA">2038年問題</a>、、、とか書いたけど、これは30年後だね。30年後にはCを扱える組込系<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/2000%C7%AF%CC%E4%C2%EA">2000年問題</a>の時の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Cobol">Cobol</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>のように方々で駆り出されてコードレビューとかやるんだろうか。<br />
+20年前といったら1988年、僕は11歳で<a class="keyword" href="http://d.hatena.ne.jp/keyword/EPSON">EPSON</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EF%A1%BC%A5%D7%A5%ED">ワープロ</a>で独自フロッピーとか50音キーボードを使ってた。調べてみるとHTMLはなかったけれど<a class="keyword" href="http://d.hatena.ne.jp/keyword/SGML">SGML</a>はあったし、<a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP/IP">TCP/IP</a>も<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ethernet">Ethernet</a>もあったんだね。ちょうどWIDEができた年か。</p>
+<blockquote cite="http://d.hatena.ne.jp/amachang/20080617/1213676578" title="駄文 - HTMLは20年後どうなっているんだろう - IT戦記"><p>20年後、</p>
+
+<ul>
+<li>HTMLは残っているか</li>
+<li>HTTPは残っているか</li>
+<li><a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP/IP">TCP/IP</a> は残っているか</li>
+<li>上にレイヤーが追加されるか</li>
+<li>下のレイヤーから入れ替わるか</li>
+</ul><p>どういう時代が来るんだろうか、そのとき僕は 46 歳。</p>
+</blockquote>
+
+<p>下のレイヤーが入れ替わるかって、<a class="keyword" href="http://d.hatena.ne.jp/keyword/10GbE">10GbE</a>の仕様とかみると最早<a class="keyword" href="http://d.hatena.ne.jp/keyword/CSMA/CD">CSMA/CD</a>とかない訳で、それ名前だけ<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ethernet">Ethernet</a>だけど<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ethernet">Ethernet</a>じゃないよね。経路制御もルーティング・<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%C8%A5%B3%A5%EB">プロトコル</a>は生き残ったけれど、バックボーンではATMチックなラベルスイッチが増えているし。<a class="keyword" href="http://d.hatena.ne.jp/keyword/NGN">NGN</a>な<a class="keyword" href="http://d.hatena.ne.jp/keyword/SIP">SIP</a>の使い方みて「これ何てATM <a class="keyword" href="http://d.hatena.ne.jp/keyword/SVC">SVC</a>」と考えさせられた。似た悩みを抱えて<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BA%C2%BE%CC">座礁</a>しているが。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP">TCP</a>も古式ゆかしきはスロースタートだったけど、それじゃパイプが埋まらないというんで、様々な拡張が施されている。お陰で<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%20Vista">Windows Vista</a>になって、超速<a class="keyword" href="http://d.hatena.ne.jp/keyword/ADSL">ADSL</a>とか入れなくても速くなったし、IPスタック周辺の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EC%A5%B8%A5%B9%A5%C8%A5%EA">レジストリ</a>を触っても大幅な性能向上はなくなったはずだ。<br />
+間違いなく20年後も<a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP/IP">TCP/IP</a>は生き残っているだろうし、けれどもそれが今日のSNAみたいな過去の遺物なのかバリバリの現役なのか、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A1%BC%A5%AD%A5%C6%A5%AF%A5%C1%A5%E3">アーキテクチャ</a>でみて換骨奪胎されているのか元々の思想が生き残っているのか、みたいなところは気になる。下位層では無線とか衛星通信で最適化しようとするとIPは厳しいし、上位層では遅延が大事になるとIPじゃないだろという気はする。<br />
+HTMLは十数年で換骨奪胎され尽くしているし、これからもRIAとか諸々で当分は換骨奪胎され続けるのだろう。けれども<a class="keyword" href="http://d.hatena.ne.jp/keyword/Semantic%20Web">Semantic Web</a>にもObject Webにもならなかった。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Web%202.0">Web 2.0</a>ってOpen Source以上に中身のないBuzz Wordだと思うよ。Tim O'Reillyが<a class="keyword" href="http://d.hatena.ne.jp/keyword/Web%202.0">Web 2.0</a>とかいう前から、<a class="keyword" href="http://d.hatena.ne.jp/keyword/CGM">CGM</a>もpeer reputationも<a class="keyword" href="http://d.hatena.ne.jp/keyword/AJAX">AJAX</a>もあった訳でさ。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A5%D6%A5%B8%A5%A7%A5%AF%A5%C8%BB%D8%B8%FE">オブジェクト指向</a>なLLも十数年前からあった。<br />
+20年前というと<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a> 3.0の出る前で、やっと窓が重なるようになって、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>アプリとして<a class="keyword" href="http://d.hatena.ne.jp/keyword/Macintosh">Macintosh</a> <a class="keyword" href="http://d.hatena.ne.jp/keyword/Excel">Excel</a>が移植された。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>の次は<a class="keyword" href="http://d.hatena.ne.jp/keyword/OS/2">OS/2</a>で、その後に<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>の時代が来ると信じられていた。みんな<a class="keyword" href="http://d.hatena.ne.jp/keyword/DOS">DOS</a>の上で直接ハードを叩くプログラムを書いていて、PCをリセットするために特定アドレスにジャンプするとか平気でやっていた。セグメントを超えるメモリをみるのは大変だったし、ネットとCD-ROMを同時に使おうとするとコンベンショナルメモリが足りなくなった。それは下々の話で研究室で<a class="keyword" href="http://d.hatena.ne.jp/keyword/SONY">SONY</a> NEWSを使えれば今の<a class="keyword" href="http://d.hatena.ne.jp/keyword/PC-UNIX">PC-UNIX</a>と似たような環境があったし、NeXT Cubeでは<a class="keyword" href="http://d.hatena.ne.jp/keyword/iPhone">iPhone</a>のベースとなるプログラミング環境が既に使えた訳だ。<br />
+そういった意味で、この20年で何が最も大きな変化だったかというと恐らくテク<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%CE%A5%ED">ノロ</a>ジーの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CC%B1%BC%E7%B2%BD">民主化</a>で、20年前はカネで未来が買えたけれども、いまどきアキバの店頭に並んでいる環境と、恵まれた大学の金満研究室の環境とで大差ないのではないか。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B4%D7%CF%C3%B5%D9%C2%EA">閑話休題</a>。<br />
+まあ20年後も間違いなくWebは残っている。Web的な世界に関しては媒介する<a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP/IP">TCP/IP</a>が今と似たようなかたちで残っている可能性が高い。いちばん変化が大きいのは最近だと<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ajax">Ajax</a>みたいなプログラミングモデルのところだ。いまは強引にCometでやってるようなプッシュ通信は、もっと望ましい方法があるだろう。あと<a class="keyword" href="http://d.hatena.ne.jp/keyword/VoIP">VoIP</a>みたいな世界は本当にIPでやるべきかから疑問はあるんだけど、別のインフラに乗っている可能性がある。<br />
+いま<a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP/IP">TCP/IP</a>で原理的に難しいのは恐らく低遅延とかマルチパスで、遅延を解こうとするとIPを捨てたくなるし、マルチパスしたければ<a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP">TCP</a>を捨ててSCTPのようなTransport Protocolが欲しい。低遅延の話をすると、対戦ゲームとかロボット制御なんかで使い道がありそうだけど、それだけで新たな網を構築する投資がペイするほど大きな市場があるかは怪しい。けれどどちらも、Web的な世界の延長線上で欲しいかというと微妙だ。<br />
+IPは昔から<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%EB%A5%C1%A5%AD%A5%E3%A5%B9%A5%C8">マルチキャスト</a>とか<a class="keyword" href="http://d.hatena.ne.jp/keyword/QoS">QoS</a>も苦手で、やるための規格は昔から山のように出てくるのだが、いつまで経っても安定しないしIPの良さが出てこない。<a class="keyword" href="http://d.hatena.ne.jp/keyword/NGN">NGN</a>でもうまくできていないし、やっぱ難しいのかな、と。あと移動通信で電波や電池の有効利用を考えると<a class="keyword" href="http://d.hatena.ne.jp/keyword/TCP/IP">TCP/IP</a>的にレイヤを切るだけでなく、上から下まで<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B0%EC%B5%A4%C4%CC%B4%D3">一気通貫</a>で最適化したくなる。それがBWAとしてMobile <a class="keyword" href="http://d.hatena.ne.jp/keyword/WiMAX">WiMAX</a>より<a class="keyword" href="http://d.hatena.ne.jp/keyword/LTE">LTE</a>が成功しそうな理由のひとつ。<a class="keyword" href="http://d.hatena.ne.jp/keyword/LTE">LTE</a>も広い意味でコアネットワークをIP化してはいる。けれども移動通信屋さんのいうIPは<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A1%BC%A5%AD%A5%C6%A5%AF%A5%C1%A5%E3">アーキテクチャ</a>的にIPなのか、単にIPヘッダのフォーマットを踏襲しているだけで、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A1%BC%A5%AD%A5%C6%A5%AF%A5%C1%A5%E3">アーキテクチャ</a>としては遠く離れたところにいるのではないかな。<br />
+どっちにしてもWebもIPも<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ethernet">Ethernet</a>も最早ブランドであって設計思想としては気付かぬように換骨奪胎されており、これらはブランドとして20年後も生き残り続けるだろうけれども、別の領域では全く違った進歩とかもあるかも知れないね、けれどもそこは僕らWeb時代の住民が頑張って開拓するところなのか、それともその時代の若者からみてWeb世代は今日の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Cobol">Cobol</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE%A1%BC">プログラマー</a>みたいな扱いを受けるのか、気になるところではある。<br />
+20年前といえば<a class="keyword" href="http://d.hatena.ne.jp/keyword/i386">i386</a>命令セットが既にあった訳だけど、<a class="keyword" href="http://d.hatena.ne.jp/keyword/CISC">CISC</a>/<a class="keyword" href="http://d.hatena.ne.jp/keyword/RISC">RISC</a>論争とか諸々を乗り越えて、これが20年近く生き残ったのは本当に奇跡じゃないかな。NTの仕様書を読むとi860向けに開発してからi486に移植してるんだよね。i80x86よりMC680x0の命令セットの方がずっと奇麗だし、いま考えると信じられないけれど、あの時代は遠からず<a class="keyword" href="http://d.hatena.ne.jp/keyword/CISC">CISC</a> 32bitなんか陳腐化して、<a class="keyword" href="http://d.hatena.ne.jp/keyword/RISC">RISC</a>か<a class="keyword" href="http://d.hatena.ne.jp/keyword/VLIW">VLIW</a>、そして64bitに移行すると思われていたはず。1988年にタイムスリップして、2008年になってもPCが<a class="keyword" href="http://d.hatena.ne.jp/keyword/i386">i386</a>命令で動いていて、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mac">Mac</a>まで<a class="keyword" href="http://d.hatena.ne.jp/keyword/Intel">Intel</a> CPUに移行したなんて話した日には、誰からも信じてもらえず<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D5%A5%EB%A5%DC%A5%C3%A5%B3">フルボッコ</a>されるんじゃないかな。</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:24:54.986Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-06-17-20",
+    "name": "20年後の通信技術とか",
+    "contentDigest": "79b76553090030f68a1cd6ac724caf2d1402373026866e14bc760118fc318479"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:54.986Z",
+      "proofValue": "z5DieNxtdHHY9pMib9caBJPTEZnuoUhtYcYK7kxUK5J2eeZcMe4QKgeiFhLiNpFDauvss79m6EWwUi45WgfTbQQbg"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:54.986Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:24:55.019Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "39437de7e6bbbb56b64cccbb85e77bb4ea03cf20b959a8c4a85077edd450a110",
+        "metadata": {}
+      }
+    },
+    "eventHash": "955dde686ae85b84de5fb15772ecab9cb78f27040bc1665b68d06a7c08c96f20",
+    "chainHash": "6f288e308d475a2a6f4a7cca06f275c356e01dfc29e7648ed14d955dfc004e18"
+  },
+  {
+    "prevHash": "6f288e308d475a2a6f4a7cca06f275c356e01dfc29e7648ed14d955dfc004e18",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:26:06.262Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "beb503f155b49e0ae16b0b4386269fe295623d9a74f9cf8c30071665895d8f34",
+    "chainHash": "8969c81304c33008c796e624608ce18452110858094ff7736ae3ee8b704c86c1"
+  },
+  {
+    "prevHash": "8969c81304c33008c796e624608ce18452110858094ff7736ae3ee8b704c86c1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:26.234Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "2f172468150dba4f203604ed25a8e5b6f091e88ea2432e3b22d2be0e5f02dd2b",
+    "chainHash": "232a142e82534aae4120239c2157f4ec8dce1d102be66aeb2e8579dca38e9c39"
+  },
+  {
+    "prevHash": "232a142e82534aae4120239c2157f4ec8dce1d102be66aeb2e8579dca38e9c39",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:35:16.034Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "3d0d4fe233e23f6b475b09d11d3f811ce8ca6defe307f1e023bb852ba84e6010",
+    "chainHash": "5b2b2fdc2a1e114d5f881aadc0ec82a792a3d2b98eeb733cb83f1e18a05537fe"
+  },
+  {
+    "prevHash": "5b2b2fdc2a1e114d5f881aadc0ec82a792a3d2b98eeb733cb83f1e18a05537fe",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:16:33.576Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "781af5a61c567bcb7100b60eae498da386a463d584bf2a6182908b3e1a8dc078",
+    "chainHash": "fd73314e2d088d61e548ef203797291949a44b6f36bb3abc52ba749aa818be31"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:16:33.633Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-06-17-20#container",
+    "containerHash": "d172bab174820b77a290a95cfb80947525ab2af2a76f8ab70f3b73189ac6d7b0",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "40eef7d25227a32aeb4a5970a3ea0c3ebd5598a26e4a260d579b84149b559e5f"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:33.633Z",
+      "proofValue": "zSS5CzSEgwYcEBkdAoNN6AUWGjLc7u5b5cWGepY76pWkP5yBXvCqLyERY4ebUzV51eqWzysjxAp6Mn19g1oT9dXL"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:33.633Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:16:33.724Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

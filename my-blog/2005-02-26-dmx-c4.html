@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>DMX-C4で動画を撮りながら静止画を撮ってみた</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "DMX-C4で動画を撮りながら静止画を撮ってみた",
+  "description": "",
+  "datePublished": "2005-02-26",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "DMX-C4で動画を撮りながら静止画を撮ってみた",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>DMX-C4で動画を撮りながら静止画を撮ってみた</h1>
+                <div class="article-meta">
+                    <span><time datetime="2005-02-26">2005-02-26</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>動画を撮りながら静止画を撮れるのが売りらしいけど，静止画を記録してる最中は動画のモーションが止まっている．まー，音は録れてるし使い道あるんだろうけど．これってASICだけでなくCCDからのデータ読み取りに起因する問題だから，回避は難しそうだな．<br />
+サムソンが海外で出してるビデオカメラのように，動画と静止画でCCD別にすればいいんだけど．ちなみに件のサムソンのビデオカメラは光学系から別になってて，単にビデオカメラとデジカメが電源と筐体を共有してるようにしか見えない...</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:24:43.676Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2005-02-26-dmx-c4",
+    "name": "DMX-C4で動画を撮りながら静止画を撮ってみた",
+    "contentDigest": "006e3c509c076e4698555e611b801a0f725099e43b8e1eaf3af9cad48ee8a7d4"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:43.676Z",
+      "proofValue": "z3uPv5cCSMYYJUHQz39kgyWT3w5ECdGaUjReVHgQFYhJ8wfR1xkBrXhhEfWKVTe6y2xopbdQD2CzJAvnLBAttPWrL"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:43.676Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:24:43.708Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "8b6e460123d59c2ed39ef2305821ce10e801d6182527239e6a8aeba70a548b03",
+        "metadata": {}
+      }
+    },
+    "eventHash": "5df06197e631919daf5aeb3685e538ac8fc94d2592fa8948345b72b1739ac54f",
+    "chainHash": "bae4ee18c005f6c10ac0a8d94e31b4cd987912b93dc23a94d45b07e83962a91e"
+  },
+  {
+    "prevHash": "bae4ee18c005f6c10ac0a8d94e31b4cd987912b93dc23a94d45b07e83962a91e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:25:55.700Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "79d3f131023ef87cb0f47254433c6fe43ec5370a35a975725d8005cee6928019",
+    "chainHash": "a4c687f09cc673cc104376158bce635105b40adc2d9d2f755c5acd2c995810c1"
+  },
+  {
+    "prevHash": "a4c687f09cc673cc104376158bce635105b40adc2d9d2f755c5acd2c995810c1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:12.627Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "ddb460149af513ff37d064c76d45101ecbfee01f2da192d6f0fe69b0d1e6a290",
+    "chainHash": "aaa76b536d71eec4c888aa4b75cc085216486d3e4f2ddd61c6c13be2ef476540"
+  },
+  {
+    "prevHash": "aaa76b536d71eec4c888aa4b75cc085216486d3e4f2ddd61c6c13be2ef476540",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:35:01.526Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "4156ec5d55bf562ec586ad5334c7a8403293959945990fb4c92e83590630bcd4",
+    "chainHash": "711e71191b342bff88058fa335e4113b7a53bbd224198d43508f4f499509bab9"
+  },
+  {
+    "prevHash": "711e71191b342bff88058fa335e4113b7a53bbd224198d43508f4f499509bab9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:16:16.549Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "afbc57fe45d7bee27beaba9f59ef58a4e4a8ccb4957aa415a663cc9e1ab9701e",
+    "chainHash": "0be76ad4aa4d5f33375c672a59ee9eb62ccc86bea4f4951a68d4adcdc21a1059"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:16:16.604Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2005-02-26-dmx-c4#container",
+    "containerHash": "db6c6b3c7189e15016f0e98e487e85314010f8ad4fee95d07017b14d896a64ec",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "d86f1e2aef5f96f79a32b010ff4b06d873a460d48f04c37b53633f889aa8fd60"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:16.604Z",
+      "proofValue": "zMPxeGHXqqb1vFoEs8F9M6V1cPziZEFRiR2BwPksrE1SAYhfFKeDCizwHH5sPazLNt9G2ki9UXPxmeifn9qxSrnN"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:16.604Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:16:16.692Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

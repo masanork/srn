@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Web/A フォーム記法ガイド</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Web/A フォーム記法ガイド",
+  "description": "Web/A で使用される Markdown ベースのフォーム定義構文（タグリファレンス）の網羅的な解説。",
+  "datePublished": "2026-01-02",
+  "author": {
+    "@type": "Person",
+    "name": "Sorane Project"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Web/A フォーム記法ガイド",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Web/A フォーム記法ガイド</h1>
+                <div class="article-meta">
+                    <span><time datetime="2026-01-02">2026-01-02</time></span>
+                    
+                    <span>By Sorane Project</span>
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>Web/A Form は、人間可読性と機械検証性を両立させるため、標準的な Markdown を拡張した独自の記法を採用している。本ガイドでは、サポートされているすべてのタグとフォーマットについて解説する。</p>
+<h2>1. 基本装飾</h2>
+<p>ラベルや説明文には、標準的な Markdown のインラインスタイルが使用可能である。</p>
+<table>
+<thead>
+<tr>
+<th align="left">スタイル</th>
+<th align="left">記法</th>
+<th align="left">結果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>太字</strong></td>
+<td align="left"><code>**テキスト**</code> または <code>__テキスト__</code></td>
+<td align="left"><strong>太字</strong></td>
+</tr>
+<tr>
+<td align="left"><em>斜体</em></td>
+<td align="left"><code>*テキスト*</code> または <code>_テキスト__</code></td>
+<td align="left"><em>斜体</em></td>
+</tr>
+<tr>
+<td align="left"><code>コード</code></td>
+<td align="left"><code>`コード`</code></td>
+<td align="left"><code>コード</code></td>
+</tr>
+<tr>
+<td align="left">リンク</td>
+<td align="left"><code>[ラベル](URL)</code></td>
+<td align="left"><a href="#">ラベル</a></td>
+</tr>
+</tbody></table>
+<h2>2. フォームタグ</h2>
+<p>インタラクティブな入力フィールドを定義する。基本構文は <code>[タイプ:ID (属性)] ラベル</code> である。</p>
+<h3>2.1. 基本入力タイプ</h3>
+<table>
+<thead>
+<tr>
+<th align="left">タイプ</th>
+<th align="left">記述例</th>
+<th align="left">説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>text</code></td>
+<td align="left"><code>[text:name] 氏名</code></td>
+<td align="left">標準的な一行テキスト入力。</td>
+</tr>
+<tr>
+<td align="left"><code>number</code></td>
+<td align="left"><code>[number:age] 年齢</code></td>
+<td align="left">数値入力（デフォルトで右寄せ）。</td>
+</tr>
+<tr>
+<td align="left"><code>date</code></td>
+<td align="left"><code>[date:birthday] 生年月日</code></td>
+<td align="left">ブラウザ標準の日付選択。</td>
+</tr>
+<tr>
+<td align="left"><code>textarea</code></td>
+<td align="left"><code>[textarea:memo] 備考</code></td>
+<td align="left">複数行のテキスト入力。</td>
+</tr>
+</tbody></table>
+<h3>2.2. 高度なタイプ</h3>
+<table>
+<thead>
+<tr>
+<th align="left">タイプ</th>
+<th align="left">記述例</th>
+<th align="left">説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>search</code></td>
+<td align="left"><code>[search:v src:vendors] 業者名</code></td>
+<td align="left">マスターデータを用いた補完入力。</td>
+</tr>
+<tr>
+<td align="left"><code>calc</code></td>
+<td align="left"><code>[calc:total formula=&quot;SUM(amount)&quot;]</code></td>
+<td align="left">Excelライクな自動計算フィールド。</td>
+</tr>
+<tr>
+<td align="left"><code>checkbox</code></td>
+<td align="left"><code>[checkbox:agree] 同意する</code></td>
+<td align="left">真偽値の選択。</td>
+</tr>
+<tr>
+<td align="left"><code>radio</code></td>
+<td align="left"><code>- [radio:rank] ランク</code></td>
+<td align="left">選択肢。リスト形式で記述（後述）。</td>
+</tr>
+</tbody></table>
+<h2>3. リストと選択肢</h2>
+<h3>3.1. ラジオボタン</h3>
+<p><code>radio</code> タグの下にインデントされたリストとして選択肢を記述する。</p>
+<pre><code class="language-markdown">- [radio:satisfaction] 満足度は？
+  - 非常に満足
+  - [x] 満足（デフォルト）
+  - 不満
+</code></pre>
+<h2>4. テーブル</h2>
+<h3>4.1. 静的テーブル</h3>
+<p>標準的な Markdown テーブル。そのままグリッドとして表示される。</p>
+<pre><code class="language-markdown">| 月 | 目標 |
+|---|---|
+| 1月 | 100 |
+</code></pre>
+<h3>4.2. 動的テーブル（行の追加・削除）</h3>
+<p>ユーザーが行を自由に追加・削除できるテーブル。</p>
+<pre><code class="language-markdown">[dynamic-table:items]
+| No | 品名 | 単価 |
+|---|---|---|
+| [autonum:no] | [text:item] | [number:price] |
+</code></pre>
+<h3>4.3. マスターデータテーブル</h3>
+<p>文書の末尾などで定義し、<code>search</code> フィールドのデータソースとして利用する。</p>
+<pre><code class="language-markdown">[master:vendors]
+| ID | 名称 |
+|---|---|
+| V01 | 株式会社アップル |
+| V02 | 合同会社グーグル |
+</code></pre>
+<h2>5. 属性（モディファイア）</h2>
+<p>IDの後の括弧 <code>(...)</code> 内に記述するオプション。</p>
+<table>
+<thead>
+<tr>
+<th align="left">属性</th>
+<th align="left">例</th>
+<th align="left">効果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>placeholder</code></td>
+<td align="left"><code>(placeholder=&quot;2025/01/01&quot;)</code></td>
+<td align="left">未入力時に表示されるヒント。</td>
+</tr>
+<tr>
+<td align="left"><code>align</code></td>
+<td align="left"><code>(align:R)</code></td>
+<td align="left">文字揃え (L, C, R)。</td>
+</tr>
+<tr>
+<td align="left"><code>copy</code></td>
+<td align="left"><code>(copy:src_id)</code></td>
+<td align="left">他のフィールドの値を自動コピー。</td>
+</tr>
+<tr>
+<td align="left"><code>suggest</code></td>
+<td align="left"><code>(suggest:column)</code></td>
+<td align="left">同じ列の既入力を補完候補に出す。</td>
+</tr>
+<tr>
+<td align="left"><code>formula</code></td>
+<td align="left"><code>(formula=&quot;a + b&quot;)</code></td>
+<td align="left"><code>calc</code> フィールドの計算式を定義。</td>
+</tr>
+</tbody></table>
+<h2>6. ページ構造</h2>
+<p>標準の見出しヘッダーを使用して、フォームをタブやセクションに分割する。</p>
+<ul>
+<li><code># H1</code>: フォーム全体のタイトル</li>
+<li><code>## H2</code>: タブ名（複数のH2がある場合、自動的にタブナビゲーションが生成される）</li>
+<li><code>### H3</code> 以下: ページ内のセクション見出し</li>
+</ul>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-02T12:06:04.775Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/guide/weba-form-syntax.ja",
+    "name": "Web/A フォーム記法ガイド",
+    "contentDigest": "2cbd0a5e13c45f5fffca3e6ac0e252d2395ab5b1d35a1235abe1eaf2fbede7b2"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767355525912-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T12:06:04.775Z",
+      "proofValue": "z2Es6EdMkcrMJuWJJBUct84msemVb1BkTzHCBAi6w4W5w7DZd9qAHn5RagYcEibpFDJaKuipVFZACfGeZMgna6vkT"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767355525912-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T12:06:04.775Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-02T12:06:04.808Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "0892bb73bc09c102d9bb623f37112ec5b1a0b55081cfd666e844525de50e9e83",
+        "metadata": {
+          "lang": "ja"
+        }
+      }
+    },
+    "eventHash": "2e004059a5e2d455f2faacb9dfe73ea379611559fc4526565150fdad409da6d7",
+    "chainHash": "d74634d925a76b302b10f5309c637269365b1b7af4b9a41d75195cb0df51654c"
+  },
+  {
+    "prevHash": "d74634d925a76b302b10f5309c637269365b1b7af4b9a41d75195cb0df51654c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:19:08.824Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "057da9e9b9c2f3c3cb5fbe0526840f32314577be18370935561ea2bfd020d97e",
+    "chainHash": "f98db17cace00db67479602928833c3fbe9b8139fa5978774c4d212d0ddde61a"
+  },
+  {
+    "prevHash": "f98db17cace00db67479602928833c3fbe9b8139fa5978774c4d212d0ddde61a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:25:26.884Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "61b8647ffb9083ac1ca8e7faac25e4276c4e5c233d85f04334c47188f0ddeeab",
+    "chainHash": "593fb947bfb03397c135b13310531c0002acd294ea93070d4ea68a7f251c87d2"
+  },
+  {
+    "prevHash": "593fb947bfb03397c135b13310531c0002acd294ea93070d4ea68a7f251c87d2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:28:23.935Z",
+      "payload": {
+        "buildId": "build-1767356894320"
+      }
+    },
+    "eventHash": "4ce0181716a0f49c02579d1448d9021edb5ad50f39b68d39df20ab8e956a6b0d",
+    "chainHash": "7fc0c2e9db015ca26964f96c58c12cbd6ef1c396140b919cd2ab72c6871db29f"
+  },
+  {
+    "prevHash": "7fc0c2e9db015ca26964f96c58c12cbd6ef1c396140b919cd2ab72c6871db29f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:36.934Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "0fe7abc767076f818b614b96998a49765ad14856cb9fb00c47c834cce40deef3",
+    "chainHash": "398d51cb2d364bb904a10145fb98c7a1c628cb4c24bc3bf525dec127d3b72d5b"
+  },
+  {
+    "prevHash": "398d51cb2d364bb904a10145fb98c7a1c628cb4c24bc3bf525dec127d3b72d5b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:23:01.875Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "a35ca5cbc9f1427b5ee931bdc36c485a521d06bcf0c2028b32a9f3aef55ffdee",
+    "chainHash": "57faaed47c4a6fd067c08dd402cec12f2d7d325d953c2cfb185c599ea10cf468"
+  },
+  {
+    "prevHash": "57faaed47c4a6fd067c08dd402cec12f2d7d325d953c2cfb185c599ea10cf468",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:22.518Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "55fef8b136efca140df59c130cd120b9aa70ce2f5ef2b4d5230e88f81cbb019b",
+    "chainHash": "12c1faaa012506bd7972aa9d8a327980a5ddc77914c17c0a32503e625ce8811f"
+  },
+  {
+    "prevHash": "12c1faaa012506bd7972aa9d8a327980a5ddc77914c17c0a32503e625ce8811f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:27:20.238Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "8bf687a129d1a62d058d20bb78ca356752ad7282620b2abadd3bfd706dc85369",
+    "chainHash": "3253126464d13d34811432a020868bb6e15841849a40d3566ecb50edfb2e8af2"
+  },
+  {
+    "prevHash": "3253126464d13d34811432a020868bb6e15841849a40d3566ecb50edfb2e8af2",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:49.927Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "1722671e333fc7c013f707480b09f07f892175b0c7b2415c725446732e80e1b7",
+    "chainHash": "9c5b2d503a24258c71e0018bfb4baaf2714f7dc29e4765b07777709a659e85a0"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T00:18:49.997Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/guide/weba-form-syntax.ja#container",
+    "containerHash": "2c7150fdf5f59f85773e12fbec535d6d6405e5638bc81fb60cb088e3d62e92e0",
+    "buildId": "build-1767399488154",
+    "latestContextHash": "a3bb2e2ca144e1514cea9b5af6c5845cbb61705dc6ddf4863aa61f79e0ecf536"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:49.997Z",
+      "proofValue": "z3AAgBmtUopaUsfTEr4qvnKHJ5CZHLogx7yJ98fmj7L7XCBPYM487QgUvS2Ddy7LMwsuuTscdXzfiEmrhLZEcbzgL"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:49.997Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:18:50.092Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

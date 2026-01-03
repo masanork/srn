@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>環境が解くことができるのは歩留まりではなくミスマッチ</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "環境が解くことができるのは歩留まりではなくミスマッチ",
+  "description": "",
+  "datePublished": "2008-08-18",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "環境が解くことができるのは歩留まりではなくミスマッチ",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>環境が解くことができるのは歩留まりではなくミスマッチ</h1>
+                <div class="article-meta">
+                    <span><time datetime="2008-08-18">2008-08-18</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>クリエイターでも何でも日本じゃ何とか道と囃し、まるで一本道の先頭に功成し名を遂げた方々が列を成してるように見えるんだが、そういう世界観ってどうかな。そういう見方をすれば歩留まりって発想になるが、どうだろ。西尾氏がみている世界って、もっと豊穣で多様性のある世界じゃないかな。何かを費やして結果を得られるかどうかは、能力だけじゃなく時と運の巡り合わせだったりもするよね。
+
+<br />
+だから世界を広く見る人が増えれば、単に見込み違いで挫折するようなひとが増える訳でもなくて、これまで出会えなかった需要と供給とがマッチすることだってあるし、世の中って<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%BC%A5%ED%A5%B5%A5%E0">ゼロサム</a>ゲームじゃないと思うんだよね。そしてシーズのないところで自信過剰になったり、そのことが害悪をばら撒いてしまうのも、結局のところミスマッチであって、もっと多くの人が、もっと収まりのいい居場所を見つけることってできるはずだし、そのために勉強会であったり、様々な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A1%BC%A5%D7%A5%F3%A5%BD%A1%BC%A5%B9">オープンソース</a>とかコミュニティの活動や闊達な議論って役に立つだろう。<br />
+ネットで世界がものすごくフラットになって、東京に住んでようが地方に住んでようが、はたまた<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B7%A5%EA%A5%B3%A5%F3%A5%D0%A5%EC%A1%BC">シリコンバレー</a>に住んでようが、程度の差こそあれ、接点は多いが興味は少し遠いリアルの世間と、接点が少なく興味が近いバーチャルの世間との二重生活があって、都会の方が重なっている割合が高い気はする。昔と大きく違うのは、興味で近くなくとも世間との接し方といった世知はマトモな大人であればメンタリングできる訳で、興味の重なるひとのいない場所にいることのハンディって極端に小さくなったように思う。<br />
+それでも、地方の学生とかみていると東京と比べてホンワカとしており、ネットで埋まらなかったのは何だろうか、とか考えさせられる。恐らくアルバイトとかビジネスといったシガラミや、周囲の連中に遅れを取ってられないといった焦り、様々な理不尽な目に遭ったり摩擦を乗り越えてきた経験に乏しいのだろうか。だいたい地方には新しい仕事が少ない。そこをどうにかしなきゃ、と最近は思っている。<br />
+いま<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D9%A5%F3%A5%C1%A5%E3%A1%BC">ベンチャー</a>が東京優位となっているのは、ネット<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D9%A5%F3%A5%C1%A5%E3%A1%BC">ベンチャー</a>という業態の、レベニューストリームが広告で動く標的に対する技術・ビジネス両面での即興芸と、うまくいった場合のスケーラビリティ技術といったところに集中してしまっているせいで、そうすると客の顔がみえてカネの動いており太い回線が集中して価格も安く突発的にひとを集めやすい東京が有利に決まっている。<br />
+地方の環境が光るには、じっくり腰を据えて技術を積み上げ製品を磨いていくタイプの仕事を増やしていくことが鍵になる気がするんだけれど、正しい事業開発や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A1%BC%A5%B1%A5%C6%A5%A3%A5%F3%A5%B0">マーケティング</a>と組み合わせないことには、往々にして徒労になってしまう。これもまた一種のミスマッチであって、東京でアンテナを張って地方でじっくりつくるというのが我が国でのモノヅクリの王道であって、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A4%CF%A4%C6%A4%CA">はてな</a>が京都から東京、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B7%A5%EA%A5%B3%A5%F3%A5%D0%A5%EC%A1%BC">シリコンバレー</a>に進出して京都に回帰したことも、そういった流れで捉えることができるのかなあ、という気はする。<br />
+江戸期までの日本は知識人が藩に抱えられていた訳で、そういった多様性のある世界で、通時的かつ幅広い視座を持った教養や文化が涵養されるようになるといい。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C7%A4%C5%B7%C6%B2">任天堂</a>がおもちゃ文化を今も大事にして性能一辺倒で袋小路に陥ったゲーム業界に新風を吹き込んだように、それはITのトレンドだけに立脚した脆い一時的な技術優位ではなく、何か地に足のついた文化に根ざし、そこに最新の知見を踏まえた判断が入るべきなのだろう。そういう仕事って今のところIT業界の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D2%A5%A8%A5%E9%A5%EB%A5%AD%A1%BC">ヒエラルキー</a>からは外側にあって、埋めるべきギャップとかミスマッチといった機会は諸々ありそうな気がしている。そういえば<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A4%A5%CE%A5%D9%A1%BC%A5%B7%A5%E7%A5%F3">イノベーション</a>って、もともと新結合だったよね。</p>
+<blockquote cite="http://d.hatena.ne.jp/nishiohirokazu/20080817/1218959092" title="Re: 「「勉強会の違和感」に感じる違和感」に感じる違和感 - 西尾泰和のはてなダイアリー"><p>それはさておき日本人は自分に自信のない人が多すぎる。日本の教育の伽藍的傾向が強すぎるのだろうか。考えてみると僕の中高時代は教師より数学のできる生徒が同人誌的な解説プリントを作ったりとか、地名の由来にものすごく強い生徒がいて地理の時間に先生が解説を求めてたりとか、バザール的な要素が強かったのかもなぁ。<br />
+バザール的カンファレンスで、自信を持つことができればいいんだけど。</p>
+</blockquote><blockquote cite="http://d.hatena.ne.jp/kajuntk/20080818/1219016504" title="どれだけその業を背負う覚悟があるの？ - Automatons Hacking Guide"><p>ある程度の確率でクリエイターが排出されるなら、その母集団を多くしなければならないのは僕も判る。<br />
+でも、そう言う行為はより多くの不幸な野たれ死にを増やすことを理解しなければならない。。<br />
+西尾君と同じ時間とプロセスをコンピュータに費やした人が、西尾君と同じ結果を得られるなら世の中はもっと<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A4%A5%CE%A5%D9%A1%BC%A5%B7%A5%E7%A5%F3">イノベーション</a>が多発してる。<br />
+現実は違うだろう？<br />
+そう言う人の多くは名も無き奴隷コーダーとして末路を描く。<br />
+しかも自分にシーズが無いことに気がつくのは取り返しがつかないときだし、シーズが無い癖に、自信過剰で害悪をばら撒く場合も多い。</p>
+</blockquote>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:24:48.898Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-08-18",
+    "name": "環境が解くことができるのは歩留まりではなくミスマッチ",
+    "contentDigest": "68befbb64aa85bf9c2ad844b35bdd93611c0c85bc80958dba71784b6abc2df6a"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:48.898Z",
+      "proofValue": "zKjg4hFaGrcGQSMnAyJFLo8UWz6HW1X7GZLbpSDrYMWsg21gZwMAnxz8LBpFQH7S2zpSgLeS29yxjd5DgYApq4L3"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:48.898Z",
+      "proofValue": "zqibT16HipunkrFagTTUqoH7cWRX1E22ZWbmoJSj4AG56ewdqUuyE7wUPyWNJh8r1jPt1fqaZN2tDTwwE8mZvVNasDn7CejNNv1YjAwN2eeyPpdNjXEqner3A4DeTWPuSDNfzxEa44LiFhvb2VX9d5ZU6G883xTC2SZ8YELH1T6N5qPvhn6DfajuQyumhJwN5D8wir66yyxCCaCNYVUyvrxUhaRSjWbiNzces9At5GvMiYX4WbR4voWPqJewL7kSH52gzGrf2JRDgazHAfeZCKdRevkSdKLY7bThrrshd8gKcMsf18FVq8Zap6RVwr6YzsA2xY5A7uqB1gPFW61LibWRhpgswFv4HKNPTWkXkxqsHN7auQBXRB3XSGYwqsUUz8pqdeovAs1cQhjWQb96Y7253u6CLwXjtcjsLhYnMwVkdAMmkDmMX7p3LWVmPUR8q2rFSi44DyiU5jr45oGdZTqRcCXqgtheRkKACGVuhmsfEmMZ4vhkhB1T49b2M5JjAD1A5FLeAVstMMKXVr9UH4uTkmyyNhYy8LxsVemY4DEMFa8az7vHfEvvNLVETBuwnfcQaSTpB8ui6Fcodt9imsY48uAGzfLmD2i19o24k91va4vM3xjkPS5qnoX1NEj3xVdLGu9bHATrgfiJVNzT381A9NYTmTDocz82feV2vQwfMihDeo7f5H1QCBjGTd5Vp27kRtZKSakwERLXCRVgRYX1o5KtkTL5ZsMMTMm8CVD9DW1GfdcTERF9yo4mTnnDocP1R3CeJDNJfDHxRM89mLnzGmGXtbRY6DfMp63wN23vzz9wwKhcnjeimuQtbWSKQNp2KPCUTA1BFrRkZSamjRr7A4KRfKHA6u85Y7wRe9SBpS699joSHGFgHduBwdQVqM4uWGMpz6a8mci5M9nGLnr13ydott4fqurHSPTHPoicZmJ33F2zj993euq2wpkCeyv3TF1VMUTEEUoDzFnemmmqvpxtdwuipDaYCsdFSCtUvs7D6reY1TJwsNREnhLof65Q4Ui3Kdy2oTnuJ9s4DZxwuDBEhMoizgBmW94FQcCtPqYXDAp1ju2cTK6CSM5kLAf1dr6QmdQAMVvAekhjuQ9AYAswPHDFiFLS8qmft1aAYv79fxbGEhvyomx3LaQhW2pZacmpgAqppqeXym3Lo23FagiYWnz2h7k4E8oUHqz5G3PQ36ra2jj95jPc4G6166TQQqTbbQRZsaYiWbmBkDFcGBgw7pKhNCm1NiVTnyiwoBxbjJ3WUS6v26yaFtKsnHZtyawpH51HwkeAGHTm9hciCsPikzVvWqSWQ6jngUbgT5vDNza5vZjSqCeVeCFqzNnhVTzdscb1eEn6i6TrDkre3yjSWR6YnwrCnXiLFDhuk8Wkihffgt6fXt3kGcfiuZ7Gny2rVuCdxQnS1LDr9Mf6NQvtYPF1GSLm7hhC1RQj1q4ubafv6zn8ogAo5b92AKyZhe2UwbZXfJ3Ewm81aZ7vszznwiUFGpZZ1UGdytbgHmpdXZRFpDNTXnPFSVkA5b5MrBPTRauTBqyC9J2zKJp2pfeHyBqkzGauTQPuUTV3BWkWk5BqwRQkEj2L6un29VbcqpG5RDKzuVz8rdMpV4zQgXEEDVXJTzYAaksEnEYPw97cFyZe8TegAtQMn8oNmDC7LaTtQKST1u5WT4EPduzvGDMKphUiQjnZTRbC3EQdHwWPZCh3tsVkrcJGAXB8RUHxyBkXg6VrnKeg1mteE995cT3fohG22jKtqDdCt5N6h7SnVtQnm82sTiLcihU45HBRNXKq9wHPKt7bWoF65vMP5Ly6rT8vFR79vNk9afNExJ9Fd3mMGfwxgpUiBcem5JHsJHxFadGG8d78iJFYnRZJb9M9vyXmdBwu7cDEJfZzSqTPM7VVuhAZmrKZ7QwQPofH9e6CFRX6L78xypDTQu9rnZWodQKUua4VwvTDCnqTUGJHd6HrpistePpcrkZ55UFjnq6HUE8rsc7McgRgzysA2Bh7FrcgMQub2ZSrAQKPWANSf6dv2ee3TYQnMHJ8ZoKbE5o91pnthTttrBCfqLNmBAz2ttvZSTR27uHtocetxQypVNWKv7azrXSySdEniegCsPuAo5aKbtaPLGqRHx7UDakaE8HetaSGEv4JHK9dRzqJWr6wdBhvUMqd8DdkHFdfCb2Bv7h2RCHix5Cnhurtxs85st8YaUhm57sQpPJguBTnjGC9dyGp1Mit3ZjqTuyWmnPuC8VHmMaKDxQis7rZF7x4i9znBvcYX6a3vqZo1bYYELatu91iRksUXgZZEv8JGyuf1Ws5wwCoSLckojEyzyBNVUUvjJMPgifAHDnmNcfzbGEc9jQc55b4PPC3tgRx5D1bSwCgfLjEs8sk3rq9ghsN5AXQmViG4GDSg358NEvJPVMuRzH5eTyfe66Vuy9NXwznae1gtNFqv6Zj2Wj9sGCJfbh2FZXj61gdoDNHeRDAQkoTPV332YUH1V2JAWF3qZM2Z3vphPSqqtZ1xZw59vsxybw7QuFjcipkzszX2gJEFzBaP6xq5DK5AppqaH32fRwKNTzSLx7FvysDMxoQETxPgC7UXePmDwfTqVER5eddVzBYGv6ihtHLEVCbzKri8QKDqiXmWaXpD7TfSrdgDkiqPdhDDmsLxGYoZQqSGBBpgqrKGvzuPGhMBbFzde3M3ZNwmGwwb1y7wN659ec8tq8vNz7E3pieGsupUokYPfjw3cfxhLKpZ52Dni7DSwPM6dhRd7yDvKkbq7966T1AvWXkQLBckBH1RHBj96Bbdgj59V85svUR49h2KVpjytVUhA9Y4cV3YEWjGt4mLx3hck7t51qtLCViSm4ydXJKdf7KXY6bPxZqm2v7eTMTjPSBFAgZiDQ9f3sd2drF2tBnhNq4KpoE4CKckEfiWtmxWqmiLskZ21mKJ4v4hJTHpajVDDn47Ky3EWxfNFpdxXqB8n8bqk9qXatAnfzjTa85BsspHAW7Rg7z2wtK1zmtNAuogLJyb1ibzov6B4fvrLGjH5QiSLcbSYTKmruC2oESS9NAXxuH6Mst6XjYVejkP4UbXSBdGEhUfc2ijZPVhqZXtupzgoGWRg5SVUiJzKcAMrV4xBRDC7j7yvPREznz2zKAYxngu5aUEBvKxs8ZvR4dY6AuZPZaQVDphq9C4JoUt6utT7oVPY5uj7hEqEEwcAupQ3tFSvnzgx1MdEtAczA18uSFaKfsGHrPC3tNrrP7bjXTfm6WiqsMRWZSR1c1KnUPv6A9DwWCSVxgsZ7zaxkkpDHAN6FucupaJmDhn"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:24:48.930Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "1a3a9473b35d4e944749fe77fe0ba80f9d4c9d97331c923bbae078a8edb3b7de",
+        "metadata": {}
+      }
+    },
+    "eventHash": "7ca8d4fd8bc8f23a32e33661a720cb79db22e4906516e0eb94016a48f1739520",
+    "chainHash": "61c2421175dc1454899dab93b226bb8bfe5657e0873cce4850b6ae27086d45fb"
+  },
+  {
+    "prevHash": "61c2421175dc1454899dab93b226bb8bfe5657e0873cce4850b6ae27086d45fb",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:25:59.531Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "085f8b797138b4ba7921c57e2f03691832b1ecb521e27018e92993d98c44fba6",
+    "chainHash": "e2ec9bce613e75010919048bf6efffdcaa4a84e2522462d764a8664dc37ae981"
+  },
+  {
+    "prevHash": "e2ec9bce613e75010919048bf6efffdcaa4a84e2522462d764a8664dc37ae981",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:17.414Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "aa252f4e96379e1195d282a83ff0f9737418f8b8d9bed734f9c0b07b76b6ae84",
+    "chainHash": "a1c8211fb59ddecc3fd07d8b7428a4d3949e2fd68e18c590325eee87cb0604bb"
+  },
+  {
+    "prevHash": "a1c8211fb59ddecc3fd07d8b7428a4d3949e2fd68e18c590325eee87cb0604bb",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:35:06.710Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "dcbc0b1a659210067130568c3bbe5e6e2b46b814d86306b712957c7b7dda3120",
+    "chainHash": "eac9e2fff1e0dd0b0461235b35f393bca04ec0f22f509d1c274f23b5df25ddee"
+  },
+  {
+    "prevHash": "eac9e2fff1e0dd0b0461235b35f393bca04ec0f22f509d1c274f23b5df25ddee",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:16:22.787Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "1442af3fe6816bbf4a9014ffa367c3030d56372e1f4e4de984382044d2655ed0",
+    "chainHash": "5b554ed7c958735640e250a25106299eb577f2c73433126775ad6f7b7755acd5"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:16:22.844Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-08-18#container",
+    "containerHash": "7f8dbbe6427ca57bbb83bf0f52e5ea2e6bbc48db1fb0cc842072fc510db6ab99",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "9f58f6b14e1e997258cdacc835928b79595eb81e59b9bf1e04a2a545a3307380"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:22.844Z",
+      "proofValue": "z2kPzF5z7PfUoGfkZm34hxb7Z8ZQ8YzrxZUexCnDsvE6ehy7pEcvhqu97g2T6vPo8wbQbGDuLUaznUYQ8vP7eQBTU"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:22.844Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:16:22.937Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

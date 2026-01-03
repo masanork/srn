@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>アーリーアダプティブ・バイアス</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "アーリーアダプティブ・バイアス",
+  "description": "",
+  "datePublished": "2008-04-07",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "アーリーアダプティブ・バイアス",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>アーリーアダプティブ・バイアス</h1>
+                <div class="article-meta">
+                    <span><time datetime="2008-04-07">2008-04-07</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>これは興味深いっていいたいところだけど、それって昔の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C1%F0%A4%CE%BA%ACBBS">草の根BBS</a>とか、Junetとか、fjとか、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mosaic">Mosaic</a>とか、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Duke">Duke</a>本が出て間もないころの<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>-house MLとか、<a class="keyword" href="http://d.hatena.ne.jp/keyword/ICQ">ICQ</a>とか、blogとか、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Orkut">Orkut</a>とか、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Gree">Gree</a>とか、<a class="keyword" href="http://d.hatena.ne.jp/keyword/SecondLife">SecondLife</a>とか、最近の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Facebook">Facebook</a>とか、みんなそうだったんじゃねーの、とか思う訳ですよ。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A1%BC%A5%EA%A1%BC%A5%A2%A5%C0%A5%D7%A5%BF">アーリーアダプタ</a>が集まっている段階はみんなそうで、最初のうちに飛びつく人々って共通していて<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>も今はそんな感じだけど、<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>使えるねって世間でいわれた頃に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E6%A1%BC%A5%C8%A5%D4%A5%A2">ユートピア</a>は終わっている、否、他の何かに濃い場が移ってるってことじゃないですかね。</p>
+<blockquote cite="http://blog.livedoor.jp/lalha/archives/50214303.html" title="小野和俊のブログ:Twitterで就職 - ネットコミュニケーションで仕事を決める時代"><p>従来のスタイルが、まったくの他人同士が初めて会ってガードを上げながらコミュニケーションしていくものだったのに対し、以前から愚痴も嬉しかったことも聞いている知り合いが、会社に興味を持って応募してきてくれたような感じで話が進んでいく。しかも実際にはお互い一度もあったことがないのに、である。</p>
+</blockquote>
+
+<p>いまエッジの効いている場で採用活動をするというのは素晴らしいア<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A4%A5%C7%A5%A2">イデア</a>なんだけど、それが何故素晴らしいかというと、真似ようとしているひとがそこに来る前にやるところに意義がある訳で、大衆が押し寄せたところで<a class="keyword" href="http://d.hatena.ne.jp/keyword/2ch">2ch</a>とか<a class="keyword" href="http://d.hatena.ne.jp/keyword/mixi">mixi</a>みたいになっちゃうんでしょうね。フォロワーが真似できないところにいる連中を採ることに価値があるのだし、それは採用側も求職側もそうだから、blogで評判になったり、ノウハウとして横で共有されてしまった途端に<a class="keyword" href="http://d.hatena.ne.jp/keyword/S/N%C8%E6">S/N比</a>が悪くなる。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A1%BC%A5%EA%A1%BC%A5%A2%A5%C0%A5%D7%A5%BF">アーリーアダプタ</a>の巣窟であることを超えて<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>そのもののコミュニケーション特性に特異性があるかというと、僕は疑ってしまうし、それは彼が来年や再来年も継続して<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>で採用し続けているかというかたちで結果が出るだろう。まあ、あのエントリを読んで俺も<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>で求職を、とか考えそうな奴は前のエントリで既に彼をフォローしているのであって、ブログエントリひとつで<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>が荒れるかというと分からないし、<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>で採用ってネタ自体は<a href="http://blog.hatena.ne.jp/fromdusktildawn/">id:fromdusktildawn</a>の方が早かった気もする。というかblogや<a class="keyword" href="http://d.hatena.ne.jp/keyword/SNS">SNS</a>と違って揮発性のコミュニケーションであることが、フォロワーの追随に対するひとつの防波堤となる可能性はある。<br />
+こうやって論評している僕自身、いちおう<a class="keyword" href="http://d.hatena.ne.jp/keyword/twitter">twitter</a>は使っちゃいるけれども、あまり使いこなせていない気もする。溜まっているような、それでいて1:1でおしゃべりしているような微妙な感じは好きだし、<a class="keyword" href="http://d.hatena.ne.jp/keyword/IRC">IRC</a>と比べてうまく<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%BE%A1%BC%A5%CB%A5%F3%A5%B0">ゾーニング</a>されているなと感心してしまうけれども、結局おしゃべりかー、みたいな壁もある。ただ昔は出会い系ショートメールと思っていた<a class="keyword" href="http://d.hatena.ne.jp/keyword/ICQ">ICQ</a>が、Instant Messagingという名で様々なベンダからソリューション化されて、気づいたら仕事でなくてはならない道具になっていたように、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Twitter">Twitter</a>的な何かが、仕事を進める上で不可欠な何かとなる日はくるのかも知れない。<br />
+たぶん今の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Twitter">Twitter</a>に欠けているものはコンテクストだ。確かにfollowと@によるフィルタリングは機能しているんだけれども、誰をどういうコンテクストでフォローしているかが共有されていないせいで、結果的に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A4%CF%A4%C6%A4%CA%C2%BC">はてな村</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A4%B7%A4%E3%A4%D9%A4%EA%BE%EC">しゃべり場</a>みたいなメッセージばかり飛び交っていて、そのうち<a class="keyword" href="http://d.hatena.ne.jp/keyword/FoaF">FoaF</a>と連携して、仕事でフォロー、業界でフォロー、私的にフォローみたいな感じでコンテクストを使い分けられると、もうちよっと便利かも知れない。たぶん気持ちのモードによって、LinkedInの<a class="keyword" href="http://d.hatena.ne.jp/keyword/FoaF">FoaF</a>と、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Facebook">Facebook</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mixi">Mixi</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/FoaF">FoaF</a>を使い分けたい場合もあるんだ。或いはそれぞれ、僕に割り込んでくる<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B9%A5%EC%A5%C3%A5%B7%A5%E7%A5%EB%A5%C9">スレッショルド</a>に濃淡を持たせるとか。<br />
+そういった意味じゃ<a class="keyword" href="http://d.hatena.ne.jp/keyword/Twitter">Twitter</a>的<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DF%A5%CB%A5%D6%A5%ED%A5%B0">ミニブログ</a>とOpen-IDとDataPortability.orgの活動で一気に普及しそうな<a class="keyword" href="http://d.hatena.ne.jp/keyword/FoaF">FoaF</a>が結びついて、仕事を触発し得るコンテクスチュアルな場が出てくると、いろいろ面白い気がする。ずぼらな僕は、僕が輪に入りたい議論が盛り上がっている時にプッシュで教えてくれる仕組みが欲しいんだけど、どう検出するのが賢いかな。という訳で、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Twitter">Twitter</a>的な場を濃いままで保とうとすると、どうやって場をコンテクストで仕切るかが重要になりそうで、今の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Twitter">Twitter</a>のままだと昔の<a class="keyword" href="http://d.hatena.ne.jp/keyword/ICQ">ICQ</a>みたいに臨界点を超えたところで一気に<a class="keyword" href="http://d.hatena.ne.jp/keyword/S/N%C8%E6">S/N比</a>が悪化しそう。それは同時にビジネスチャンスでもある訳だが。</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:26:12.460Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-04-07",
+    "name": "アーリーアダプティブ・バイアス",
+    "contentDigest": "20ac5672c1d01697fb373f21d629c8026e45592a52a51bd35fd8916a4bf5a726"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:26:12.460Z",
+      "proofValue": "z43eCJSmTWFgLKuFqG4gHznQTAbpNGWRA73GFRrGSaXY8aork2h895paS7GuhrHkfDQjt8GuZueHuFVNejVBeeW3i"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:26:12.460Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:26:12.492Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "1994048a9fc278a5905ce995dd2cd02f3471f93bf45d103f281308ea8e5fa61f",
+        "metadata": {}
+      }
+    },
+    "eventHash": "1b89166d2459c4a7b373180f86191c0a2853de34a5499e8024eacc6eb44d4406",
+    "chainHash": "b3f66b7355320c7d93a5f0dce406632fc2dddc1e7becdbf70a0c92b698ffa472"
+  },
+  {
+    "prevHash": "b3f66b7355320c7d93a5f0dce406632fc2dddc1e7becdbf70a0c92b698ffa472",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:26:51.817Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "7eabdf505a68140ec6e4c90fbfc0a3c2a7f6495572b1b8f020a3c32d05671e2e",
+    "chainHash": "30468e348f11900129e6e8510dab45cf93435bcf8cee10537cc76edb7a44fa74"
+  },
+  {
+    "prevHash": "30468e348f11900129e6e8510dab45cf93435bcf8cee10537cc76edb7a44fa74",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:31:24.255Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "6af7b9dfd7be58c8cbd77896616cf99c05ce772c119d56ddf3ebe0684ca01460",
+    "chainHash": "bb4423e4cef5029fcf4ce629e5bd001c98161c7b6ae104237d11be1b5a7691eb"
+  },
+  {
+    "prevHash": "bb4423e4cef5029fcf4ce629e5bd001c98161c7b6ae104237d11be1b5a7691eb",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:36:16.136Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "21e14f31c64c8741971d280156a39bdf2bb9ad4fc718c3b3888467f62bcdc57b",
+    "chainHash": "f357e0a1031aacf98c5afba78badc3011c7c4e09eb85dc64e7dac0af13d8d899"
+  },
+  {
+    "prevHash": "f357e0a1031aacf98c5afba78badc3011c7c4e09eb85dc64e7dac0af13d8d899",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:17:43.181Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "50bab4ae653e787e665e00dbd9fabdc812bd4ebf2cb5a3184fa7e5ae440b8873",
+    "chainHash": "d5df65f7ebfa1ebb79035afac033de305751fb7f3c57b666bc0508b9ac164adf"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:17:43.243Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-04-07#container",
+    "containerHash": "27061215901ca36732307ded8ef6f7e70b1bc8947ff6bfdada9948b87a2fe505",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "deb03d54bab47e43e5d99342bfefb2bba1d71f10cfd603871301035ca4276588"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:43.243Z",
+      "proofValue": "z3qv4oYCWJd6D38zbCvutdcDGSayTzJpMFqtBxC99HyRqCMxpjVPbj9DJPPGvDDzu8AmicqJ1mMm3N4ov41JWnt9K"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:43.243Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:17:43.337Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

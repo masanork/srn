@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>「本物のプログラマ」もNEETになり得る御時世の処世術</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "「本物のプログラマ」もNEETになり得る御時世の処世術",
+  "description": "",
+  "datePublished": "2005-12-24",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "「本物のプログラマ」もNEETになり得る御時世の処世術",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>「本物のプログラマ」もNEETになり得る御時世の処世術</h1>
+                <div class="article-meta">
+                    <span><time datetime="2005-12-24">2005-12-24</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>ぼくはIT業界の中で技術者から<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A1%BC%A5%B1%A5%C6%A5%A3%A5%F3%A5%B0">マーケティング</a>に移った人間で、最初こそ張り切って<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%C8%A5%E9%A1%BC">コトラー</a>とか読んだけど、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B3%B0%BB%F1">外資</a>系企業で日本法人にいて3Cとか分析しても4Pのどれも殆ど触れないことに気づいて、これじゃ<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A1%BC%A5%B1%A5%C6%A5%A3%A5%F3%A5%B0%C0%EF%CE%AC">マーケティング戦略</a>の勉強にはならないなぁと感じて途中から技術渉外っぽい仕事に路線変更した。<a href="#f-05cbbcff" name="fn-05cbbcff" title="ちなみにマーケティングを諦めた訳ではない。自分の考えている4Pもいじれるマーケティングをやりたければ本社にいくか、他社に転職すべきなんだろうけど、とりあえず目先にそういう選択肢が見当たらなかったのだ。それにマーケティング理論はベタに仕事にするだけでなく、自分の売り込み方を組み立てることにも使える、ということに気づいたし。">*1</a>技術渉外というのも一風変わった仕事で、似たような仕事があるといっても非常に限られているだろうし、日本企業のそういった部署で中途は採ることは少ないだろうから、日々潰しが利かなくなっているのではないかという不安はある。けれどもまぁ、英語とか段取りとか、自分の苦手なところを鍛えつつ、少し突き放して業界の仕組みを眺める居場所としては面白い。<br />
+どこかでいざとなったら技術者に戻れるという気持ちもあって、Virtual <a class="okeyword" href="g:mohican:keyword:PC">PC</a>で<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>とかの環境はつくっているし、手元の環境には一通りの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D1%A5%A4%A5%E9">コンパイラ</a>は入れているし、研究所でつくってる新しい<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%AB%A1%BC%A5%CD%A5%EB">マイクロカーネル</a>の<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>コードをデバッガで追いかけたり、流行りものは一通り遊んでいるんだけど、基本的にプログラムは書かないし、顧客と接したり問題を解いたりしていないので、きっと技術者としては相当ナマってるだろう。<br />
+僕は技術の歴史性は意識しているけれども、優秀な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>になることは早い段階で諦めてしまった。優秀な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>というのは、歴史を知ってようが知ってまいが優秀なのである。別に修辞学や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%C0%B8%EC%B3%D8">言語学</a>に造詣の深い奴が良い物書きになるとは限らないのと一緒である。そして僕は優秀な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>でもシステム屋でもなかった。<br />
+僕の知る優秀な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>の多くは、確かに流行りのCの末裔<a href="#f-37d8dfca" name="fn-37d8dfca" title="C++, Java, C#とか">*2</a>ばかりでなく、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%BB%A5%F3%A5%D6%A5%E9">アセンブラ</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Fortran">Fortran</a>、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Lisp">Lisp</a>、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Prolog">Prolog</a>、ML、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Haskell">Haskell</a>とか<a class="okeyword" href="g:mohican:keyword:変な">変な</a>言語も触っているひとが多い気がする。きっと、特定の言語による抽象を所与のものとして<a class="okeyword" href="g:mohican:keyword:受け">受け</a>入れている限り、超えられない壁のようなものがあるんだろうね。いろいろ知ってれば<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%BB%A5%F3%A5%D6%A5%E9">アセンブラ</a>レベルのチューニングもできる<a href="#f-36c9b942" name="fn-36c9b942" title="確かiアプリで動く某エミュレータの作者だっけか、携帯電話機メーカーからJITコンパイラのソースコードを借りて、JITコンパイルされた後の命令数ができるだけ小さくなるようにチューニングしていた">*3</a>し、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Cobol">Cobol</a>で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A5%D6%A5%B8%A5%A7%A5%AF%A5%C8%BB%D8%B8%FE">オブジェクト指向</a>プログラミングだってできるのだ。<br />
+そういえば日経バイトの最終号で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A4%DE%A4%C4%A4%E2%A4%C8%A4%E6%A4%AD%A4%D2%A4%ED">まつもとゆきひろ</a>さんが<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DF%A5%F3%A5%B0%B8%C0%B8%EC">プログラミング言語</a>でここ20年間は進歩がないということを書いていた。言語のことは<a class="okeyword" href="g:mohican:keyword:よく知らないけど">よく知らないけど</a>、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>もここ20〜30年近く進歩がない。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>も<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mac">Mac</a>も<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>も、<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>の亜種ばかり残ってしまった。<a href="#f-7b8c9c81" name="fn-7b8c9c81" title="Windows 9xとかMac OS 9とか最近まで非UNIX文化圏はあったのに。そういえばOS/400とかz/OSは非UNIX文化圏で興味深いけど、公開されてる文書も少ないし手元で触る機会がないからよく知らない">*4</a>細かい違いはあれど、『<a href="http://d.hatena.ne.jp/asin/4894710471/mkusunokhaten-22">オペレーティングシステム―設計と理論およびMINIXによる実装</a>』を読めれば、だいたい中身がどうなっているかは理解できる(<a class="okeyword" href="g:mohican:keyword:ような気がする">ような気がする</a>)。<a class="okeyword" href="g:mohican:keyword:みんな">みんな</a>大部分が<a class="keyword" href="http://d.hatena.ne.jp/keyword/C%B8%C0%B8%EC">C言語</a>で書かれ<a class="keyword" href="http://d.hatena.ne.jp/keyword/POSIX">POSIX</a>をサポートし、メモリ保護は2階層しか使わず、それなりにモジュール化しているけど<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%AB%A1%BC%A5%CD%A5%EB">マイクロカーネル</a>ではない。<br />
+でも<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mach">Mach</a>でOSの進化が止まった訳ではなく、そこから先も<a class="keyword" href="http://d.hatena.ne.jp/keyword/Plan%209">Plan 9</a>とかInferno、Spring、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a> OSとか色々と面白いことをやったんだけど、遅かったり互換性がなくて普及しなかったのである。けど、そろそろ状況は変わるかも知れない。セキュリティのことを厳密に考えると、ずっとシステムや<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C7%A5%D0%A5%A4%A5%B9%A5%C9%A5%E9%A5%A4%A5%D0">デバイスドライバ</a>を<a class="keyword" href="http://d.hatena.ne.jp/keyword/C%B8%C0%B8%EC">C言語</a>で書くのは辛いし、仮想化技術<a href="#f-ad36d295" name="fn-ad36d295" title="これも最近のバズワードだけど、S/360で動くCP以来40年近くの歴史がある">*5</a>とマルチコア<a href="#f-8b97e8ef" name="fn-8b97e8ef" title="単にプロセス技術の制約によるパッケージングという話であって、技術といえるかは微妙">*6</a>が普及すると古い資産は別<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D1%A1%BC%A5%C6%A5%A3%A5%B7%A5%E7%A5%F3">パーティション</a>で動かしましょうという逃げができるし、<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>コードレベルで形式的手法と連携させるとか、品質管理手法も大きく変わるだろう。僕は<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>の亜種達に「レガシー」のレッテルを貼れるようになる日を楽しみにしている。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B4%D7%CF%C3%B5%D9%C2%EA">閑話休題</a>。<br />
+言語にしても<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>にしても開発者から覚えてもらわなければならないし、枯れるほど資産もノウハウも溜まるから、往々にして技術というのは急速に普及した時点のものでピン留めされてしまうのである。確かに世界はCや<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>の亜種ばかりに席巻されてしまったけれども、ヘンテコな言語やOSは日々開発されている。新しいことは覚えるのが面倒だし既存資産がないから、そのコンセプトは忘れられるか、取り込まれるのが世の常であって、そう新しい発明なんてないから、忘れられた技術たちの歴史を知っていれば、いっけん新しげな技術と出会っても<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CB%A8%A4%A8%CD%D7%C1%C7">萌え要素</a>の組み合わせに過ぎず、驚き戸惑うことは少ないのである。<br />
+然るに、この手の薀蓄を語る上で技術の歴史性は非常に重要だし、それは中身のない与太話の原稿を水増ししたり、コンサルと称して茶飲み話に行って専門家面するには使えるし、そういう衒学的な付加価値で高い人月単価を取る商売も世の中にはあるし、それはそれでIT肉体労働者ではないのだけれども、「優秀な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>」でもないのである。<br />
+とここまで書いて、僕の考える「優秀な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>」が<a href="http://www.pbm.com/~lindahl/real.programmers.html">&#x300C;&#x672C;&#x7269;&#x306E;&#x30D7;&#x30ED;&#x30B0;&#x30E9;&#x30DE;&#x300D;</a>であることに気づいた。然るに技術の趨勢は本物の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>を必要としない方向に向いている。誰が本物の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>であるかは本物の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>にしか分からないので、本物の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>ではないマネージャにとって、<a class="okeyword" href="g:mohican:keyword:みんな">みんな</a>に<a class="keyword" href="http://d.hatena.ne.jp/keyword/Fortran">Fortran</a>ではなく<a class="keyword" href="http://d.hatena.ne.jp/keyword/Pascal">Pascal</a>を、Cや<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%BB%A5%F3%A5%D6%A5%E9">アセンブラ</a>ではなく<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/PHP">PHP</a>を使わせた方が安心なのである。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C7%A5%D0%A5%A4%A5%B9%A5%C9%A5%E9%A5%A4%A5%D0">デバイスドライバ</a>とか組込系とか、どうしてもCや<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%BB%A5%F3%A5%D6%A5%E9">アセンブラ</a>で書かなきゃならない部分もあるけれども、ここは仕様の切り分けが容易なので、研究や趣味で触る以外は、真っ先にインドあたりに外注に出すべき仕事だ。<a href="http://blog.livedoor.jp/dankogai/archives/50280082.html">Larry Wall&#x304C;O&#39;Reilly&#x3092;&#x30EC;&#x30A4;&#x30AA;&#x30D5;&#x3055;&#x308C;&#x308B;</a><a href="#f-9509078f" name="fn-9509078f" title="Tim O'ReillyはWeb 2.0とか煽っておきながら出版事業の不振に喘いでいるらしい。まぁ先がよくみえることと、正しく体を動かせることとは違うんだろうし、Larry Wallならその気になればいくらでもスポンサーが集まる気がするけど">*7</a>ようなご時世だし、人件費の高い日本や米国に残る高付加価値の仕事は、恐らく小野さんの宣言した<a href="http://blog.livedoor.jp/lalha/archives/50055039.html">&#x30D7;&#x30ED;&#x30B0;&#x30E9;&#x30E0;&#x30FB;&#x30C7;&#x30B6;&#x30A4;&#x30CA;&#x30FC;</a>のような路線なのだろう。それも付加価値に見合った対価を得るには、受託開発ではなく製品開発をやった方がいい。客にいわれたことをやっている限り、人月で買い叩かれてしまうからである。ひとより高い人月を取るには、ひとより先に新しい技術に手を出し、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%E2%A5%C7%A5%A3%A5%C6%A5%A3%B2%BD">コモディティ化</a>する前に次の<a class="okeyword" href="g:mohican:keyword:ネタ">ネタ</a>を探す必要がある。けれども実績のない新しい技術を使うのは顧客が躊躇することが一般的であって、よほど優秀な営業に恵まれないと難しいし、失敗すると一瞬でプロジェクトが赤字になるような薄利のSI稼業では、そんなリスクのある提案はなかなかさせてもらえない。それに目先の案件や運用保守に引っ張りまわされている限り、なかなか新しい技術で遊ぶ暇もないのである。だから、努力に応じて技術者が幸せになるには、自前のサービスなり製品なりを持って、他人から頼まれた仕事ではなく自分の事業のために技術を磨いた方がいい。まぁリターンの大きい分リスクも大きいし、ネット広告バブルもいつまで続くか分からないけどさ。<br />
+という訳で僕は狭義の情報サービス産業での<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AD%A5%E3%A5%EA%A5%A2%A5%D1%A5%B9">キャリアパス</a>からは絶望して逃げたけど、IT産業そのものにはまだ可能性を感じている。僕は本物の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>を掛け値なしに尊敬するけど、仮に本物の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>になれたところで、IT肉体労働者か出版奴隷か<a class="keyword" href="http://d.hatena.ne.jp/keyword/NEET">NEET</a>になってしまうかも知れないことは知っておいた方がいい。大事なことに早い段階から気づいたようだし、頭の柔らかいうちに技術の全体像を知ることは悪くないと思うから、使い潰されて磨り減って、ふと気づいたらIT肉体労働者に堕ちていたなんてことのないよう祈ってる。<br />
+最後に<a class="okeyword" href="g:mohican:keyword:どうでもいい">どうでもいい</a>突っ込みをすると、パソコンの歴史は40年ではなく30年だし、プログラム内蔵型デジタル計算機の歴史は60年だ。アナログや機械式も含めると計算機の歴史はさらに長い。こんなことを知ってたって何の役にも立たないけど。</p>
+<blockquote cite="http://d.hatena.ne.jp/tigress-kyoto/20051224/p1" title="早く人間に成りたーい。 - マーケティングを超えたい２"><p>出版・広告業からＩＴ業界に転職していろいろ思うところがある。<br />
+ＩＴ業界の技術者見習いの立場にうちは今いる。で、この業界って、毎日覚えなきゃいけない知識や技術がたくさんあることを実感してる。技術の歴史性をどれだけ意識してるかどうかで、優秀な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>かどうかが決まる。パソコンの歴史なんてたかだか４０年なんだけど、流行の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DF%A5%F3%A5%B0%B8%C0%B8%EC">プログラミング言語</a>を覚えるだけじゃなくて、パソコンのハード、ネットワークの仕組みや、そもそもプログラムがなんで動くのかってことを覚えないと、ＩＴ肉体労働者で終わってしまう世界。</p>
+</blockquote><div class="footnote">
+<p class="footnote"><a href="#fn-05cbbcff" name="f-05cbbcff" class="footnote-number">*1</a><span class="footnote-delimiter">:</span><span class="footnote-text"><a class="okeyword" href="g:mohican:keyword:ちなみに">ちなみに</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A1%BC%A5%B1%A5%C6%A5%A3%A5%F3%A5%B0">マーケティング</a>を諦めた訳ではない。自分の考えている4Pもいじれる<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A1%BC%A5%B1%A5%C6%A5%A3%A5%F3%A5%B0">マーケティング</a>をやりたければ本社にいくか、他社に転職すべきなんだろうけど、<a class="okeyword" href="g:mohican:keyword:とりあえず">とりあえず</a>目先にそういう選択肢が見当たらなかったのだ。それに<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A1%BC%A5%B1%A5%C6%A5%A3%A5%F3%A5%B0">マーケティング</a>理論はベタに仕事にするだけでなく、自分の売り込み方を組み立てることにも使える、ということに気づいたし。</span></p>
+<p class="footnote"><a href="#fn-37d8dfca" name="f-37d8dfca" class="footnote-number">*2</a><span class="footnote-delimiter">:</span><span class="footnote-text"><a class="keyword" href="http://d.hatena.ne.jp/keyword/C%2B%2B">C++</a>, <a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>, <a class="keyword" href="http://d.hatena.ne.jp/keyword/C%23">C#</a>とか</span></p>
+<p class="footnote"><a href="#fn-36c9b942" name="f-36c9b942" class="footnote-number">*3</a><span class="footnote-delimiter">:</span><span class="footnote-text">確か<a class="keyword" href="http://d.hatena.ne.jp/keyword/i%A5%A2%A5%D7%A5%EA">iアプリ</a>で動く某<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A8%A5%DF%A5%E5%A5%EC%A1%BC%A5%BF">エミュレータ</a>の作者だっけか、携帯電話機メーカーから<a class="keyword" href="http://d.hatena.ne.jp/keyword/JIT">JIT</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D1%A5%A4%A5%E9">コンパイラ</a>の<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>コードを借りて、<a class="keyword" href="http://d.hatena.ne.jp/keyword/JIT">JIT</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D1%A5%A4%A5%EB">コンパイル</a>された後の命令数ができるだけ小さくなるようにチューニングしていた</span></p>
+<p class="footnote"><a href="#fn-7b8c9c81" name="f-7b8c9c81" class="footnote-number">*4</a><span class="footnote-delimiter">:</span><span class="footnote-text"><a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a> 9xとか<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mac%20OS">Mac OS</a> 9とか最近まで非<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>文化圏はあったのに。そういえばOS/400とかz/OSは非<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>文化圏で興味深いけど、公開されてる文書も少ないし手元で触る機会がないからよく知らない</span></p>
+<p class="footnote"><a href="#fn-ad36d295" name="f-ad36d295" class="footnote-number">*5</a><span class="footnote-delimiter">:</span><span class="footnote-text">これも最近の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%BA%A5%EF%A1%BC%A5%C9">バズワード</a>だけど、S/360で動くCP以来40年近くの歴史がある</span></p>
+<p class="footnote"><a href="#fn-8b97e8ef" name="f-8b97e8ef" class="footnote-number">*6</a><span class="footnote-delimiter">:</span><span class="footnote-text">単にプロセス技術の制約によるパッケージングという話であって、技術といえるかは微妙</span></p>
+<p class="footnote"><a href="#fn-9509078f" name="f-9509078f" class="footnote-number">*7</a><span class="footnote-delimiter">:</span><span class="footnote-text">Tim O'Reillyは<a class="keyword" href="http://d.hatena.ne.jp/keyword/Web%202.0">Web 2.0</a>とか煽っておきながら出版事業の不振に喘いでいるらしい。まぁ先がよくみえることと、正しく体を動かせることとは違うんだろうし、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Larry%20Wall">Larry Wall</a>ならその気になればいくらでもスポンサーが集まる気がするけど</span></p>
+</div>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:24:55.528Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2005-12-24-neet",
+    "name": "「本物のプログラマ」もNEETになり得る御時世の処世術",
+    "contentDigest": "0c3c971eb50b2fc6edd4fce0add9fbfcd2c162834b6a95a220a767a3807a8813"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:55.528Z",
+      "proofValue": "z5DspLFh8KfoDaXyhGwBdVVdySaGWigTfbVdsw6RXrmR66DJW9LGVxy1QNkWJhHtJdgi4YTTL71j5XupQKxcW1fdR"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:55.528Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:24:55.574Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "feddeacdcceccc40e08c9d271b77bf1abc60ef1ebe13504d100f4ed555bdab21",
+        "metadata": {}
+      }
+    },
+    "eventHash": "1ac0972e95d3165609c1ee932772093e816b98c094ab6ad865e80b5b981b6429",
+    "chainHash": "9eca1f1e57de1b0c59c7eae46df48e6be1151835fa2225ffafea8297b07289ef"
+  },
+  {
+    "prevHash": "9eca1f1e57de1b0c59c7eae46df48e6be1151835fa2225ffafea8297b07289ef",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:26:06.864Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "ef6c36da2c71ea23e3e9b28ba1cfb562ace7382b337059f9791b9e7265634feb",
+    "chainHash": "d67656d75f31c3d468e77e6194746138d0e3222cf3307491acab7a2814cffa9d"
+  },
+  {
+    "prevHash": "d67656d75f31c3d468e77e6194746138d0e3222cf3307491acab7a2814cffa9d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:27.028Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "eb8a5d7dd752764087996579d02a0e7cfacf0c91f6a0d551d3ee78bc38f639c3",
+    "chainHash": "2bf38fd990fe98e40ce304497db59e80dde7c16d8884252051a02ffa538546d8"
+  },
+  {
+    "prevHash": "2bf38fd990fe98e40ce304497db59e80dde7c16d8884252051a02ffa538546d8",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:35:16.833Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "c1d1d225d0025a63ca9a596e7f339fa710ec187ab5bb0395457d0d31635bcd48",
+    "chainHash": "48b234e03d940152f64f9fcf96b3c68afda602e8f811523d41f3f454bdde3811"
+  },
+  {
+    "prevHash": "48b234e03d940152f64f9fcf96b3c68afda602e8f811523d41f3f454bdde3811",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:16:34.496Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "5d9d19b23bdaf081adc334ca2c1e68adf678ffde24efbad08bf5c7954fd6ae51",
+    "chainHash": "c8dfd016a6a501096b2ed5448f19f55075399f280d26a7d07535da757a5e42ed"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:16:34.552Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2005-12-24-neet#container",
+    "containerHash": "e0d0a9a40826b1e5d56e7b3aec9f199b9b2a4006e42166484b87cc5af3fe0828",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "e74c387d8ddb44e6ac0dc3c8baee366af6d326cc4107bac4bf8cf0f4583b2c70"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:34.552Z",
+      "proofValue": "z2kGJQcBHG4pETivAWZFb7DkhSa8Cv1g8h17Da3J5DwvcwCKGCtcJ6bziVCq2qPxAVLxwnZdk1HfCzGCpoCFedsCG"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:34.552Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:16:34.645Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

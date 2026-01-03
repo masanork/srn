@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>データ活用やら機械学習の時代に情シスとベンダーってどうなるんですかね</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "データ活用やら機械学習の時代に情シスとベンダーってどうなるんですかね",
+  "description": "",
+  "datePublished": "2017-05-07",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "データ活用やら機械学習の時代に情シスとベンダーってどうなるんですかね",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>データ活用やら機械学習の時代に情シスとベンダーってどうなるんですかね</h1>
+                <div class="article-meta">
+                    <span><time datetime="2017-05-07">2017-05-07</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>だらだらしていたら連休が終わってしまう。連休中に仕上げるはずだった、あの原稿も、火曜の講義資料も、さっぱりできていないのに困ったものだ。この連休中けっこうな時間を割いたのは、くだらないことに手元のラップトップを<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>から<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>に戻すことだった。
+
+<br />
+Blockchainの評価・デモと<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%B3%D8%BD%AC">機械学習</a>の勉強用に買った重いゲーミングノートで、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>のリハビリがてらfabricやirohaのビルドにDockerが欲しいし、Tensorflowで<a class="keyword" href="http://d.hatena.ne.jp/keyword/GPGPU">GPGPU</a>を使おうとすると<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ubuntu">Ubuntu</a>が良さげだというので入れてみた。2か月ほどいじってみる間にBlockchainを動かすだけならDocker for <a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>で十分だし、TensorflowやKerasも<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>版で<a class="keyword" href="http://d.hatena.ne.jp/keyword/GPGPU">GPGPU</a>を扱えるようになり、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>は仮想環境だけで一通りの用事を済ませられそうなので<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>に戻すことにした。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a> 10のCreators UpdateでEdgeのブラウザ拡張周りの仕様が変わったらしく、その辺を手元で調べたいこともあった。<br />
+誤算はお目当てだった<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a> 10 Creators Updateを結局導入できなかったこと。<a class="keyword" href="http://d.hatena.ne.jp/keyword/ASUS">ASUS</a>のROG GL502VSというゲーミングノートはプレインストールされた<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a> 10 Homeでしか動作保証しないという奇妙な警告がカタログに書かれているんだけど、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ubuntu">Ubuntu</a> 16.04はあっさり問題なく動いて拍子抜けしたところ、意外にも<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a> 10 Creators Updateが入らなかった。プレインストールOSからアップグレードしようとすると、再起動後のセットアップがクラッシュして<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%ED%A1%BC%A5%EB%A5%D0%A5%C3%A5%AF">ロールバック</a>してしまうし、無理やりUSBで1からインストールしても起動前にクラッシュしてしまって使い物にならない。<a class="keyword" href="http://d.hatena.ne.jp/keyword/ASUS">ASUS</a>のフォーラムでも英語で多くの悲鳴が上がっていた。まだ発売されて間もないモデルだし、この数週間で改善されるだろうけど、残念なことだ。さらについてないことに最近<a class="keyword" href="http://d.hatena.ne.jp/keyword/Visual%20Studio">Visual Studio</a> 2017がローンチしたお陰で、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Visual%20Studio">Visual Studio</a> 2015のコミュニティー・エディションをダウンロードできなくなってしまった。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D1%A5%A4%A5%E9">コンパイラ</a>なんて新しければ良さそうなものだけれども、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>だと<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A4%A5%F3%A5%BF%A5%D7%A5%EA%A5%BF">インタプリタ</a>のビルドに使ったのと同じバージョンの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D1%A5%A4%A5%E9">コンパイラ</a>を使ってモジュールをビルドする必要があったり、<a class="keyword" href="http://d.hatena.ne.jp/keyword/NVIDIA">NVIDIA</a>のCUDA Toolkitやら<a class="keyword" href="http://d.hatena.ne.jp/keyword/Intel">Intel</a>のMKLが最新のVS2017にまだ対応していないからVS2015が欲しくなるのだ。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>のモジュールをビルドするだけであればVisual <a class="keyword" href="http://d.hatena.ne.jp/keyword/C%2B%2B">C++</a> Build Toolというのが新たに公開されて、こちらをインストールすればいいんだけど、CUDA ToolkitやMKL、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>用のアドオンなんかを使おうとするとVS2015が欲しい。結局デスクトップのダウンロードフォルダーにVS2015のセットアップが残っているのを思い出して、それを使うことにした。<br />
+データ分析向けのソフトウェア環境構築のTIPSは混迷を極めていて、Qiitaなんかをみればいくらでも記事を見つけることができるけれども、半年前の情報がもう古かったりする。VS2015が無償では手に入らなくなったこともそうだし、Anacondaの<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>が3.5.2から3.6.0に上がっただけで別のトラブルが出てきたり、CUDAやらcuDNNのバージョンもころころ上がる。最新バージョンを入れればいいというものでもないのである。結局VS2015、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>は一旦<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a> 3.6系のMinicondaを入れた上で、これではTensorflowの<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>版バイナリがないし<a class="keyword" href="http://d.hatena.ne.jp/keyword/Visual%20Studio">Visual Studio</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/IDE">IDE</a>機能も対応していないので<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a> 3.5.3の仮想環境を構築することにした。途中Theanoから<a class="keyword" href="http://d.hatena.ne.jp/keyword/GPU">GPU</a>が見えないトラブルを解決するために設定ファイルをいじり、<a class="keyword" href="http://d.hatena.ne.jp/keyword/MinGW">MinGW</a>を入れ、ライブラリ関連の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B4%C4%B6%AD%CA%D1%BF%F4">環境変数</a>を追加するのに結構な時間を要した。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%C9%A5%CE%A5%A6%A5%CF%A5%A6">バッドノウハウ</a>の塊過ぎて、どうせすぐ陳腐化するのでQiitaに書く気さえしないんだけど、ここまで苦労するなら<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ubuntu">Ubuntu</a>で環境構築した方がずっと楽だった。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B4%D7%CF%C3%B5%D9%C2%EA">閑話休題</a>。<br />
+データ分析環境をつくるとデータを分析したくなるが、Kaggleを見ても何から手をつけていいのか分からないし、最初はサンプルコードで参照しているmnistとかciferといった典型的なデー<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%BF%A5%BB%A5%C3%A5%C8">タセット</a>をいじる。何せデータの入手元と、料理の仕方が示されていて、前処理もされているデータがあるのは心強い。とはいえそれをいじってる間は、どんなにデータやコードと戯れたところで富を生まないのである。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DF%A5%F3%A5%B0%B8%C0%B8%EC">プログラミング言語</a>なんかだと、覚えて何かプロトタイプでもつくれば達成感も利用価値もあるのだけど、データ分析というのは分析対象やら使途がなければ毒にも薬にもならない。チューニングも楽しいけど、既成のデー<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%BF%A5%BB%A5%C3%A5%C8">タセット</a>で精度をチューニングしていくのは、俺様アプリをつくるのと比べて地味というか、とりあえずAppStoreや<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google%20Play">Google Play</a>に並べておけば儲かるかもしれないとか夢を持てるアプリとは大違いだ。<br />
+データサイエンティストが足りないという話の次にくるのは、データが<a class="keyword" href="http://d.hatena.ne.jp/keyword/GAFA">GAFA</a>に独占されているという話で、どっちも足りなければ何も困ってないじゃないかという気もするのだけれども、それでは競争の土俵に乗ることもできないという堂々巡りの議論が日本中のあちこちで行われている。IT系の女子から話を聞いていても、いわゆる<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE%A1%BC">プログラマー</a>だけでなく企画とか事務補助の女子まで連休中に<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>を勉強したいといっていた。（たぶんサンプルバイアスはあるけど）エンジニアとしての興味というよりは、何か大事なことが起こっているという直感が働くのだろうか。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>はもともと諸学者に向いた言語で、何かを始めようとしたとき他に覚えなければならないことが極端に少ない。その気になれば、かなり複雑なシステムをつくることもできるし、部品となるライブラリが充実している。充実しすぎているが故に環境構築で苦戦することもあるけれども、動作環境を選ばないし、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/C%2B%2B">C++</a>と比べたら取っつきやすく、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a> Scriptなんかと比べて応用範囲が広く、もともと似たようなコンセプトだった<a class="keyword" href="http://d.hatena.ne.jp/keyword/Perl">Perl</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ruby">Ruby</a>よりも頭一つ抜けた感がある。<br />
+ちょっと触ってみれば分かるけど<a class="keyword" href="http://d.hatena.ne.jp/keyword/Deep%20Learning">Deep Learning</a>は難しい。KerasであれDeelであれ、ひとつひとつのサンプルコードは非常に短くて、何だか自分でも書けそうな気がしてくるところが罪作りだけれども、気の利いた前処理のされたデー<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%BF%A5%BB%A5%C3%A5%C8">タセット</a>が整っているからであって、自分で何かを処理しようとし始めた途端に前処理も実装も手間がかかる。理論や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%EB%A5%B4%A5%EA%A5%BA%A5%E0">アルゴリズム</a>はあるけれども、その組み合わせやパラメーターは、ちょっと複雑になるともう、試行錯誤の結果こうやったらうまくいったという感じ。そのうち体系化なり理論化されるんだろうけども現時点では手探りで、裏を返すと教科書になっていないというのは、結構チャンスが転がってるということでもある。<br />
+ITの世界ってこの四半世紀はコンシューマリゼーションともいわれるように、世界中の誰もが等しくチャンスを与えられる方向に向いていたのが、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Deep%20Learning">Deep Learning</a>のライブラリ自体の敷居は非常に低いんだけど、ちょっと頭抜けたことをやろうとすると、計算能力もデータもフィードバックも物量で突っ込んでいく必要が出てくるし、物量を支配しているものが強くなる、重工業の時代に逆戻りしつつある気がしている。安直に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AF%A5%E9%A5%A6%A5%C9">クラウド</a>を借りると使用料でびっくりしちゃうんじゃないかという恐怖もあって、<a class="keyword" href="http://d.hatena.ne.jp/keyword/GPU">GPU</a>の陳腐化が早いことを考えれば借りた方が安そうな気もするけれども、手元のマシンで試行錯誤したくなるわけだ。そのうち<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%BA%B2%C1%BD%FE%B5%D1">減価償却</a>まで考えて計算したいけど。<br />
+とはいえ手元の計算機で<a class="keyword" href="http://d.hatena.ne.jp/keyword/Python">Python</a>の環境を手動で整えて、という世界はホビイストや研究者の世界では残るだろうけれども、いま浮足立っている企業の多くは、<a class="keyword" href="http://d.hatena.ne.jp/keyword/SaaS">SaaS</a>なりPaaSで使うようになるのだろう。Azure Machine Learning Studioなんかをみると、データの入出力や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%B3%D8%BD%AC">機械学習</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E2%A5%C7%A5%EA%A5%F3%A5%B0">モデリング</a>自体はビジュアルプログラミングが向いているし、それで表現しきれない部分も<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A1%BC%A5%C9%A5%B9%A5%CB%A5%DA%A5%C3%A5%C8">コードスニペット</a>を埋め込むので十分という気がする。G SuiteやOneDriveから簡単にそういった機能にアクセスできて、もうちょっと高度なことはPaaSを叩くように自分でコーディングして、その向こうで<a class="keyword" href="http://d.hatena.ne.jp/keyword/GPU">GPU</a>だか<a class="keyword" href="http://d.hatena.ne.jp/keyword/FPGA">FPGA</a>に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D1%A5%A4%A5%EB">コンパイル</a>されてもユーザーは気づかないようになるのだろう。そして各社とも撒き餌となる処理系や学習済みモデルを提供して、データとユーザーを自社<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AF%A5%E9%A5%A6%A5%C9">クラウド</a>に囲い込むのだろう。だいたい昨今の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Deep%20Learning">Deep Learning</a>ブーム自体が、オンプレミスでデータを抱え込むの、そろそろ止めませんか？ってキャンペーンになってる気もする訳で。これからはAIだ、データが大事だとかいってる時点でお釈迦様の掌の上で踊らされているのに、そこで競争力がーといっても、そりゃ飛んで火に入って無理ゲーでしょうよと。<br />
+斯様に今の段階での勝負はついていて、といっても<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>の独占的影響力が<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%2095">Windows 95</a>から<a class="keyword" href="http://d.hatena.ne.jp/keyword/iPhone">iPhone</a>登場までの10年ちょっとしか続かなかったように、個々の製品やサービスの覇権がそんなに長く続くものでもない。ひっくり返すチャンスはいくらでもあるし、それを虎視眈々と狙っている<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D9%A5%F3%A5%C1%A5%E3%A1%BC">ベンチャー</a>は数多あるのだろう。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Apple">Apple</a>も<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>も<a class="keyword" href="http://d.hatena.ne.jp/keyword/Microsoft">Microsoft</a>も覇権を維持し続けるために何度も生まれ変わっているし、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Facebook">Facebook</a>もこれから転機や生まれ変わりを経験するだろう。かつての<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%BD%A5%CB%A1%BC">ソニー</a>が『<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A4%A5%CE%A5%D9%A1%BC%A5%B7%A5%E7%A5%F3%A4%CE%A5%B8%A5%EC%A5%F3%A5%DE">イノベーションのジレンマ</a>』で称賛されたように。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AF%A5%E9%A5%A6%A5%C9">クラウド</a>で、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C8%BE%C6%B3%C2%CE">半導体</a>で、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Web%A5%B5%A1%BC%A5%D3%A5%B9">Webサービス</a>で、米国どころか中国にも引き離されるのは既定路線として、残念ながら<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%B3%D8%BD%AC">機械学習</a>の進展は日本の競争力に更なる深刻な打撃を与えるだろう。恐らく民間企業も政府も今のままではマトモにAIを活用できず、米<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B2%A4%B0%A1">欧亜</a>の後塵を拝することになる。特に大きな課題は雇用の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CE%AE%C6%B0%C0%AD">流動性</a>が低いためにユーザー企業でエンジニアの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AD%A5%E3%A5%EA%A5%A2%A5%D1%A5%B9">キャリアパス</a>を構築できず<a class="keyword" href="http://d.hatena.ne.jp/keyword/SIer">SIer</a>をバッファーとして利用していることだ。<br />
+これは今に始まったことではないが、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%C4%BF%CD%BE%F0%CA%F3%CA%DD%B8%EE%CB%A1">個人情報保護法</a>制の強化によってユーザー企業のデータに<a class="keyword" href="http://d.hatena.ne.jp/keyword/SIer">SIer</a>が触れなくなり、試行錯誤が大事なデータ解析で事前の要件定義や正確な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B9%A9%BF%F4">工数</a>見積もりは難しく、丸投げの請負契約は難しい。これまでITを軽視し、要件定義さえちゃんとできれば確実にプロジェクトを遂行できると考えて安易に開発を丸投げし、エンジニアに相場に応じた待遇や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AD%A5%E3%A5%EA%A5%A2%A5%D1%A5%B9">キャリアパス</a>を提供してこなかったユーザー企業や政府は深刻な打撃を受けるだろう。今のところデータサイエンティストが足りない以前に、その受け皿さえ十分にないのである。<br />
+政府で様々な会議体がAIやデータ利活用について議論しているが、残念ながらその多くが研究者やサプライサイドの視点で、専らデータが足りない、もっと速い<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B9%A5%D1%A5%B3%A5%F3">スパコン</a>が欲しい、日本独自の技術が必要だといった問題提起が多く、従前の情報サービスを支えてきたエコシステムやユーザー企業の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EA%A5%C6%A5%E9%A5%B7%A1%BC">リテラシー</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%B3%D8%BD%AC">機械学習</a>の特性と合っていないことについて十分に議論が尽くされているとは言い難い。現実問題として課題認識を持ったとしても、平場で自分たちに都合の悪いことを話せといわれたところでユーザー企業にとっても役所にとっても厳しい。<br />
+とりあえず<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%B9%A5%D1">コスパ</a>とか考えなければ速い計算機はカネで買うことができるので計算機は整備する。となると当面なくて困るのはデータということになる。ユーザー企業のデータにベンダーが手を突っ込めないから利用者の許諾を取ってデータ活用の器を別に用意しようというのが日本における<a class="keyword" href="http://d.hatena.ne.jp/keyword/PDS">PDS</a>とか情報銀行の議論だが、私は難しいと感じている。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Facebook">Facebook</a>は確かにユーザーのデータをマネタイズしているが、ユーザーは<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>にデータを預けているという実感を持っている場合は少ない。用事があるからツールとしての<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>を使っているのであって、その副次的な結果としてデータが溜まっているに過ぎないからだ。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CD%F8%CD%D1%B5%AC%CC%F3">利用規約</a>を通じて同意しているが、そもそも消費者との関係においてデータは主役ではないのである。だから利用者にとってデータを切り売りするといっても実感が湧かないし、気持ち悪いという印象を持つだろう。さらにデータの分析だけを通じて分析技術を精緻化したり、マネタイズすること自体が難しい。データを取ったユーザーとの関係でデータを使い、フィードバックを受けて初めて分析結果の品質を検証して磨き上げマネタイズできる。もとより収益モデルができているところのパフォーマンスを改善するためのツールに過ぎないからだ。<br />
+もちろんデータ活用がうまくいきそうな産業分野もある。まずは工作機械や自動車といった元気のいい製造業は、自分でデータを持っているだけでなく、海外のメーカーと競争しており、自前の研究開発やソフトウェアチームを持つだけの余裕を持っているので、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%B3%D8%BD%AC">機械学習</a>を使いこなして自己の競争力に結び付けるだろう。キャッシュリッチで柔軟なユーザー企業も、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AF%A5%E9%A5%A6%A5%C9">クラウド</a>移行なりを契機に内製比率を高めたり、丸投げではないベンダーコン<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C8%A5%ED%A1%BC%A5%EB">トロール</a>を実践している。逆にいえば情報システムは<a class="keyword" href="http://d.hatena.ne.jp/keyword/SIer">SIer</a>に丸投げで、伝統的な新卒一括採用で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C3%E6%C5%D3%BA%CE%CD%D1">中途採用</a>比率が低く、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D7%A5%E9%A5%A4%A5%A2%A5%F3%A5%B9">コンプライアンス</a>意識が過剰な組織（このご時世にそんな会社あるのか？）といったところが困ることになりそうだが、そうした会社は国際的な競争に晒されていなかったり意外と何とかなるのかも知れない。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/Twitter">Twitter</a>界隈では<a class="keyword" href="http://d.hatena.ne.jp/keyword/SIer">SIer</a>の人月商法がおかしい、遠からず行き詰まるといった言説に溢れていて、これからどう業態を変えていくのか議論が喧しいけれども、ユーザー企業であれ政府であれ、顧客サイドの意識が変わらない限り、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B5%A5%D7%A5%E9%A5%A4%A5%E4%A1%BC">サプライヤー</a>としては如何ともし難い。これまでもオープン化や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AF%A5%E9%A5%A6%A5%C9">クラウド</a>化の波を生き延び、利益率は厳しいながらも生き延びているのだから、これからも環境変化を乗り越えて、顧客ニーズを満たそうとするだろう。受託型の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B7%A5%B9%A5%C6%A5%E0%B3%AB%C8%AF">システム開発</a>における仕事の進め方や質を変えていけるかどうかは、まず発注側にボールがあるのではないだろうか。<br />
+昔話を聞くことが多い公共分野でいうと1980年代くらいまで日本でもシステムの内製が一般的であったらしい。いまどき<a class="keyword" href="http://d.hatena.ne.jp/keyword/SQL">SQL</a>くらいは仕事で使うことがあっても、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/PHP">PHP</a>のコードを書ける情シス要員は仕事というよりも趣味の領域だが、四半世紀前の話を聞いていると普通に<a class="keyword" href="http://d.hatena.ne.jp/keyword/COBOL">COBOL</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Fortran">Fortran</a>やJCLで役人がコードを書いていたようである。1990年代のオープン化のタイミングで技術体系が大きく変わり、パッケージを入れるようになってから現場の要員がコードを書かなくなったようだ。1985年の電電民営化で政府全体の情シスの役割を担ってきたデータ通信本部が切り出されて、2000年代に入って<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B9%D4%C0%AF%B2%FE%B3%D7">行政改革</a>と調達改革できれいに分離された。特許や年金のシステムで問題となった<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EC%A5%AC%A5%B7%A1%BC%A5%B7%A5%B9%A5%C6%A5%E0">レガシーシステム</a>やベンダーロックインは、もともと内製であったシステムを後から組織再編で引き裂いたものの、雇用<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CE%AE%C6%B0%C0%AD">流動性</a>が低い組織で内製を続けたことによる設計負債に押しつぶされた面もあったのではないだろうか。意外と今の仕組みの延長線上でも、その気になれば内製化を図りつつ、切り出せる仕事を外に出すスタイルに転換できるのかも知れないけれども、それだけやったところで人事が硬直的であり続けるならば設計負債は溜まっていく、そうしないための<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A1%BC%A5%AD%A5%C6%A5%AF%A5%C1%A5%E3">アーキテクチャ</a>ーや組織経営が必要とされている。<br />
+データ活用というと<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%C4%BF%CD%BE%F0%CA%F3%CA%DD%B8%EE%CB%A1">個人情報保護法</a>の制約なく技術を持ったベンダーがデータを分析できるようにしたい、そのために本人同意なしにデータ流通を図れる匿名加工情報を<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%C4%BF%CD%BE%F0%CA%F3%CA%DD%B8%EE%CB%A1">個人情報保護法</a>に入れてみたり、本人同意を得て情報を蓄積して活用する仕組みを医療分野でもつくろうとしているけれども、どこまでうまくいくかは分からない。これらの発想の根っこに、今ある情報をかき集めるだけでそこに価値があるに違いないという思い込みがあるが、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>であれ<a class="keyword" href="http://d.hatena.ne.jp/keyword/Facebook">Facebook</a>であれ、米国において<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D3%A5%C3%A5%B0%A5%C7%A1%BC%A5%BF">ビッグデータ</a>を収益化してきた企業は、明確なレベニューモデルを持った上で、意志を持ってデータを集めてきたのであって、とりあえず貯めておいたデータが後から価値を生んだ訳ではない。もちろん創業期のグーグルには検索連動広告といった収益モデルはなかったので、先行投資の期間が続いたことになるが、その間に彼らが磨いたのはサービスであり、顧客との繋がりであって、その時代に集めてきたデータそのものではないだろう。結局のところデータとは意思を持って集めるからこそ処理する受け皿に設備投資しつつマネタイズできるのであって、利用者に対するサービスも目的もはっきりしない間は、本人の同意を得ることも、処理基盤に投資することも、ましてやマネタイズすることもできない。利益が生まれる過程で確かにデータは流れているけれども、それはエコシステムの血液のようなものであって、無理をして一人分の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%A5%B7%EC">献血</a>をかき集めたところで、どう捏ね繰り回したところで一人の人間をつくれる訳ではないのである。<br />
+コストを度外視すれば計算機を買うことはできる。計算機が手に入れば捏ね繰り回せるデータが欲しくなるが、データが手に入ったところで捏ね繰り回しただけでは価値を生むことはできない。データは媒介に過ぎず、利用者は用事をこなすことを求めていて、その<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BE%A6%CE%AE">商流</a>に入り込まない限り、マネタイズなどできないのである。そしてマネタイズしようとした途端、適正な価格で計算機を買うことがいかに難しいか、ユーザーを獲得してストリームラインでデータを処理できる基盤を構築することがどれだけ難しいか、それはベンダーに丸投げできるようなものではなく、経営レベルでの意志と戦略、それを実現する組織と顧客基盤を抱えて初めて意味を持つのだということを痛感する。その上で今この瞬間どうおもちゃをぶん回すかの次に、この技術が何を可能にするものであって、それが自分たちのビジネスに対してどのような価値を齎し得るか、それを実現するために何の種を撒く必要があるか、といったところから考え直す必要があるのではないだろうか。<br />
+ベンダーなり<a class="keyword" href="http://d.hatena.ne.jp/keyword/SIer">SIer</a>はそれっぽい提案をしたり一緒に悩んで試行錯誤することはできる。そのときの契約形態は請負よりもリスクを互いに共有した何かになるだろう。もちろん<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%B3%D8%BD%AC">機械学習</a>だけであれば、それが得意な学生を新卒で採用した方が安上がりだが、厳しい競争の中で優秀な人材を惹きつけるのは大変だし、技術の適用領域を見極めて提案し、組織に対して変革を促す仕事は、特に日本的な組織において新卒には荷が重い。そうした上流工程だけでは業界としての裾野を抱えられないんだけれども、優れた学習済モデルを構築するまでの試行錯誤やらデータの前処理、ましてやテストまで含めると、いまのところ<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%B3%D8%BD%AC">機械学習</a>ってかなり力業であって、OA化で紙が増えたのと同じように、人間の仕事を減らすよりは、むしろ増やすことになりそうな気がする。それは結局のところ自分で仕事をこなすよりも、新人に仕事を教え込むことの方が面倒なのと同じことだ。僕らはAIに仕事を取って変わられることを心配する前に、雇用<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CE%AE%C6%B0%C0%AD">流動性</a>が高い国々が次々とそうした技術をモノにして生産性を高めていく中、自分たちの仕事の進め方で適切に変わっていけるだろうか、何をやるべきか自社のデータを捏ね繰り回しながらプロトタイピングの内製化で試行錯誤しつつ、モノになりそうなシナリオについて機械に仕事を教え込むと同時に組織やビジネスプロセスを見直していけるか、みたいなところが重いのではないだろうか。よくデータサイエンティスト不足が云われているけれども、日本において<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DC%A5%C8%A5%EB%A5%CD%A5%C3%A5%AF">ボトルネック</a>は本当にそこだろうか？それ以前に土俵に立つための障壁が結構あるんじゃないだろうか？これからAIを活用するプロジェクトの死屍累々のなかで、その辺の現実が炙り出されていくのではないだろうか？とモヤモヤ考えていたら眠くなってきた。おやすみなさい。</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:23:43.312Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2017-05-07",
+    "name": "データ活用やら機械学習の時代に情シスとベンダーってどうなるんですかね",
+    "contentDigest": "190a62ab1bd48257e62627b55e0ac9914f82a92171fe1b3a41c13ea82b1e4c5b"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:43.312Z",
+      "proofValue": "zwkJAqXVdkF36jPqMNVZqCU5EM4Dg2F8g9zzFgWTrJPB5AAFkec3xdnc4RE3oH74bGc2vYBhYVQgBH85Z8GiuaCS"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:43.312Z",
+      "proofValue": "z14Ng8jGMgAy4SthPqFp4hYY75YzEkkutddj6pEVURpNHttYoM6zZzUEVwHgvUsKxf3eKc3fhZeTYUhRHdBk9chwVE9Y2SBgTzggisRsp9yj2FHjbpwyUCCgm8Q3NBBWaQ2mApiEate5BTWTmbCWrKHSd1R7Rm4Zzjzwdzp8Kgdh4xjP8oUGLmYBLwJntPUg98WiYsegTUDDtSLQzKUHQutZ18i827uz9XhK7Y21FehuhTMtXcMAES6r7AmACF1kRCmjP4LHbC36gx4wKnPE3wNgKUF8vSrALxRFJkB3bh5TR7kdX7U8nWFucepso1DkCHF7x6T1EG16MSC9FBgr8qMU5kN3iLCTR44QxHCSUU9r42WpyHwW3ftCCZ2qAzTAs6BRfsTWRtPHadKBw5bve4g4wdzAZUttciKq9w8nvk7PV2yvJruZGKmwcPTGetDyoc6uqLgpm5uT1NCVkFFaLNn6VfmMBCFG8utQzZNqphTd8p41fbFwcu3NXYnjbi3o3XFc9v6pCrUJj2Ma4btactvUP8nmN1LtgXHZDkLeJjqxm5mhwfBjkq8hVLCi7EesnfhVNwa8sJfRCdFHgZetrEFNFxqKdzM6ZkC7CZMG94CZFbxdfW7tMJNs3oaPv7HA14qD3XF8hTgh8YrjZ7drDKYmnE2VpKFAsAnRj4r7XRUNZqdkj3BZLehh3nGPrQrbUq8RFaQVDGKsRMytitAuhpQb1Fn3jyKT2DmNZsgMe5rfyWWHazTp3TEqbBv8jx5CfSZ6LHHVurdSj8HLLs2SDHiHoJcGnQZ1HQV3AtyUtaBy8ypwdcWTguR8KqKZwJYE99J23EwaS3wGvGcK4TucuTqvKUzH3inBK4B2mvoV1Vx5qd6zp2sVagf6DdjAPgsUzsobQRpSwAhBSwJFSBrsCu21X9K51GCycCos9QKHbLvpHEqGZjfKeciT2uett2CvmmYAmfcWngg7zs2nJXWDk6Sdo1zye3gGEcUMcxSzT1yJc1FeHKaNvzTpEByDcR5JQ99vaagje4pvrePZUxCgUZNsnMsaRkm6bZy5WAdQU96uZExZW3XPbrQF8yBaybqPmQy8yZJF4sDmvQyxythKNGdPLGHmEuYkEuaeub9E64o1c3CfkQZSPgDWvZXpDqoMfRg6Ku4f4RSbK249hTWpqreBG8G6uWwPrqTnAkukXjvvG9Gxhp7jWkCwuCgYfAroYvyS9jT2pqucCmBCGyBJXrFHsGFFQBUE9nsJ5eKtJusEkDQjRzD5dB9pfR9UdgCKL8TTAYpJD6XoDHQnyU4c3XNHVejR16JKa19v33oLnxgecd8jeNnH797kwyNxnPf9HcKLnPTc8J65BWrvaYxkAXW8sngbXPcPBDDGvdPccGaLPJeBA9otRnHXzKDQ4NgggnG98UdLi4bb98TfSLRFRGhhtSnQEtenSxgHjoRerRz78gSH63EM7UfCZjVZ2xiMwUSPZbozdnjW2bSX8usyJXpBukaBYrzzS8GPBUV4TsBWXfVHsSKbVm6QQsARBy5trQXbFKRiLN7Dn2wLJXiLHmtM1XWDag6ofQyAFFm8Lj2XHCkELnrjAuDPSSRQkmrse7kF2PxLrWLJGMhtaY4DxXwhBjn1RJCfuMFbGMYU8wDanSMGj7gnSC3RpvXon5L6ub67geH9utRFPCqy7zk3ba4VofE2t1DJLF1PhjMQ54N4daXHYeFs72kfsXgu1uNs4s1a6ATaT3MuLd1pUB5iioFQ83c2nYQTcRJ33Am8N4cRShYgJZSMPgMjBr6WW95RDJgZE6wDadyujYy1qNeQ1PG3vzTw2TgaGLRvMqoznyW242eoTuUYdwjbJiLivNXX1ThpgVtcrHaN5Zn1TS8oNbozWXPWBLTv4K7kFX8RQFj6ziwAkLc2B3FzhAaDVUo3m3nLs9AdRuCgEAxxivkC8RYxYmJ4kSUrapifJ9RBdJSep14vKwFba5ViSorHGYPSWMXT4odH1f5zTZ52LjbiKQAr9CQLs71sq24Wp8gh7i4rriHxJob2eLvJ1bKVKPB5e417pHSAiS53QK1n88BrmsRmasoszydeMCAY6LfVnzhjq9SN9rQuhLVLsVyjW21i5d3JZZX8KXz9zKvaSEcsUhhKNZK1txZvYURhREmE6c91wDmYdzF9KjpKDRHC6JhhZVz5B9iYga3cS2ou9Msb1x7v9MoqwrEExjTd6Yo6822kAE7ztSK9AZKgn89h9fwoMNFgQue8Tg2PafiAyNkvDZAhjHGU9THvKsvbUecbDHGzAdg6BxbFjFsYsNrbESAWnCSmHhD81icjper21smPT9qjebTrqLyEGg7jUg7xaGf83T4MHakdyqikGfRXRRoxNgkct3eJoQwxQJhCUUYFTrY9BnVbXLKsFvhmGbFuSu92Y4GqksRoYhpMNTRmEYYZ9TBLDEkGzm6YU5o7jLZTBa3dmTT2Au3SnUnc1WGytMxGman5uLWRC2GPuXgD9jRp49GVLB4Vdifgyh5tiqD9ccmVQj2b8n58nt6zcZ8T4nDtirjgiD3K2tHrWfmyG3RMpARLWiSs6CG4SCXqKdLES3Ss4XRGXoPxjixQ873djwfNDfd3K7bKaxCXLDvxsyd1RF7PvnaequGV6NiBnFz2B3QSeh8ju4AvQVryN5oRUBKQ7vWcSCSzcF5EpDhipnPxGtydnJbuyBL9C4RSauCjJwAEzB5cAjuZMzsATBXGMzUDBo3mYDrm8wKfbviNMPKTgHdSQ31npsmqt21FiaroMyphmjCbhfdAPm9CQ6V1p7D3neMoqwtiXDGLTojSa9geCUYimrFPBGSJo2HoCJG5VCunPGS4RBDcEyfSpgnJ6NEp278gLrxwZSy7dyk9wQni6aSqpKmBJmsDn2j8YWtasYwE3kfWoGckMZy2KduEF7FNuSRHKYsNsWo1nyjZW9xkVFUkjiEGzLc1RkPQ5oNmnv9MWdG1x1VBnyrJDATE5fJZSvJ5RMBjWU8LznW84QrrBxNtwjjFUUHWwTbbR7DbkyGHEtqknarseeeiHVVqK68pBXRRs8JiGmF6Pu8n7E6QoQwyXiungfgFokAyQywGkDmRosbGbPkmRAJeUADQi8SxNCTjnWtUVqr83KiexZUTXJd1uP9QoAdeEEmCzJcFvqzShmvE7EHVBpv5XRL3v5rWU72WvsUTRboZtPANj2WsymNBwpDamDYRUGd5Y2zsxF47wnCRGeHD4wAW4GnNwJ28L1s5u2gHK6ZwBkg1xfu5G6yYcUBnskGveiqb9cfY1JNZeEsmTLJh3ydFbdhu3x"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:23:43.345Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "3c8c105c288df8502dffab0fc5c4160952aa07be0b82bb18187ce991c5cb9ac1",
+        "metadata": {}
+      }
+    },
+    "eventHash": "58aa64125bb15aae6b16aceb8e835af31cf679fec3a2135960f8de595a2b3809",
+    "chainHash": "7d995330b2d4e9406b4d421d332c30b8859617fa48c30f829db04ecfba751040"
+  },
+  {
+    "prevHash": "7d995330b2d4e9406b4d421d332c30b8859617fa48c30f829db04ecfba751040",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:25:04.859Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "8fb3cf522b6a5e6a9e84ce6dfe098706568adf61c852e0b4a78bfcf08c801b6c",
+    "chainHash": "959a60f01696d2bc8a7650f1059fc5ea5d7a60f040f887675aff97ab618a4731"
+  },
+  {
+    "prevHash": "959a60f01696d2bc8a7650f1059fc5ea5d7a60f040f887675aff97ab618a4731",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:29:17.481Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "20b1d1790085c506998a9293f1d80f52822662ce626f1dec745b52361e46ead0",
+    "chainHash": "5591d75581b0106e92688db565cceef6af2c59fbf7b1499246ade321e2134e17"
+  },
+  {
+    "prevHash": "5591d75581b0106e92688db565cceef6af2c59fbf7b1499246ade321e2134e17",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:34:04.744Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "e11ae5349f5cd47477a73a9b84fd66bed69240c0ae2c1ba3eea8d0195ba199c1",
+    "chainHash": "b381bd5cb3fa6f526424addcb2006f6ed938332cad63121dfa72382ada980bbf"
+  },
+  {
+    "prevHash": "b381bd5cb3fa6f526424addcb2006f6ed938332cad63121dfa72382ada980bbf",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T23:48:39.113Z",
+      "payload": {
+        "buildId": "build-1767397680032"
+      }
+    },
+    "eventHash": "34c9d7dbbddfdaf344b7a19e93c3228b5e982bb1a2fe3969cfd28180323ee817",
+    "chainHash": "e42483120d4ae915e389a0f1c83a2d0620507c3c1516f91fae48ae983d674849"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-02T23:48:39.166Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2017-05-07#container",
+    "containerHash": "d2d6ad8120697bfcd6c54c79579d20f04a2e300c317d0a76e53c8a4235936cd1",
+    "buildId": "build-1767397680032",
+    "latestContextHash": "22a1d386addf21005f9a61da8e665822ecc6f569ea47bf3099111de21dd79547"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:39.166Z",
+      "proofValue": "z3haSuD2HPvRCAmCM8M6cKgxwfVjePtpm7VnxoTEMmfg9mKrjCjeFK2roCtEwFWXksLH944kXSWDMRWrZ5UQfBn3h"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:39.166Z",
+      "proofValue": "zaKZ3wSJwF6FchKbqD6wLjVU1YRrzQa3CmUb6ycMpsgXPMGMzMBfW2Q8CBYgeDN4RvcGzKZe8yQh6arNBPsENxCeDGXvgRnQU6VVunptHGG4c25YQ6psDfD2PmZNmVwvDS91SbGXL1kT5FTLcMJpfduBy8YTv9HHsmxNSocuntPqzgZyZjJiA1qxd5x1FpvwQVwdKnoAH31rkxg7DLtPydJdJtLx9Towzq8fXzc5UAYVQMXhDCw84mqN781jBGBQnopN3rS9zjGHtBqLSHxzp6JtdM1t5Jz5SoZrNhC9TMUazjJD3j2WvTkHmrea4oDXv3By64FbkV3p7M5FbGD5kqnRLQHGJ91aD1hxjvTzkRcMzrV4nu2anA2vWkqG3hvC1e3jf1CVAvyCnLU1WYd5snhHspNF2uMm6pFUGfRvSQhgjeazeTLTUPUbnGuvt32tTfuNDP4px8tboh4ajV7yTnVa5VUVovQQiG9GDgqj3bkJbGaiCttK6k71bFpsNaSNDfmk8JnJnc89tiHrrvH4EAabhyADyzBpuDUThsQjFZ6AAYk2JFVGcCoYhwNhvmwemR9nzevvnefu3eW9NHpTTPGNc87hRG4uu1q21Xfd5hbSLY8QWveHXTckUaZXiZ3xZvE9N6KWDJgYFHrG58vm85xtycMiDzDVWAzQs9SY79oEWKvpWaxjSwunQeGcTLvxwBpGuf5tvHDiz1AVvVpJCAD773RcVwoHECWssBM3r2aDareaxkUB4gcQSAFvzKz2thyUd1VNhiabYT8C6TqLTNFY4TZQHhkJ4M4m6fL9haDQRDELbkbzkLM1b8EHPM7B7mLAjD7YRRuwbZaxg9yN2U9Tb8keGmxW1YvaJW1698A8Uwy371UWkU9DCCA4SQ4GaRbacXvamHZA6UJSUqB4cwehEBE7wzK63KamAH3hiCSMr2NfJerHTQiYqG7QuFMYg1s5w7rjSN6NCb2qnwEf2fzREMgjS9jfEUnTuR7w9KA5xJ6bq8JAMJF6wFcb1iwkqEHMjH7xbF5P4i9Tnd16NvWnM2ghBiMaEigESYdMZdMo1vUjuBzfcQB6PQqV3xgz5uCGuAWC9HBJvt1Kqz2wKenTwWKsZcbuV58LsvPUNEBZBAsReYCK9xTQpC5KdvcjKM8t8ho7pqjJYJj13sPHjyvPvJDH9tArKXhjM8rWaaCutnbfiEk1Pn7JsGLdkwZyNR35BTThCCUjDh6JdDNeFNsd4VgVygMWFcTRLpAv84gPXmTEEy7HbbdyUHhgK5kTP6cScq8xm28m6iPaXgqQdV32RieHPtP4DZ9K8rih2AauBTREJLJNDqUJUxSdiqQk6NtSjjPqNLyTVAa5PpBgEbfjikn5Hm1TXfq8RXnYrvxgWia4RCCkwvoo8S5EJCPsq1q4hSAypEojWweoBdpANoULa8T7Np4t7UgG7zLoiPjLBy983TSmUjacjEmF5JLPWphjbxnom1VFW4Dy6NzT82HB5DaybwUnDmJizji6ZERT87f9bsnjz5uE9wyGs9Ssbo9SrfiqJYgL7scLBJXaMLWvwo5ZbMPm7acmQsXViieUTpdQjk8rWNJrw9bQn3mKdooGkQEx1SvjFu4Uif3bEwjSKNVY3i9XcgCAtYGpdSoLX2dTnyahe5RNJUoSUA8FVutn7Rq5SrExRW1ZmNMdaZv7fuLqy7RRRLfTuyoDNoHMwhzcgMY1Ysb1Wyyzm4sf2JzhwwvnzCGgfuKv5eTNMcBQbg9YF9bDoknbx7B4s8z2QB3DGsYfARG9uJRyfqQYERTxSyeUcquUzX89mmQymiL6EK9QgB8JEYEbAe4ZWETw8c5tJvzi9tzGACAotkT2EYKkJhaciQzjnAe3jD6Rnu1ikeY8RmExU9MghyfHi4KcEPZqgMY7AxUArVPZQE8rbGU4MD9yxJNSnCetVroxHxvvf1hjp9eZA5cW2WdPYuqqZhhDFsUpoy6k6nRRfHPNauVjbCXZYMKk8ukML43GPcfdzv7fxMJyFuHvkFTYXuZZv3jxiHEt2QWCVSHFv3q4Ju1NrMVDSZzFURq2yDEKrZ3VinFA3qAdwoPqGH3n9STEEGKUA96FmhP1j7JrJ2PAyt5cc3znJZPQzb6283t4r52VdxqKbPPvndBcZhwJQAnwhbZBybKcxzfPXn14fPXwuyjqU1waGhDdf5xfxgNFnfDLbyKdQPp5vA1zCk3W2AtDMN1o5S69HNjCCMDmJ7kTWNpvqvCSqrqWYqWoxbFaEg5QNk8wkCNzqGtqRDHjFrrATKCNjP7QCDwZdY1gs4FsvMchEayTXxxv9SxoSwU9tq5d7S4auezo2M2ymyGyw2BKPyj7ohFkbeqUtSbp8nDxVbymEPfMjAf2FUe575sYkx3HjEhctmuZG6zSg3xmhZDL1xRB6W6VwXrNXftU5z2yYDSx6EoVoCSzrb9DF1yd2fb6ToZzF1LqTLWfXdafR9VhhDxn628xQCwCGHpWYWbUiDXDD7cDxR3xWEjg1ssQg98YqnDN6eNF8oXPnwsQBgBGks5TSrZctZPF8StmN4yz4xQ7Tm9uNc99MoHVGagkFvm3kBavveRvMEtBQ7gk3MkQtAhUeP6yzr9C6wPa4NvZQ9qtuU99u6vNoZrzKPMx9zoQh36otG5wbzGoPxTwyr3cUzQ7nbDPz6LDjBAMJUfShr2hEsNxJAbSRKCV95ntQ9et2K19QVq2jty1HuySNrexWqk1i8x9ByfQrAgTJuCgNqXnRrYbwtngZjWxZX66tVXntMjTVqqRLYgY1VRpiNZzwChwry2HK8N314uKpRtpZCken9DCTPWFWYap41orHJpt1DvmGe11i6eo9D9Ws2cBx7hGUyU3YjP2YxNVtXhbt4as9YJD4hxBPygUMD7gPohCAhhQio4hoLVivmcuyXuAZ7qJwjmHo9PSSfYpXwqQVNP3hca3nAdXohmK1LxfJXMPfx6KQUDLd8ooJdB8wKmx6Z4zchr4HoZNRmpB5QgexxmYHovR4bqAP8Xs8RiqW5FCQE22nLXDDeB9fBg8BDjGys2mBkWGkzeX3gfNonvi7SkfqKr6NRnRFdGfyX67u1qnPNXWKSTFz8wUukUtxoWv7gXLsQFpcirEdbDWpA84MGYkSUypgy7VwtDEC5pYiBkb6wKxKTExUHXBEZ8wx2E14fWrJAQKJ3Vbdu6iz8gPFtTeSRaQFG4x21uPF8uJpzj33TqYhmyxUtLjB9nMMJudvWHrRa7YtHHnvWNvk5QSHM2VSowg3EpUo2FpFDZkfsqXFK2GULDxiXtj2WahcW"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-02T23:48:39.253Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>OSを理解する手っ取り早い方法?</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "OSを理解する手っ取り早い方法?",
+  "description": "",
+  "datePublished": "2006-07-25",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "OSを理解する手っ取り早い方法?",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>OSを理解する手っ取り早い方法?</h1>
+                <div class="article-meta">
+                    <span><time datetime="2006-07-25">2006-07-25</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>日経ITProに『<a href="http://d.hatena.ne.jp/asin/4822234096/mkusunokhaten-22">自分で作るLinux OS (日経BPパソコンベストムック)</a>』という本の書評が出ていた．自社刊行物の宣伝とはいえ酷い書評である．恐らく評者がOSのことを理解せずに書いたのだろう．<a href="#f-170cc1ce" name="fn-170cc1ce" title="目次をみた限り，著者は本書でカーネルの構造を理解できるとは書いていない">*1</a>OSを勉強するなら下記の本の方がお勧めできる．<br />
+<a href="http://d.hatena.ne.jp/asin/4839919844/mkusunokhaten-22" class="asin"><img src="/images/imported/aHR0cHM6Ly9pbWFn.jpg" alt="30日でできる! OS自作入門" title="30日でできる! OS自作入門" class="asin"></a> <a href="http://d.hatena.ne.jp/asin/4756146791/mkusunokhaten-22" class="asin"><img src="/images/imported/aHR0cHM6Ly9pbWFn.jpg" alt="BSDカーネルの設計と実装―FreeBSD詳解" title="BSDカーネルの設計と実装―FreeBSD詳解" class="asin"></a> <a href="http://d.hatena.ne.jp/asin/4891004738/mkusunokhaten-22" class="asin"><img src="/images/imported/aHR0cHM6Ly9pbWFn.jpg" alt="インサイド MS WINDOWS 第4版 上 (マイクロソフト公式解説書)" title="インサイド MS WINDOWS 第4版 上 (マイクロソフト公式解説書)" class="asin"></a> <a href="http://d.hatena.ne.jp/asin/4891004746/mkusunokhaten-22" class="asin"><img src="/images/imported/aHR0cHM6Ly9pbWFn.jpg" alt="インサイド MS WINDOWS 第4版 下 (マイクロソフト公式解説書)" title="インサイド MS WINDOWS 第4版 下 (マイクロソフト公式解説書)" class="asin"></a> <a href="http://d.hatena.ne.jp/asin/4894710471/mkusunokhaten-22" class="asin"><img src="/images/imported/aHR0cHM6Ly9pbWFn.jpg" alt="オペレーティングシステム―設計と理論およびMINIXによる実装" title="オペレーティングシステム―設計と理論およびMINIXによる実装" class="asin"></a> <a href="http://d.hatena.ne.jp/asin/4894712067/mkusunokhaten-22" class="asin"><img src="/images/imported/aHR0cHM6Ly9pbWFn.jpg" alt="OSの基礎と応用―設計から実装、DOSから分散OS Amoebaまで" title="OSの基礎と応用―設計から実装、DOSから分散OS Amoebaまで" class="asin"></a>
+
+<br />
+評者が混乱している背景にOSの定義が混乱していることもあるので，ここでは狭義のOSを<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>と書き分けることにする．いうまでもなく<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>からビルドして<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>ディストロの自作をしたところで，<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>自体を理解することはできない．<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>が起動しinitを実行した後の処理を撫でる<a href="#f-62953fa0" name="fn-62953fa0" title="実際のLinuxディストロの起動処理は設定情報の読み込みやRCスクリプトの再帰的な読み込みなど，自作ディストロの起動処理よりも非常に複雑なので，ディストロの起動処理を理解したことにさえならない">*2</a>程度のことだ．本書の目次をみた限り，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>のビルド方法や簡単なユーザーランドの構築方法については記述していても，肝心の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>の構造について解説している気配はない．<br />
+同じ<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>を使う限り<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>対策は必要で，<a class="okeyword" href="g:mohican:keyword:パッチ">パッチ</a>マネジメントに膨大なコストのかかる割に学べることの少ない自作ディストロは決してお勧めしない．手作り感を味わうだけなら<a class="keyword" href="http://d.hatena.ne.jp/keyword/Gentoo">Gentoo</a>とかMomongaを使う手もあるし，それ以上の労力をかける暇があったら既存のディストロに寄与したらいい．<a href="#f-152db1eb" name="fn-152db1eb" title="わたしは以前そういう動機でKondara Projectに寄与していた">*3</a><br />
+確かに<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>の構造を深く理解するにはOSを自作するのが一番である．しかし流行として引き合いに出すべきは<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>ディストロ自作ではなく<a class="keyword" href="http://d.hatena.ne.jp/keyword/OSASK">OSASK</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mona">Mona</a>といった<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>も含めたOS自作であろう．これらは実用OSと比べて機能が限られている上，<a class="keyword" href="http://d.hatena.ne.jp/keyword/C%2B%2B">C++</a>で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A5%D6%A5%B8%A5%A7%A5%AF%A5%C8%BB%D8%B8%FE">オブジェクト指向</a>を意識してモジュール化されているので<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>は一般の実用OSよりも読みやすい．<br />
+とはいえ実際にOSを自作するのは骨だし前提となる知識も膨大なので，勉強の手始めは概念を書籍で理解しながら既存OSのコードを追う方が現実的だ．コードを追う場合も，まずは本で勉強して基礎的な概念を理解し，データ構造を把握した上で，デバッガのステップ実行で実際の流れを追って，理解を深めたい部分を絞って実際のコードを追うという順番になるのだろう．昔は2台のPCを<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AF%A5%ED%A5%B9%A5%B1%A1%BC%A5%D6%A5%EB">クロスケーブル</a>で繋いだりSoftICEを使うとなると大仰だったが，最近は<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B2%BE%C1%DB%A5%DE%A5%B7%A5%F3">仮想マシン</a>環境を簡単につくれるので非常に手軽になった．</p>
+<blockquote cite="http://itpro.nikkeibp.co.jp/article/OPINION/20060721/243952/" title="OSを自作する時代がやってきた：ITpro"><p>単なるパーツの知識じゃなくてOSの仕組みをもっと知りたい。概念的には分かるが，いまいち内部に踏み込めない。この悩みを解決するのに手っ取り早い方法が，OSの自作だ。<br />
+OSは，コンピュータで動くプログラムのベースとなるソフトウエアである。コンピュータを構成するメ<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E2%A5%EA%A1%BC">モリー</a>やデ<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%A4%A5%B9">バイス</a>などのハードウエアを上位のアプリケーション・プログラムから隠し，しかも，多数のプログラムがあたかも同時に動いているように時分割でハードウエア資源を割り当てる。ハードウエアを効率よく配分するという役割もある。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE">プログラマ</a>はOSの内部を知らなくても、ライブラリやシステム・コールを使うことでハードウエアやOSの機能を簡単に利用できる。逆に言えば，OSを自作すれば，OSの仕組みだけではなく，ハードウエアの仕組みも深く理解できるようになる。<br />
+(略)<br />
+簡単なOSなら，がんばれば他人が書いた<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>を用いずにス<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AF%A5%E9%A5%C3%A5%C1">クラッチ</a>から作ることもできるかもしれないが，それはあまりにも非現実的である。日常的に使えるOSにはなり得ない。そもそも，アプリケーション・プログラムまで自作する必要がある。<br />
+そこでお勧めなのが<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>の<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>・コードを使うという方法である。ご存知の通り，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>はOSの核となる<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>の<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>・コードが公開されている。これをベースにして，自分なりのOSを作るのである。<a class="okeyword" href="g:mohican:keyword:もちろん">もちろん</a>，無償で入手できる。</p>
+</blockquote><div class="footnote">
+<p class="footnote"><a href="#fn-170cc1ce" name="f-170cc1ce" class="footnote-number">*1</a><span class="footnote-delimiter">:</span><span class="footnote-text">目次をみた限り，著者は本書で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>の構造を理解できるとは書いていない</span></p>
+<p class="footnote"><a href="#fn-62953fa0" name="f-62953fa0" class="footnote-number">*2</a><span class="footnote-delimiter">:</span><span class="footnote-text">実際の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>ディストロの起動処理は設定情報の読み込みやRC<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B9%A5%AF%A5%EA%A5%D7%A5%C8">スクリプト</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BA%C6%B5%A2">再帰</a>的な読み込みなど，自作ディストロの起動処理よりも非常に複雑なので，ディストロの起動処理を理解したことにさえならない</span></p>
+<p class="footnote"><a href="#fn-152db1eb" name="f-152db1eb" class="footnote-number">*3</a><span class="footnote-delimiter">:</span><span class="footnote-text">わたしは以前そういう動機でKondara Projectに寄与していた</span></p>
+</div>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:24:56.229Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-07-25-os",
+    "name": "OSを理解する手っ取り早い方法?",
+    "contentDigest": "588f1e372df5749d452c7e7c4e7df54b0833298c87c081a99731a1a1a8bca151"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:56.229Z",
+      "proofValue": "z2R7wYNwrtmjw2uP7Y6CyQ6dFDGNK96Qe9BWWGT7a4YwUyLN1kmSnBmGMpuiKNSJu8QQ7bKucrsxGsYduNRxaaWps"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:56.229Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:24:56.264Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "5bf0183149c7bdea6e06c4293a901c6e750c3ba0673b9c9233e3ce7ebca842c1",
+        "metadata": {}
+      }
+    },
+    "eventHash": "cfad385ff1f83eef13f37ed1edb0c7db6f5745e0410eb2cb3ca239705ee4800b",
+    "chainHash": "34c0d4424dc5d0fb526c7acf85547812dee4dadc78331c556dd9e6711b30369c"
+  },
+  {
+    "prevHash": "34c0d4424dc5d0fb526c7acf85547812dee4dadc78331c556dd9e6711b30369c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:26:07.438Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "bfc555163b1533e9337c30580e525193c573d9fb89241c31c6b7727b7ab0397c",
+    "chainHash": "1368a8708ccedcf461734b6143629cf67d2d31a59ebffeb6fb26485132a02495"
+  },
+  {
+    "prevHash": "1368a8708ccedcf461734b6143629cf67d2d31a59ebffeb6fb26485132a02495",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:27.769Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "e41dc36120613d875b23891fa177aa809a4ed7b463288f22788f92f85bd85ef1",
+    "chainHash": "b38d77befd21a51318a85d313674ee63f31c879343c4fcb419445c51cd156deb"
+  },
+  {
+    "prevHash": "b38d77befd21a51318a85d313674ee63f31c879343c4fcb419445c51cd156deb",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:35:17.622Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "c90e7e196ab716f38402613ad4c7956ea57cb52356630f52d06a1a77745dfb94",
+    "chainHash": "76cc2294b09f302a066eba6de0606d37efa95d50809038ae0cc8846986128ab8"
+  },
+  {
+    "prevHash": "76cc2294b09f302a066eba6de0606d37efa95d50809038ae0cc8846986128ab8",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:16:35.438Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "a319506c909561e6c1999015a083f91fceead1a734963b4bcb8ee10f34150930",
+    "chainHash": "76a11ac696a0a5301e2396b5570708d14d722f7a426e9eecf1441edd7e38f6e1"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:16:35.502Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-07-25-os#container",
+    "containerHash": "e32845fba59b27b74cf9480f8e348c3a727f40ae6b50a365757c5020589d5ddc",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "2feec39c9058087619d768253a7b675393a34d007fee5c30f4020ad63e03b121"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:35.502Z",
+      "proofValue": "z5PUC93CvjmCuKNcocpEQ8MZxuGxSDNTE2AfRBzWpdvQRbdMk5msWNC9LB7mQ6Z3jf5Sz6Ja3wJxveMk229S69swU"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:16:35.502Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:16:35.595Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

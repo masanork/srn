@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>RSAとNSAとの秘密契約疑惑で揺らぐ暗号システム評価</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "RSAとNSAとの秘密契約疑惑で揺らぐ暗号システム評価",
+  "description": "",
+  "datePublished": "2013-12-23",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "RSAとNSAとの秘密契約疑惑で揺らぐ暗号システム評価",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>RSAとNSAとの秘密契約疑惑で揺らぐ暗号システム評価</h1>
+                <div class="article-meta">
+                    <span><time datetime="2013-12-23">2013-12-23</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p><a class="keyword" href="http://d.hatena.ne.jp/keyword/RSA">RSA</a>といえば代表的な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%F8%B3%AB%B8%B0%B0%C5%B9%E6">公開鍵暗号</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%EB%A5%B4%A5%EA%A5%BA%A5%E0">アルゴリズム</a>で、作者が暗号を商用化するために設立した会社の社名でもある。その老舗が<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>から1000万ドルを受け取って、同社の暗号ツールキットBSafeで、<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>が開発した<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%AF%A5%C9%A5%A2">バックドア</a>を含む<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%BC%BB%F7%CD%F0%BF%F4">擬似乱数</a>生成器Dual Elliptic Curveを標準設定にしたと<a href="http://www.reuters.com/article/2013/12/20/us-usa-security-rsa-idUSBRE9BJ1C220131220">&#x30ED;&#x30A4;&#x30BF;&#x30FC;&#x304C;&#x5831;&#x3058;&#x305F;</a>。事実であれば<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSA">RSA</a>やBSafeのブランドだけでなく、Dual_EC_DRBGをSP 800-90Aとして標準化したNISTへの信頼も揺らぐ。</p>
+<blockquote cite="http://jp.techcrunch.com/2013/12/21/20131220nsa-reportedly-paid-a-security-firm-millions-to-ship-deliberately-flawed-encryption-technology/" title="NSAは、セキュリティー会社に金を払って欠陥暗号化アルゴリズムを使わせていた（ロイター） | TechCrunch Japan"><p>ある<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>メモは、大胆にもその進捗状況についてこう書いている。「暗号解読機能がオンラインで使えるようになった。これでこれまで捨てられていた大量の暗号化インターネットデータを活用できる」 (略) Reuterが<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>は<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSA">RSA</a>に1000万ドル払って欠陥<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%EB%A5%B4%A5%EA%A5%BA%A5%E0">アルゴリズム</a>を使わせたと暴露したことによって話は変わってきた。<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>がある種の邪悪な黒幕で、人気のセキュリティー標準を陳腐化しようと必死になっている、と思われていたものが、実は金を使って企業に侵入していたのだから。</p>
+</blockquote>
+
+<p>報道からは実際どれだけ多くの製品がBSafeを組み込み、デフォルト設定通りDual_EC_DRBGを使っていたのかなど分からない点は多い。不適切な乱数が暗号システムの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>となることは広く知られているが、専門機関でさえ気付けない欠陥を乱数生成器に仕込むだけで、どこまで暗号解読が容易になったかも気になる。<br />
+問題は<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSA">RSA</a>のBSafeだけでなく、中立的な機関として数多くの暗号<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%EB%A5%B4%A5%EA%A5%BA%A5%E0">アルゴリズム</a>を評価・標準化してきたNISTがDual_EC_DRBGにお墨付きを与えてしまい、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A1%BC%A5%D7%A5%F3%A5%BD%A1%BC%A5%B9">オープンソース</a>で検証が容易であるはずのOpen <a class="keyword" href="http://d.hatena.ne.jp/keyword/SSL">SSL</a>までデフォルトではないが対応したことだ。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A1%BC%A5%D7%A5%F3%A5%BD%A1%BC%A5%B9">オープンソース</a>のメリットとして<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%AF%A5%C9%A5%A2">バックドア</a>の有無を検証できるとする神話があるが、専門家による<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%BD%A1%BC%A5%B9%A5%B3%A1%BC%A5%C9">ソースコード</a>・レビューだけでは<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%AF%A5%C9%A5%A2">バックドア</a>の存在に気づけると限らないことも明らかになった。<br />
+BSafe以外に対しても<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>が解読容易になるよう実装者にアプローチしてきたのではないかという疑惑もある。著名な<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%CF%A5%C3%A5%AB%A1%BC">ハッカー</a>として知られる<a class="keyword" href="http://d.hatena.ne.jp/keyword/Google">Google</a>のTheodore Ts'oが9月にDual_EC_DRBGの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>が明らかになった際<a href="https://plus.google.com/+TheodoreTso/posts/SDcoemc9V3J">&#x300C;&#x30A4;&#x30F3;&#x30C6;&#x30EB;&#x306E;&#x30A8;&#x30F3;&#x30B8;&#x30CB;&#x30A2;&#x9054;&#x304B;&#x3089;&#x306E; /dev/random &#x304C;RDRAND&#x547D;&#x4EE4;&#x3060;&#x3051;&#x306B;&#x4F9D;&#x5B58;&#x306B;&#x3059;&#x3079;&#x304D;&#x3060;&#x3068;&#x3044;&#x3046;&#x5727;&#x529B;&#x306B;&#x62B5;&#x6297;&#x3057;&#x305F;&#x3053;&#x3068;&#x3092;&#x8A87;&#x308A;&#x306B;&#x601D;&#x3046;&#x300D;</a>とコメントしているように、実装で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>のある命令のみに依存するよう複数の働きかけがあったようだ。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/Microsoft">Microsoft</a> Researchの研究者は2007年にDual_EC_DRBGの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>に気づいて<a href="http://rump2007.cr.yp.to/15-shumow.pdf">&#x5B66;&#x4F1A;&#x3067;&#x975E;&#x516C;&#x5F0F;&#x306B;&#x30D7;&#x30EC;&#x30BC;&#x30F3;</a>し、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%20Server%202008">Windows Server 2008</a>から対応したもののデフォルト設定にはしなかった。2007年末に<a href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa375534(v=vs.85).aspx">Windows&#x306E;Cryptography API&#x306E;&#x30DA;&#x30FC;&#x30B8;</a>で「<a href="https://www.schneier.com/essay-198.html">Bruce Schneier&#x306E;&#x5206;&#x6790;</a>を読んで欲しい」という指摘に対して「NIST標準だから対応したけどデフォルトでは使ってないよ。個々の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE%A1%BC">プログラマー</a>が自分で分析してオプション機能を使うか決めたらいい」と回答したやりとりが残っている。<br />
+NISTはDual_EC_DRBGに限らず様々な暗号<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%EB%A5%B4%A5%EA%A5%BA%A5%E0">アルゴリズム</a>を標準化している。現在主流のブロック暗号AESや<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%CF%A5%C3%A5%B7%A5%E5%B4%D8%BF%F4">ハッシュ関数</a>SHA-2もNISTが標準化したものだ。今後、疑惑が更に広がる可能性はあるのだろうか？仮に一連の策謀が9.11を受けたものであれば、それ以前に標準化されたAESやSHA-2に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%AF%A5%C9%A5%A2">バックドア</a>が仕込まれた可能性は低い。あらゆる暗号システムを危殆化させるために乱数の標準化を標的としたのだとしたら賢い戦略だ。NISTの担当者がDual_EC_DRBGの問題を知った上で国家安全保障を目的に標準化したのか、たまたま審査をすり抜けてしまったかによって再発防止策は変わってくる。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSA">RSA</a>がどういった名目で<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>から資金を受け取ったのか、その時期も気になる。<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSA">RSA</a>は<a href="http://blogs.rsa.com/news-media-2/rsa-response/">2004&#x5E74;&#x304B;&#x3089;BSafe&#x3067;Dual_EC_DRBG&#x3092;&#x30C7;&#x30D5;&#x30A9;&#x30EB;&#x30C8;&#x8A2D;&#x5B9A;&#x3068;&#x3057;&#x3066;&#x63A1;&#x7528;&#x3057;&#x305F;&#x3068;&#x767A;&#x8868;</a>した。ロイターの記事によると技術者は蚊帳の外で専ら経営陣によって<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>との契約が進められたと元従業員が証言している。BSafeがNISTによる標準化の前から<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>の開発した<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%BC%BB%F7%CD%F0%BF%F4">擬似乱数</a>生成器をデフォルト設定で採用したことはOpen <a class="keyword" href="http://d.hatena.ne.jp/keyword/SSL">SSL</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>の対応と比べても突出しており、暗号屋の<a class="keyword" href="http://d.hatena.ne.jp/keyword/NSA">NSA</a>に対する不信感を考えれば極めて不自然だ。<a href="http://www.itnews.com.au/News/368285,rsa-paid-10m-by-nsa-for-encryption-backdoor.aspx">RSA&#x306F;&#x4ECA;&#x65E5;&#x306B;&#x306A;&#x3063;&#x3066;NSA&#x3068;&#x306E;&#x79D8;&#x5BC6;&#x5951;&#x7D04;&#x3092;&#x5426;&#x5B9A;</a>しているが、BSafeでDual_EC_DRBGをデフォルト設定した経緯について納得いく説明はまだない。<br />
+いずれにしても今後の暗号<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%EB%A5%B4%A5%EA%A5%BA%A5%E0">アルゴリズム</a>評価で、NISTはこれまで以上に高い透明性を求められる。<a class="keyword" href="http://d.hatena.ne.jp/keyword/RSA">RSA</a>に限らず実装者も暗号周りの仕様変更に関しては丁寧な説明が求められる。2007年には専門家の間でDual_EC_DRBGの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>について指摘されていたことを教訓にすると、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%B0%A5%E9%A5%DE%A1%BC">プログラマー</a>は暗号ツールキットを扱う際にデフォルト設定に頼らず個々のオプションの安全性について情報収集した方が良い。</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:25:49.508Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2013-12-23-rsansa",
+    "name": "RSAとNSAとの秘密契約疑惑で揺らぐ暗号システム評価",
+    "contentDigest": "763bb564563885a4d8cf6d240a2882fa339b98a7af8b7976f10ab3dd64287dea"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:25:49.508Z",
+      "proofValue": "z4zG8huu3bt33zsz8hXdbMcyLcbocHopHnr7qmLnAfoT5YcMUWnnjKbirNFAzdMc75tZjJZ5ikAKtHBN8HzNVbmBf"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:25:49.508Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:25:49.540Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "ef31e469031de27c51b3dae75da1555c92b645f4b5b9e51fc81738f632d54cd5",
+        "metadata": {}
+      }
+    },
+    "eventHash": "97a24e39325efafadef0c71c90067a608c0513540e558c8be8ff613f3eac3629",
+    "chainHash": "9130abfff86dc05c0a7cea118de0acc85b1b850ead9fe6a8d93ea30714d63f22"
+  },
+  {
+    "prevHash": "9130abfff86dc05c0a7cea118de0acc85b1b850ead9fe6a8d93ea30714d63f22",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:26:35.903Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "f8234ec3becbfc51ef03f5a09497f0aa45c741a3c5b889f2c0a4147af02e444a",
+    "chainHash": "88aaefc8d9b8144ef5f34c1b3efc3aeb9b5143e9489e249aaec156a73424caf9"
+  },
+  {
+    "prevHash": "88aaefc8d9b8144ef5f34c1b3efc3aeb9b5143e9489e249aaec156a73424caf9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:31:03.222Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "8e2c236386c826328120e91775a90e25cbb9c944ad0bcb8634a9df8562346fcc",
+    "chainHash": "8e885a3ffb276a5a9bf04f793358048d8318bd08536005b44370c956261b999a"
+  },
+  {
+    "prevHash": "8e885a3ffb276a5a9bf04f793358048d8318bd08536005b44370c956261b999a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:35:54.745Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "0893742d0c91557e40843a5553fb369ae3694146bed483260c151cfba8895d71",
+    "chainHash": "9589040f0f06c49593f0fcb0fb095a660cc99b890ef278125c430814f01f9427"
+  },
+  {
+    "prevHash": "9589040f0f06c49593f0fcb0fb095a660cc99b890ef278125c430814f01f9427",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:17:18.572Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "418860a42b5098260e9fb4fd05dbae169bca589f421861681841406a0917d3f3",
+    "chainHash": "4b73bf1c9b8224a6955a93c8c8adb44f606abf67e3a847040125634d435e03cf"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:17:18.631Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2013-12-23-rsansa#container",
+    "containerHash": "a073e7439295c8197a35a6bd73b71722374bb2fc85bbd4bc7b2e5f175f8c230d",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "ffe35e0d968f8267256aac122db0489bd42fda5b671bb58d99c4560f6cf4eb92"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:18.631Z",
+      "proofValue": "z4BS5Vf9uM1VBqT7poYLcqdj68F9BJsJ4oCx14fBvmf3adDpGfTpaxg3BNBmZxxPGPDkcEUVpJDYqAQWVDtgbZJZj"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:18.631Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:17:18.723Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

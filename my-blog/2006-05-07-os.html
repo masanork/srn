@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>OSの内部構造を何故，どうやって勉強するか</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "OSの内部構造を何故，どうやって勉強するか",
+  "description": "",
+  "datePublished": "2006-05-07",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "OSの内部構造を何故，どうやって勉強するか",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>OSの内部構造を何故，どうやって勉強するか</h1>
+                <div class="article-meta">
+                    <span><time datetime="2006-05-07">2006-05-07</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>デバドラとか組込系の仕事をしたいというのでない限り，いまどきOSについて詳しくても困ることはないんだけど，やはり基本的なことは知っておいた方がいい．<a href="#f-54e30149" name="fn-54e30149" title="サーバー運用の現場でパラメータ設定とかする時に役に立ったり，JavaやC#でもThreadは自分で切らなくちゃならないし，未だに再現性の低い面倒なバグというとThreadの競合だったりするのであって，JavaやC#が言語仕様としてThreadをどう扱っているか，それが実行環境の下でどうハンドリングされているかとか，知っておくおくに超したことがない．性能チューニングの面でも，これまでMPUはパイプラインを深くしてクロックを高くする方向だったので，ハードの性能向上によって勝手に性能が上がっていった訳だが，これからはマルチコアとかメニーコアが増えてマルチスレッド化しないと性能が上がらないし，コアの数が増えるとメモリバンド幅と遅延はこれまで以上にボトルネックとなるので，キャッシュコヒーレンシのトラヒックとか考えながらメモリアクセスの局所性を保つ必要がある">*1</a>とはいえ，ここ数年で学習環境が大幅に改善したとはいえ選択肢が増えすぎて，何から手をつけていいか却って分かりにくくなった感がある．<br />
+僕が学ぼうとした1990年代後半は，教科書というと『<a href="http://d.hatena.ne.jp/asin/4894710471/mkusunokhaten-22">オペレーティングシステム―設計と理論およびMINIXによる実装</a>』とか『<a href="http://d.hatena.ne.jp/asin/4891000309/mkusunokhaten-22">インサイド WINDOWS NT 第2版 (マイクロソフト公式解説書)</a>』だった．会社には当時は幻だった<a href="#f-595aaf6a" name="fn-595aaf6a" title="AT&TがUCBを訴えたとばっちりかどうか知らないけど，知財の問題で絶版になってしまったのだ．だから原書はAmazonで検索しても出てこない">*2</a>『<a href="http://d.hatena.ne.jp/asin/4756118445/mkusunokhaten-22">Lions’ Commentary on UNIX (Ascii books)</a>』の原書とかも置いてあったし，何となく眺めて「あー昔はこんなに見通しが良かったのか」と感動したけど，<a href="#f-3ddaf556" name="fn-3ddaf556" title="いまさらPDP-11のアセンブラ覚える気もせず．気になってはいたのでCalderaがUNIX Version 6とかのソースコードを公開した時は，PDP-11エミュレータでUNIX Version 6を動かす記事とかSDに書いたけどね．">*3</a><br />
+長文エントリになったんで先に結論を書いちゃうと，今日ぼくが調べた範囲だと<a class="keyword" href="http://d.hatena.ne.jp/keyword/FreeBSD">FreeBSD</a>を入れて『<a href="http://d.hatena.ne.jp/asin/4756146791/mkusunokhaten-22">BSDカーネルの設計と実装―FreeBSD詳解</a>』を読むのが一番シアワセになれそうな気がする．ここは是非<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>派の反論＆情報が欲しいところ．
+
+<br />
+言語の話の続きで学習に適したOSについて考えようとしたんだけど，なかなか難しい．いまどきの<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>の内部構造ってどの本を読めば分かるんだろう．<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>って<a class="keyword" href="http://d.hatena.ne.jp/keyword/Slackware">Slackware</a>の頃まではLoadable Kernel Moduleの仕掛けが成熟してなかったこともあって，誰もがハード構成に合わせて<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>を再構築するのが当たり前だったし，新しい<a class="keyword" href="http://d.hatena.ne.jp/keyword/gcc">gcc</a>でビルドしたり<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%D1%A5%A4%A5%EB">コンパイル</a>オプションを変えてみたり，あとサーバーとして運用するにはファイル<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C7%A5%A3%A5%B9%A5%AF%A5%EA%A5%D7%A5%BF">ディスクリプタ</a>の数とか諸々を書き換えたり，あちこちから集めた<a class="okeyword" href="g:mohican:keyword:パッチ">パッチ</a>を適用して遊んだものだけど，気付いたら<a class="keyword" href="http://d.hatena.ne.jp/keyword/Fedora">Fedora</a>なんか，最近どうインストールしても/usr/src以下が空だったりするしね．いちいちsrc.<a class="keyword" href="http://d.hatena.ne.jp/keyword/rpm">rpm</a>を展開して<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>を眺めたり，自分で再ビルドする奴ってどれくらいいるんだろう．本家のtarball引っ張って再構築すると，却ってハマるのが目に見えているし．<br />
+そういう意味で，ビルドシステムがシステム管理者による<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>再構築を念頭に置いている*<a class="keyword" href="http://d.hatena.ne.jp/keyword/BSD">BSD</a>の方がまだ<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>は身近だ．けど，<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>構造の奥まで解説した<a class="keyword" href="http://d.hatena.ne.jp/keyword/BSD">BSD</a>本の多くは旧過ぎる．<a class="keyword" href="http://d.hatena.ne.jp/keyword/NetBSD">NetBSD</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/OpenBSD">OpenBSD</a>は<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mach">Mach</a> <a class="keyword" href="http://d.hatena.ne.jp/keyword/VM">VM</a>を捨ててしまったし，<a class="keyword" href="http://d.hatena.ne.jp/keyword/FreeBSD">FreeBSD</a>もマトモにSMPをサポートするために大幅に書き換わってしまった．<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D5%A5%A1%A5%A4%A5%EB%A5%B7%A5%B9%A5%C6%A5%E0">ファイルシステム</a>も昔のUFSからは激変してるし．<span style="font-weight:bold;">とか思ってたら，いつの間に『<a href="http://d.hatena.ne.jp/asin/4756146791/mkusunokhaten-22">BSDカーネルの設計と実装―FreeBSD詳解</a>』なんて本が出ていたのか．</span>この本は良さげだ．こんど探してみよう．<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mac">Mac</a>は<a class="keyword" href="http://d.hatena.ne.jp/keyword/Darwin">Darwin</a>のkernel sourceがビルド可能なかたちで公開されて，<a class="keyword" href="http://d.hatena.ne.jp/keyword/x86">x86</a>への移行と<a class="keyword" href="http://d.hatena.ne.jp/keyword/Parallels">Parallels</a>の登場で<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mac">Mac</a>上でゲストOSとして<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>を動かしてデバッガにかけるのが楽になった気がするけど，いい教科書がない．<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mach">Mach</a> 3.0ベースといっても，<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a>サブシステムを<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>内の関数呼び出しに戻してしまっていたりとか<a class="keyword" href="http://d.hatena.ne.jp/keyword/Mach">Mach</a>の教科書を読めばいい感じでもないし．<br />
+up to dateな教科書の充実という点では最近『<a href="http://d.hatena.ne.jp/asin/4891004738/mkusunokhaten-22">インサイド MS WINDOWS 第4版 上 (マイクロソフト公式解説書)</a>』『<a href="http://d.hatena.ne.jp/asin/4891004746/mkusunokhaten-22">インサイド MS WINDOWS 第4版 下 (マイクロソフト公式解説書)</a>』が出た<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a>もなかなかいいのだが，いかんせんデバッガで<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>コードを追えないと，OSの勉強というのは実感が湧かないじゃない．どーせkernel coreだけ公開したって丸ごとパチられることもないだろうし，"<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows">Windows</a> Research Kernel"といって，研究用途ではライセンスも緩くなってるんだから，個人的にはkernel sourceを<a class="keyword" href="http://d.hatena.ne.jp/keyword/DDK">DDK</a>の一部として<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>デバッガから参照できるかたちで配ったらどうだろう，とか思うのだが...<br />
+とゆー訳で仮想化環境の普及とか，書籍の充実とか，諸々の面でOS内部環境の学習インフラは向上しているかにみえて，どれも細かく検討してみると帯に短し襷に長しという気がしないでもない．<a href="#f-6408bd29" name="fn-6408bd29" title="逆に，これぞ決定版ですよという話があったら教えて欲しい">*4</a>ただ，学習環境がないから勉強できないのか勉強したいひとが少ないから本にならないのか微妙なところだ．<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>とか<a class="keyword" href="http://d.hatena.ne.jp/keyword/BSD">BSD</a>界隈をみていると，細かいところで面白い論争<a href="#f-a4c3c72f" name="fn-a4c3c72f" title="1:1 threadかm:n threadか，ThreadやSMPスケーラビリティをどう高めるか，Journaling File Systemをvfs層で実装するか，個別Filesystem Driverで実装するか，等々">*5</a>が色々とあるんだけど，やっぱり<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a>周りの話題って総じて地味なんだよね．<a class="keyword" href="http://d.hatena.ne.jp/keyword/BSD">BSD</a> vs. System Vとか<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linus">Linus</a> - タンネンバウム論争くらいまでが華でさ．<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%BD%A5%D5%A5%C8">マイクロソフト</a>も<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%2095">Windows 95</a>とかNT 4.0くらいまでは「9xの実装をプリエンプティブ・<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%EB%A5%C1%A5%BF%A5%B9%A5%AF">マルチタスク</a>と呼んでいいのか」とか「NT 4.0でGDIをkernel modeに持って行ったのは理解できない」とか好事家の間で下らない話題の種になってたんだけど「<a class="keyword" href="http://d.hatena.ne.jp/keyword/Windows%20Vista">Windows Vista</a>ではスケジューラのデータ構造をいじって云々」とか，誰も話題にしているのを聞いたことがない．NGSCBがちゃんと実装されればTCBの信頼モデルってどうよとか，話題に華が咲いたのかも知れないけどさ．<br />
+たぶん諸々の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%A4%A5%AF%A5%ED%A5%AB%A1%BC%A5%CD%A5%EB">マイクロカーネル</a>とか<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CA%AC%BB%B6OS">分散OS</a>が商業的には成功しなかったあたりから，OS研究って地味だよね的な雰囲気が醸成されたのかな．身の回りの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AB%A1%BC%A5%CD%A5%EB">カーネル</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%CF%A5%C3%A5%AB%A1%BC">ハッカー</a>達をみていても，まだOS研究が輝いていた時代に勉強された世代の方々が多い<a class="okeyword" href="g:mohican:keyword:ような気がする">ような気がする</a>．それはこう，ルータ技術者のコミュニティに顔を出しても感じたりするのだが... という訳でOSって地味に進化してるけど，基本は20〜30年前からあまり変わってないし，勉強したくなる誘因ってあるのだろうか，研究して何か大きな進歩を勝ち取る機会ってあるのだろうか，ということが問題だったりする．</p>
+<div class="footnote">
+<p class="footnote"><a href="#fn-54e30149" name="f-54e30149" class="footnote-number">*1</a><span class="footnote-delimiter">:</span><span class="footnote-text">サーバー運用の現場でパラメータ設定とかする時に役に立ったり，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/C%23">C#</a>でもThreadは自分で切らなくちゃならないし，未だに再現性の低い面倒なバグというとThreadの競合だったりするのであって，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Java">Java</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/C%23">C#</a>が言語仕様としてThreadをどう扱っているか，それが実行環境の下でどうハンドリングされているかとか，知っておくおくに超したことがない．性能チューニングの面でも，これまで<a class="keyword" href="http://d.hatena.ne.jp/keyword/MPU">MPU</a>はパイプラインを深くしてクロックを高くする方向だったので，ハードの性能向上によって勝手に性能が上がっていった訳だが，これからはマルチコアとかメニーコアが増えてマルチスレッド化しないと性能が上がらないし，コアの数が増えるとメモリバンド幅と遅延はこれまで以上に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DC%A5%C8%A5%EB%A5%CD%A5%C3%A5%AF">ボトルネック</a>となるので，キャッシュコヒーレンシの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C8%A5%E9%A5%D2%A5%C3%A5%AF">トラヒック</a>とか考えながらメモリアクセスの局所性を保つ必要がある</span></p>
+<p class="footnote"><a href="#fn-595aaf6a" name="f-595aaf6a" class="footnote-number">*2</a><span class="footnote-delimiter">:</span><span class="footnote-text"><a class="keyword" href="http://d.hatena.ne.jp/keyword/AT%26T">AT&T</a>がUCBを訴えたとばっちりかどうか知らないけど，<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C3%CE%BA%E2">知財</a>の問題で絶版になってしまったのだ．だから原書は<a class="keyword" href="http://d.hatena.ne.jp/keyword/Amazon">Amazon</a>で検索しても出てこない</span></p>
+<p class="footnote"><a href="#fn-3ddaf556" name="f-3ddaf556" class="footnote-number">*3</a><span class="footnote-delimiter">:</span><span class="footnote-text">いまさら<a class="keyword" href="http://d.hatena.ne.jp/keyword/PDP">PDP</a>-11の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A5%BB%A5%F3%A5%D6%A5%E9">アセンブラ</a>覚える気もせず．気になってはいたのでCalderaが<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a> Version 6とかの<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>コードを公開した時は，<a class="keyword" href="http://d.hatena.ne.jp/keyword/PDP">PDP</a>-11<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A8%A5%DF%A5%E5%A5%EC%A1%BC%A5%BF">エミュレータ</a>で<a class="keyword" href="http://d.hatena.ne.jp/keyword/UNIX">UNIX</a> Version 6を動かす記事とかSDに書いたけどね．</span></p>
+<p class="footnote"><a href="#fn-6408bd29" name="f-6408bd29" class="footnote-number">*4</a><span class="footnote-delimiter">:</span><span class="footnote-text">逆に，これぞ決定版ですよという話があったら教えて欲しい</span></p>
+<p class="footnote"><a href="#fn-a4c3c72f" name="f-a4c3c72f" class="footnote-number">*5</a><span class="footnote-delimiter">:</span><span class="footnote-text">1:1 threadかm:n threadか，ThreadやSMPスケーラビリティをどう高めるか，Journaling File Systemを<a class="keyword" href="http://d.hatena.ne.jp/keyword/vfs">vfs</a>層で実装するか，個別Filesystem Driverで実装するか，等々</span></p>
+</div>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:23:23.907Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-05-07-os",
+    "name": "OSの内部構造を何故，どうやって勉強するか",
+    "contentDigest": "8e17568aab1df69a414aedde1116ed9f73d7ad887d23db170bfc763693945fe3"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:23.907Z",
+      "proofValue": "z4waccsq8Txg6rmgLT25EYkdpTg2WAReLrfowiTQtgngkDeBjpNePq4JdrEeb1SQK6aiv8KXhpZsFaiyHJVC9vu3a"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:23.907Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:23:23.939Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "3ef664cd13241b00c9858f00231cbcbd2b3c216a982ce36c88007defc9fc96b9",
+        "metadata": {}
+      }
+    },
+    "eventHash": "bd8da2d4aa480649c9df452acaa12e1ee7e7a2442b0c3fbe2a74e9c82da7a8db",
+    "chainHash": "f41c9155fce9238eff68c5f94e31eba6b3b2526625c8921abcc6ebd7d1ff894b"
+  },
+  {
+    "prevHash": "f41c9155fce9238eff68c5f94e31eba6b3b2526625c8921abcc6ebd7d1ff894b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:24:48.475Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "1febd9885f5a30914775197a50da6b885f6417497de7660d77e81fb71b11293a",
+    "chainHash": "7ed448deaf084f1cbd8475dfeff2210d7ac75363a4f4c2e455faf4425f828b92"
+  },
+  {
+    "prevHash": "7ed448deaf084f1cbd8475dfeff2210d7ac75363a4f4c2e455faf4425f828b92",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:28:33.288Z",
+      "payload": {
+        "buildId": "build-1767274104980"
+      }
+    },
+    "eventHash": "c01a9f91e5153ef1a8baabf3660d56c5480bc7777cebe7d779e6ea357c31c892",
+    "chainHash": "741f46046417c08ccfd69f16b4979f3018070a9cdde52cbeebd7365029c2f4b9"
+  },
+  {
+    "prevHash": "741f46046417c08ccfd69f16b4979f3018070a9cdde52cbeebd7365029c2f4b9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:33:42.205Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "30585db8e83160b32e8f7f9d79ead4de49c31adfc87e8b3385f5a6f5066b7138",
+    "chainHash": "765e448703d156e2885692b409feb11952c5f8608d95fe4ac544a471d512f953"
+  },
+  {
+    "prevHash": "765e448703d156e2885692b409feb11952c5f8608d95fe4ac544a471d512f953",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T23:48:11.826Z",
+      "payload": {
+        "buildId": "build-1767397680032"
+      }
+    },
+    "eventHash": "e8a885e4993a4a5e637cfbf5b201395367aef3679ef285a620d417e3811c0d52",
+    "chainHash": "756e7f85901b2bdbfc1004d1a6f90f9d237ea04fb6423dd8463b2d8dc1cf8de9"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-02T23:48:11.883Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-05-07-os#container",
+    "containerHash": "ba831f79d19f92bedf9b04d40a6b4a216696493eb90332ebc69e40916d959365",
+    "buildId": "build-1767397680032",
+    "latestContextHash": "949f68113a9d4d62e044284329a2c0120d9995c55c075f4e153cba060aa05617"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:11.883Z",
+      "proofValue": "z3U74eRkr94ijqhDK7nBFbECqBnVxzWkozgT3FPnVU5oifnm43SqdbsUZD7448Y1VsMGVn7s43bKW87oikecwbMz4"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:11.883Z",
+      "proofValue": "z2fukfDazxCWkUc8Qsg9rhrwA2QvRx7o1G9jFVaoxGszuzyJ4czgSvqj9AvWQNRiWnTedx87EwH93aUd3NsEiWpRqAGuYDzg7XQwGwTGnbyd9B8is3sXSXHxpNQM9nbioySLwuRiYDpVpGahVR2Hfa1NYPKZnFSk76EUeHf9CuxFtBHG9YL4bQdHyXd3vxF2TB9mhMsW2AY9shwzsE3t262SMZtKYeGrXEMt32EdGj55wE8t4vLVu1BGV7riA2et2jzC1TByRZbW4baxgFpBKN1dpAJuqYiC2Av47nNkcRHq74B7y5u6wHdxu9AZe57Ty8UeLGRKcUcUDQd3KWPHMtefBdUfNH34yz2BegJQjQZUpUd11E7cNkykbxsadJ1jXWNKPiXsrtZrdqBnff95TsRxw1rRCmDSmqzMar8H7NcSDoePGZrnBKKFAQnecjcRm63r4SWh4ZTqyrp2NLeB3iqvbSrqoGuYLeDabTAkAU2joXL6yb7khBZwvu8HDE6baC1SoeAtUnjdmTM4wZJmxCbMfRG7QXzF5KHvEmNrXHt1YSW2SByPTpP7SfHsyurVbAqx7uiY3Bug6Dt1JtfCSwdqBhoDAcmKQPopCz63eKv7tiR8CDkFRgq4PHQtgFty7PSUZpk55p1t1e26n7BrbJwB1WtVEyvF7dggKt18QoJMaVCY5yRnKdn1T7FqdW2465PJ96MgGM3XQAgC8JFLLKDPxP7reHrtxTgMQTw5mwCV459DZh5jxAmiGNne1TUgmQ3vyUqGqtvoqU1zE9WgMumxtNUMkaMBDPeRUdbGkpsgxUmhhJd4fVTp345DzjqaEZcAfzjmvwmoXa44RUpBnFydoKq1qTeK7Gp5owFSWUFtkTxFM7phhxVaVEnyw8SqCycpjMBZk3dff9GcievXDR9puevMmZE7F8ufHVkeSosxU6wnjp4gfrGyGTKHs7TAQaqixbkkUiPKQP2kEoUfLdCumz2fLKKaBTbMwY8eTfSVw2Xh5ygaoJ5xGKCNn6zZq3FTqf8NgSnZY438D9csbpcR2tRSkyRa4i4C3B3oiUZXtpEPNnv3owZrNDGPrnzvzDca1x5BkwLVA52TQKp6dkwjTTDiqqd2irPZQ1A4oqweUmhnFfCQ5Adx4XBZKhNX3wVDheNiYznSWUUwa58uWicb5k95BawPpC6GCpTQ7H6xAozNFCXEDay1Tni9NkM2dQF4TicXVPdjRwhe1isKs2h3giFWpEhrLp8VkM3X16t1vMTj1QYuqyj7Yjg1fw6VzUpcvZg2K4e1fCofmbzSnti9yBd6t1yJrNX4QfQUXxMDYM7Wz4W38y3QoTVTrJbyyW3auyqVwMS4NEMiRUGNtwDRQ6TLbXUqgwfooqmQN4bjdeAeNos5fqdcbvcLCYqTE57sYnVUAX1XQCb3AKg3GcHhgYqdZsDEPxqfCV5M68q3bvZy33SFe6GXcgPw6JBhW8eDLTotsdy8JNMNh4Bqh1sMB1Kp35U6WrS5ADtsP1L3bYXvGPzeTJhosyAvB54BaZHFFp3S8Hh6vTXZwoHeKuY9Mxx6Pf3xxsAf8Zk3cUVnsX8bgmZptE9FSjiJKk1nmPAYB5kXL5Fwdqncxno3rT6sM1bTS9FDZmTVVRj5HbmrynzjDCZS4viWMeD5aw5yqLHrpjGufaBeHFEytfoFuaAn2E2JmhyCDWMD315Unr3f569ZpmopovvqRVJTVWjPrzp3LTTVCvgGGXTfLwXvK75N6uSWK4JTkiPTg9Y2rBfVhyEvPrvvH2j7pqR1t7r4AmPdYtCfsN36Jzpy9LAqVa6kRzhL3QFKaKRmfcuRsLucU42B2o6qNBppA7aqjtPsuCjQ81dpyCT85YPZ8rxYCNTP5EqbSPLpwVqfqCR9f79bGEcsPr5we28Cxna1Kk1Vx4vL3xspmE91gwvMuht8WBogHPySMvU3FXwSPdVqs7uojWJmAdxr54YiF4Xjg45EFNfQisMFd1HcUXXjny2E1fdPE7Nnkr68KY4oUsfTp9R3ajdFBAHm2hhfDpvAyzqfHaQu98N5Guvn3DyzRcW81k8UPYgxAR4Zrcf59zerYNubvYZb4ThJE1dFm4e5QCEaVwyRhcoXxR8bN6Pexvs648sGwcqMJwaxdtuBYtMQqj6TUNx7CFVQQf85nDDpU33QyjVeCeQJGEQCvwhFZvhVFpk6mGRT9uMP666NMXECqh2L6rehkL5UshTiJmZSBaEbQEx8iznTKktL2T49LaGit6gPbSe29H3gRD6KbQ5nYcW9fgxgnxuVBuCoDiX6Cjeqvngmxv3qBLADsYzZFf5g1NZ9c1zqSESegGGJU1pC49YntG4YReyX2WfM9Yyy32MLGE8YstrbGzeQFRaVmYfFMBSu86qNx6U59r9RFaW7ZvWtdRzMWy2gaBpfQ7MUVN4S9iSaNWg9EqzmsMhrAmrwQ5vq2cc5LGHFSCrLo3JhbXyPFK5A6DoGGvJWeDEPi6HJU5QddHmSAeGvf1RATThJfxvLzw1HQQ5SNT1z3JDn5frZRrAXG6EMZ9WcEctyy6JXkUFXv4wP6zmz73XgQXhyR8eEuPQJe4RQzSPtDYhxpw9xgX759MQrfPQMu5mJZyyr8Szm1mPyXxnMPhLwZbAv2FpA1cNUGuFaXXG7jcSLUxfTFxm3YqewbFyaBaDJsH4Sjj2e3WsYpci9ZvuS3isuu5FDegUhgZLGJvPegzWDhxbrRKgQhbytBCynVZAQm3eKfnFFU3wmkxiq194uxf6tyhzggTtjrJDrisCPNHCbjaYwwrKe4L3PVvrzRqZURq9YrjiaCGKSnydW1UfrNbFm5Rnamr3aYYSNL2RuiyqvgvBM56BkY84rrvtFXSeLm8C7DFAMBC6qhjtJhw1qnEVy9GdeRmT95zzvpcoj8Qrwg3bUs57zDX6h3G19iGCYYHNefwyBDpvB9QpQadPf7X5j46LFhJCXpj6LvQBe4zshzHUzv954L3SJrBXv8RPmPwCPWrMuUTeTKU1upYPQNYGNNnTLS1aDFAmSPLXkzba77E5RSgQUAbGfPSbc7YaR3nzd4nUGt4wTEt9T9QVdyWQ5238BBqBMWQRgkTFXyuA5wGRR8T8B4vN4jtwmr3oVXd6ZQizT2hXtUc4QczD3koyZAQM1BLsA7exLbEMR5zo55v3n3fKUehm5mcjhYLVZZpnCXG16mVELNrQ3gKvk6sVyR3LFzmgN7n6niNTVm2WVveTMBFCFVCDPWgiFzNfGydLfvEsAjeqN7eBkwmM4uo2rVpYeMe6AXQQbFxUjxQVeSk"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-02T23:48:11.968Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

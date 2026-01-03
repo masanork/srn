@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>GPL3に関連して</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "GPL3に関連して",
+  "description": "",
+  "datePublished": "2006-01-28",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "GPL3に関連して",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>GPL3に関連して</h1>
+                <div class="article-meta">
+                    <span><time datetime="2006-01-28">2006-01-28</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>GPL3が<a class="keyword" href="http://d.hatena.ne.jp/keyword/DRM">DRM</a>を禁じる規定について、八田さんも懸念しているようだ。一瞬Embedded <a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>でHDレコーダや音楽プレーヤを構築しているメーカーが困るのではないかと気になったけれども、<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linus">Linus</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a>はGPL3を採用しない、と表明したことで安堵しているのではないか。<a class="keyword" href="http://d.hatena.ne.jp/keyword/glibc">glibc</a>とかで問題が出るのかも知れないけど、Embedded系ならnewlibとか逃げ道もあるし。<br />
+問題はむしろ、せっかく<a class="keyword" href="http://d.hatena.ne.jp/keyword/OSI">OSI</a>がライセンス数削減を進めている最中に、最も一般的なライセンスがforkしてしまうことかも知れない。まだ議論する余裕はあるようなので、混乱が起こらない決着を望みたい。ただ、こういう方法はStallmanらしい現実的な理想主義だし、後からオープン<a class="okeyword" href="g:mohican:keyword:ソース">ソース</a>なる用語を流行らせ或いは流行に乗った現実的な現実主義者たちが、Stallmanの肩の上で勝手に動きすぎた帰結という気もする。</p>
+<blockquote cite="http://japan.linux.com/opensource/06/01/27/0445258.shtml?topic=6" title="japan.linux.com | 現実的な理想主義"><p>筆者も<a class="keyword" href="http://d.hatena.ne.jp/keyword/DRM">DRM</a>には反対だが、そもそもコードの用途をライセンスで制約するのは筋が悪いと思う。また、<a class="keyword" href="http://d.hatena.ne.jp/keyword/DRM">DRM</a>を極端な形で排除しても、そういった企業はおそらく<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%D7%A5%E9%A5%A4%A5%A8%A5%BF%A5%EA">プロプライエタリ</a>なソリューションに逃げるだけで、決して自由なソフトウェアを支持するようにはならないだろう。むしろ、様々な制約に直面しつつも、企業の中での自由なソフトウェアの利用促進に奮闘している人々がいよいよ動きにくくなってしまうのではないだろうか。</p>
+</blockquote>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:25:51.906Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-01-28-gpl3",
+    "name": "GPL3に関連して",
+    "contentDigest": "4a1c965b4350dd1ed4db4b79a05777943681f8938b346c750c9ce44e4e4c5eef"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:25:51.906Z",
+      "proofValue": "z5aVaVX6TSuErVX1hdWfv9Z7hi4hJ9BG1EaougbjVbq7bGCQtmoKdAA8H8BzTtXVUHf9KNND5JK33hktduAqaqPhJ"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:25:51.906Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:25:51.939Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "0de61c3e173dc23d4b4c721dbb872dd6a42b968a7b5e2905091476eb2ce1ccd2",
+        "metadata": {}
+      }
+    },
+    "eventHash": "52f7af769b6d492169076918a239e9ee1764bd8458321b2618558ae228558287",
+    "chainHash": "c702434af1ee75e2c3426873acbaecc8d6790992ddec96243ba6daf4b3d39f45"
+  },
+  {
+    "prevHash": "c702434af1ee75e2c3426873acbaecc8d6790992ddec96243ba6daf4b3d39f45",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:26:38.362Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "b63d46f7bc5f29d530ea203db95c05aee0bbb422159ebc87afbb03a56ebfbd42",
+    "chainHash": "c1b785480b85dbb9f00cb9887fb5d89ac864d74b965e9c96439c2adbdb0eddf0"
+  },
+  {
+    "prevHash": "c1b785480b85dbb9f00cb9887fb5d89ac864d74b965e9c96439c2adbdb0eddf0",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:31:06.091Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "e664895ba19ccc5f78592c01d18ae37f65b7e002108fc9943249ac607a3f7985",
+    "chainHash": "d04261f9e8b12c01c393d6b9490156e6101fc3bc4a05167d376a74f95798d319"
+  },
+  {
+    "prevHash": "d04261f9e8b12c01c393d6b9490156e6101fc3bc4a05167d376a74f95798d319",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:35:57.942Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "f6e67c09cb051525f39fc1a4ef69bd36e5a26fe8e9bce7935aa0b91fc029a110",
+    "chainHash": "45f845f9d06b209e5b3d762400fc0c786298072a4dbe300024f922b986d9df62"
+  },
+  {
+    "prevHash": "45f845f9d06b209e5b3d762400fc0c786298072a4dbe300024f922b986d9df62",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:17:22.223Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "1bf6c0629191cfa8138696d34263ddd4bd6777174e39d61cbb5971b06d0ff55a",
+    "chainHash": "9d2716bad56f9e471e785d495a13732576c24b27a19e4f24402f522c86aee36b"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:17:22.286Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2006-01-28-gpl3#container",
+    "containerHash": "6435eb643fc33d7630367a662acc8284f50f9d43df863630141d9bc05d1a3b12",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "15f63169a29e6cbc5cc105541e7a99469b64c9eb2ad8606e0800f94aa834d0e9"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:22.286Z",
+      "proofValue": "z5yAF9JCWC9FCBAm4JbwDxgjRXtPwHsGJbChBjtRarh9vug4VS2z7E8yetGTnsD3moPrXG74wBSGqPizwDhEhsUHi"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:22.286Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:17:22.378Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

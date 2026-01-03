@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Bitcoin考: 貨幣的な、あまりに貨幣的な</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Bitcoin考: 貨幣的な、あまりに貨幣的な",
+  "description": "",
+  "datePublished": "2013-11-25",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Bitcoin考: 貨幣的な、あまりに貨幣的な",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Bitcoin考: 貨幣的な、あまりに貨幣的な</h1>
+                <div class="article-meta">
+                    <span><time datetime="2013-11-25">2013-11-25</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>久々にBitcoinに興味をもったのは<a href="http://1ds.websig247.jp/2013/">WebSig1&#x65E5;&#x5B66;&#x6821;2013</a>の基調講演を引き受けた際に紹介しようと思ったのが契機だった。講演の数日前に会社へいく道すがら<a class="keyword" href="http://d.hatena.ne.jp/keyword/BBC">BBC</a> World Newsの<a class="keyword" href="http://d.hatena.ne.jp/keyword/Podcast">Podcast</a>を聞いていたら<a href="http://www.gizmodo.jp/2013/10/fbisilk_road.html">FBI&#x306B;&#x3088;&#x308B;&#x95C7;&#x30AA;&#x30FC;&#x30AF;&#x30B7;&#x30E7;&#x30F3;Silk Road&#x6458;&#x767A;&#x306E;&#x5831;&#x9053;</a>で、日本人の中本哲史が開発した電子貨幣として紹介されていた。調べ直して流通量が10億ドルを超えていることや、この数ヶ月の乱高下を知って驚いた。
+
+<br />
+正直白状すると初めてBitcoinのことを知った時、興味深いがここまで世界で流行るとは思わなかった。1990年代後半から電子貨幣に興味を持ち、<a class="keyword" href="http://d.hatena.ne.jp/keyword/MOJO">MOJO</a> Nationや<a class="keyword" href="http://d.hatena.ne.jp/keyword/LETS">LETS</a>の試みに注目したが広がりをみせず、その後の<a class="keyword" href="http://d.hatena.ne.jp/keyword/SecondLife">SecondLife</a>で流通したLinden Dollarsや、数多あるゲーム通貨の<a class="keyword" href="http://d.hatena.ne.jp/keyword/RMT">RMT</a>と似たような流行に終わるのではないかと諦めていたからだ。ところがBitcoinは今や米国・カナダ・ドイツといった国々が存在を認めて態度を表明しつつある。この新たなグローバル貨幣が謎多き日本人の作品として世界に紹介され、渋谷付近に世界最大級の取引所があるらしいにも関わらず、欧米のテンションと較べて日本での関心が高まらない理由も気になった。<br />
+他の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C5%C5%BB%D2%A5%DE%A5%CD%A1%BC">電子マネー</a>とBitcoinが決定的に違う点として集中管理する発行主体が存在しないこと、既存の通貨と連動せず独自の為替レートを持つこと、ポイントやゲーム通貨の<a class="keyword" href="http://d.hatena.ne.jp/keyword/RMT">RMT</a>と違って役務提供や通貨での払い戻しを約束していないことなどがある。その詳しい仕組みに興味のある人は<a href="http://www.bitcoin.co.jp/docs/SatoshiWhitepaper.pdf">&#x539F;&#x8AD6;&#x6587;&#x304C;&#x90A6;&#x8A33;&#x3055;&#x308C;&#x3066;&#x3044;&#x308B;</a>ので、まずそれを読むといい。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B2%DF%CA%BE%CF%C0">貨幣論</a>の理屈として貨幣に価値を感じて受け取る利用者が十分な数いれば貨幣として成り立つ。しかしながら金のようなモノ自体の価値や、国家が法定した通貨とは別に、役務提供などの払い戻し保証もなく形もない電子貨幣が広く受け入れられて世界で流通することは私の想像を超えていた。<br />
+最近までCypherpunkのおもちゃだったBitcoinが今年に入って急激に社会から受け入れられた背景に、欧州<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C4%CC%B2%DF%B4%ED%B5%A1">通貨危機</a>があった。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AD%A5%D7%A5%ED%A5%B9">キプロス</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B6%E2%CD%BB%B4%ED%B5%A1">金融危機</a>で流通総価値が10億ドルを超え、当地の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%CB%A5%B3%A5%B7%A5%A2">ニコシア</a>大学では今月に入って世界で初めてBitcoinで学費を受け取ると発表した。最近ではFBIによるSilk Road摘発で闇オークションサイトの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B7%E8%BA%D1%BC%EA%C3%CA">決済手段</a>として報道され、中国でのBaiduによる採用などBitcoin熱と取引所の閉鎖、米議会での<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%F8%C4%B0%B2%F1">公聴会</a>や為替の乱高下など話題に事欠かない。<br />
+<a href="http://internet.watch.impress.co.jp/docs/news/20130401_593985.html">&#x4EEE;&#x60F3;&#x901A;&#x8CA8;&#x300C;Bitcoin&#x300D;&#x6D41;&#x901A;&#x7DCF;&#x4FA1;&#x5024;&#x304C;10&#x5104;&#x30C9;&#x30EB;&#x8D85;&#x3048;&#x301C;&#x30AD;&#x30D7;&#x30ED;&#x30B9;&#x91D1;&#x878D;&#x5371;&#x6A5F;&#x304C;&#x5F71;&#x97FF;&#xFF1F;</a><br />
+<a href="http://techcrunch.com/tag/bitcoin/">Bitcoin | TechCrunch</a><br />
+<a href="http://www.economist.com/topics/bitcoins">Bitcoins | Economist - World News, Politics, Economics, Business &amp; Finance</a><br />
+<a href="http://www.forbes.com/sites/kashmirhill/2013/10/16/bitcoin-says-goodbye-to-silk-road-and-hello-to-baidu-chinas-google/">Bitcoin Says Goodbye To Silk Road And Hello To Baidu, China&#39;s Google - Forbes</a><br />
+<a href="http://www.theregister.co.uk/2013/11/12/bitcoin_gbl_hong_kong_collapse/">Chinese Bitcoin exchange DISAPPEARS, along with &pound;2.5 MEEELLION - The Register</a><br />
+<a href="http://www.unic.ac.cy/news-and-events/73/unic-to-be-the-first-university-in-the-world-to-accept-bitcoin/112831#.UpNh-2Qp0lM">UNic to be the first university in the world to accept Bitcoin | University of Nicosia</a><br />
+日本にいると気づきにくいが、通貨や決済インフラの弱い国に住む人々や世界をまたにかける旅行者にとっては、手持ち現金の逃避先や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B7%E8%BA%D1%BC%EA%C3%CA">決済手段</a>としてBitcoinが魅力的な選択肢となりつつあるようだ。いちど<a href="http://www.thepinkcow.com/">&#x516D;&#x672C;&#x6728;&#x306E;Bitcoin&#x3092;&#x4F7F;&#x3048;&#x308B;&#x30D0;&#x30FC;The Pink Cow</a>で開かれるオフ会に顔を出したが、参加者の多くは外国人で、国際送金や両替の為替手数料に嫌気がさして、グローバルな<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B7%E8%BA%D1%BC%EA%C3%CA">決済手段</a>としてBitcoinが成長することに期待していた。歴史的な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CE%CC%C5%AA%B4%CB%CF%C2">量的緩和</a>を受けて、政府が発行量を調整できる管理通貨に対する不信感から、発行量が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B5%A1%B3%A3%C5%AA">機械的</a>に調整されるBitcoinの価値が貴金属と同様に安定することを期待する向きもある。米国でTea Partyを中心にBitcoinでの政治<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%A5%B6%E2">献金</a>を求める声が強いのも、先日の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BA%C4%CC%B3%C9%D4%CD%FA%B9%D4">債務不履行</a>危機とも絡んで政府不信の姿勢を反映しているのだろう。<br />
+<a href="https://www.verifiedvoting.org/fec-deadlocks-on-bitcoin-contributions-tea-party-reporting-exemption-in-the-arena/">FEC Deadlocks on Bitcoin Contributions, Tea Party Reporting Exemption | In the Arena | Verified Voting</a><br />
+Bitcoinは<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B2%DF%CA%BE%CF%C0">貨幣論</a>的に経済学者からは冷静に受け止められているが、法的な位置づけについては不透明なところも多い。今年に入ってカナダやドイツの税当局が税法上の扱いを明らかにしたが、外為規制との関係や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%CD%A1%BC%A5%ED%A5%F3%A5%C0%A5%EA%A5%F3%A5%B0">マネーロンダリング</a>対策、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B7%E8%BA%D1%BC%EA%C3%CA">決済手段</a>としての扱いについての国際的な対話はこれからだ。現金決済と較べれば取引が広報される分だけ透明性は高いともいえるが、資金の流れを追うには追跡技術が必要で、時間が経てば古い取引はブロックから削除されてしまう。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/Napster">Napster</a>や<a class="keyword" href="http://d.hatena.ne.jp/keyword/Winny">Winny</a>がコンテンツ配信を脱中心化したように、Bitcoinが可能性を示したCryptocurrencyは電子貨幣システムを脱中心化し得る。技術の本質と可能性を正しく理解して社会や制度と折り合いをつけるには、少なくとも向こう数年を要するのではないか。珍しく日本発の技術（ということになっている）で、西海岸で次々と関連<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D9%A5%F3%A5%C1%A5%E3%A1%BC">ベンチャー</a>が生まれ、どうやら<a href="https://www.mtgox.com/">&#x65E5;&#x672C;&#x306B;&#x3042;&#x308B;&#x4F01;&#x696D;</a>が金融取引の中心となっている分野なのに、今のところ日本から発信される情報があまりに少ない。<br />
+<a href="http://www.nikkei.com/article/DGXNASM130006_R30C13A5000000/">&#x30D3;&#x30C3;&#x30C8;&#x30B3;&#x30A4;&#x30F3;&#x304C;&#x751F;&#x3080;&#x300C;&#x7B2C;&#xFF12;&#x306E;&#x30B1;&#x30A4;&#x30F3;&#x30BA;&#x300D;&#x56FD;&#x969B;&#x57FA;&#x7763;&#x6559;&#x5927;&#x5B66;&#x5BA2;&#x54E1;&#x6559;&#x6388;&#x306E;&#x5CA9;&#x4E95;&#x514B;&#x4EBA;&#x6C0F;&#xFF1A;&#x65E5;&#x672C;&#x7D4C;&#x6E08;&#x65B0;&#x805E;</a><br />
+<a href="http://jp.techcrunch.com/2013/04/16/20130414iterations-how-five-real-economists-think-about-bitcoins-future/">&#xFF15;&#x4EBA;&#x306E;&#x672C;&#x7269;&#x306E;&#x7D4C;&#x6E08;&#x5B66;&#x8005;&#x305F;&#x3061;&#x306F;Bitcoin&#x306E;&#x672A;&#x6765;&#x3092;&#x3069;&#x3046;&#x8003;&#x3048;&#x3066;&#x3044;&#x308B;&#x304B; | TechCrunch Japan</a><br />
+<a href="http://www.magnetforensics.com/bitcoin-forensics-a-journey-into-the-dark-web/">Bitcoin Forensics - A Journey into the Dark Web | Magnet Forensics</a><br />
+<a href="http://www.theverge.com/2013/4/1/4154500/mt-gox-barons-of-bitcoin">Barons of Bitcoin: the Tokyo-based powerhouse that controls the world&#39;s virtual money | The Verge</a></p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:25:56.030Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2013-11-25-bitcoin",
+    "name": "Bitcoin考: 貨幣的な、あまりに貨幣的な",
+    "contentDigest": "e5e00b427cc4c229a9aaff0a99502d7d3fbd6ddb7e1d75fdb22234a4c910f863"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:25:56.030Z",
+      "proofValue": "z4we4scnPAutpN2GCa9tnsQ7vTgzLzT6UcQpSfbvcpGvsTHfynSuuqpwQv5L9xpUWusabu6WysBC56fwHXEGPHHrr"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:25:56.030Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:25:56.063Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "2f7112ecad4ddd91f248a50c0e23963e08bb1ae024dec04beb29801abadeb7a4",
+        "metadata": {}
+      }
+    },
+    "eventHash": "169f95478016fdebec2c060360e5fac94c5e8f28675f4e5d27527ab3fd0ea36b",
+    "chainHash": "2d133f8b2b68a02caa71da564af452d10b44036cb9075881d21a8b86a3b206f4"
+  },
+  {
+    "prevHash": "2d133f8b2b68a02caa71da564af452d10b44036cb9075881d21a8b86a3b206f4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:26:41.174Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "d0bdf8714a430d27c2fa56437569b1e1f16dffb885ac541f33e5a59fc5b37dac",
+    "chainHash": "45b77b6a1dc6c66125bdd6a862f14a4343b828238ab116686741066eaf6007ba"
+  },
+  {
+    "prevHash": "45b77b6a1dc6c66125bdd6a862f14a4343b828238ab116686741066eaf6007ba",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:31:09.677Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "49aaad6b050035cd26e33fb7ebf0958bef880d28ba484ea9571c7bec656f46ea",
+    "chainHash": "be7371372825f4be080ae5ba5d7043f69822016860be73088a83199670286312"
+  },
+  {
+    "prevHash": "be7371372825f4be080ae5ba5d7043f69822016860be73088a83199670286312",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:36:01.705Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "08f7f95fe4d4e88fc0ceaa024d14b18861e18ea93a6aa3355de5df85e6162a09",
+    "chainHash": "6f7ac2839aa653e4cfefbdd7f74684be24991ba31ecee56757f9d207f783f31c"
+  },
+  {
+    "prevHash": "6f7ac2839aa653e4cfefbdd7f74684be24991ba31ecee56757f9d207f783f31c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:17:26.568Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "d3c13e404a19695d942fd0cdf98d0c6f3bec39a11eeb101965c018a8551895e4",
+    "chainHash": "058701638dd68eb7bed79ee857c41a3437583df20cfba413814e35c48083f034"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:17:26.636Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2013-11-25-bitcoin#container",
+    "containerHash": "e3c2b0d968bdab3a4b3a8c098a725adcde0e1521b0499154b19680198ede2131",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "ccb0616aae4f4423fa2fc5c7bd7e04fe3498161df7f4cfa1b8b35adcc03490f8"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:26.636Z",
+      "proofValue": "zB3Nq12P5JtjzSL2bNUr8iz82kK5gJPKeiXRgk73G3T1X1UJeSaMuNz4tLZxgPcBQB7EunQGuBeEE6hxhJYAhgPV"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:26.636Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:17:26.726Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

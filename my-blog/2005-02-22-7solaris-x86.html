@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>7年ぶりのSolaris x86</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "7年ぶりのSolaris x86",
+  "description": "",
+  "datePublished": "2005-02-22",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "7年ぶりのSolaris x86",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>7年ぶりのSolaris x86</h1>
+                <div class="article-meta">
+                    <span><time datetime="2005-02-22">2005-02-22</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p><a class="keyword" href="http://d.hatena.ne.jp/keyword/Solaris">Solaris</a> <a class="keyword" href="http://d.hatena.ne.jp/keyword/x86">x86</a>で遊ぶなんて，JTRON発表のシンポジウムでScott McNearlyに発売直後の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Solaris">Solaris</a> 2.6を貰って以来だから，7〜8年ぶりとなる．<a class="keyword" href="http://d.hatena.ne.jp/keyword/Gnome">Gnome</a>が入ったら遊んでみようと思っていたので，早速<a class="keyword" href="http://d.hatena.ne.jp/keyword/Fedora%20Core">Fedora Core</a> 3の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D1%A1%BC%A5%C6%A5%A3%A5%B7%A5%E7%A5%F3">パーティション</a>を潰してインストール．<br />
+画面解像度が1280x1024までしか設定できない(ぼくは1600x1200の液晶モニタを使っている)し，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Gnome">Gnome</a>は旧いし，Evolution 1.4に統合されている<a class="keyword" href="http://d.hatena.ne.jp/keyword/Ximian">Ximian</a> Exchange Connectorから会社の<a class="keyword" href="http://d.hatena.ne.jp/keyword/Exchange%20Server">Exchange Server</a> 2003に接続できないなど，<a class="keyword" href="http://d.hatena.ne.jp/keyword/Fedora%20Core">Fedora Core</a> 3と比べて気になることも多々あるけれども，やっぱりリソース周りとかは商用OSらしい丁寧さを感じる．<a class="keyword" href="http://d.hatena.ne.jp/keyword/Linux">Linux</a> 2.6と比べてもっさりと重いのは仕方ないのかな...<br />
+サーバー性能の比較とかも興味あるけど，どっかにいいデータ落ちてないかな．いまは現場のエンジニアじゃないので，手元に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D9%A5%F3%A5%C1%A5%DE%A1%BC%A5%AF">ベンチマーク</a>できるほどのマシンがないので入れて触って/etc以下を眺めるくらいしかできない．</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:23:52.435Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2005-02-22-7solaris-x86",
+    "name": "7年ぶりのSolaris x86",
+    "contentDigest": "694ac0d56ecd0f857f2c77d48c65f85ca66e362807ed7bf4388a9a8fc6bbf545"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:52.435Z",
+      "proofValue": "z2b9ozuh1ryBqKxmkDGyQrde5dQWoWnPUgZvQYVkm5q7Eap7nq9KnNddiHrkLwkrcRmk8EAetMTJ2sQZi8VTLUPkC"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:23:52.435Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767397680032-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-ed25519",
+        "did:web:masanork.github.io#build-1767397680032-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:23:52.467Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "71546e161ba12e6d62cc71db76de8115489fdc2ec629b69c7d241d6f62a43bf7",
+        "metadata": {}
+      }
+    },
+    "eventHash": "fc268e84798e341c3432af43f7fae9dc970b24681a19cc3fa58959acfe2e6f8e",
+    "chainHash": "16de56a2c2cb83922d5dc6bba7610ab9e80af1cff2a93ea41c2eba51e0780068"
+  },
+  {
+    "prevHash": "16de56a2c2cb83922d5dc6bba7610ab9e80af1cff2a93ea41c2eba51e0780068",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:25:10.818Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "11450c202f68b7cd977ea911d6e7caadaad4ef9925a495f98197b384eebd2225",
+    "chainHash": "29c194f9e4035aa1c05fd7b8ffb5a65a401c46f6e95cf49e9eb1bd30f8ab4177"
+  },
+  {
+    "prevHash": "29c194f9e4035aa1c05fd7b8ffb5a65a401c46f6e95cf49e9eb1bd30f8ab4177",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:29:24.805Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "79714cc59c9ccd61a9acd775e86729b6d812e4c29ebffd72d021ebcdf9423de2",
+    "chainHash": "410962cc009f4d14211a6c1da0b122c911a11308c01d7f5df7dfbbdb11fd75b1"
+  },
+  {
+    "prevHash": "410962cc009f4d14211a6c1da0b122c911a11308c01d7f5df7dfbbdb11fd75b1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:34:13.386Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "bcd34731f513e274b7480a3f0756d294d086aeb2fa9d97e66a7502c52a4fccc8",
+    "chainHash": "47ccef9b420b532b68a2ddf6f2e547e71278427d8b81257c319ffe7441b22cb5"
+  },
+  {
+    "prevHash": "47ccef9b420b532b68a2ddf6f2e547e71278427d8b81257c319ffe7441b22cb5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T23:48:49.604Z",
+      "payload": {
+        "buildId": "build-1767397680032"
+      }
+    },
+    "eventHash": "94837213a73b36f7cc1e2d72360078ac4e32a8affa1b249a39e7706f4731e376",
+    "chainHash": "d170968dc2bd02b1e0a378a4c774676d75d757d0e881c6e7968299857a8950bb"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-02T23:48:49.662Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2005-02-22-7solaris-x86#container",
+    "containerHash": "1f94731b9b520c8c85e0279e4b947d32a9bab145d07b6618f24b4c2e005589c0",
+    "buildId": "build-1767397680032",
+    "latestContextHash": "6cc6b9cff06e03d2fb49ea7a01fc1b15ef0af4eddba40201cf56f4a1a9ce6fd9"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:49.662Z",
+      "proofValue": "z4erqKisNUvwxe5RkLySG1hWy47pfoY3UsGh1HCzASnAXvVu28nHgMk6eT6AZQbzC4ibGko2MWqcrn1TQ5fcgXMy9"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767397680032-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-02T23:48:49.662Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-02T23:48:49.749Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

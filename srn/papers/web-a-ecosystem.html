@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Whitepaper: Web/A Ecosystem Overview — The Fabric of Digital Trust</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Whitepaper: Web/A Ecosystem Overview — The Fabric of Digital Trust",
+  "description": "A comprehensive view of how Web/A, Maker, Form, Folio, and Post weave together to create a decentralized and intelligent trust infrastructure.",
+  "datePublished": "2024-12-31",
+  "author": {
+    "@type": "Person",
+    "name": "Sorane Project"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "Whitepaper: Web/A Ecosystem Overview — The Fabric of Digital Trust",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io:srn"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      },
+      {
+        "label": "c2pa.actions",
+        "data": {
+          "action": "c2pa.created",
+          "softwareAgent": "Antigravity",
+          "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <script>
+        (() => {
+            const runMermaid = () => {
+                const mermaid = window.mermaid;
+                if (!mermaid) return;
+
+                const fonts = [];
+                const fontFamily = fonts.join(', ');
+
+                document.querySelectorAll('pre > code.language-mermaid').forEach((code) => {
+                    const pre = code.closest('pre');
+                    if (!pre) return;
+                    const container = document.createElement('div');
+                    container.className = 'mermaid';
+                    container.textContent = code.textContent || '';
+                    pre.replaceWith(container);
+                });
+
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+                    fontFamily: fontFamily
+                });
+
+                mermaid.run({
+                    querySelector: '.mermaid'
+                });
+            };
+
+            const onReady = () => {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', runMermaid, { once: true });
+                } else {
+                    runMermaid();
+                }
+            };
+
+            const script = document.createElement('script');
+            script.src = 'data:text/javascript;base64,Y29uc29sZS5sb2coJ01lcm1haWQgTG9hZGVkJyk7IHdpbmRvdy5tZXJtYWlkID0geyBpbml0aWFsaXplOiAoYykgPT4gY29uc29sZS5sb2coJ01lcm1haWQgSW5pdCcsIGMpIH07Cg==';
+            script.onload = onReady;
+            document.head.appendChild(script);
+        })();
+    </script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Whitepaper: Web/A Ecosystem Overview — The Fabric of Digital Trust</h1>
+                <div class="article-meta">
+                    <span><time datetime="2024-12-31">2024-12-31</time></span>
+                    
+                    <span>By Sorane Project</span>
+                    <span class="ai-badge" title="Content generated by AI (Antigravity)">🤖 AI Generated</span>
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <h2>1. Introduction: From Points to a Network</h2>
+<p>The Web/A protocol suite is not merely a proposal for a new document format. It is an ecosystem that redefines the entire lifecycle of data: <strong>Creation (Foundry)</strong>, <strong>Interface</strong>, <strong>Ownership</strong>, and <strong>Infrastructure</strong>. Together, they form an <strong>&quot;Autonomous Network of Trust&quot;</strong> that is independent of any single platform.</p>
+<p>This paper provides an overview of how the five key components collaborate to balance user data sovereignty with intelligent automation.</p>
+<h2>2. Ecosystem Map (The Big Picture)</h2>
+<p>The flow of information in the Web/A ecosystem is not a one-way broadcast, but an organic cycle woven by issuers, users, and mediators.</p>
+<pre><code class="language-mermaid">graph TD
+    classDef highlight fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef blue fill:#eef,stroke:#333,stroke-width:1px;
+    classDef green fill:#efe,stroke:#333,stroke-width:1px;
+    classDef yellow fill:#fffbe6,stroke:#333,stroke-width:1px;
+
+    %% The Engine
+    Maker[Web/A Maker / SSG]
+
+    subgraph Documents [Interfaces / Files]
+        Form[Web/A Form]
+        Doc[Web/A Document / Report]
+        Aggregator[Web/A Aggregator]
+    end
+
+    subgraph Storage [Ownership / Storage]
+        Folio[Web/A Folio / Briefcase]
+    end
+
+    subgraph Network [Infrastructure / Delivery]
+        Post[Web/A Post / Postal Hub]
+    end
+
+    %% Relations
+    Maker --&gt;|1. Build &amp; Sign| Form
+    Maker --&gt;|1. Build &amp; Sign| Doc
+    Maker --&gt;|1. Build &amp; Sign| Aggregator
+    
+    Form --&gt;|2. Fill, Sign &amp; Submit| Doc
+    Doc --&gt;|3. Receive, Verify &amp; Save| Folio
+    
+    Folio &lt;--&gt;|4. Deliver, Delegate &amp; Sync| Post
+    Post &lt;--&gt;|5. Federation / Delivery| Post2[Another Web/A Post]
+    
+    Post --&gt;|6. Data Collection| Aggregator
+    Aggregator --&gt;|7. Analysis &amp; Feedback| Maker
+
+    %% Apply Classes
+    class Maker yellow;
+    class Form,Doc,Aggregator blue;
+    class Folio highlight;
+    class Post green;
+</code></pre>
+<h2>3. Roles of the Components</h2>
+<h3>3.1. Web/A (Format) — The Atomic Unit of Trust</h3>
+<p>The foundation for everything: an <strong>&quot;Archive-Quality&quot; document format</strong>.</p>
+<ul>
+<li><strong>Features</strong>: A single HTML file that encapsulates HTML (view), JSON-LD (structured data), fonts, and signatures.</li>
+<li><strong>Value</strong>: Ensures that a document can be &quot;read&quot; by a browser 50 years from now while being simultaneously &quot;verifiable&quot; by a machine.</li>
+</ul>
+<h3>3.2. Web/A Maker &amp; Aggregator (Foundry) — The Mint and Intelligence of Trust</h3>
+<p>A suite of tools powered by the <strong>Sorane SSG (Static Site Generator)</strong> designed to handle the beginning and end of the document lifecycle.</p>
+<ul>
+<li><strong>Maker</strong>: Generates signed Web/A documents/forms from templates.</li>
+<li><strong>Aggregator</strong>: Collects and analyzes signed data submitted via Post, providing dashboards and insights.</li>
+<li><strong>Value</strong>: Enables developers to bake automated &quot;trust generation&quot; and &quot;trust analysis&quot; into existing workflows.</li>
+</ul>
+<h3>3.3. Web/A Form (Interface) — The Interactive Document</h3>
+<p>An <strong>interactive document</strong> that adds &quot;input&quot; and &quot;confidentiality&quot; capabilities to the Web/A format.</p>
+<ul>
+<li><strong>Features</strong>: The form operates as an autonomous program, handling Passkey signing and recipient-only encryption (L2E).</li>
+<li><strong>Value</strong>: Shifts from a model where servers wait for input to one where the document itself &quot;returns with the answer.&quot;</li>
+</ul>
+<h3>3.4. Web/A Folio (Ownership) — The Digital Briefcase</h3>
+<p>A <strong>personal data container</strong> residing on the user&#39;s local device for managing their own evidence and history.</p>
+<ul>
+<li><strong>Features</strong>: While &quot;wallets&quot; primarily handle identity, a Folio structure manages a vast volume of &quot;documents (records).&quot;</li>
+<li><strong>Value</strong>: Serves as the bedrock for true Self-Sovereign data management—your data is in your hands.</li>
+</ul>
+<h3>3.5. Web/A Post (Infrastructure) — The Intelligent Postal Hub</h3>
+<p>The <strong>delivery infrastructure</strong> responsible for message transport and identity mediation between Folios.</p>
+<ul>
+<li><strong>Features</strong>: It does not hold master data. Instead, it specializes in routing, context management, and &quot;automated responses in owner absence.&quot;</li>
+<li><strong>Value</strong>: Acts as an intelligent gatekeeper or digital counter, maintaining a 24/7 presence on behalf of the user.</li>
+</ul>
+<h2>4. Infrastructure for AI Agents: Bring Your Own AI Agent (BYOA)</h2>
+<p>Today&#39;s AI ecosystem is often trapped in &quot;fragmented silos&quot; that exist only within specific platforms. One agent might have advanced reasoning but lacks access to the user&#39;s master data (evidence), while another might read the data but has no way to verify its authenticity.</p>
+<p>The Web/A ecosystem provides a common infrastructure for <strong>&quot;Bring Your Own AI Agent (BYOA)&quot;</strong>—allowing users to bring an AI agent of their choice to achieve safe and sophisticated automation.</p>
+<ul>
+<li><strong>Eyes and Hands for Agents</strong>:
+Web/A&#39;s machine-readability (JSON-LD) and Post&#39;s delivery capabilities serve as the &quot;common language&quot; and &quot;nervous system&quot; for AI agents.</li>
+<li><strong>Chain of Trust</strong>:
+Agents can autonomously verify whether a received document has been tampered with and who signed it, without relying on a central platform.</li>
+<li><strong>Structured Context</strong>:
+The structured data accumulated in a Folio serves as a foundation for agents to accurately understand the user&#39;s situation (e.g., via RAG) and provide high-precision assistance.</li>
+</ul>
+<h2>5. Implementation &amp; Deployment: From CLI to Large-scale Ecosystems</h2>
+<p>While the Web/A ecosystem is currently provided as a reference implementation for developers, its roadmap envisions large-scale, cross-sector deployment spanning public, private, and personal domains.</p>
+<ul>
+<li><strong>Folio CLI / MCP (Present)</strong>:
+Tools that allow AI agents and developers to directly manipulate and verify data via the command line or Model Context Protocol (MCP).</li>
+<li><strong>Large-scale &amp; Cross-sector Deployment (Future)</strong>:
+A Folio is not only for direct management by individuals but can also serve as a standard infrastructure for the exchange of official evidence between government entities (G2G), businesses (B2B), and between enterprises and administrations (B2G/G2B).</li>
+<li><strong>Integration into Service Platforms</strong>:
+Organizations with extensive customer bases and data—or those seeking to dramatically improve the user experience for complex applications and procedures—can integrate this reference implementation into their own infrastructure to provide secure &quot;Digital Briefcase&quot; functionality to their users.</li>
+</ul>
+<h2>6. Use Case Scenario: The Lifecycle of a Document</h2>
+<ol>
+<li><strong>Issuance</strong>: An issuing organization (enterprise, government, or NGO: <strong>Maker</strong>) publishes an official survey or procedural <strong>Form</strong>.</li>
+<li><strong>Reception</strong>: The user&#39;s <strong>AI Agent</strong> receives a notification in the Folio, analyzes the content, and presents a draft to the user.</li>
+<li><strong>Completion</strong>: The AI Agent prepares a draft based on existing profiles in the <strong>Folio</strong>, which the user reviews and signs via Passkey.</li>
+<li><strong>Submission</strong>: An encrypted package is delivered via <strong>Post</strong> to the recipient organization with minimal exposure.</li>
+<li><strong>Auto-response</strong>: The recipient&#39;s <strong>Post</strong> performs automatic verification and immediately returns a receipt. The user&#39;s AI agent records the completion.</li>
+</ol>
+<h2>7. Conclusion: Freedom Beyond Platforms</h2>
+<p>The goal of the Web/A ecosystem is to move away from a world where one must log into a giant platform to perform even basic digital tasks.</p>
+<p>By combining Web/A (the &quot;container for trust&quot;), the tools to handle it (Maker / Form), a place to own it (Folio), and a path to deliver it (Post), users can maintain absolute sovereignty while enjoying the freedom and intelligent automation of an interconnected world, powered by the AI of their choice.</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-01T03:24:00.689Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/web-a-ecosystem",
+    "name": "Whitepaper: Web/A Ecosystem Overview — The Fabric of Digital Trust",
+    "contentDigest": "931ba7b0b6d65598725acc22431d4a4329b599610170a00971019994d3910a8f"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T03:24:00.689Z",
+      "proofValue": "z5bLfmwJJLchWgW8QixAooQQBmaDtETNfoXg5S7Y8azscVykY1j4jCs7XhugA9aA5KHnEf8mWQ9izUB74CMe93Epd"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T03:24:00.689Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+        "did:web:masanork.github.io:srn#build-1767399488154-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "type": "WebAContextLink",
+    "prevHash": "genesis",
+    "targetHash": "8d580714a14b0a0ab350fa9c8749d61778f90766b77899876c47324a0bcdaad4",
+    "signer": "did:web:masanork.github.io:srn",
+    "timestamp": "2026-01-01T03:24:00.722Z",
+    "proof": {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-ed25519",
+      "proofValue": "mock_signature_for_poc"
+    }
+  },
+  {
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-01T04:14:12.663Z",
+      "payload": {
+        "metadata": {},
+        "buildId": "build-1767240723633",
+        "reason": "Frontmatter updated in SSG"
+      }
+    },
+    "eventHash": "5db97abbad5d165a73ca3bbf79322518a5be40b7bc2e40d2e936debb5e32d98f",
+    "chainHash": "c7293cf59fb28260acfe55e697bdf959cca2b6980f2e6bbd4d2f5aad3d880547"
+  },
+  {
+    "prevHash": "c7293cf59fb28260acfe55e697bdf959cca2b6980f2e6bbd4d2f5aad3d880547",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:22:52.885Z",
+      "payload": {
+        "buildId": "build-1767241235576"
+      }
+    },
+    "eventHash": "490d1c4fa27d4bfd7f4baa66b7c923c25b5d7504f99005a45f261524428b2d37",
+    "chainHash": "a679e5451985d4e7f2e9c8daa0c6335107e43b8e91f6f36e222c6ab360e54e8b"
+  },
+  {
+    "prevHash": "a679e5451985d4e7f2e9c8daa0c6335107e43b8e91f6f36e222c6ab360e54e8b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:32:09.808Z",
+      "payload": {
+        "buildId": "build-1767241710058"
+      }
+    },
+    "eventHash": "26d9c59bfb7b4fbda0496380a537d7a5479d906aacc630286da09534053bad40",
+    "chainHash": "83fac68bdeaaf88b72262f1da6dc46a6d7619a5650dbf6831e9c9f0b8f33a551"
+  },
+  {
+    "prevHash": "83fac68bdeaaf88b72262f1da6dc46a6d7619a5650dbf6831e9c9f0b8f33a551",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:38:18.925Z",
+      "payload": {
+        "buildId": "build-1767242067086"
+      }
+    },
+    "eventHash": "7d3a7f24d07893a041bfaad75da5c6024bc7a24a1616327f3ab921f57f2d9f67",
+    "chainHash": "a94908a3979e21a94b25d1b538135d5b1ebb29fdd7ef9a752c642debf380a071"
+  },
+  {
+    "prevHash": "a94908a3979e21a94b25d1b538135d5b1ebb29fdd7ef9a752c642debf380a071",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T04:43:33.731Z",
+      "payload": {
+        "buildId": "build-1767242380816"
+      }
+    },
+    "eventHash": "2f5fc0a53e45e411baa6e9027acf927ebac3d3aa942ec96124c22adae2678ae8",
+    "chainHash": "6ae9b237aba85e752e44bde8867d6782ea45e23a695fedbcf9600ed7f28c3c58"
+  },
+  {
+    "prevHash": "6ae9b237aba85e752e44bde8867d6782ea45e23a695fedbcf9600ed7f28c3c58",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T06:05:09.693Z",
+      "payload": {
+        "buildId": "build-1767247274826"
+      }
+    },
+    "eventHash": "f2db41f558be3a5fcc85fb018ea7cea4d5236d6b8bdecf53b23877c852939e5b",
+    "chainHash": "4322b3ad19622f3676671948fb6af16b9ca599c3f6fc919b95a12f784d149d88"
+  },
+  {
+    "prevHash": "4322b3ad19622f3676671948fb6af16b9ca599c3f6fc919b95a12f784d149d88",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:12:23.772Z",
+      "payload": {
+        "buildId": "build-1767262105333"
+      }
+    },
+    "eventHash": "90f225a43d13f5b08f1b7cedbeee701b6cb9dd4489569435a5dd3f7835c1b920",
+    "chainHash": "b87327333a30adb6eaabd5ace605fd73fff5b777c75b09d4e7fdbd5c00300f36"
+  },
+  {
+    "prevHash": "b87327333a30adb6eaabd5ace605fd73fff5b777c75b09d4e7fdbd5c00300f36",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:19:16.675Z",
+      "payload": {
+        "buildId": "build-1767262532262"
+      }
+    },
+    "eventHash": "26007bb1582dbf680a14a25dd0fe15d7e114ad6297bbb1e77b3b013a993c394e",
+    "chainHash": "ea94212b80fc125e049a00be56d7edc19702ad699b8330026b8b4bd89941abb7"
+  },
+  {
+    "prevHash": "ea94212b80fc125e049a00be56d7edc19702ad699b8330026b8b4bd89941abb7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:24:52.765Z",
+      "payload": {
+        "buildId": "build-1767262950176"
+      }
+    },
+    "eventHash": "52f3e406cf95bc44bcca94f836965a26addfb6cd643ae3b6fdbc10ead02e914d",
+    "chainHash": "a3235064097c38f099739d68172e773be04aabc99ecdd5bea4597d0d6ceb8a0b"
+  },
+  {
+    "prevHash": "a3235064097c38f099739d68172e773be04aabc99ecdd5bea4597d0d6ceb8a0b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T10:51:09.845Z",
+      "payload": {
+        "buildId": "build-1767263450152"
+      }
+    },
+    "eventHash": "8929aa1353bca54b1a07f26083e9311686ead7a1da2b1d880653ee8fda283439",
+    "chainHash": "aa7484a8723f598e53513f6f7802544bb46891c544597e7ac5d1cc3ea4302e54"
+  },
+  {
+    "prevHash": "aa7484a8723f598e53513f6f7802544bb46891c544597e7ac5d1cc3ea4302e54",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:01:04.340Z",
+      "payload": {
+        "buildId": "build-1767265011181"
+      }
+    },
+    "eventHash": "9f32818afe3cf10668f388f7c07fae202dece5ad02521e7411c2bf884d3fce45",
+    "chainHash": "859e8f952b20072744fa28760fd2a879d59a4c7d3ad7b3d8d2337532353173ed"
+  },
+  {
+    "prevHash": "859e8f952b20072744fa28760fd2a879d59a4c7d3ad7b3d8d2337532353173ed",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:21:40.907Z",
+      "payload": {
+        "buildId": "build-1767266242469"
+      }
+    },
+    "eventHash": "5a68aaeff1a3c24f1b24d84e0e0a76bab5a5428b3fa5def3d7b2dba0a906ce7d",
+    "chainHash": "a26cf8784bec15ca8aef70abbcec9a93cb27e30db458f67ed605be7e2441a5aa"
+  },
+  {
+    "prevHash": "a26cf8784bec15ca8aef70abbcec9a93cb27e30db458f67ed605be7e2441a5aa",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:37:49.442Z",
+      "payload": {
+        "buildId": "build-1767267249416"
+      }
+    },
+    "eventHash": "8f919980f7cf9ed11dba4a9dab8ae72429b448211484836660096eb689be6008",
+    "chainHash": "77b95bd2580537a58158b3f833a1ded09ab1c33d5605d9917dfa2ab40829844d"
+  },
+  {
+    "prevHash": "77b95bd2580537a58158b3f833a1ded09ab1c33d5605d9917dfa2ab40829844d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T11:43:49.673Z",
+      "payload": {
+        "buildId": "build-1767267609379"
+      }
+    },
+    "eventHash": "dac2bdeafe2343f02c8a59b352cca434bffa99f5ca913682bceb13eaa64f5a2e",
+    "chainHash": "d21235cc66501ae8d5c42e3e8d3fbb6c6bd9007b4e344dfb36e3de063568211d"
+  },
+  {
+    "prevHash": "d21235cc66501ae8d5c42e3e8d3fbb6c6bd9007b4e344dfb36e3de063568211d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:02:22.719Z",
+      "payload": {
+        "buildId": "build-1767268714878"
+      }
+    },
+    "eventHash": "48551d21fd02a83ce334e535d0e67532c8ad0184e6ff8200b928d5e14bf3fb7a",
+    "chainHash": "fd81904524a4c6d3745264fadf01f5f537952305bb9347a883e0517340df61e7"
+  },
+  {
+    "prevHash": "fd81904524a4c6d3745264fadf01f5f537952305bb9347a883e0517340df61e7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:07:28.435Z",
+      "payload": {
+        "buildId": "build-1767269026282"
+      }
+    },
+    "eventHash": "9fc55f9dbbae3c00f8fd388da491107447ec429ada8875727b69895ea5b959a1",
+    "chainHash": "464966cde680ba8ad361986d20380b58c1a2a643afc7253bf8c38dd6ffea809b"
+  },
+  {
+    "prevHash": "464966cde680ba8ad361986d20380b58c1a2a643afc7253bf8c38dd6ffea809b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:44:50.141Z",
+      "payload": {
+        "buildId": "build-1767271356932"
+      }
+    },
+    "eventHash": "d769762e3b8d8c25ed7699a30d01eae34dd9da1dd52c15f643a28ed213d9d005",
+    "chainHash": "472e4ac57d62bcde4ecf28d0d206c3698d6ee65caa6c9b92f840ec792c056c6c"
+  },
+  {
+    "prevHash": "472e4ac57d62bcde4ecf28d0d206c3698d6ee65caa6c9b92f840ec792c056c6c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:53:50.434Z",
+      "payload": {
+        "buildId": "build-1767271809300"
+      }
+    },
+    "eventHash": "7f5a9c52058111ebecfe3fac0293733a417acee01ee721d1d77561904767a231",
+    "chainHash": "9c34244db8c99dac825e98a7a5ee6d72c2ab1c42743f7b8503bfa6357eb834ad"
+  },
+  {
+    "prevHash": "9c34244db8c99dac825e98a7a5ee6d72c2ab1c42743f7b8503bfa6357eb834ad",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:55:32.023Z",
+      "payload": {
+        "buildId": "build-1767272123565"
+      }
+    },
+    "eventHash": "55eed083115f50a4ca09ce3536fee446a49a7e60f70383e385e094e9cc2ee425",
+    "chainHash": "012748e12924e19fb9b6ece2fadd5dd0a7d6ab9611f4beaa632251fc4884dbe1"
+  },
+  {
+    "prevHash": "012748e12924e19fb9b6ece2fadd5dd0a7d6ab9611f4beaa632251fc4884dbe1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T12:59:32.673Z",
+      "payload": {
+        "buildId": "build-1767272360638"
+      }
+    },
+    "eventHash": "b285b0afd79b0a05714cd1ac7dbba939517f16051924b6c5d2fa8dc4b9872662",
+    "chainHash": "5950be682dac48deec7333de1e5721f4ca9bfdcb3c6387be86d71a61dcba829e"
+  },
+  {
+    "prevHash": "5950be682dac48deec7333de1e5721f4ca9bfdcb3c6387be86d71a61dcba829e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:01:54.140Z",
+      "payload": {
+        "buildId": "build-1767272502016"
+      }
+    },
+    "eventHash": "c4291fd8be45a997c856a710c614730e77fd718ce1103fdacf3c17455e41f89e",
+    "chainHash": "08c5e6b8fb77a299b28e56b206e7e8e1267357604d6118fde663f8e10d024e76"
+  },
+  {
+    "prevHash": "08c5e6b8fb77a299b28e56b206e7e8e1267357604d6118fde663f8e10d024e76",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:20:29.290Z",
+      "payload": {
+        "buildId": "build-1767273615905"
+      }
+    },
+    "eventHash": "2b1cfbf32fed554529843d4ee26a840c6386df440cc3ae8db4b43fd20e2329be",
+    "chainHash": "e90a988293d6928d0ff16cda2850a0c6ba44afe77d6ade724379ffb39ec9eccc"
+  },
+  {
+    "prevHash": "e90a988293d6928d0ff16cda2850a0c6ba44afe77d6ade724379ffb39ec9eccc",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:22:11.997Z",
+      "payload": {
+        "buildId": "build-1767273703292"
+      }
+    },
+    "eventHash": "b7d31ca28eb865452f0d1ee71fda8e9a9fd0b6969d80d95c08029a6886ec0e37",
+    "chainHash": "e110e9b7c11294a754283b9b29385d46054c40a4c13284818d1fa125b6b54d0a"
+  },
+  {
+    "prevHash": "e110e9b7c11294a754283b9b29385d46054c40a4c13284818d1fa125b6b54d0a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:22:58.007Z",
+      "payload": {
+        "buildId": "build-1767273749152"
+      }
+    },
+    "eventHash": "9f69a80dc7ded6738bb022fd7c5e8f9fefd003d0c096a1dbc52fd2bbf622310c",
+    "chainHash": "b1aaa5f0ae363df6180761f20fa6fda27edbe62aab647d6d818820f6a7c26965"
+  },
+  {
+    "prevHash": "b1aaa5f0ae363df6180761f20fa6fda27edbe62aab647d6d818820f6a7c26965",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:30:40.814Z",
+      "payload": {
+        "buildId": "build-1767274205386"
+      }
+    },
+    "eventHash": "e03ff4d1065e641b2f56ce9d34a5ff7873cfad605633b9b7e236118b1bc07120",
+    "chainHash": "45ffab30db816cb565f11db2d29906649b14e3924b3edc34fee9d61666e62ecd"
+  },
+  {
+    "prevHash": "45ffab30db816cb565f11db2d29906649b14e3924b3edc34fee9d61666e62ecd",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:37:07.622Z",
+      "payload": {
+        "buildId": "build-1767274598466"
+      }
+    },
+    "eventHash": "7bb50e5c4ea6b8d16d74ea71b7e15740a3cb1d93f63419a1f87fced716729485",
+    "chainHash": "4da2cb6c91b67b114bd0fa85fe2ef3f8dc5a6333d844b29a2726fe9be1dd8bc3"
+  },
+  {
+    "prevHash": "4da2cb6c91b67b114bd0fa85fe2ef3f8dc5a6333d844b29a2726fe9be1dd8bc3",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T14:01:34.765Z",
+      "payload": {
+        "buildId": "build-1767276065034"
+      }
+    },
+    "eventHash": "25342622712e97f549d99bf6173547b5a6e0c7b801967d2275f3399fb7044c2e",
+    "chainHash": "cf84695fd5ac758d4ee9a135dcb8fb82e065e088c1011019332799e719f0f7af"
+  },
+  {
+    "prevHash": "cf84695fd5ac758d4ee9a135dcb8fb82e065e088c1011019332799e719f0f7af",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:02:17.863Z",
+      "payload": {
+        "buildId": "build-1767279702726"
+      }
+    },
+    "eventHash": "68529bd9b1a7fb97fef22b706472943cccca822f901d9c4afa5db0980dda3e2e",
+    "chainHash": "0497ace353ae3b2b0c6b27854d34b6882197e67d65aead1ad5c198ccb671869e"
+  },
+  {
+    "prevHash": "0497ace353ae3b2b0c6b27854d34b6882197e67d65aead1ad5c198ccb671869e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T15:17:37.769Z",
+      "payload": {
+        "buildId": "build-1767280622690"
+      }
+    },
+    "eventHash": "66b743065c122134f2d55ef6bd36d91b866d0ddc3f4ee5f9d28cb508e2be1e8c",
+    "chainHash": "646718bd463764601e2ae28450c8cc867a0b1508c2458530a32e688f86027017"
+  },
+  {
+    "prevHash": "646718bd463764601e2ae28450c8cc867a0b1508c2458530a32e688f86027017",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:13:16.477Z",
+      "payload": {
+        "buildId": "build-1767305561689"
+      }
+    },
+    "eventHash": "f56aa86193e5e8f5b654557af06426c42ecfc7f300f6691eee7b7ec6328b31ef",
+    "chainHash": "5c1ec6c79a38e725a27e433c0dda45190032cb8959994c02f7accdb1eb19957b"
+  },
+  {
+    "prevHash": "5c1ec6c79a38e725a27e433c0dda45190032cb8959994c02f7accdb1eb19957b",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:37:21.014Z",
+      "payload": {
+        "buildId": "build-1767307006040"
+      }
+    },
+    "eventHash": "4248db92e3b8f94ea475da6920e1a389ace1b47bdde8121e5b555c257dffe41c",
+    "chainHash": "e62f3e162ba788f95a381c476a1aca11e9552d16169a6a080f961756c7a362cc"
+  },
+  {
+    "prevHash": "e62f3e162ba788f95a381c476a1aca11e9552d16169a6a080f961756c7a362cc",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:46:36.171Z",
+      "payload": {
+        "buildId": "build-1767307567034"
+      }
+    },
+    "eventHash": "039bc4ad3b82a4fc2db2971865a0a8309604336ac266be6f68a58ac0220ebd52",
+    "chainHash": "c74136097bf9981e8ade0a12d33a70acd73b2a164b5ab94cec80a5e910cafd97"
+  },
+  {
+    "prevHash": "c74136097bf9981e8ade0a12d33a70acd73b2a164b5ab94cec80a5e910cafd97",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T22:50:25.067Z",
+      "payload": {
+        "buildId": "build-1767307789914"
+      }
+    },
+    "eventHash": "58b70a16314aec8a513e6f284f3046c5baede91ff0dd80a7647a31bbf0898e4b",
+    "chainHash": "95a89f2bf8cdce9bfdd989e281d8e049765a7a1040cb8f367e2ae51b47a109a5"
+  },
+  {
+    "prevHash": "95a89f2bf8cdce9bfdd989e281d8e049765a7a1040cb8f367e2ae51b47a109a5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T11:15:30.234Z",
+      "payload": {
+        "buildId": "build-1767352493876"
+      }
+    },
+    "eventHash": "cc7d5703c22e02c9fd5e868cab5b10070a4eb2a5c0aad05c84140115b57e5758",
+    "chainHash": "f888623b0da6bb58a6c594385bdd80d6fe0bff91f93649e339228b5d248ac525"
+  },
+  {
+    "prevHash": "f888623b0da6bb58a6c594385bdd80d6fe0bff91f93649e339228b5d248ac525",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:06:03.004Z",
+      "payload": {
+        "buildId": "build-1767355525912"
+      }
+    },
+    "eventHash": "eb4afc10348d3804ae4f5d36bf73fa4ab3e9e168024ca0ae79b581d140f8d546",
+    "chainHash": "1019408171df7945f0450413ee0ce76caf6473b999735444b1d7e89d08bb2f59"
+  },
+  {
+    "prevHash": "1019408171df7945f0450413ee0ce76caf6473b999735444b1d7e89d08bb2f59",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:19:21.863Z",
+      "payload": {
+        "buildId": "build-1767356329197"
+      }
+    },
+    "eventHash": "022d16533d82b86e9791f63af4a8343dc365db9307a99c0be998e3e5bb774707",
+    "chainHash": "78a5eff1fdabe6fbc4ce4954eac11f4ef7b00820897a36274d070b3814915e38"
+  },
+  {
+    "prevHash": "78a5eff1fdabe6fbc4ce4954eac11f4ef7b00820897a36274d070b3814915e38",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:22:40.400Z",
+      "payload": {
+        "buildId": "build-1767356524824"
+      }
+    },
+    "eventHash": "87ac733f3961dc47c4c1d4761a25e7fa996bed6cfd8901a7595862502b33a922",
+    "chainHash": "94dd4f7d8a88ca3805d5849c0dd6b1c05cbaa3679c337c2f9a702b96c220cc61"
+  },
+  {
+    "prevHash": "94dd4f7d8a88ca3805d5849c0dd6b1c05cbaa3679c337c2f9a702b96c220cc61",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T12:25:25.080Z",
+      "payload": {
+        "buildId": "build-1767356687279"
+      }
+    },
+    "eventHash": "49568a0d495f194295042a92b61c7dfd5db52d15a8cfa161343fc4ffd9bd7d48",
+    "chainHash": "9905e0bfce2d579ec01c56dbdaa71a34f3fbe546cc56fe2a9022acbedc90e787"
+  },
+  {
+    "prevHash": "9905e0bfce2d579ec01c56dbdaa71a34f3fbe546cc56fe2a9022acbedc90e787",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:20:35.008Z",
+      "payload": {
+        "buildId": "build-1767359997502"
+      }
+    },
+    "eventHash": "22f730c508fce257c6c710532da8f4f98c87a294dcd70dc0cad20235fbe9a0d7",
+    "chainHash": "785d5cb12ee93bad1482a7cb5a172b3ffdd085f1803b6936f8ff84da96b39456"
+  },
+  {
+    "prevHash": "785d5cb12ee93bad1482a7cb5a172b3ffdd085f1803b6936f8ff84da96b39456",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T13:23:15.130Z",
+      "payload": {
+        "buildId": "build-1767360156155"
+      }
+    },
+    "eventHash": "c24fe9cf49b3713577dc085d5f6632587119654359583e33a4f5904da99b54de",
+    "chainHash": "14196ff04c595e8ec861e0f27226f69c310cb41ebf3c9f5603f60ca625e41a4e"
+  },
+  {
+    "prevHash": "14196ff04c595e8ec861e0f27226f69c310cb41ebf3c9f5603f60ca625e41a4e",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:22:36.826Z",
+      "payload": {
+        "buildId": "build-1767363723073"
+      }
+    },
+    "eventHash": "691fa8329f995f5f325b3181c0fb44c5255f13303e62c83ec023a61b87aee388",
+    "chainHash": "9f5dee5ceba2ad0ab74d1823fdd5605543bafd723dbe0ada1b91c4797b66862c"
+  },
+  {
+    "prevHash": "9f5dee5ceba2ad0ab74d1823fdd5605543bafd723dbe0ada1b91c4797b66862c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-02T14:27:11.845Z",
+      "payload": {
+        "buildId": "build-1767363999447"
+      }
+    },
+    "eventHash": "3ddf245896cf504a213aa244d7f0012a0c78bdb6b33351e1db6212e662d0cc14",
+    "chainHash": "ababdb29ee47c8c92ec9269ef732691ee4d1447c95863ffa97857f52ac5b3b3d"
+  },
+  {
+    "prevHash": "ababdb29ee47c8c92ec9269ef732691ee4d1447c95863ffa97857f52ac5b3b3d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:18:47.912Z",
+      "payload": {
+        "buildId": "build-1767399488154"
+      }
+    },
+    "eventHash": "553e0ca668471c7d9add5a233cb3fc445cf5f897d9f78a9222750e62fcb7687f",
+    "chainHash": "7421230f7191592c74df77a3813cbfb5e37850eabd54099ee5013cb7976d81a3"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T00:18:47.973Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/web-a-ecosystem#container",
+    "containerHash": "02d1fe9e1349f263ae5d103d657ccbe7c87407bdbdfaaeb5ea44471be778c711",
+    "buildId": "build-1767399488154",
+    "latestContextHash": "29e090095f4acb26a2154377c9c97bc3015a049c97b46cf709c7823ee0dd4fd7"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:47.973Z",
+      "proofValue": "z5xWLiWhbHXNeTidFV63UNejc6PLpxAGqURRPaVf82hw1SN8c9zHH9YmYGNoJW4dzm99VkvUY5R3txEmPUUTjAEp8"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767399488154-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:18:47.973Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[{"id":"js-mermaid","digest":"sha256:94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec","mediaType":"application/javascript","size":103,"urls":["#weba-blob-94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec","./data/blobs/mermaid.min.js"],"description":"Mermaid Diagram Renderer"}],"createdAt":"2026-01-03T00:18:48.073Z"};</script>
+<script id="weba-blob-94dc44f848186f8130ec454fc44a4bb8adcd40b3974a19b7fd75551c2e924bec" type="application/javascript">Y29uc29sZS5sb2coJ01lcm1haWQgTG9hZGVkJyk7IHdpbmRvdy5tZXJtYWlkID0geyBpbml0aWFsaXplOiAoYykgPT4gY29uc29sZS5sb2coJ01lcm1haWQgSW5pdCcsIGMpIH07Cg==</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

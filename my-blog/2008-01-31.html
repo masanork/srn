@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>現実的な未成年ゾーニング技術の検討</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "現実的な未成年ゾーニング技術の検討",
+  "description": "",
+  "datePublished": "2008-01-31",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "現実的な未成年ゾーニング技術の検討",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>現実的な未成年ゾーニング技術の検討</h1>
+                <div class="article-meta">
+                    <span><time datetime="2008-01-31">2008-01-31</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p>わたしは子供たちを犯罪を守るための技術の開発と普及が重要であることを認めつつ、現時点で未成年の利用する携帯電話にフィルタリングを原則化することは時期尚早と考える。まず福祉犯のピークは1985年で犯罪件数は横ばい傾向にあり緊急性が薄く、さらに既に実用化されているフィルタリング技術は<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>であれ<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DB%A5%EF%A5%A4%A5%C8%A5%EA%A5%B9%A5%C8">ホワイトリスト</a>であれ政府が使用を推奨するには完成度が低く、弊害が大きいと考えるからである。
+
+<br />
+ここでは前エントリで挙げた少年保護技術の満たすべき要件の項目に沿って、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>方式、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DB%A5%EF%A5%A4%A5%C8%A5%EA%A5%B9%A5%C8">ホワイトリスト</a>方式の課題を洗い出し、政府による未成年フィルタリング原則化へ向けて、考えられる改善策を検討する。</p>
+
+<div class="section">
+    <h4>青少年を効果的に犯罪から守ること</h4>
+    <p>未成年をコミュニケーション・サイトから閉め出すことによって少年犯罪が減少するかについて充分な実証研究が欠けている。特定の携帯サイトから閉め出したところでコミュニケーション欲求がなくなる訳ではないので、海外のSMSサービスのようなメッセンジャ・サービスや、ネットカフェ経由のネットアクセスなどに代替される可能性も高い。<br />
+個人的には未成年をコミュニケーション・サイトから閉め出すよりも、子供同士のコミュニケーションは子供同士に閉じこめて、そういったサイトで子供とコミュニケーションできる大人を厳しく制限した上で、メッセージ内容を第<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BB%B0%BC%D4">三者</a>が監査した方が有効と考えられる。<br />
+加入者の年齢情報を移動通信事業者からコンテンツ事業者に通知する仕組みがあれば、大人の入会を制限した<a class="keyword" href="http://d.hatena.ne.jp/keyword/SNS">SNS</a>サイトの構築が可能となる。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E2%A5%D0%A5%B2%A1%BC%A5%BF%A5%A6%A5%F3">モバゲータウン</a>のように子供から大人まで使うサービスについても、子供と大人の間のコミュニケーションを重点的に制限・監視するだけで、かなり犯罪を抑止できる可能性が高い。<br />
+携帯やネットが犯罪に利用される経路や経緯について<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BC%D2%B2%F1%B3%D8">社会学</a>的に分析し、弊害が小さく効果的な犯罪抑止策を検討すべきである。</p>
+
+</div>
+<div class="section">
+    <h4>競争による技術革新を阻害しないこと</h4>
+    <p>もともと公式サイトは移動通信事業者による厳しい規制によってビジネス機会が限界に近づき、ビジネスの主力は勝手サイトに移りつつある。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E2%A5%D0%A5%B2%A1%BC%A5%BF%A5%A6%A5%F3">モバゲータウン</a>をはじめとした勝手サイトが10代の利用者を開拓して伸びていたところでの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DB%A5%EF%A5%A4%A5%C8%A5%EA%A5%B9%A5%C8">ホワイトリスト</a>方式の導入は、携帯コンテンツ事業への参入障壁を高めることになる。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DB%A5%EF%A5%A4%A5%C8%A5%EA%A5%B9%A5%C8">ホワイトリスト</a>方式を導入する場合も、公式コンテンツとして登録するための要件と手続きを透明化し、制限を緩和すべきである。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>方式もポリシー如何で過剰規制となる。特に利用者毎の細かい設定ができない現行方式では安全側に倒す運用となるため、新しいコンセプトのサイトが排除される公算が高い。</p>
+
+</div>
+<div class="section">
+    <h4>技術的に実装可能で費用を抑えられること</h4>
+    <p><a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>方式は個々の通信に対してディープ・パケット・インスペクションを行ってURLを取り出して膨大なデータベースと照合する必要があり負荷が大きい。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DB%A5%EF%A5%A4%A5%C8%A5%EA%A5%B9%A5%C8">ホワイトリスト</a>方式はコンテンツ数が激増しなければ、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>方式と比べて負荷が小さいと考えられる。いずれにしても<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B2%A1%BC%A5%C8%A5%A6%A5%A7%A5%A4">ゲートウェイ</a>・サーバー方式の場合、通信の秘密に抵触する上、利用者増に応じた設備投資が必要となる。<br />
+理想的には端末の処理能力が高まっている現状に鑑み、ポリシーは原則として個々のサーバーが発行し、端末側でサーバーから受信したポリシー及び定期的に更新される<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B7%A5%B0%A5%CB%A5%C1%A5%E3">シグニチャ</a>を使ってフィルタリングを行う方式が、設備投資を抑えつつフィルタリングの柔軟性を実現する上で合理的と考えられる。<br />
+しばしばパソコンと違って携帯電話はソフトウェアを後から導入できないため、端末側でのフィルタリングが難しいという意見もあるが、後から追加するのではなくブラウザの機能として搭載すれば良い。既存端末は引き続き<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B2%A1%BC%A5%C8%A5%A6%A5%A7%A5%A4">ゲートウェイ</a>で対応する必要があるが、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B2%A1%BC%A5%C8%A5%A6%A5%A7%A5%A4">ゲートウェイ</a>・サーバーにかかる追加設備投資は削減できる。</p>
+
+</div>
+<div class="section">
+    <h4>基準が明確で裁量的判断の余地が小さいこと</h4>
+    <p>現状ではフィルタリングで参照されるラベルの判断基準が曖昧である。原則として第<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BB%B0%BC%D4">三者</a>評価機関が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AC%A5%A4%A5%C9%A5%E9%A5%A4%A5%F3">ガイドライン</a>を発行し、携帯コンテンツ事業者が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AC%A5%A4%A5%C9%A5%E9%A5%A4%A5%F3">ガイドライン</a>に基づいて自己格付けを行い、不適切なラベル付けについて受付機関が届け出を受理し、実際に問題があれば携帯コンテンツ事業者に改善勧告を行い、改善勧告に従わない事業者の情報を<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>に掲載するようにすれば、事務量と<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>を削減でき、公正な運用を担保できると考えられる。</p>
+
+</div>
+<div class="section">
+    <h4>出版物等への規制と齟齬のない制限であること</h4>
+    <p>現状フィルタリング事業者の持つデータベースの内容について、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CD%AD%B3%B2%BF%DE%BD%F1">有害図書</a>規制と比べて著しく基準が厳しいという指摘もある。第<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BB%B0%BC%D4">三者</a>評価機関は<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AC%A5%A4%A5%C9%A5%E9%A5%A4%A5%F3">ガイドライン</a>を作成するに当たって、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B7%FB%CB%A1">憲法</a>で保障された<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C9%BD%B8%BD%A4%CE%BC%AB%CD%B3">表現の自由</a>に充分に配慮したかたちで、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CD%AD%B3%B2%BF%DE%BD%F1">有害図書</a>規制など他業界の事例も参考とすべきである。</p>
+
+</div>
+<div class="section">
+    <h4>正当な利活用や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EA%A5%C6%A5%E9%A5%B7%A1%BC">リテラシー</a>教育の妨げとならないこと</h4>
+    <p>ブログや検索、コミュニケーション、動画共有サービスなどは、サイトの一部に不適切なコンテンツが含まれていたとしても大半は正当な利活用で、それが<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EA%A5%C6%A5%E9%A5%B7%A1%BC">リテラシー</a>教育にとって非常に重要な場合も考えられる。フィルタリングの原則化に当たっては、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C7%A5%A3%A1%BC%A5%D7%A5%EA%A5%F3%A5%AF">ディープリンク</a>について個別コンテンツ単位でアクセス制御を実現し、未成年によるサービスの正当な利活用や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EA%A5%C6%A5%E9%A5%B7%A1%BC">リテラシー</a>教育の妨げにならないよう充分に配慮すべきである。<br />
+親の判断で子供の成熟度に応じてフィルタリングを解除すればよいという考え方もあるが、親が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D5%A5%A3%A5%EB%A5%BF%A5%EA%A5%F3%A5%B0%A5%B5%A1%BC%A5%D3%A5%B9">フィルタリングサービス</a>の実情について充分な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EA%A5%C6%A5%E9%A5%B7%A1%BC">リテラシー</a>を持っているとは限らない。通常設定でのフィルタリングを厳しくし過ぎることは、親のIT<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EA%A5%C6%A5%E9%A5%B7%A1%BC">リテラシー</a>の低さが子のIT<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%EA%A5%C6%A5%E9%A5%B7%A1%BC">リテラシー</a>獲得を制約し、階層を固定化させる懸念がある。</p>
+
+</div>
+<div class="section">
+    <h4>国際的に妥当な制度で海外のサーバーにも適用可能なこと</h4>
+    <p>現行のインターネット・ホットラインセンターは有害コンテンツについて<a class="keyword" href="http://d.hatena.ne.jp/keyword/ISP">ISP</a>への通知までしかできず、海外にサーバーを置く事業者に対する規制が難しい。窓口機関の法的位置づけを諸外国並みに高め、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>のフィードなども行うことで、執行能力を高める必要がある。</p>
+
+</div>
+<div class="section">
+    <h4>措置の中立性・透明性が担保され外部から検証可能であること</h4>
+    <p>現在のフィルタリング・データベースは内容が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C3%F8%BA%EE%B8%A2">著作権</a>で守られ公表されておらず、適切に運用されているかどうか外部から監査することができない。政府がフィルタリングの利用を推奨するに当たっては、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B7%FB%CB%A1">憲法</a>で保障された<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CB%A1%A4%CE%B2%BC%A4%CE%CA%BF%C5%F9">法の下の平等</a>、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C9%BD%B8%BD%A4%CE%BC%AB%CD%B3">表現の自由</a>、通信の秘密、検閲の禁止を充分に尊重し、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>の中立かつ適切な管理を担保すべく、外部から検証できるようにすべきである。<br />
+そのためには<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%EA%A5%B9%A5%C8">ブラックリスト</a>の内容を開示し、内容に対する説明責任を負わせ、更新手続きの透明化を図り、フォルスポジティブについて異議申し立てできる仕組みを用意すべきである。フィルタリングの内容を私企業の知的財産として秘匿し、説明責任を果たしていないデータベースの利用については、政府として推奨すべきではない。</p>
+
+</div>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:24:14.290Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-01-31",
+    "name": "現実的な未成年ゾーニング技術の検討",
+    "contentDigest": "b102359b75c9923392e45321d237bc979b30f340ebea6408ee325d20692a6538"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:14.290Z",
+      "proofValue": "ztHVtEoXNP4GdbLe5ivxDGma6J2UfxX8ibRd9nFw5ziMhDWYUCKY9WGjPPdtVTm3JnTCAS1gg7XX9my8h17brpkX"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:24:14.290Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:24:14.322Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "e05deffd1d589458e99f6738481ca2df6b9a83ffc5b2399b35f9fa05c7cbe030",
+        "metadata": {}
+      }
+    },
+    "eventHash": "35ef6a4184dbd3d5b1f32cb61ce97b7b599338d8a2e8138eecf1131c015c9955",
+    "chainHash": "6889c99cb40be2c74622050dc92c8d7d6b4bfcc54e8261212c87ee21d57d6e66"
+  },
+  {
+    "prevHash": "6889c99cb40be2c74622050dc92c8d7d6b4bfcc54e8261212c87ee21d57d6e66",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:25:24.400Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "98e00411017d553d2cba07cc5c29e54e9aeca13d5527b621b6a2e3e486456c23",
+    "chainHash": "41e7c93cc808e3edd59367469d31d0cac89a6543712bb5bc5454d4fff25aa847"
+  },
+  {
+    "prevHash": "41e7c93cc808e3edd59367469d31d0cac89a6543712bb5bc5454d4fff25aa847",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:29:39.564Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "3e35fb36e3fbf304f5b3fa07829d2a5cba5947e50cbe706518793ace5ccd26e0",
+    "chainHash": "0408d5f48ab931de3ae8e522875c6f1e08cb444d1f2f519cf692e1051ed018e0"
+  },
+  {
+    "prevHash": "0408d5f48ab931de3ae8e522875c6f1e08cb444d1f2f519cf692e1051ed018e0",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:34:29.731Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "e2644c418b4471f81a0f0a9485d5750e3c2a122f019af26340d1588cf605804d",
+    "chainHash": "a060feb479095c72750f250a16e3781fa6b62ae73698cbfaab052357c71b06a8"
+  },
+  {
+    "prevHash": "a060feb479095c72750f250a16e3781fa6b62ae73698cbfaab052357c71b06a8",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:15:42.817Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "a857d64d777ea3f51bc7f9924bd0826b5d8091fd24941b898da3839aaed90545",
+    "chainHash": "6e350b022dc487cc9a7a1b150e87238b9939c4f8e478e3efd16b42a890b97092"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:15:42.874Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2008-01-31#container",
+    "containerHash": "105cc30f9dab303fcfe71f56205effdccf00f095c1ceb8a19588523154090d49",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "7be0629fdd47c83e5a477459c5a66629a161f25d28a41bc8e9cefbe94f693a45"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:15:42.874Z",
+      "proofValue": "zQQhEPwacckfyG5wK8dAQ5pdFKkN2E4uk6dbvJD2hah72MnM4hfLFQMgwvnpbcVvmQMUezy9KXvesCM5zS19ShdY"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:15:42.874Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:15:43.060Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>

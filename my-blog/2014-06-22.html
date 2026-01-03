@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>もっと安全なメッセンジャーを考える</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="style.css">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <link rel="help" type="text/plain" href="llms.txt">
+    
+    <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "もっと安全なメッセンジャーを考える",
+  "description": "",
+  "datePublished": "2014-06-22",
+  "author": {
+    "@type": "Person",
+    "name": "Unknown"
+  },
+  "provenance": {
+    "metadata": {
+      "title": "もっと安全なメッセンジャーを考える",
+      "format": "application/x.web-a+html",
+      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    },
+    "producer": {
+      "name": "Sorane (SRN) SSG",
+      "version": "1.0.0",
+      "identifier": "did:web:masanork.github.io"
+    },
+    "assertions": [
+      {
+        "label": "srn.hmp_declaration",
+        "data": {
+          "assertion": "Human-Machine Parity (HMP) Guaranteed",
+          "generator_hash": "unknown"
+        }
+      }
+    ]
+  }
+}</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>もっと安全なメッセンジャーを考える</h1>
+                <div class="article-meta">
+                    <span><time datetime="2014-06-22">2014-06-22</time></span>
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <p><a href="http://d.hatena.ne.jp/mkusunok/20140621/line">&#x524D;&#x306E;&#x8A18;&#x4E8B;</a>では<a href="http://facta.co.jp/article/201407039.html">FACTA&#x306E;&#x8A18;&#x4E8B;</a>が事実と仮定した場合に韓国政府が認めたのは韓国国内利用者-日本のLINEデータセンター間の平文通信の傍受で、日本国内での利用を韓国当局が適法に傍受することは難しいと書いた。技術的には<a class="keyword" href="http://d.hatena.ne.jp/keyword/SSL">SSL</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%C8%EB%CC%A9%B8%B0">秘密鍵</a>やサーバーに蓄積された情報が狙われ得るものの、日本国内での通信傍受は司法傍受を除いて違法で、事業者が法的手続きを経ずに外国当局に情報提供すれば<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C5%C5%B5%A4%C4%CC%BF%AE%BB%F6%B6%C8%CB%A1">電気通信事業法</a>の「通信の秘密」に觝触するから、国家間の協議であっさり認めるとは考え難いからだ。
+
+<br />
+とはいえ諜報の世界では非合法のことも行われている。例えば米国が法律上の権限を超えて広く通信傍受していたことや、中国が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CC%B1%BC%E7%B2%BD">民主化</a>運動家のアカウントを嗅ぎ回っていることは広く知られている。従って事業者として絶対に傍受されていないと断言すべきではなく、データセンターの場所や暗号化方式などの事実を説明し、それ以上のことは断言を避けた方が広報上のリスクは小さいと結論づけた。仮に通信傍受が行われていたとしても、直接的に協力していない限りは関知しようがないからである。<br />
+日本は敗戦以降、諸外国と比べて「通信の秘密」を厳しく規律してきたが、青少年対策の文脈で警察や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C1%ED%CC%B3%BE%CA">総務省</a>が<a class="keyword" href="http://d.hatena.ne.jp/keyword/SNS">SNS</a>事業者に対してミニメールの自主的な監視や<a class="keyword" href="http://d.hatena.ne.jp/keyword/%BB%F9%C6%B8%A5%DD%A5%EB%A5%CE">児童ポルノ</a>の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%ED%A5%C3%A5%AD%A5%F3%A5%B0">ブロッキング</a>を求めるなど、ここ数年で大きく風穴が開いた。また海外のサーバーでサービスを運営している場合は、現地の法律を守るために情報提供する限りは正当業務行為に当たるとの解釈も成り立つ。<br />
+そもそも<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D6%A5%E9%A5%C3%A5%AF%A5%DC%A5%C3%A5%AF%A5%B9">ブラックボックス</a>かつ本来の目的はお遊びツールである<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B9%A5%DE%A5%DB">スマホ</a>アプリを信じて行政傍受への対策まで求めるのは筋違いというか、どうしても傍受されたくないのであれば、もっと真剣に安全性を担保できるアプリを検討すべきだろう。では安全な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E1%A5%C3%A5%BB%A5%F3%A5%B8%A5%E3%A1%BC">メッセンジャー</a>の要件は何か。<br />
+まず<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CC%B5%C0%FELAN">無線LAN</a>での通信だけでなく、3G・<a class="keyword" href="http://d.hatena.ne.jp/keyword/LTE">LTE</a>での通信も暗号化すべきだ。そして端末-サーバー間の通信を暗号化するだけでなく端末間でEnd-to-endの暗号化を行った方が安全だ。端末単位でキーペアを作成して直接暗号化していれば、運営者のサーバーが不正に侵入された場合や、運営者が当局に<a class="keyword" href="http://d.hatena.ne.jp/keyword/SSL">SSL</a><a class="keyword" href="http://d.hatena.ne.jp/keyword/%C8%EB%CC%A9%B8%B0">秘密鍵</a>を提出していた場合であってもメッセージの解読が難しい。<br />
+アカウントや公開鍵を共有する<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C7%A5%A3%A5%EC%A5%AF%A5%C8">ディレクト</a>リーサービスや、片方の端末がオフラインであった場合にメッセージを一時保存するキューはサーバーに集中させるのではなく、<a class="keyword" href="http://d.hatena.ne.jp/keyword/P2P">P2P</a>で分散管理した方がいい。端末間で直接通信すると通信の存在そのものを隠せないので、インターネットを使う場合はTORなどのOnion Routingを使って間接的に通信した方がいい。ローカルで直接接続できる場合はインターネットを使わず、無線通信は直接拡散方式の<a class="keyword" href="http://d.hatena.ne.jp/keyword/%CC%B5%C0%FELAN">無線LAN</a>よりも、Firechatのように周波数<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DB%A5%C3%A5%D4%A5%F3%A5%B0">ホッピング</a>方式の古い<a class="keyword" href="http://d.hatena.ne.jp/keyword/Bluetooth">Bluetooth</a>でバケツリレーを行った方が傍受は難しい。これらを全てテンコ盛りにすると著しく重くて不便そうだけど。<br />
+こうした方針が適切に実装されているかを確認するためには、参照実装が<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A1%BC%A5%D7%A5%F3%A5%BD%A1%BC%A5%B9">オープンソース</a>で提供されてコードレビューを行えた方がいい。OpenSSLにHeartbleed<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>が紛れ込んだ教訓を踏まえると、プロジェクトには暗号通信の専門家が複数関わって、ちゃんと安定した経済基盤の上でレビューしている必要がある。ひとつの実装に依存するよりは、公開された標準<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%C8%A5%B3%A5%EB">プロトコル</a>に基づいて複数の実装が提供された方がいい。<br />
+これらの理想を全て満たした<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E1%A5%C3%A5%BB%A5%F3%A5%B8%A5%E3%A1%BC">メッセンジャー</a>を探して様々なアプリを試しているのだが、部分的にはTextSecure、ChatSecureやthreema.などが実現しているが、どれも流行っていない。起動時のパスワード入力など操作が複雑であったり、暗号化のオーバーヘッドや最適化不足で操作感が軽快でなかったり、あまり積極的に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A1%BC%A5%B1%A5%C6%A5%A3%A5%F3%A5%B0">マーケティング</a>されていないのだろう。<br />
+大きなシェアを獲得したサービスの中で<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%A2%A1%BC%A5%AD%A5%C6%A5%AF%A5%C1%A5%E3">アーキテクチャ</a>ー的に傍受が難しかったのは<a class="keyword" href="http://d.hatena.ne.jp/keyword/Skype">Skype</a>だが、中国参入に当たっては<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%AF%A5%C9%A5%A2">バックドア</a>を開けたし、それ以外でも各国の規制に対応するための仕組みが埋め込まれていると考えられている。ビジネスで儲けようとすると課金や規制との絡みで様々なしがらみが発生し、政府やパートナー企業と折り合いをつけていく必要が生じる。<a class="keyword" href="http://d.hatena.ne.jp/keyword/Skype">Skype</a>からの教訓を考えると、通信傍受が不可能なメッセージング・アプリケーションをつくって世界中で広く普及させるのは難しいのだろうか。<br />
+<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E1%A5%C3%A5%BB%A5%F3%A5%B8%A5%E3%A1%BC">メッセンジャー</a>に限らなければ<a class="keyword" href="http://d.hatena.ne.jp/keyword/PGP">PGP</a>やTor、Bitcoinといった仕組みは利便性や必要性が評価されて、しぶとく生き残っている。日本でも<a class="keyword" href="http://d.hatena.ne.jp/keyword/SoftEther">SoftEther</a>の登君が<a class="keyword" href="http://d.hatena.ne.jp/keyword/VPN">VPN</a> Gateで中国政府などによる検閲を乗り越えるサービスを提供している。これらの単体では様々な使い道のある<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%B3%A5%F3%A5%DD%A1%BC%A5%CD%A5%F3%A5%C8">コンポーネント</a>を組み合わせ、システムとしてもビジネスとしても脱中心化したかたちで盗聴に対して安全なメッセージング基盤をつくることは可能だし、実際に様々なかたちで細々と運用されているのだろう。<br />
+それらはオープンなインターフェースに基づく誰もが後から入り込めるエコシステムで、上手に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DC%A5%C8%A5%EB%A5%CD%A5%C3%A5%AF">ボトルネック</a>をつくって儲かる仕組みをつくるのは非常に難しい。その代わりに運営コストを低く抑え、様々な人々の緩やかな厚意と強力によって維持される。しかしながらOpenSSLにHeartbleed<a class="keyword" href="http://d.hatena.ne.jp/keyword/%C0%C8%BC%E5%C0%AD">脆弱性</a>が仕込まれたように、<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%AA%A1%BC%A5%D7%A5%F3%A5%BD%A1%BC%A5%B9">オープンソース</a>、オープンなプロセスだからといって安全とは限らない。腰を据えて開発やレビューに打ち込める経済的余裕がなければ、いとも簡単に<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%AF%A5%C9%A5%A2">バックドア</a>は開けられ得るのである。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B4%D7%CF%C3%B5%D9%C2%EA">閑話休題</a>。<br />
+商業的に成功するアプリはほどほどに安全で、各国の規制と折り合いをつけられる仕組みにならざるを得ない。もちろん技術的には安全な<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E1%A5%C3%A5%BB%A5%F3%A5%B8%A5%E3%A1%BC">メッセンジャー</a>をつくることはできるが、広く普及して成功する過程で<a href="http://www.theguardian.com/world/2013/jul/11/microsoft-nsa-collaboration-user-data">Skype&#x306E;&#x3088;&#x3046;&#x306B;&#x5F53;&#x5C40;&#x3068;&#x6298;&#x308A;&#x5408;&#x3044;&#x3092;&#x3064;&#x3051;&#x308B;</a>か、<a href="http://negi.hatenablog.com/entry/2013/11/05/093606">Lavabit&#x3084;Silent Circle&#x306E;&#x3088;&#x3046;&#x306B;&#x30B5;&#x30FC;&#x30D3;&#x30B9;&#x3092;&#x9589;&#x3058;&#x308B;&#x3053;&#x3068;&#x306B;</a>なる。<br />
+権力から潰されないためには小さな運営コストで、収入源を人質に取られないよう運営する必要があるが、そうすると今度はOpenSSLのように外部からの<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%D0%A5%C3%A5%AF%A5%C9%A5%A2">バックドア</a>を含んだ寄付に対して脆弱となる。そういった<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%C8%A5%EC%A1%BC%A5%C9%A5%AA%A5%D5">トレードオフ</a>の中で成功しているサービスはそれなりにバランスを取っているのであって、本当に高い安全性が欲しいのであれば外部性なり利便性を犠牲にして、地味に目立たず運営していくのが手堅いのではないか。<br />
+それは海の果てで孤軍奮闘する未来の革命家の人生を支えて、密かに世界史を動かす小道具になるかも知れないが、若者に使われ出会いのきっかけをつくったり、テレビで宣伝されたり運営会社を上場に導くようなヒットを飛ばすことは難しいだろう。という訳でLINEがEnd-to-end暗号化するべきとは思わないし、とはいえオプションで通信傍受とか気にする人向けに「常に<a class="keyword" href="http://d.hatena.ne.jp/keyword/TLS">TLS</a>を利用する」オプションくらい用意してもいいかもね、とは思う。<br />
+本当に安全な環境が欲しいんだったら<a class="keyword" href="http://d.hatena.ne.jp/keyword/geek">geek</a>なりCypherpunkとなってハードボイルドに頑張ろうぜ、あんまり敷居を下げて出会い厨とかに使われると日本でも厄介なことになるし、テロリストや犯罪者に助け舟を出してると外国政府から後ろ指を指されながらの金儲けって難しいけどさ。<br />
+そして自分でつくるほどの根性はないが、そこそこ安全な通信手段が欲しいのであれば、End-to-end暗号化をサポートした実装の公開されている定評のあるアプリを検討した方がいい。とはいえどんなに安全なアプリを使っていてもOSが<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%DE%A5%EB%A5%A6%A5%A7%A5%A2">マルウェア</a>に汚染されていれば台なしだし、話し相手のいない<a class="keyword" href="http://d.hatena.ne.jp/keyword/%A5%E1%A5%C3%A5%BB%A5%F3%A5%B8%A5%E3%A1%BC">メッセンジャー</a>ほど虚しいものはない。<br />
+斯様に技術も世の中も、あちらが立てばこちらが立たずという制約の中で、上手にバランスを取ったアプリが流行っているし、深く考えるほど不便を受け入れてまで相手に隠したいメッセージなんてやりとりしていない。<a class="keyword" href="http://d.hatena.ne.jp/keyword/%B8%FD%C0%E2%A4%AD">口説き</a>たい相手がLINEを使っていれば後から消したくなる程度に恥ずかしいメッセージであってもLINEで送るし、それを情報機関に傍受されたところで普通そんなに困らないはずだ。暗号が身近になって、やろうと思えば何でもできるようになっても、伝えたいことを伝えたい相手に伝えたい時に伝えることは、今も昔も変わらず難しい。<br />
+僕は通信傍受の実態を多少は知った上で、明日以降もLINEや<a class="keyword" href="http://d.hatena.ne.jp/keyword/Facebook">Facebook</a> Messengerや<a class="keyword" href="http://d.hatena.ne.jp/keyword/Gmail">Gmail</a>で他愛ない連絡を続けるし、いろんなセキュア・メッセージングのアプリを入れてはみたものの話し相手が誰もいなくて、早く同好の士をみつけなきゃと気にしつつ、普段連絡を取りたい相手に押し付けたくなるほど気に入ってもいない。ハードボイルドな試みの中から簡単には潰されない安全かつ堅牢な環境が整備されて、いずれカジュアルに使っても楽しい安全なアプリが出てきたら面白いけどね。</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-01T06:26:26.599Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2014-06-22",
+    "name": "もっと安全なメッセンジャーを考える",
+    "contentDigest": "fea67f7bd6ef6a3b1c49f0b0e91ffc58fb43c3e5b13af846e39d0fffc3bc1783"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:26:26.599Z",
+      "proofValue": "zGkMCQyn2EDTATLfAbya9LvGNWA723aBNHMi4353Apjjj5tPRu9Wg7pLXZXpTNWvRYJXa87ZUWmWXdbjGsqyAxsQ"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767248589672-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-01T06:26:26.599Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "e2d4597c3df793b9d9f9e35ccc9be43572c8e433127b02ee842a00273b64deae"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyHex": "4b298808a3b88a3d8269001643e696fabdc1d0feaa749203f29488651108dca1"
+        },
+        {
+          "id": "did:web:masanork.github.io#build-1767399336697-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "UUYOnm76NJOGIEbt3IKAPiNhfF9Um-gr2PLmwyplpA-jSLDmWK2kDmfoFW4b1zzBYEDU_yk7kLS5u8sB-nvlw_7exw-mVLKypnqu-B_zk_--GNlsDIjdMa_WQwL4h-F0to-wmN7iry8kcKsK89oTyxj8l7vZMCJTHFcEzAGqledOxLqR8XK5n9yj1ur8DtDQyyl1JhNJwBSHHBVyQiBdk80EQ1D7BL40KkKansuHdP_TQL0aEx8IoXjHVkvUv6x7ZOCEJO8IF43bSOa9x6BaLZX6wfltsDxXlo5_vC1ceKcfQ1OY1QiP0HnsvEdPBddY7HHcPmNvHg4DauqyKt0vIxxmOJ9jQijaarkQY0LRHPUNDlwDvewOL9lEzupRrAYF7CRbRCq9HuUgi1LYTg9L7SEfNGC2WDjtHJhEZ3aPTO1Q1Ja_mQnBvNoNj1KJ2KI97OkYre0v9XJRNWefe-SDG6MksMxo_Fwu177KFxC0vCJxU9y8rJLdtkFw5UpR89hrDNsttdI6yCJNNOxR5zHW-ab4eneOkOHGGZXZt1r0a0loDX4wA29HNtg-3hl-0a2uxG54U-nQI4bxvNeYWQHJcYczB9Hx9U9UTnJ4eCEObOWh3KvY0io4ZAd91Y3BUsQJauKXH84Wus-9cgypgWBSpQM-0mEehVxPl6DMqfiH8S2Yi6GKyTcH2jOJreIWt7GtlNPN8XI9r8LWikuxk5wEUyzLF60UIXSxeaj3Jj_7YA_XZqMTfUbVtMZxijQz4jqOOvKJBZzw_BixRukld-LjR_rfHlgCh6c2ruJhs599Zvwe65judSPzttLU0BOGip0lTCw2bP8ivwfeKqemK_8E4DzYn4yLPLAgQ42fhbE-BsuQGu19QQTJ8D3HsecnoyDMTXzaZPATI9VxWu951gZI85RikkEFX06PDbBfWN9gJOE0xm6N1U-lQaIY-H4yCBWMHHcb_0HMmfJ2wCQRIZ1kZCVsDbXEZMGRT8s1hnS9DqHPmpZOR7yOHdGjpNT2QaqGVpI2CRsL_G24egMV6GC-1ZEhQnH5C75WDyspqDpu84IO_io_PugCatPQhmjNA4kJgQRbKOn7SQ8rnK0L7Zif9-D8x0dAMrP_AVC5Unxxu4T9A3Fyo6Hi6lcD5cim3kVwPlte_EfKpbCjeX0z5zfN-mOXcsUgKQoYU2B-QJb2PpLjjRivBerUOxK-MA1YKhWTE2D7eYG44TXAfQP-QGWihAbvf9vQJC1q24OTZC7KlDFXZ9GPiWmBf6p0uxfP78SNuMgRbsczPuCJOooo6EHdJ_NeX31O-FtXmtJ9jE11hu5rA0f08Qqi-ypby5LOTR8BFrw9pQlXicIB45JFKZUhVmIuAcq4N6Ou1Fo5T_0r7ktEXGYtuXZwqcDkio_gunQQ68WxmXSm_Ao2mwTb5bsx88f5BM7KfBe0UMyvBWoPbowJRBfltsoRfec8Ct7OgRyEr-rjqrk7GPDwtFF75i4gO0E3QvZ_NaQO8cGtwwa4X1ifDwvHIvoc71lXH__Fh_oURqbtK-FvGsC6mROej7KG5bzJZzn6JtBZNXozA96xjA2nTVVuDn8xYORHfUX4LOo1h-jJJPdXV7ogKaA-XwvmMh1iPjMGTHaORfBQp9mITW56LYIpl2DzF1m0Ow70PaYRXsUPpuuDemC_Yodxste9tHKAYL610qkfWtrl2H3HEyI3lKcZNVEwHyJewGhM92zg2jIWBKdsr6l4sbtzBOst5g"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io#root-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-ed25519",
+        "did:web:masanork.github.io#build-1767399336697-pqc"
+      ]
+    }
+  ]
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-01T06:26:26.636Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io",
+        "payloadHash": "3fab2de2f9a6bcf68db4e984bca6f4e4144d8fca4fe8ccf941deb1a8a6fab05b",
+        "metadata": {}
+      }
+    },
+    "eventHash": "75412aa78180f4ad4cb83b1a5c5bb46070647a4d74465417a055e21422a5ed9e",
+    "chainHash": "ce0b881c425b4d11b1a59858e035013b1ce6952a8c562c3e6c3277fbb9b8a22c"
+  },
+  {
+    "prevHash": "ce0b881c425b4d11b1a59858e035013b1ce6952a8c562c3e6c3277fbb9b8a22c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:27:03.857Z",
+      "payload": {
+        "buildId": "build-1767273882497"
+      }
+    },
+    "eventHash": "45dc8c7a82b5f25beb0f7633ec2000b7533984862ce0d575d44ac8eaaaf4f8bd",
+    "chainHash": "04b6ae7d5b147af78eb784716976c53871a49748261ca868e2935920d827f61a"
+  },
+  {
+    "prevHash": "04b6ae7d5b147af78eb784716976c53871a49748261ca868e2935920d827f61a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:31:37.755Z",
+      "payload": {
+        "buildId": "build-1767274141826"
+      }
+    },
+    "eventHash": "b8e9ede7816f70e442d010e1191767610ee4e60f88b30301d3d2e347d36bcaa1",
+    "chainHash": "e7ff561945960dd58bb3ac2edaf64e999b26b6af15edb0d87bff27d3fc1a9584"
+  },
+  {
+    "prevHash": "e7ff561945960dd58bb3ac2edaf64e999b26b6af15edb0d87bff27d3fc1a9584",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-01T13:36:30.091Z",
+      "payload": {
+        "buildId": "build-1767274412824"
+      }
+    },
+    "eventHash": "5122fec37858860e2712c9008421dffec4471e4c2143d6222b588bdfb1ad8c20",
+    "chainHash": "4b22e1b4c8e074099e2d6ed676ee3d880d5409960481c20135cf3c72ee7f65ef"
+  },
+  {
+    "prevHash": "4b22e1b4c8e074099e2d6ed676ee3d880d5409960481c20135cf3c72ee7f65ef",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T00:17:58.614Z",
+      "payload": {
+        "buildId": "build-1767399336697"
+      }
+    },
+    "eventHash": "174f71cd0c4b702696baa3d1d70ac1cd289644a39ca0b22667b23c88f8dd63c8",
+    "chainHash": "4d619def5bf5716649c6636bd4646fba8f1a2dfe38cbf21434659a1690c50260"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io",
+  "issuanceDate": "2026-01-03T00:17:58.675Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io/2014-06-22#container",
+    "containerHash": "e2f9e6b612e9eef8a1df98b94b6be5a5142a477268befd1a37623819d25d5148",
+    "buildId": "build-1767399336697",
+    "latestContextHash": "bc314db93ef4622447c132a5bb673d133bb11bef696c493bc33abea35089af98"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:58.675Z",
+      "proofValue": "z2totSYjeAaPa3eQR2CvkKQyekX3FgbLbVeoLtWWtZ3kpBu1QFBeYXZoWcJQZ9xage8u8XcrG4TMcci2Kbih5oDtY"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io#build-1767399336697-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T00:17:58.675Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script>
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T00:17:58.775Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+</body>
+</html>
