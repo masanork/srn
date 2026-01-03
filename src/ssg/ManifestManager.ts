@@ -67,7 +67,7 @@ export class ManifestManager {
                 `#weba-blob-${digest.split(':')[1]}`,
                 `./${relativePath}`
             ],
-            description: params.description
+            ...(params.description ? { description: params.description } : {})
         };
 
         (ref as any)._content = buffer.toString('base64');
@@ -111,12 +111,22 @@ export class ManifestManager {
         let html = '\n<!-- Web/A L1 Manifest & Blobs -->\n';
         html += '<script>window.__WEBA_MANIFEST = ' + JSON.stringify(manifest) + ';</script>\n';
 
+        // Deduplicate blobs by digest to prevent duplicate injection
+        const injectedDigests = new Set<string>();
+
         for (const blob of this.blobs) {
             const b = blob as any;
             if (!b.urls || b.urls.length === 0) {
                 console.warn(`[ManifestManager] Blob ${b.id} has no URLs, skipping injection`);
                 continue;
             }
+
+            // Skip if already injected
+            if (injectedDigests.has(b.digest)) {
+                continue;
+            }
+            injectedDigests.add(b.digest);
+
             const id = b.urls[0].substring(1);
             html += '<script id="' + id + '" type="' + b.mediaType + '">' + b._content + '</script>\n';
         }
@@ -178,7 +188,13 @@ export class ManifestManager {
 })();
 `;
 
-        html += '<script type="module">' + runtimeJs + '</script>\n';
+        html += '<script type="module">';
+        html += runtimeJs;
+        html += '\n</script>\n';
+
+        // Clear blobs after injection to prevent accumulation
+        this.blobs = [];
+
         return html;
     }
 
