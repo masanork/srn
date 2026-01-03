@@ -5,6 +5,29 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v3.1.0 - Web/A LTV & Verifier Overhaul
+
+**Date:** 2026-01-03
+
+Completion of the **Long-Term Validation (LTV)** architecture and a complete rewrite of the verification tooling to ensure 50-year durability for Web/A documents.
+
+*   **Long-Term Validation (LTV) Architecture**:
+    *   **Phase 1: Prunable Hash Chain (PHC)**: Implemented the L3 Context layer with an automated "Pack & Prune" strategy (retaining Genesis + Latest 5 events). This manages document history (updates/transfers) without breaking the original L2 signature validity.
+    *   **Phase 2: Extended Trust Store**: Upgraded the embedded Trust Store schema to support `revocationList` and `trustedTimestamps`, enabling robust offline verification.
+    *   **Phase 3: Trusted Timestamping**: Integrated RFC 3161 TSA support (defaulting to DigiCert). Signatures are now automatically sealed with a trusted third-party timestamp during the build process.
+
+*   **Verification Tooling Overhaul**:
+    *   **CLI Verifier 2.0**: Completely rewrote `weba-verify` to support full **L1-L4 Container Verification**. It now verifies:
+        *   **L4**: Container Integrity (HTML/UI anti-tampering).
+        *   **L3**: Context History (PHC continuity).
+        *   **L2**: Payload Signature (Ed25519/ML-DSA).
+        *   **TSA**: Trusted Timestamp validity.
+    *   **Fit & Gap Analysis**: Conducted a comprehensive audit of verification tools and resolved critical gaps where container integrity and timestamps were previously ignored.
+
+*   **Documentation & Visualization**:
+    *   **Architecture Diagram**: Added a detailed [Architecture Diagram](./papers/web-a-ltv-architecture.html) illustrating the relationship between the HTML Container, Signatures, and ManifestManager.
+    *   **Whitepaper Update**: Expanded the LTV Whitepaper with implementation specifications and a comparison with legacy standards (PAdES/XAdES).
+
 ## v3.0.0 - Web/A Infinite Canvas & Validation
 
 **Date:** 2026-01-03

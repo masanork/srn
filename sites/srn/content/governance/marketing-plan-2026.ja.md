@@ -4,6 +4,7 @@ layout: article
 author: "SRN Strategy Team"
 date: 2026-01-03
 description: "「SSG」から「分散型トラストインフラ」へのリブランディング計画および市場参入戦略"
+draft: true
 ---
 
 # SRN Rebranding & Marketing Plan 2026 (Draft)
@@ -63,13 +64,15 @@ Web/Aの普及には、2つの異なる市場ニーズを同時に満たす「�
 「卵が先か鶏が先か」を解決するため、発行者単独でもメリットがある段階から、社会インフラ化までを3段階で定義し、段階的に訴求を変化させる。
 
 ### Level 1: "My Data to My Agent" (AIとの対話不全の解消)
-*   **Customer Question**: 「なぜ、私のAIアシスタントは、私の仕事を理解してくれないのか？」
-*   **Insight (Empathy)**: あなたの指示が悪いのではない。あなたが使っているファイル形式（PDF/Excel）が、**「印刷するため」**のものであり、**「AIに読ませるため」**のものではないからだ。AIにとって、PDFはただの画像であり、Excelは巨大な迷路だ。
-*   **The Answer (Product)**: **"Web/A makes your work agent-readable."**
-    *   Web/Aは、ファイルを「見た目（HTML）」と「意味（JSON）」の両方で保存する。
-    *   これを渡せば、エージェントは一瞬で内容を理解し、あなたの期待通りの仕事をするようになる。
-*   **Action**: ツールを売るのではなく、**「AIと分かり合える体験」** を提供する。
-    *   「Excelで苦戦する様子」と「Web/Aで即答するAI」の比較動画を見せる。
+*   **Target**: **MCP Builders, AI Hackers, RAG Engineers**.
+    *   自分でMCPサーバーを書いたり、LangChainでパイプラインを組んでいる層。
+*   **Customer Question**: 「なぜ、PDFのパースにこんなに苦労するのか？ OCRの精度に一喜一憂するのは無駄ではないか？」
+*   **The Answer (Quick Hack)**: **"The Zero-Parsing Document."**
+    *   Web/Aなら、複雑なPDFパーサーなど不要。HTMLの中からJSONを1行で取り出すだけ。
+    *   **「Web/Aは、MCP/RAGにとって最も『栄養価の高い』ファイル形式である」**。
+*   **Action**: 
+    *   **"Web/A MCP Server"**: フォルダ内のWeb/Aファイルを一瞬でインデックス化し、LLMに提供するリファレンス実装（OSS）を配布する。
+    *   「PDFパーサーを書くのをやめて、Web/Aを使おう」というナラティブをDeveloper Communityで形成する。
 
 ### Level 2: "Orchestrated Ecosystem" (組織間連携の高度化) ★Current Focus
 *   **戦略骨子**: 既存ベンダーを敵に回さず、システム間の隙間を埋める「潤滑油」として機能させる。
