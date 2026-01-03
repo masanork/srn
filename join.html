@@ -791,7 +791,7 @@ button.tab-btn:hover:not(.active) {
                 </div>
                 <div class="no-print" style="margin-top: 1rem; color: #94a3b8; font-size: 0.75rem; display: flex; gap: 1rem;">
                     <span>v1.0.0</span>
-                    <span>Build: 2026-01-03 07:49:11</span>
+                    <span>Build: 2026-01-03 09:22:06</span>
                 </div>
             </footer>
         </div>
@@ -800,6 +800,60 @@ button.tab-btn:hover:not(.active) {
         
     
     </main>
+
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[{"id":"weba-structure","digest":"sha256:cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475","mediaType":"application/json","size":136,"urls":["#weba-blob-cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475","./data/blobs/cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475.json"],"description":"Form structure metadata"},{"id":"weba-plugin-manifest","digest":"sha256:0f41a0bb188b109c8207feca4a7cb2653b95682f3585e5b8bc670e99a7133f57","mediaType":"application/json","size":101,"urls":["#weba-blob-0f41a0bb188b109c8207feca4a7cb2653b95682f3585e5b8bc670e99a7133f57","./data/blobs/0f41a0bb188b109c8207feca4a7cb2653b95682f3585e5b8bc670e99a7133f57.json"],"description":"Plugin manifest (required plugins and data blobs)"}],"createdAt":"2026-01-03T09:22:06.782Z"};</script>
+<script id="weba-blob-cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475" type="application/json">eyJAY29udGV4dCI6Imh0dHBzOi8vc2NoZW1hLm9yZyIsIkB0eXBlIjoiQ3JlYXRpdmVXb3JrIiwibmVlZHNQb3N0YWwiOmZhbHNlLCJmaWVsZHMiOltdLCJ0YWJsZXMiOnt9LCJtYXN0ZXJEYXRhIjp7fSwibWFzdGVyRGF0YVJlZnMiOnt9fQ==</script>
+<script id="weba-blob-0f41a0bb188b109c8207feca4a7cb2653b95682f3585e5b8bc670e99a7133f57" type="application/json">ewogICJwbHVnaW5zIjogW10sCiAgImRhdGFCbG9icyI6IFtdLAogICJtZXRhZGF0YSI6IHt9LAogICJnZW5lcmF0ZWRBdCI6ICIyMDI2LTAxLTAzVDA5OjIyOjA2Ljc3NloiCn0=</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
 
 <script type="application/vnd.weba+trust-store" id="weba-trust-store">
 {
@@ -818,13 +872,13 @@ button.tab-btn:hover:not(.active) {
           "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767426550147-ed25519",
+          "id": "did:web:masanork.github.io:srn#build-1767432126044-ed25519",
           "type": "Ed25519VerificationKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767426550147-pqc",
+          "id": "did:web:masanork.github.io:srn#build-1767432126044-pqc",
           "type": "JsonWebKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyJwk": {
@@ -836,11 +890,13 @@ button.tab-btn:hover:not(.active) {
       ],
       "assertionMethod": [
         "did:web:masanork.github.io:srn#root-ed25519",
-        "did:web:masanork.github.io:srn#build-1767426550147-ed25519",
-        "did:web:masanork.github.io:srn#build-1767426550147-pqc"
+        "did:web:masanork.github.io:srn#build-1767432126044-ed25519",
+        "did:web:masanork.github.io:srn#build-1767432126044-pqc"
       ]
     }
-  ]
+  ],
+  "revocationList": [],
+  "trustedTimestamps": []
 }
 </script>
 
@@ -2373,9 +2429,7 @@ button.tab-btn:hover:not(.active) {
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T02:37:00.480Z",
-      "payload": {
-        "buildId": "build-1767407819736"
-      }
+      "pruned": true
     },
     "eventHash": "0df2bb8f94568fc93911757964ff09fc0be28b6ef849cf9aca126d6da0a03919",
     "chainHash": "064fa833d165865827c25d65686fa4cc5c1676a50aed1e380a3ea944f7d9fc21"
@@ -2385,9 +2439,7 @@ button.tab-btn:hover:not(.active) {
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T02:40:53.528Z",
-      "payload": {
-        "buildId": "build-1767408052899"
-      }
+      "pruned": true
     },
     "eventHash": "1550eebfbe0013753c410b43bce117c6c13e4474096591f8544ae595d7dfe02f",
     "chainHash": "ebd75e7e21cbf9278a006a02e2c707176c4251a409c8ca375ac7c0c784b18287"
@@ -2397,9 +2449,7 @@ button.tab-btn:hover:not(.active) {
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T03:16:53.355Z",
-      "payload": {
-        "buildId": "build-1767410212520"
-      }
+      "pruned": true
     },
     "eventHash": "4bfd55c04c5bc9b2961aec568fdbde77c9b1b7918c59085fca961d906a6ec401",
     "chainHash": "043e66f57a0f3aca56807bfc794b819a2894412c67cb74bd4379f96c4f75e67e"
@@ -2409,9 +2459,7 @@ button.tab-btn:hover:not(.active) {
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T03:47:10.036Z",
-      "payload": {
-        "buildId": "build-1767412029426"
-      }
+      "pruned": true
     },
     "eventHash": "608ec075f032f9864960df7978e5b1b4d9a22d3feaab17679abc6a2d15561e76",
     "chainHash": "add2cea0e84c42a1ed1a9e2fd3b2313fc75f210816224a9be88b61e368f7a30b"
@@ -2421,12 +2469,182 @@ button.tab-btn:hover:not(.active) {
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T07:49:11.005Z",
-      "payload": {
-        "buildId": "build-1767426550147"
-      }
+      "pruned": true
     },
     "eventHash": "6427cfa0f28c70be8f2e42e319f04ff2292f5aae5d498f2fbd7f0450e6e49e97",
     "chainHash": "2b982db278a5199c501c2587279e404ef412524f62a00b4b2317bda20d592a2e"
+  },
+  {
+    "prevHash": "2b982db278a5199c501c2587279e404ef412524f62a00b4b2317bda20d592a2e",
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-03T08:10:14.154Z",
+      "pruned": true
+    },
+    "eventHash": "c53c2637c527a9d4ca2b04997c86b7c2ae97bad64d45be162b1f4627a8b9931f",
+    "chainHash": "4b8189f0aa0c385eb4c4fbb90dbacb9b36b7c22641d7c6374cee9b6f38c25eac"
+  },
+  {
+    "prevHash": "4b8189f0aa0c385eb4c4fbb90dbacb9b36b7c22641d7c6374cee9b6f38c25eac",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:17:37.439Z",
+      "pruned": true
+    },
+    "eventHash": "4fabe7c1c926c5e53207deed0318459925ef46568392d56f9e114466188e0954",
+    "chainHash": "b48f325e78217ff5d8b94f9430edceabe58e3364979beef7d8a515a92fa4bfeb"
+  },
+  {
+    "prevHash": "b48f325e78217ff5d8b94f9430edceabe58e3364979beef7d8a515a92fa4bfeb",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:22:29.783Z",
+      "pruned": true
+    },
+    "eventHash": "e6372193f8783aa12ed74c01abc61bb0afbbcf4e00a8e3ab8fce3f11a521969c",
+    "chainHash": "dac9fd581e2f9c20bc126fcdde3532039a15650005677c22e044e4d3cd08c281"
+  },
+  {
+    "prevHash": "dac9fd581e2f9c20bc126fcdde3532039a15650005677c22e044e4d3cd08c281",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:23:40.597Z",
+      "pruned": true
+    },
+    "eventHash": "43ca6d580ba864f436d8bd66c18e0aa629e2f9c194c1641d2539091f78bbe84f",
+    "chainHash": "d4cb3e86a6abe6d81b85117ce6d6dd257bca439879970b520bb67d9b61d840b9"
+  },
+  {
+    "prevHash": "d4cb3e86a6abe6d81b85117ce6d6dd257bca439879970b520bb67d9b61d840b9",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:38:57.753Z",
+      "pruned": true
+    },
+    "eventHash": "7f9bf235692b0cd5d9af453777a5ca11417026d9c3a8f2cae77de9fdc0795f67",
+    "chainHash": "07cd91fe1de840f55ff83f6405527ed4d56f7b8fd0749cea0c5c148327f7b60f"
+  },
+  {
+    "prevHash": "07cd91fe1de840f55ff83f6405527ed4d56f7b8fd0749cea0c5c148327f7b60f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:42:25.582Z",
+      "pruned": true
+    },
+    "eventHash": "cf6501c98fea83e983140e9464609928d7305e28f9dbe7afcf60f5d7f4c27ea3",
+    "chainHash": "2a935743ea1befd9bf5f4d21622f8634f9b3462163216244e22956d7ab2fa336"
+  },
+  {
+    "prevHash": "2a935743ea1befd9bf5f4d21622f8634f9b3462163216244e22956d7ab2fa336",
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-03T08:47:08.870Z",
+      "pruned": true
+    },
+    "eventHash": "2fc54345d633a1571f2a061f0056640c649c97d4403f527c9dbdc6ac1f321353",
+    "chainHash": "c0a16d225ae94be4fd57bced722d8f7bbe3e154bd7857b810c0aad798ef3ce0c"
+  },
+  {
+    "prevHash": "c0a16d225ae94be4fd57bced722d8f7bbe3e154bd7857b810c0aad798ef3ce0c",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:55:27.774Z",
+      "pruned": true
+    },
+    "eventHash": "02466c33ca3c0f7c949fcd36524af2fb313579cef89c030deaedbd43e8ff1273",
+    "chainHash": "9c96437369b1d9106e1cb843a1c022f9cae7644c007903da40c91b1c2696f533"
+  },
+  {
+    "prevHash": "9c96437369b1d9106e1cb843a1c022f9cae7644c007903da40c91b1c2696f533",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:57:22.481Z",
+      "pruned": true
+    },
+    "eventHash": "a14cb876c1247e27c240ec7723c6154a0223e4f11ab2ca78af538efa0d10ba44",
+    "chainHash": "6e1b2219cab0ec28604b48b7ac8e90254bb4e2196f8e6a64b2a5464cca010b30"
+  },
+  {
+    "prevHash": "6e1b2219cab0ec28604b48b7ac8e90254bb4e2196f8e6a64b2a5464cca010b30",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:58:29.524Z",
+      "pruned": true
+    },
+    "eventHash": "4bd4f3541dec36866fa46ab81e4c807127c71cc41c210d73b0a75defb385d4e4",
+    "chainHash": "417a6eff208ed5d06d8ff23d5e94afc22a4ef71771f7eb35faa781ca591aa071"
+  },
+  {
+    "prevHash": "417a6eff208ed5d06d8ff23d5e94afc22a4ef71771f7eb35faa781ca591aa071",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T09:00:57.655Z",
+      "pruned": true
+    },
+    "eventHash": "5cfd052f91ee4ca42a868a820fba6f1704c25edc88fed624efa2c6d011ed7cb7",
+    "chainHash": "d5f4b21e3f857f9e42c47312e8c17e45c6fd6d371eb67250aa68e95279ac8951"
+  },
+  {
+    "prevHash": "d5f4b21e3f857f9e42c47312e8c17e45c6fd6d371eb67250aa68e95279ac8951",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T09:02:43.054Z",
+      "payload": {
+        "buildId": "build-1767430962455"
+      }
+    },
+    "eventHash": "43e650e51f61f31b06f5bd03a69c0dfab956129982acea520238c3035496e64f",
+    "chainHash": "74d8f2e92c529a835fdc458b6b74479d4396bb9d9d23aadfc05268217ec7e45b"
+  },
+  {
+    "prevHash": "74d8f2e92c529a835fdc458b6b74479d4396bb9d9d23aadfc05268217ec7e45b",
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-03T09:06:48.064Z",
+      "payload": {
+        "metadata": {},
+        "buildId": "build-1767431207449",
+        "reason": "Frontmatter updated in SSG"
+      }
+    },
+    "eventHash": "1ef038c40a744caf181f6d1e7bf72cc0ce574a79980cb4cab4d3afa68c6d0626",
+    "chainHash": "f7c57ade3a986b01d15f13a7f52b602831e442d49954a419f1dc9cb7008d1603"
+  },
+  {
+    "prevHash": "f7c57ade3a986b01d15f13a7f52b602831e442d49954a419f1dc9cb7008d1603",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T09:09:22.651Z",
+      "payload": {
+        "buildId": "build-1767431362042"
+      }
+    },
+    "eventHash": "86da461a945c3a4d0bc967ccc5581b483fbe151d1424863357f45fb8b344197c",
+    "chainHash": "1b3e0277087822fbd6a00f08c9caf18cabdf03543432f347d7bf898b3b2a6760"
+  },
+  {
+    "prevHash": "1b3e0277087822fbd6a00f08c9caf18cabdf03543432f347d7bf898b3b2a6760",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T09:11:12.639Z",
+      "payload": {
+        "buildId": "build-1767431472042"
+      }
+    },
+    "eventHash": "a1310929ac54646d749d820555b002156c80cfd9a54b801b1690cf7c62565459",
+    "chainHash": "3f6a355ed136d33dcee1489364da184108c90b87c03cb8e963152aa3dd0b8359"
+  },
+  {
+    "prevHash": "3f6a355ed136d33dcee1489364da184108c90b87c03cb8e963152aa3dd0b8359",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T09:22:06.684Z",
+      "payload": {
+        "buildId": "build-1767432126044"
+      }
+    },
+    "eventHash": "70d15e844a2de21af492413c92fc320ea499913df58f60346acf8342d7a25374",
+    "chainHash": "4ef51ca4f7852365da7062c3d9ef28e5032cf1e2618a2c4384ec213492f493cf"
   }
 ]
 </script>
@@ -2440,85 +2658,31 @@ button.tab-btn:hover:not(.active) {
     "WebAContainerSignature"
   ],
   "issuer": "did:web:masanork.github.io:srn",
-  "issuanceDate": "2026-01-03T07:49:11.094Z",
+  "issuanceDate": "2026-01-03T09:22:06.782Z",
   "credentialSubject": {
     "id": "did:web:masanork.github.io:srn/join#container",
-    "containerHash": "b56a126d1fc8116936283392c35abfb1290fd32289664c3f0ce54fc5fc5dcdd0",
-    "buildId": "build-1767426550147",
-    "latestContextHash": "d0494dd4a7280a6c5bbb6b120b6c6c734e4a023edf75e4ef20fd5be7e19ba086"
+    "containerHash": "462c4ba867b9c673002ac4be60aa6bbd1150b8df93a52396d110f858a0d447da",
+    "buildId": "build-1767432126044",
+    "latestContextHash": "1455904d486ea7d3ffc2c5cc46d7e37bbdaad35a99ead4e3679fa42613295fe8"
   },
   "proof": [
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767426550147-ed25519",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767432126044-ed25519",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-03T07:49:11.094Z",
-      "proofValue": "z4ynv7nNs4YZULJZuy9wqrLAVCpXpKgd3GFPCGDnzQH4znduhM26RPGXWKpqvh5dGBGtcRhrQKBXuCfetwzvLUFFR"
+      "created": "2026-01-03T09:22:06.782Z",
+      "proofValue": "z3rY6r9qnVZKw9FXFgYNEVZ82tiF12TU8yqcTsDBjoK3FZzaKFitUrLr1igye9T4DRvmCLpfTJCTB35tn4vGuyfeo"
     },
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "ml-dsa-44-jcs-2025",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767426550147-pqc",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767432126044-pqc",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-03T07:49:11.094Z",
-      "proofValue": "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"
+      "created": "2026-01-03T09:22:06.782Z",
+      "proofValue": "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"
     }
   ]
 }
-</script>
-<!-- Web/A L1 Manifest & Blobs -->
-<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[{"id":"weba-structure","digest":"sha256:cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475","mediaType":"application/json","size":136,"urls":["#weba-blob-cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475","./data/blobs/cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475.json"],"description":"Form structure metadata"},{"id":"weba-plugin-manifest","digest":"sha256:5e3f4cc0b0be1aa769dba5b79b46e7aa43a0d087e759caa9a4959a38971b190f","mediaType":"application/json","size":101,"urls":["#weba-blob-5e3f4cc0b0be1aa769dba5b79b46e7aa43a0d087e759caa9a4959a38971b190f","./data/blobs/5e3f4cc0b0be1aa769dba5b79b46e7aa43a0d087e759caa9a4959a38971b190f.json"],"description":"Plugin manifest (required plugins and data blobs)"}],"createdAt":"2026-01-03T07:49:11.214Z"};</script>
-<script id="weba-blob-cfb98b04e61ac00eb807cd0800adb1c7f799e8bf7abac90e4a7eb85e9b961475" type="application/json">eyJAY29udGV4dCI6Imh0dHBzOi8vc2NoZW1hLm9yZyIsIkB0eXBlIjoiQ3JlYXRpdmVXb3JrIiwibmVlZHNQb3N0YWwiOmZhbHNlLCJmaWVsZHMiOltdLCJ0YWJsZXMiOnt9LCJtYXN0ZXJEYXRhIjp7fSwibWFzdGVyRGF0YVJlZnMiOnt9fQ==</script>
-<script id="weba-blob-5e3f4cc0b0be1aa769dba5b79b46e7aa43a0d087e759caa9a4959a38971b190f" type="application/json">ewogICJwbHVnaW5zIjogW10sCiAgImRhdGFCbG9icyI6IFtdLAogICJtZXRhZGF0YSI6IHt9LAogICJnZW5lcmF0ZWRBdCI6ICIyMDI2LTAxLTAzVDA3OjQ5OjExLjA4NloiCn0=</script>
-<script type="module">
-(async function() {
-  const m = window.__WEBA_MANIFEST;
-  if (!m || !m.blobs) return;
-  
-  const processBlob = async (b) => {
-    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
-    if (!el) return null;
-
-    const bin = atob(el.textContent.trim());
-    const ui8 = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
-    
-    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
-      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
-      return await new Response(stream).arrayBuffer();
-    }
-    return ui8.buffer;
-  };
-
-  const sortedBlobs = [...m.blobs].sort((a, b) => {
-    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
-    return score(a.mediaType) - score(b.mediaType);
-  });
-
-  for (const b of sortedBlobs) {
-    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
-      const data = await processBlob(b);
-      if (!data) continue;
-      const family = b.id.replace('font-', '');
-      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
-      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
-      const style = document.createElement('style');
-      style.textContent = css;
-      document.head.appendChild(style);
-    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
-      const data = await processBlob(b);
-      if (!data) continue;
-      const code = new TextDecoder().decode(data);
-      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.src = blobUrl;
-      document.body.appendChild(script);
-      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
-    }
-  }
-})();
-</script>
-</body>
+</script></body>
 </html>

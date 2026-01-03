@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data: blob:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Credit Card Statement (利用明細書)</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">[
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Credit Card Statement (利用明細書)",
+    "description": "A standard credit card statement created using Web/A.",
+    "datePublished": "2026-01-03",
+    "author": {
+      "@type": "Person",
+      "name": "Unknown"
+    },
+    "provenance": {
+      "metadata": {
+        "title": "Credit Card Statement (利用明細書)",
+        "format": "application/x.web-a+html",
+        "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+      },
+      "producer": {
+        "name": "Sorane (SRN) SSG",
+        "version": "1.0.0",
+        "identifier": "did:web:masanork.github.io:srn"
+      },
+      "assertions": [
+        {
+          "label": "srn.hmp_declaration",
+          "data": {
+            "assertion": "Human-Machine Parity (HMP) Guaranteed",
+            "generator_hash": "unknown"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1"
+    ],
+    "type": [
+      "VerifiableCredential",
+      "WebADocument"
+    ],
+    "issuer": "did:web:masanork.github.io:srn",
+    "issuanceDate": "2026-01-03T08:39:07.406Z",
+    "credentialSubject": {
+      "id": "did:web:masanork.github.io:srn/examples/credit-card-statement",
+      "name": "Credit Card Statement (利用明細書)",
+      "contentDigest": "c5fca67b97532ffa5abdb2e87e88bca1c063fd4d331b11d5a7f3452469cd4450"
+    },
+    "proof": [
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "eddsa-jcs-2022",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:07.406Z",
+        "proofValue": "z52DFkFbcD4HaYETnfbHVkRcTM1J3hsaPvdqvovyUQfW18BgzTqtsSFUeMzwG13GMemwwpY3Uww1N2p5kF3PT4cN4"
+      },
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "ml-dsa-44-jcs-2025",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:07.406Z",
+        "proofValue": "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"
+      }
+    ]
+  }
+]</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Credit Card Statement (利用明細書)</h1>
+                <div class="article-meta">
+                    
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <div class="cc-container">
+    <div class="cc-header">
+        <div class="card-brand">Sorane Card</div>
+        <div class="statement-period">
+            <strong>ご利用明細書</strong><br>
+            2026年1月10日 お支払分<br>
+            (利用期間: 2025/11/16 - 2025/12/15)
+        </div>
+    </div>
+
+<pre><code>&lt;div class=&quot;summary-box&quot;&gt;
+    &lt;div class=&quot;summary-item&quot;&gt;
+        &lt;div class=&quot;summary-label&quot;&gt;今回お支払額&lt;/div&gt;
+        &lt;div class=&quot;summary-value total&quot;&gt;¥86,400&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;summary-item&quot;&gt;
+        &lt;div class=&quot;summary-label&quot;&gt;お支払日&lt;/div&gt;
+        &lt;div class=&quot;summary-value&quot;&gt;2026年1月10日&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;summary-item&quot;&gt;
+        &lt;div class=&quot;summary-label&quot;&gt;獲得ポイント&lt;/div&gt;
+        &lt;div class=&quot;summary-value&quot;&gt;432 pt&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;table class=&quot;detail-table&quot;&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th class=&quot;col-date&quot;&gt;利用日&lt;/th&gt;
+            &lt;th class=&quot;col-desc&quot;&gt;ご利用店名・商品名&lt;/th&gt;
+            &lt;th class=&quot;col-method&quot;&gt;支払区分&lt;/th&gt;
+            &lt;th class=&quot;col-amount&quot;&gt;金額&lt;/th&gt;
+            &lt;th class=&quot;col-notes&quot;&gt;摘要&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;11/20&lt;/td&gt;
+            &lt;td&gt;AMAZON.CO.JP&lt;/td&gt;
+            &lt;td style=&quot;text-align:center&quot;&gt;1回&lt;/td&gt;
+            &lt;td style=&quot;text-align:right&quot;&gt;4,500&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;11/25&lt;/td&gt;
+            &lt;td&gt;STARBUCKS COFFEE&lt;/td&gt;
+            &lt;td style=&quot;text-align:center&quot;&gt;1回&lt;/td&gt;
+            &lt;td style=&quot;text-align:right&quot;&gt;980&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;12/01&lt;/td&gt;
+            &lt;td&gt;東京電力エナジーパートナー&lt;/td&gt;
+            &lt;td style=&quot;text-align:center&quot;&gt;1回&lt;/td&gt;
+            &lt;td style=&quot;text-align:right&quot;&gt;12,400&lt;/td&gt;
+            &lt;td&gt;公共料金&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;12/10&lt;/td&gt;
+            &lt;td&gt;JR東日本モバイルSuica&lt;/td&gt;
+            &lt;td style=&quot;text-align:center&quot;&gt;1回&lt;/td&gt;
+            &lt;td style=&quot;text-align:right&quot;&gt;10,000&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;12/12&lt;/td&gt;
+            &lt;td&gt;ユニクロ オンラインストア&lt;/td&gt;
+            &lt;td style=&quot;text-align:center&quot;&gt;1回&lt;/td&gt;
+            &lt;td style=&quot;text-align:right&quot;&gt;15,900&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+         &lt;tr&gt;
+            &lt;td&gt;12/14&lt;/td&gt;
+            &lt;td&gt;スーパーマーケットライフ&lt;/td&gt;
+            &lt;td style=&quot;text-align:center&quot;&gt;1回&lt;/td&gt;
+            &lt;td style=&quot;text-align:right&quot;&gt;5,420&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+         &lt;tr&gt;
+            &lt;td&gt;12/15&lt;/td&gt;
+            &lt;td&gt;ABCマート&lt;/td&gt;
+            &lt;td style=&quot;text-align:center&quot;&gt;2回(1/2)&lt;/td&gt;
+            &lt;td style=&quot;text-align:right&quot;&gt;12,000&lt;/td&gt;
+            &lt;td&gt;靴&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;div class=&quot;points-section&quot;&gt;
+    &lt;div class=&quot;points-header&quot;&gt;ポイント情報&lt;/div&gt;
+    &lt;div style=&quot;display:flex; justify-content:space-between;&quot;&gt;
+        &lt;span&gt;前月残高: 1,200 pt&lt;/span&gt;
+        &lt;span&gt;今回獲得: +432 pt&lt;/span&gt;
+        &lt;span&gt;今回利用: -0 pt&lt;/span&gt;
+        &lt;strong&gt;現在残高: 1,632 pt&lt;/strong&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div style=&quot;margin-top:2rem; font-size:0.8rem; color:#666; text-align:center;&quot;&gt;
+    ※ 本明細書はWeb/A Verified Documentです。&lt;br&gt;発行元: Sorane Card Co., Ltd.
+&lt;/div&gt;
+</code></pre>
+</div>
+
+<script type="application/json" id="wa-input-data">
+{
+    "@context": "https://schema.org",
+    "@type": "Invoice",
+    "description": "Credit Card Statement",
+    "paymentDueDate": "2026-01-10",
+    "totalPaymentDue": { "@type": "PriceSpecification", "price": 86400, "priceCurrency": "JPY" },
+    "referencesOrder": [
+        { "@type": "OrderItem", "orderDate": "2025-11-20", "seller": { "name": "AMAZON.CO.JP" }, "price": 4500, "priceCurrency": "JPY" },
+        { "@type": "OrderItem", "orderDate": "2025-11-25", "seller": { "name": "STARBUCKS" }, "price": 980, "priceCurrency": "JPY" },
+        { "@type": "OrderItem", "orderDate": "2025-12-01", "seller": { "name": "TEPCO" }, "price": 12400, "priceCurrency": "JPY" },
+         { "@type": "OrderItem", "orderDate": "2025-12-10", "seller": { "name": "Mobile Suica" }, "price": 10000, "priceCurrency": "JPY" },
+         { "@type": "OrderItem", "orderDate": "2025-12-12", "seller": { "name": "UNIQLO" }, "price": 15900, "priceCurrency": "JPY" },
+         { "@type": "OrderItem", "orderDate": "2025-12-14", "seller": { "name": "LIFE" }, "price": 5420, "priceCurrency": "JPY" },
+         { "@type": "OrderItem", "orderDate": "2025-12-15", "seller": { "name": "ABC MART" }, "price": 12000, "priceCurrency": "JPY" }
+    ]
+}
+</script>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:39:07.406Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/credit-card-statement",
+    "name": "Credit Card Statement (利用明細書)",
+    "contentDigest": "c5fca67b97532ffa5abdb2e87e88bca1c063fd4d331b11d5a7f3452469cd4450"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:07.406Z",
+      "proofValue": "z52DFkFbcD4HaYETnfbHVkRcTM1J3hsaPvdqvovyUQfW18BgzTqtsSFUeMzwG13GMemwwpY3Uww1N2p5kF3PT4cN4"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:07.406Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T08:47:37.639Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-pqc"
+      ]
+    }
+  ],
+  "revocationList": [],
+  "trustedTimestamps": []
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-03T08:39:07.439Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "6c0dcafb53b4bfae3ad33ec5d8c23b4cbfcd61aee96c6bd9cbdabbd7cf06a736",
+        "metadata": {}
+      }
+    },
+    "eventHash": "0c40481359b59bc51b693a8bf15a810c9c67bcc991bfcec664bdd1f797fa4830",
+    "chainHash": "3c00e6816333d5c9e25fd26996d8206cabf074126527b9284fa9f8acc3465684"
+  },
+  {
+    "prevHash": "3c00e6816333d5c9e25fd26996d8206cabf074126527b9284fa9f8acc3465684",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:47:37.566Z",
+      "payload": {
+        "buildId": "build-1767430028077"
+      }
+    },
+    "eventHash": "d98bbfc674289a5a27923d936862a653dd7cf6bbb3fc5fb56d24f0c8e8efd259",
+    "chainHash": "1df15c7984fc3e1706b070c1c83691840000f13e3c0d10631aa09b0ecd75c8c3"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:47:37.640Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/credit-card-statement#container",
+    "containerHash": "8dfc14981ef305ae6cdfbb236654ba5d6a366dba24a4d9b01375d91e6563178f",
+    "buildId": "build-1767430028077",
+    "latestContextHash": "60f800dffe5f81803a02f06850a606904eea3f4170612d2d835b8b406620153c"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:37.640Z",
+      "proofValue": "zLZBuWRaxYwcGNrM5Etnx6AezyQcAJhV4hZ3byrs98vQQ236JZsgANuFNQ3SEEgyfvb4RUh3xFxkQi8wqAGY8GFS"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:37.640Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script></body>
+</html>

@@ -11,46 +11,82 @@
     <link rel="sitemap" type="application/xml" href="../sitemap.xml">
     <link rel="help" type="text/plain" href="../llms.txt">
     
-    <script type="application/ld+json">{
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "製品チーム回答：Red Team指摘事項（v6）への暫定回答とPoC方針",
-  "description": "Red Teamによる批判的分析（v6）を受け、中長期的な検討課題の整理と、短期的なPoC展開のセキュリティ的妥当性についての問いかけ。",
-  "datePublished": "2024-12-31",
-  "author": {
-    "@type": "Person",
-    "name": "Web/A Product Team"
-  },
-  "provenance": {
-    "metadata": {
-      "title": "製品チーム回答：Red Team指摘事項（v6）への暫定回答とPoC方針",
-      "format": "application/x.web-a+html",
-      "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+    <script type="application/ld+json">[
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "製品チーム回答：Red Team指摘事項（v6）への暫定回答とPoC方針",
+    "description": "Red Teamによる批判的分析（v6）を受け、中長期的な検討課題の整理と、短期的なPoC展開のセキュリティ的妥当性についての問いかけ。",
+    "datePublished": "2024-12-31",
+    "author": {
+      "@type": "Person",
+      "name": "Web/A Product Team"
     },
-    "producer": {
-      "name": "Sorane (SRN) SSG",
-      "version": "1.0.0",
-      "identifier": "did:web:masanork.github.io:srn"
-    },
-    "assertions": [
-      {
-        "label": "srn.hmp_declaration",
-        "data": {
-          "assertion": "Human-Machine Parity (HMP) Guaranteed",
-          "generator_hash": "unknown"
+    "provenance": {
+      "metadata": {
+        "title": "製品チーム回答：Red Team指摘事項（v6）への暫定回答とPoC方針",
+        "format": "application/x.web-a+html",
+        "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+      },
+      "producer": {
+        "name": "Sorane (SRN) SSG",
+        "version": "1.0.0",
+        "identifier": "did:web:masanork.github.io:srn"
+      },
+      "assertions": [
+        {
+          "label": "srn.hmp_declaration",
+          "data": {
+            "assertion": "Human-Machine Parity (HMP) Guaranteed",
+            "generator_hash": "unknown"
+          }
+        },
+        {
+          "label": "c2pa.actions",
+          "data": {
+            "action": "c2pa.created",
+            "softwareAgent": "Antigravity",
+            "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+          }
         }
+      ]
+    }
+  },
+  {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1"
+    ],
+    "type": [
+      "VerifiableCredential",
+      "WebADocument"
+    ],
+    "issuer": "did:web:masanork.github.io:srn",
+    "issuanceDate": "2026-01-01T03:25:38.407Z",
+    "credentialSubject": {
+      "id": "did:web:masanork.github.io:srn/governance/web-a-product-team-response-v6.ja",
+      "name": "製品チーム回答：Red Team指摘事項（v6）への暫定回答とPoC方針",
+      "contentDigest": "9eab7119b508d1e390b5e0eacdecfa32ee524e951905e2ad465e7c6a6530a58d"
+    },
+    "proof": [
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "eddsa-jcs-2022",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-ed25519",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-01T03:25:38.407Z",
+        "proofValue": "z63NiidpKCoN4ByR8ytJqNEnSUTbv2G2T7HVjPuJRiohzSFik6edK2JRbxQwwPogsiqR6adX3NZGLU72dDMiy7YaW"
       },
       {
-        "label": "c2pa.actions",
-        "data": {
-          "action": "c2pa.created",
-          "softwareAgent": "Antigravity",
-          "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
-        }
+        "type": "DataIntegrityProof",
+        "cryptosuite": "ml-dsa-44-jcs-2025",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767237728277-pqc",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-01T03:25:38.407Z",
+        "proofValue": "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"
       }
     ]
   }
-}</script>
+]</script>
     
     <style>
         /* Hide by default, show based on body class */
@@ -200,6 +236,58 @@
     
     </main>
 
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T08:47:36.497Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+
 <script type="application/vnd.weba+trust-store" id="weba-trust-store">
 {
   "didDocuments": [
@@ -217,13 +305,13 @@
           "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767426550147-ed25519",
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
           "type": "Ed25519VerificationKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767426550147-pqc",
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
           "type": "JsonWebKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyJwk": {
@@ -235,11 +323,13 @@
       ],
       "assertionMethod": [
         "did:web:masanork.github.io:srn#root-ed25519",
-        "did:web:masanork.github.io:srn#build-1767426550147-ed25519",
-        "did:web:masanork.github.io:srn#build-1767426550147-pqc"
+        "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-pqc"
       ]
     }
-  ]
+  ],
+  "revocationList": [],
+  "trustedTimestamps": []
 }
 </script>
 
@@ -702,9 +792,7 @@
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T01:37:57.645Z",
-      "payload": {
-        "buildId": "build-1767404251737"
-      }
+      "pruned": true
     },
     "eventHash": "dec4e7d0ae355ab3fb5f5dd36cb8f1640568ec0ff0cb8a8d324776cb4481a3b8",
     "chainHash": "7b691431ab271a1c59a22c3cf3e854bc0260570ac6a58a1fab6c66955e90b808"
@@ -756,6 +844,20 @@
     },
     "eventHash": "9b101a7c3088f5cea980a358bd5cc5ff1cc453953be334afd78ca5c1de412035",
     "chainHash": "3426cdb65c07f8309eadd31ec3e0671df015b80230b5568640cbde1c4d8c195f"
+  },
+  {
+    "prevHash": "3426cdb65c07f8309eadd31ec3e0671df015b80230b5568640cbde1c4d8c195f",
+    "event": {
+      "type": "MetadataUpdate",
+      "timestamp": "2026-01-03T08:47:36.419Z",
+      "payload": {
+        "metadata": {},
+        "buildId": "build-1767430028077",
+        "reason": "Frontmatter updated in SSG"
+      }
+    },
+    "eventHash": "44ba9b317da99061fda99cc83cf708f2deeebe98cd9bfba6b9435a977aa62fba",
+    "chainHash": "79cc19f3aefed2e0aeeb735fb22717e5a8676e59de82e3b5fd97d3a920a1d69d"
   }
 ]
 </script>
@@ -769,83 +871,31 @@
     "WebAContainerSignature"
   ],
   "issuer": "did:web:masanork.github.io:srn",
-  "issuanceDate": "2026-01-03T07:49:38.030Z",
+  "issuanceDate": "2026-01-03T08:47:36.497Z",
   "credentialSubject": {
     "id": "did:web:masanork.github.io:srn/governance/web-a-product-team-response-v6.ja#container",
-    "containerHash": "7d3e6263bcf33b29794060fb6b4b73dd8a3b446fdd22a1f77d383710e5865063",
-    "buildId": "build-1767426550147",
-    "latestContextHash": "e944a9ac5c1c087c4d63032f52430810309e2324d090a63e3eca457a74fb6144"
+    "containerHash": "4351a379d0cdec0ea9d2950265ee61503d3913f6bfacf506a0feee36a009d531",
+    "buildId": "build-1767430028077",
+    "latestContextHash": "df225d76ff4c7accd43ee1373dff83163321c0cc921e5cd27f4c59b2d6b4003e"
   },
   "proof": [
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767426550147-ed25519",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-03T07:49:38.030Z",
-      "proofValue": "z4XWopSFQXMZM85tN8aRogMFxzRgkR8LNswLkxpcAyeXjuP9LbRyvGLjveRzPteTbBmWJYhFYSJWBqoxy9uHyTwT1"
+      "created": "2026-01-03T08:47:36.497Z",
+      "proofValue": "zp7gCzgiUvoKPdQ3H4NhrsZoTZkZ2dhZAVuUd2BGgNnaiSFYXStEv2do5iGUFDhcDsM3qy3fLk1H95oX1Uheih9f"
     },
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "ml-dsa-44-jcs-2025",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767426550147-pqc",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-03T07:49:38.030Z",
-      "proofValue": "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"
+      "created": "2026-01-03T08:47:36.497Z",
+      "proofValue": "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"
     }
   ]
 }
-</script>
-<!-- Web/A L1 Manifest & Blobs -->
-<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T07:49:38.134Z"};</script>
-<script type="module">
-(async function() {
-  const m = window.__WEBA_MANIFEST;
-  if (!m || !m.blobs) return;
-  
-  const processBlob = async (b) => {
-    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
-    if (!el) return null;
-
-    const bin = atob(el.textContent.trim());
-    const ui8 = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
-    
-    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
-      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
-      return await new Response(stream).arrayBuffer();
-    }
-    return ui8.buffer;
-  };
-
-  const sortedBlobs = [...m.blobs].sort((a, b) => {
-    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
-    return score(a.mediaType) - score(b.mediaType);
-  });
-
-  for (const b of sortedBlobs) {
-    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
-      const data = await processBlob(b);
-      if (!data) continue;
-      const family = b.id.replace('font-', '');
-      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
-      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
-      const style = document.createElement('style');
-      style.textContent = css;
-      document.head.appendChild(style);
-    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
-      const data = await processBlob(b);
-      if (!data) continue;
-      const code = new TextDecoder().decode(data);
-      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.src = blobUrl;
-      document.body.appendChild(script);
-      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
-    }
-  }
-})();
-</script>
-</body>
+</script></body>
 </html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data: blob:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Transaction Statement (入出金明細書)</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">[
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Transaction Statement (入出金明細書)",
+    "description": "A standard bank transaction statement created using Web/A.",
+    "datePublished": "2026-01-03",
+    "author": {
+      "@type": "Person",
+      "name": "Unknown"
+    },
+    "provenance": {
+      "metadata": {
+        "title": "Transaction Statement (入出金明細書)",
+        "format": "application/x.web-a+html",
+        "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+      },
+      "producer": {
+        "name": "Sorane (SRN) SSG",
+        "version": "1.0.0",
+        "identifier": "did:web:masanork.github.io:srn"
+      },
+      "assertions": [
+        {
+          "label": "srn.hmp_declaration",
+          "data": {
+            "assertion": "Human-Machine Parity (HMP) Guaranteed",
+            "generator_hash": "unknown"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1"
+    ],
+    "type": [
+      "VerifiableCredential",
+      "WebADocument"
+    ],
+    "issuer": "did:web:masanork.github.io:srn",
+    "issuanceDate": "2026-01-03T08:39:06.553Z",
+    "credentialSubject": {
+      "id": "did:web:masanork.github.io:srn/examples/bank-statement",
+      "name": "Transaction Statement (入出金明細書)",
+      "contentDigest": "65a7f57cd4f0e231221984476a549b27592bfdb178f9e2c5a2c6a6f06b6c3ff9"
+    },
+    "proof": [
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "eddsa-jcs-2022",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:06.553Z",
+        "proofValue": "z66cwH4itibwku35iUfT8zMWYFFhNKKzwDxUkQtttxzixdEZ84LzsNSAFXTyHjohc6An9L8kG4En3DLfxHnmb7ji5"
+      },
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "ml-dsa-44-jcs-2025",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:06.553Z",
+        "proofValue": "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"
+      }
+    ]
+  }
+]</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Transaction Statement (入出金明細書)</h1>
+                <div class="article-meta">
+                    
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <div class="statement-container">
+    <div class="header-row">
+        <div class="statement-title">取引推移明細書</div>
+        <div class="bank-logo">空音銀行 (Sorane Bank)</div>
+    </div>
+
+<pre><code>&lt;div class=&quot;account-info&quot;&gt;
+    &lt;dt&gt;店番・口座番号&lt;/dt&gt;
+    &lt;dd&gt;123 - 1234567&lt;/dd&gt;
+    &lt;dt&gt;おなまえ&lt;/dt&gt;
+    &lt;dd&gt;ソラネ　タロウ　様&lt;/dd&gt;
+    &lt;dt&gt;対象期間&lt;/dt&gt;
+    &lt;dd&gt;2025年12月1日 〜 2025年12月31日&lt;/dd&gt;
+&lt;/div&gt;
+
+&lt;table class=&quot;tx-table&quot;&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th style=&quot;width: 15%&quot;&gt;年月日&lt;/th&gt;
+            &lt;th style=&quot;width: 40%&quot;&gt;お取引内容&lt;/th&gt;
+            &lt;th style=&quot;width: 15%&quot;&gt;お支払金額&lt;/th&gt;
+            &lt;th style=&quot;width: 15%&quot;&gt;お預り金額&lt;/th&gt;
+            &lt;th style=&quot;width: 15%&quot;&gt;差引残高&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td class=&quot;date&quot;&gt;2025-12-01&lt;/td&gt;
+            &lt;td&gt;前月からの繰越&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;&lt;/td&gt;
+            &lt;td class=&quot;balance&quot;&gt;245,000&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td class=&quot;date&quot;&gt;2025-12-10&lt;/td&gt;
+            &lt;td&gt;ミツビシＵＦＪニコス&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;15,400&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;&lt;/td&gt;
+            &lt;td class=&quot;balance&quot;&gt;229,600&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td class=&quot;date&quot;&gt;2025-12-15&lt;/td&gt;
+            &lt;td&gt;振込　サラリー&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;320,000&lt;/td&gt;
+            &lt;td class=&quot;balance&quot;&gt;549,600&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td class=&quot;date&quot;&gt;2025-12-25&lt;/td&gt;
+            &lt;td&gt;電気料金&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;8,500&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;&lt;/td&gt;
+            &lt;td class=&quot;balance&quot;&gt;541,100&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td class=&quot;date&quot;&gt;2025-12-27&lt;/td&gt;
+            &lt;td&gt;ヤチン&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;90,000&lt;/td&gt;
+            &lt;td class=&quot;amount&quot;&gt;&lt;/td&gt;
+            &lt;td class=&quot;balance&quot;&gt;451,100&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;div class=&quot;footer-note&quot;&gt;
+    &lt;p&gt;※ 本書は、Web/Aプロトコルにより電子署名された正式な取引明細書です。ブラウザの検証機能により真正性を確認できます。&lt;br&gt;
+    ※ This document is cryptographically signed. The content displayed is the verified data.&lt;/p&gt;
+&lt;/div&gt;
+</code></pre>
+</div>
+
+<script type="application/json" id="wa-input-data">
+{
+    "@context": "https://schema.org",
+    "@type": "BankAccount",
+    "bankAccountType": "Checking",
+    "accountNumber": "123-1234537",
+    "name": "Taro Sorane",
+    "bank": "Sorane Bank",
+    "interactionStatistic": [
+        { "@type": "MonetaryAmount", "date": "2025-12-01", "name": "Forward Balance", "amount": 245000, "currency": "JPY" },
+        { "@type": "MonetaryAmount", "date": "2025-12-10", "name": "Credit Card Payment", "amount": -15400, "currency": "JPY" },
+        { "@type": "MonetaryAmount", "date": "2025-12-15", "name": "Salary Deposit", "amount": 320000, "currency": "JPY" },
+        { "@type": "MonetaryAmount", "date": "2025-12-25", "name": "Electricity Bill", "amount": -8500, "currency": "JPY" },
+        { "@type": "MonetaryAmount", "date": "2025-12-27", "name": "Rent Payment", "amount": -90000, "currency": "JPY" }
+    ]
+}
+</script>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:39:06.553Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/bank-statement",
+    "name": "Transaction Statement (入出金明細書)",
+    "contentDigest": "65a7f57cd4f0e231221984476a549b27592bfdb178f9e2c5a2c6a6f06b6c3ff9"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:06.553Z",
+      "proofValue": "z66cwH4itibwku35iUfT8zMWYFFhNKKzwDxUkQtttxzixdEZ84LzsNSAFXTyHjohc6An9L8kG4En3DLfxHnmb7ji5"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:06.553Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T08:47:36.854Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-pqc"
+      ]
+    }
+  ],
+  "revocationList": [],
+  "trustedTimestamps": []
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-03T08:39:06.586Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "baecfe1dc3b5dcd6d4bd7261ef8528d39dbf508540b3590b91fd5bb3748cbee8",
+        "metadata": {}
+      }
+    },
+    "eventHash": "a7429042b781b1bc44ee39da0a1018d2bfb6f1cc2981659132bfeb273fada2c7",
+    "chainHash": "f59135607574a31c264d841157d074fe065e77b22f10ecc8c0396bbc1ee1da84"
+  },
+  {
+    "prevHash": "f59135607574a31c264d841157d074fe065e77b22f10ecc8c0396bbc1ee1da84",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:47:36.786Z",
+      "payload": {
+        "buildId": "build-1767430028077"
+      }
+    },
+    "eventHash": "514828eab7b425d7f21f7b331c92c30c371acdd0e167ae57e6022931e4bfa2c4",
+    "chainHash": "628debef6e31c4cbd9f74b8e29e0f8f4c0ddb2db3adab3663468c3f556bb0e9b"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:47:36.855Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/bank-statement#container",
+    "containerHash": "98e2ca941a3e753e0c84c86197d7b3917453880998c56b344d03cec2c67378d1",
+    "buildId": "build-1767430028077",
+    "latestContextHash": "e1194e409f6185b346304b9b5191d67ac95cc335c4144703045d5e20518b4fdc"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:36.855Z",
+      "proofValue": "z5ZfBip5nFPv61LkihB1HDJwwX4qujnnUeGKXdC9KmZp7KVKGdzyzx4sJ2koQ5sbGM2nh4kYmacVx9pkPrNgGHMP"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:36.855Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script></body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data: blob:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Web/A Verifier LTV Fit & Gap Analysis</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="sitemap" type="application/xml" href="../../sitemap.xml">
+    <link rel="help" type="text/plain" href="../../llms.txt">
+    
+    <script type="application/ld+json">[
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Web/A Verifier LTV Fit & Gap Analysis",
+    "description": "Analysis of the current Verifier implementations (CLI & Web) against the LTV architecture, identifying gaps in PHC, Timestamping, and Container verification.",
+    "datePublished": "2026-01-03",
+    "author": {
+      "@type": "Person",
+      "name": "Web/A Technical Lead"
+    },
+    "provenance": {
+      "metadata": {
+        "title": "Web/A Verifier LTV Fit & Gap Analysis",
+        "format": "application/x.web-a+html",
+        "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+      },
+      "producer": {
+        "name": "Sorane (SRN) SSG",
+        "version": "1.0.0",
+        "identifier": "did:web:masanork.github.io:srn"
+      },
+      "assertions": [
+        {
+          "label": "srn.hmp_declaration",
+          "data": {
+            "assertion": "Human-Machine Parity (HMP) Guaranteed",
+            "generator_hash": "unknown"
+          }
+        },
+        {
+          "label": "c2pa.actions",
+          "data": {
+            "action": "c2pa.created",
+            "softwareAgent": "Antigravity",
+            "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1"
+    ],
+    "type": [
+      "VerifiableCredential",
+      "WebADocument"
+    ],
+    "issuer": "did:web:masanork.github.io:srn",
+    "issuanceDate": "2026-01-03T08:39:08.252Z",
+    "credentialSubject": {
+      "id": "did:web:masanork.github.io:srn/governance/proposals/verifier-ltv-gap-analysis",
+      "name": "Web/A Verifier LTV Fit & Gap Analysis",
+      "contentDigest": "bcf028e1091122870a6f134a4cb14d5997bba5ed5ea5be2912f5ea5ddd8ad35e"
+    },
+    "proof": [
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "eddsa-jcs-2022",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:08.252Z",
+        "proofValue": "z3h7EYs44oXrmixaMWgHyFrQ81x1nsBM1HP5FXzw8BoVMqzZmvtxSSKUhMogQZY1JECEVNirby9uHPk26QpSNTnLk"
+      },
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "ml-dsa-44-jcs-2025",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:08.252Z",
+        "proofValue": "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"
+      }
+    ]
+  }
+]</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Web/A Verifier LTV Fit & Gap Analysis</h1>
+                <div class="article-meta">
+                    <span><time datetime="2026-01-03">2026-01-03</time></span>
+                    
+                    <span>By Web/A Technical Lead</span>
+                    <span class="ai-badge" title="Content generated by AI (Antigravity)">🤖 AI Generated</span>
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <h2>1. Introduction</h2>
+<p>Following the successful implementation of the Web/A LTV Container format (Phase 1-3), we performed an audit of the verification tools to ensure they can correctly interpret and validate the new data structures.</p>
+<p><strong>Scope:</strong></p>
+<ul>
+<li><strong>CLI Verifier</strong>: <code>weba-verify</code> (CI/CD use)</li>
+<li><strong>Web Verifier</strong>: <code>verify-app.ts</code> (End-user use)</li>
+</ul>
+<h2>2. Fit &amp; Gap Analysis</h2>
+<table>
+<thead>
+<tr>
+<th align="left">Feature</th>
+<th align="left">CLI Verifier (<code>weba-verify</code>)</th>
+<th align="left">Web Verifier (<code>verify-app</code>)</th>
+<th align="left">LTV Requirement</th>
+<th align="left">Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>L2 Signature (VC)</strong></td>
+<td align="left">✅ <strong>Verified</strong><br>Checks Ed25519 &amp; PQC signatures.</td>
+<td align="left">✅ <strong>Verified</strong><br>Checks signatures via drag-and-drop.</td>
+<td align="left">Confirm content authenticity.</td>
+<td align="left"><strong>Good</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>L3 Context (PHC)</strong></td>
+<td align="left">❌ <strong>Ignored</strong><br>Does not parse <code>weba-context-chain</code>.</td>
+<td align="left">❌ <strong>Ignored</strong><br>No visualization or verification of history.</td>
+<td align="left">Verify Chain of Custody (Updates, Transfers).</td>
+<td align="left"><strong>Critical Gap</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>L4 Container Sig</strong></td>
+<td align="left">❌ <strong>Ignored</strong><br>Treats HTML as just a text source.</td>
+<td align="left">❌ <strong>Ignored</strong><br>Does not verify the HTML wrapper hash.</td>
+<td align="left">Ensure UI integrity (Anti-tampering).</td>
+<td align="left"><strong>High Gap</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Trust Store</strong></td>
+<td align="left">⚠️ <strong>Manual</strong><br>Requires <code>--did</code> flag for local docs.</td>
+<td align="left">⚠️ <strong>Partial</strong><br>Loads DIDs but ignores other fields.</td>
+<td align="left">Offline verification (DIDs, CRLs).</td>
+<td align="left"><strong>Medium Gap</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Timestamping</strong></td>
+<td align="left">❌ <strong>Ignored</strong></td>
+<td align="left">❌ <strong>Ignored</strong><br>Does not check <code>trustedTimestamps</code>.</td>
+<td align="left">Prove existence at specific time.</td>
+<td align="left"><strong>Critical Gap</strong></td>
+</tr>
+</tbody></table>
+<h2>3. Detailed Findings</h2>
+<h3>3.1. CLI Verifier</h3>
+<p>The CLI tool is currently a &quot;Payload Verifier&quot; rather than a &quot;Container Verifier.&quot; It extracts the JSON-LD VC and verifies it in isolation. It fails to utilize the embedded LTV data, meaning it requires an online connection (or manual setup) to verify DIDs, and it cannot detect if the container (HTML) has been tampered with around the payload.</p>
+<h3>3.2. Web Verifier</h3>
+<p>The Web Verifier has basic support for the embedded Trust Store (loading DID Documents), but it lacks the logic to utilize the new LTV features:</p>
+<ul>
+<li><strong>Timestamps</strong>: The <code>trustedTimestamps</code> array in the Trust Store is currently ignored.</li>
+<li><strong>Pruning</strong>: It does not understand the Prunable Hash Chain, so it cannot verify the lineage of a pruned document.</li>
+</ul>
+<h2>4. Recommendations</h2>
+<p>We recommend a 3-Step Refactoring Plan:</p>
+<h3>Step 1: Core Logic Upgrade (<code>src/core/verify-ltv.ts</code>)</h3>
+<p>Create a new shared verification module that:</p>
+<ol>
+<li>Parses the full HTML Container structure (L2, L3, L4, Trust Store).</li>
+<li>Verifies the <strong>L4 Container Signature</strong> first (integrity check).</li>
+<li>Verifies the <strong>L3 PHC</strong> (chain consistency).</li>
+<li>Verifies the <strong>L2 Payload Signature</strong> using the <strong>Trust Store</strong>.</li>
+<li>Verifies <strong>Timestamps</strong> against the L2/L3 hashes.</li>
+</ol>
+<h3>Step 2: Web UI Enhancements</h3>
+<p>Update the Web Verifier to display:</p>
+<ul>
+<li><strong>Timeline View</strong>: Visualizing the PHC events (Genesis -&gt; Update -&gt; Current).</li>
+<li><strong>&quot;Sealed At&quot; Badge</strong>: Showing the trusted timestamp.</li>
+<li><strong>Offline Status</strong>: Indicating if verification was performed fully offline.</li>
+</ul>
+<h3>Step 3: CLI Alignment</h3>
+<p>Update <code>weba-verify</code> to use the new core module, enabling full container audits in CI/CD pipelines.</p>
+<hr>
+<p><strong>Conclusion</strong>: The current Verifiers are &quot;LTV-Blind.&quot; Immediate action is required to surface the value of the LTV architecture to users.</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:39:08.252Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/governance/proposals/verifier-ltv-gap-analysis",
+    "name": "Web/A Verifier LTV Fit & Gap Analysis",
+    "contentDigest": "bcf028e1091122870a6f134a4cb14d5997bba5ed5ea5be2912f5ea5ddd8ad35e"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:08.252Z",
+      "proofValue": "z3h7EYs44oXrmixaMWgHyFrQ81x1nsBM1HP5FXzw8BoVMqzZmvtxSSKUhMogQZY1JECEVNirby9uHPk26QpSNTnLk"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:08.252Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T08:47:54.433Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-pqc"
+      ]
+    }
+  ],
+  "revocationList": [],
+  "trustedTimestamps": []
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-03T08:39:08.289Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "b7fcca87caea6628769a2d0c76ca7de31d72807e45d2ba774352a1047f774ccd",
+        "metadata": {}
+      }
+    },
+    "eventHash": "c015ce29205075df1cfd3410276462ef076e360623dfc997d1fb1f39efad2742",
+    "chainHash": "518a865aa5a0f5352abbb51562dca575bc0efd9b788d96867bec253f43c60914"
+  },
+  {
+    "prevHash": "518a865aa5a0f5352abbb51562dca575bc0efd9b788d96867bec253f43c60914",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:47:54.363Z",
+      "payload": {
+        "buildId": "build-1767430028077"
+      }
+    },
+    "eventHash": "8aeb2a8d9cf826e129059d3c5cb3fe30392a03aa21acfed9aaa2cce39f97dfab",
+    "chainHash": "4148c2b6715d60705b9cced815cfdf74e6d876a4cbe7e3dc5a3aec97a6c407cc"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:47:54.433Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/governance/proposals/verifier-ltv-gap-analysis#container",
+    "containerHash": "82a5de9dbe0333d038488afe49205bd47851b023cddf09932875b3f684f7cc08",
+    "buildId": "build-1767430028077",
+    "latestContextHash": "d2dd6996129d14d3a3b2dce5489b5d2ebfc7c0c41728076d6f4845ee925cd86c"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:54.433Z",
+      "proofValue": "z38PeFfdNyqV6p7vuRnZ3JaHr7VTsTB85UyrGCJ7UpU5evWmQDB9gsymdRo8XsVJMUdidWpxnAdAJwYFrTBvGyamX"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:54.433Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script></body>
+</html>

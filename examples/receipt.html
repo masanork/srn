@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data: blob:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>Verified Receipt (Receipt of Payment)</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">[
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Verified Receipt (Receipt of Payment)",
+    "description": "A sample verified receipt (invoice) created using Web/A.",
+    "datePublished": "2026-01-03",
+    "author": {
+      "@type": "Person",
+      "name": "Unknown"
+    },
+    "provenance": {
+      "metadata": {
+        "title": "Verified Receipt (Receipt of Payment)",
+        "format": "application/x.web-a+html",
+        "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+      },
+      "producer": {
+        "name": "Sorane (SRN) SSG",
+        "version": "1.0.0",
+        "identifier": "did:web:masanork.github.io:srn"
+      },
+      "assertions": [
+        {
+          "label": "srn.hmp_declaration",
+          "data": {
+            "assertion": "Human-Machine Parity (HMP) Guaranteed",
+            "generator_hash": "unknown"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1"
+    ],
+    "type": [
+      "VerifiableCredential",
+      "WebADocument"
+    ],
+    "issuer": "did:web:masanork.github.io:srn",
+    "issuanceDate": "2026-01-03T08:39:07.815Z",
+    "credentialSubject": {
+      "id": "did:web:masanork.github.io:srn/examples/receipt",
+      "name": "Verified Receipt (Receipt of Payment)",
+      "contentDigest": "700d4aad334df4c8814316c828fffc22549f55f8322387c6c4a8bc5d4b18f45e"
+    },
+    "proof": [
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "eddsa-jcs-2022",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:07.815Z",
+        "proofValue": "z2VFrcaWS21nSgymq4mjcTMqarb34JiuNPriF9d8oRbsJbwbskXEAZGvZS7U7JnFmqjf4VrR5X1mdrRS8FvmFPSBp"
+      },
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "ml-dsa-44-jcs-2025",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T08:39:07.815Z",
+        "proofValue": "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"
+      }
+    ]
+  }
+]</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>Verified Receipt (Receipt of Payment)</h1>
+                <div class="article-meta">
+                    
+                    
+                    
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <div class="receipt-container">
+    <div class="receipt-header">
+        <div class="store-name">ACME Coffee Roasters</div>
+        <div class="receipt-meta">
+            Date: 2026-01-03 14:30:00<br>
+            Receipt #: <span id="receipt-id">R-20260103-0012</span><br>
+            Terminal: POS-01
+        </div>
+    </div>
+
+<pre><code>&lt;table class=&quot;receipt-details&quot;&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Drip Coffee (Hot)&lt;/td&gt;
+        &lt;td class=&quot;price&quot;&gt;¥450&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Espresso Double&lt;/td&gt;
+        &lt;td class=&quot;price&quot;&gt;¥380&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Coffee Beans (200g)&lt;/td&gt;
+        &lt;td class=&quot;price&quot;&gt;¥1,200&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;div class=&quot;receipt-total&quot;&gt;
+    Total: ¥2,030 &lt;span style=&quot;font-size:0.8rem; font-weight:normal;&quot;&gt;(Tax Inc.)&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;issuer-info&quot;&gt;
+    &lt;p&gt;Thank you for visiting!&lt;/p&gt;
+    &lt;p&gt;Issuer ID: T1234567890123&lt;br&gt;(Qualified Invoice Issuer)&lt;/p&gt;
+&lt;/div&gt;
+</code></pre>
+</div>
+
+<div style="text-align:center; margin-top:2rem; color:#666;">
+    <small>
+        This is a <strong>Web/A Verified Receipt</strong>.<br>
+        The HTML content above is cryptographically signed.<br>
+        Data (JSON-LD) is embedded for automated processing.
+    </small>
+</div>
+
+<script type="application/json" id="wa-input-data">
+{
+    "@context": "https://schema.org",
+    "@type": "Invoice",
+    "description": "Receipt of Payment",
+    "invoiceDate": "2026-01-03T14:30:00+09:00",
+    "identifier": "R-20260103-0012",
+    "provider": {
+        "@type": "Organization",
+        "name": "ACME Coffee Roasters",
+        "taxID": "T1234567890123"
+    },
+    "totalPaymentDue": {
+        "@type": "PriceSpecification",
+        "price": 2030,
+        "priceCurrency": "JPY"
+    },
+    "referencesOrder": [
+        { "@type": "OrderItem", "orderItemStatus": "Delivered", "orderItemNumber": "1", "name": "Drip Coffee (Hot)", "price": 450, "priceCurrency": "JPY" },
+        { "@type": "OrderItem", "orderItemStatus": "Delivered", "orderItemNumber": "2", "name": "Espresso Double", "price": 380, "priceCurrency": "JPY" },
+        { "@type": "OrderItem", "orderItemStatus": "Delivered", "orderItemNumber": "3", "name": "Coffee Beans (200g)", "price": 1200, "priceCurrency": "JPY" }
+    ]
+}
+</script>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:39:07.815Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/receipt",
+    "name": "Verified Receipt (Receipt of Payment)",
+    "contentDigest": "700d4aad334df4c8814316c828fffc22549f55f8322387c6c4a8bc5d4b18f45e"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:07.815Z",
+      "proofValue": "z2VFrcaWS21nSgymq4mjcTMqarb34JiuNPriF9d8oRbsJbwbskXEAZGvZS7U7JnFmqjf4VrR5X1mdrRS8FvmFPSBp"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767429537116-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:39:07.815Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T08:47:38.041Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+</script>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+        "did:web:masanork.github.io:srn#build-1767430028077-pqc"
+      ]
+    }
+  ],
+  "revocationList": [],
+  "trustedTimestamps": []
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-03T08:39:07.849Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "7b25a7b322371bee2231c51535fb9619939f4a8d7f079e22ac236dc450aa2d76",
+        "metadata": {}
+      }
+    },
+    "eventHash": "c704817c699c9d736a20a8128a49dbe6525cd6a0738abed17167f2541c026ac8",
+    "chainHash": "8237b092fe00a2ed7d0877eda7528da2c6dd80b288be8f77ed46f20142b79db4"
+  },
+  {
+    "prevHash": "8237b092fe00a2ed7d0877eda7528da2c6dd80b288be8f77ed46f20142b79db4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T08:47:37.946Z",
+      "payload": {
+        "buildId": "build-1767430028077"
+      }
+    },
+    "eventHash": "d3340ed031c0c2376cdd3a165d553e26af16071056ea8a79b73be9bb326d9b2f",
+    "chainHash": "2c7a047ff1a40e04e320ae68561140605d163a45e3ef8760130f2f43e9033f08"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T08:47:38.042Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/examples/receipt#container",
+    "containerHash": "7fb606ee1a88c05ad110b4f22be41439a43396c47fd742bd196a0eb8477fef28",
+    "buildId": "build-1767430028077",
+    "latestContextHash": "b2b48038200c13a4fdd400f23adf361bc578266acb07e184993e533a10bdbb3a"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:38.042Z",
+      "proofValue": "z4YwNkFHFRBEJFsV6XWdc52TgGJ25EfRrKAmGM3Qnw77VyND2ZDvckWoAcVPWoDMv9KVGuhzX54thZfdGBqwxXg8K"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T08:47:38.042Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script></body>
+</html>
