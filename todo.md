@@ -1,30 +1,28 @@
-# SRN v2.0 Project TODO List
+# SRN v3.0 Project TODO List
 
-This list tracks the implementation status of the next-generation architecture features outlined in `issues.md` and `docs/PROPOSED_ARCHITECTURE_POLICY.md`.
+Prioritized tasks for Folio CLI and Web/A Ecosystem. Focus: Local-First, SQLite-backed metadata management, and Assisted Filling.
 
-## 1. Identity & Authority
-- [ ] **Multi-tier Key Management**: Implement offline Root Key -> online Delegate Key signing workflow.
-- [ ] **Authority Model**: Define and implement the "Trust Registry" or "Centralized Signing Proxy" PoC for municipality integration.
-- [x] **did:web Migration**: Transition from ephemeral `did:key` to stable domain-anchored identity.
+## 1. Folio CLI: Data Management (Local First)
+- [ ] **SQLite Integration**: Implement `folio db init` to create a local SQLite database for indexing Web/A files.
+- [ ] **Ingest Command**: Implement `folio ingest <dir>` to scan HTML files, extract JSON-LD/Frontmatter, and index metadata (Sender, Schema, Date, Fields) into SQLite.
+- [ ] **Query Command**: Implement `folio ls` or `folio query` to search indexed documents by metadata.
 
-## 2. VC Standards (W3C 2.0)
-- [ ] **Data Model v2.0**: Update `@context` and core properties (e.g., `validFrom`) to match the latest W3C 2.0 draft/recommendation.
-- [ ] **Enveloping Signatures**: Implement JOSE (JWT/JWP) wrapper for hybrid credentials.
-- [ ] **Revocation**: Transition from build-level revocation to bitstring-based individual VC revocation.
+## 2. Assisted Filling (Input Intelligence)
+- [ ] **Field Analysis**: Analyze indexed documents to identify common fields (Name, Address, etc.) and their values.
+- [ ] **Profile Generation**: Create a `profile.json` or similar from aggregated specific past submissions.
+- [ ] **Auto-Fill Injection**: Implement logic to inject profile data into new Web/A forms (via CLI or Browser extension/bookmarklet).
 
-## 3. Presentation & Integrity
-- [x] **Native IVS Handling**: Native Cmap Format 14 injection for perfect typography without PUA.
-- [x] **C2PA Integration**: Prototype "Verified Font" by injecting COSE provenance manifest (SRNC table) into subsetted fonts.
-- [ ] **Rendered HTML Integrity**: Extend C2PA to sign the rendered HTML structure hash alongside the data. (Partial: Juminhyo instance VC includes HTML+JSON-LD digests; C2PA binding pending.)
+## 3. Web/A Form (Core)
+- [x] **Infinite Canvas UX**: Flat design, sticky toolbar.
+- [x] **Client Validation**: `required` check, submit button control.
+- [ ] **Mobile Optimization**: Touch-friendly layouts, software keyboard adjustments.
 
-## 4. Privacy & Security
-- [ ] **Selective Disclosure**: Implement SD-JWT Support for privacy-preserving attribute sharing.
-- [ ] **Holder Binding**: Integrate WebAuthn (Passkeys) for cryptographically linking the VC to the user's device.
+## 4. Identity & Trust
+- [x] **Hybrid Signatures**: Ed25519 + ML-DSA-44.
+- [ ] **Trust Store Embedding**: Inject issuer DIDs for offline verification.
+- [ ] **L3 Prunable Hash Chain**: Audit trail implementation.
 
-## 5. Performance & Post-Quantum
-- [x] **Hybrid Signatures**: Production-ready Ed25519 + ML-DSA-44 hybrid signing.
-- [ ] **Binary Transport**: PoC for COSE/CBOR encoding to optimize large PQC signature transport.
+## 5. Deprioritized / Future
+- [ ] **Remote Server (Post)**: Async architecture, Object Storage.
+- [ ] **Selective Disclosure**: SD-JWT.
 
-## 6. Documentation & DX
-- [ ] Formalize the `did:web` resolution server/helper for verifiers.
-- [ ] Create a "Deployment Guide" for municipalities using the SRN SSG.

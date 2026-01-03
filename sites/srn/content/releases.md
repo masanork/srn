@@ -5,6 +5,31 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v3.0.0 - Web/A Infinite Canvas & Validation
+
+**Date:** 2026-01-03
+
+Major UX overhaul transforming Web/A forms from "static paper" to an "infinite canvas" application feel, alongside robust client-side validation and extensive plugin optimizations.
+
+*   **UX Overhaul: Infinite Canvas**:
+    *   **Flat Design**: Dropped the "paper card" metaphor (`box-shadow`, fixed width) for a full-width, flat interface suitable for data-intensive applications.
+    *   **Immersive Toolbar**: The toolbar is now sticky and integrates seamlessly with the header, providing a consistent app-like experience.
+    *   **Dynamic Data Tables**: Improved rendering for large tables with `nowrap` headers and auto-numbering support.
+
+*   **Client-Side Validation**:
+    *   **`required` Attribute**: Introduced support for `[type:key (required)]` syntax in Markdown.
+    *   **Real-time Feedback**: The "Submit" button is now dynamically enabled/disabled based on form completeness.
+    *   **Console Debugging**: Validation errors (missing fields) are logged to the console for easier troubleshooting.
+
+*   **Plugin Architecture Refinement**:
+    *   **Custom Bundler**: Implemented a specialized bundler (`bundler.ts`) that intelligently packages client-side plugins (Postal, LG Code, L2 Crypto) based on usage.
+    *   **Conditional Loading**: Heavy assets like the Postal Dictionary and L2 WASM modules are now loaded only when needed (Lazy Loading), significantly improving initial load performance.
+    *   **Manifest Integration**: Plugins are fully integrated with the ManifestManager, loading resources from `blob:` URLs for offline compatibility (Pack & Prune).
+
+*   **Performance Optimization**:
+    *   **Conditional GZIP**: Implemented on-the-fly GZIP decompression for Blob resources, reducing memory footprint.
+    *   **WASM Optimization**: Migrated critical L2 cryptographic operations to Rust/WASM, loaded conditionally to avoid blocking the main thread.
+
 ## v2.9.0 - Unified Manifest & Pack-and-Prune Strategy
 
 **Date:** 2026-01-02
