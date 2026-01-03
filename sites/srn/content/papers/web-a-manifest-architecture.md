@@ -49,6 +49,20 @@ Web/A must be operable offline and verifiable over the long term. The **Pack & P
     *   The `Digest` in the manifest remains, preserving verifiability.
     *   For re-verification or rendering, Blobs can be retrieved from the `Secondary URL` (external archives, IPFS, etc.) defined in the manifest, fully restoring the original state.
 
+### 2.3 Feature-Based Conditional Loading (Advanced Optimization)
+
+For large runtime dependencies like the WASM crypto module, the Manifest Architecture enables **feature-based conditional loading**:
+
+*   **Static Analysis**: During the build process, the presence of specific features (e.g., L2 Encryption config) is detected.
+*   **Selective Blob Registration**: Heavy blobs are registered in the manifest **only if the feature is actively used** in that document.
+*   **Zero Overhead for Unused Features**: Documents without L2E do not include the WASM module, saving ~454KB.
+
+**Example:** The Web/A crypto WASM (`weba_crypto.wasm`, ~454KB) is only registered when:
+*   The form includes L2 encryption configuration (`l2_encrypt: true`), or
+*   The content references L2-related features (`weba-l2-encrypt`, etc.)
+
+This strategy maintains the Single File principle while avoiding unnecessary bloat.
+
 ## 3. Data Structures
 
 ### 3.1 Master Data Reference (Blob Entry)

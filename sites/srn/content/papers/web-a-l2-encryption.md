@@ -523,6 +523,25 @@ Web/A implements a **Graduated Forward Secrecy** model to balance the paradoxica
 *   **Decoy Traffic (Roadmap)**: Evaluate constant-rate or batch scheduling
     options for high-sensitivity deployments.
 
+### 8.1. Conditional WASM Loading & Performance Optimization
+
+To minimize bandwidth and storage overhead for basic forms, the WASM crypto module (~454KB) is **conditionally loaded** only when Layer 2 Encryption features are actively used.
+
+**Detection Logic:**
+*   **Frontmatter Check**: Presence of `l2_encrypt`, `l2_recipient_kid`, and `l2_recipient_x25519`
+*   **Content Analysis**: Detection of L2-related keywords (`weba-l2-*`, `l2crypto`)
+
+**File Size Impact:**
+*   **Non-L2 Forms**: WASM not loaded (saves ~454KB)
+*   **L2-enabled Forms**: WASM (~454KB) + L2 runtime (`form-l2.js`, ~300KB) ≈ **+754KB total**
+
+**Design Rationale:**
+*   Basic forms with only server-side template signing do not require client-side crypto WASM
+*   Client-side signature verification for VCs is not currently implemented (server-side only)
+*   This optimization reduces the barrier to adoption by keeping non-encrypted forms lightweight
+
+**Implementation:** See `src/ssg/LayoutManager.ts:65-95` and test suite `tests/wasm_conditional_loading.test.ts`.
+
 ## 9. Conclusion
 Web/A Layer 2 Encryption provides a robust, flexible, and future-proof
 confidentiality layer for serverless forms. By leveraging standard primitives
