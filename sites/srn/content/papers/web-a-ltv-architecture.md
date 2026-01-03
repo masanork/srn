@@ -8,7 +8,7 @@ ai_generated: true
 # Web/A Long-Term Validation (LTV) Architecture
 
 **Status**: Draft Proposal
-**Date**: 2026-01-01
+**Date**: 2026-01-03
 **Author**: Antigravity (AI Assistant)
 
 ## 1. Introduction: The Need for "Digital Scrolls"
@@ -34,7 +34,19 @@ SRN currently treats signatures as a "deploy-time artifact" rather than a "conte
 
 ## 3. Architecture Proposal
 
-### 3.1. The "Onion" Model for Web/A
+### 3.1. Anatomy of a Web/A Container
+
+The Web/A Container is an HTML5 document that functions as a secure envelope for data. It embeds multiple layers of signatures and validation data to ensure long-term trust.
+
+![Web/A Container Architecture](/images/web-a-container-architecture.svg)
+
+*   **Layer 4 (Presentation)**: The outer HTML/CSS shell. It includes a **Container Signature** that secures the visual representation against tampering.
+*   **Layer 3 (Context)**: The **Prunable Hash Chain (PHC)** manages the document's history (e.g., transfers, updates) without invalidating the original data.
+*   **Layer 2 (Payload)**: The core **Verifiable Credential (VC)**. This is the immutable fact, signed once at creation.
+*   **Trust Store**: An embedded JSON block (`didDocuments`, `revocationList`) enabling offline verification.
+*   **ManifestManager**: Manages heavy assets (Fonts, WASM) as Gzipped/Base64 blobs, referenced by hash.
+
+### 3.2. The "Onion" Model for Web/A
 
 We adopt the PAdES evolution model (B-T-LT-LTA) for Web/A.
 
@@ -58,7 +70,7 @@ We adopt the PAdES evolution model (B-T-LT-LTA) for Web/A.
 *   **Mechanism**: Periodically (e.g., every 10 years before algorithm compromise), wrap the entire package in a new, stronger timestamp.
 *   **Benefit**: Indefinite longevity.
 
-### 3.2. Solving the Rebuild Paradox: "Layered Signatures"
+### 3.3. Solving the Rebuild Paradox: "Layered Signatures"
 
 Web/A separates the trust model for "Data" vs. "Presentation" to allow independent lifecycles.
 
@@ -79,44 +91,38 @@ Web/A separates the trust model for "Data" vs. "Presentation" to allow independe
 *   **Lifecycle**: Ephemeral. Regenerated upon every rebuild/deployment.
 *   **Trust**: Validates "The current view is authorized by the issuer." It protects against UI tampering (e.g., swapping a "Valid" icon for an "Invalid" one) without altering the underlying data.
 
-### 3.3. L3 Structure: Prunable Hash Chain (PHC)
+### 3.4. Comparison with Existing Standards (Pros/Cons)
 
-To prevent the **Context Layer (L3)** from growing indefinitely while maintaining a complete audit trail (Chain of Custody), we adopt a **Prunable Hash Chain** model.
+| Feature | PAdES (PDF) / XAdES (XML) | Web/A LTV (HTML) |
+| :--- | :--- | :--- |
+| **Container Format** | PDF (Binary) or XML | HTML5 (Text/DOM) |
+| **Human Readability** | Low (requires PDF Reader) | **High** (Viewable in any browser) |
+| **Visual Validation** | WYSIWYG (Fixed Layout) | **Responsive** (Reflows for Mobile/Desktop) |
+| **Data Extraction** | Difficult (Unstructured) | **Native** (JSON-LD / Semantic HTML) |
+| **LTV Support** | Mature (DSS, TSA standard) | **Emerging** (Uses DID/VC + Custom Trust Store) |
+| **File Size** | Large (Embeds Fonts/Images inefficiently) | **Optimized** (Pack & Prune, Shared Blobs) |
+| **Complexity** | High (ASN.1, CMS) | Moderate (JSON, JWS, simple Hash Chain) |
 
-*   **The Chain (Mandatory)**: A lightweight linked list of signatures. Each node contains:
-    *   `previous_hash`: Link to the prior state.
-    *   `signer`: The DID of the custodian at that time.
-    *   `timestamp`: When the update occurred.
-    *   `evidence_hash`: Hash of the associated heavy data (e.g., CRLs, detailed logs).
-    *   **Immutability**: This chain ensures that no history can be silently deleted.
-*   **The Evidence (Optional/Prunable)**: The actual heavy data blobs referenced by `evidence_hash`.
-    *   **Self-Contained Mode**: Evidence is embedded within the Web/A file (e.g., in a separate CBOR block).
-    *   **Stripped Mode**: To save space, old evidence can be removed from the file. The `evidence_hash` remains in the chain, enabling "Existence Proof" even without the data. The actual data can be stored in an external archive if needed.
+## 4. Implementation Specifications (v1.0 Status)
 
-This allows a 100-year-old document to keep its verification chain intact (KB size) while offloading gigabytes of obsolete CRLs.
+### 4.1. Pruning Strategy (Implemented)
+To prevent the PHC (Layer 3) from growing indefinitely, the system implements an **Automatic Pruning** policy:
+*   **Rule**: Keep **Genesis** (Index 0) + **Latest 5 Events**.
+*   **Mechanism**: Intermediate events (e.g., repeated "L4Rebuild" events) have their payloads stripped, leaving only the hash to maintain chain integrity. This ensures the file size remains stable over decades of maintenance.
 
-**Workflow:**
-*   **Content Change**: Trigger re-signing of Payload layer. Update Timestamp.
-*   **Template Change**: Rebuild HTML. **Retain Payload Signature.** Re-sign Container Signature.
+### 4.2. Trust Store Schema (Implemented)
+The `weba-trust-store` script block has been extended to support the full LTV requirement:
+```json
+{
+  "didDocuments": [ ... ],
+  "revocationList": [ ... ], // For CRLs/OCSP responses
+  "trustedTimestamps": [ ... ] // For TSA tokens
+}
+```
 
-This separation ensures that a maintenance update to the website's CSS does not invalidate the 10-year-old signatures of archived documents.
-
-## 4. Implementation Strategy
-
-### Phase 1: Offline Verification Foundation (Completed 2026-01-01)
-*   ✅ **Context Freezing**: Confirmed usage of **JCS (RFC 8785)** in `src/core/vc.ts`. This canonicalization scheme does not require fetching external `@context` definitions, effectively solving "Context Rot" by design.
-*   ✅ **Trust Anchor Embedding**: Implemented in `src/ssg/LayoutManager.ts`. The Issuer's DID Document is now embedded in the generated HTML via a `<script type="application/vnd.weba+trust-store">` tag.
-*   **Next Action**: Update the Verifier logic to read from this embedded Trust Store.
-
-### Phase 2: Stable Signatures (Fixing Rebuilds)
-*   **Action**: Modify the SSG build pipeline. Differentiate between "Content Update" and "System Update".
-*   **Impl**: Check if `content_hash` has changed. If not, reuse the existing signature from previous build/metadata.
-*   **Goal**: Preserve the original "Signed At" timestamp across system updates.
-
-### Phase 3: The Trust Store (LTV)
-*   **Action**: Define `Web/A-LT` spec.
-*   **Impl**: When signing, fetch the current CRL/OCSP implementation (or Mock for local/self-signed). Embed this data into the Web/A file structure alongside the signature.
-*   **Goal**: Fully self-contained verification (LTV).
+### 4.3. Next Steps
+*   **Phase 3**: Integration with a TSA (Time Stamping Authority) to populate `trustedTimestamps`.
+*   **Verifier Update**: Enhance the client-side verifier to visualize the Pruning Chain and validate the Trust Store.
 
 ## 5. Conclusion
 
