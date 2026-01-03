@@ -283,6 +283,14 @@ export class LayoutManager {
                 break;
         }
 
+        // --- Manifest Injection (Fonts, Blobs, etc.) ---
+        const manifestHtml = manifestManager.generateInjectionHtml();
+        if (finalHtml.includes('</body>')) {
+            finalHtml = finalHtml.replace('</body>', `${manifestHtml}</body>`);
+        } else {
+            finalHtml += manifestHtml;
+        }
+
         // --- LTV: Inject Trust Store (Phase 1) & Context Chain (Phase 3) ---
         // Embed the Issuer's DID Document directly into the file.
         // This allows offline verification of the signature chain (at least the root key).
@@ -342,14 +350,6 @@ ${JSON.stringify(containerVc, null, 2)}
 </script>`;
 
             finalHtml = finalHtml.replace('</body>', `${l4Script}</body>`);
-        }
-
-        // --- Manifest Injection (Fonts, Blobs, etc.) ---
-        const manifestHtml = manifestManager.generateInjectionHtml();
-        if (finalHtml.includes('</body>')) {
-            finalHtml = finalHtml.replace('</body>', `${manifestHtml}</body>`);
-        } else {
-            finalHtml += manifestHtml;
         }
 
         return { html: finalHtml, vc };

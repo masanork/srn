@@ -310,7 +310,7 @@ export function articleLayout(
         content: fullContent,
         fontCss,
         fontFamilies,
-        jsonLd: schema,
+        jsonLd: vc ? [schema, vc] : schema,
         lang: lang,
         className: `layout-${data.layout || 'article'}${presentationEnabled ? ` presentation-template-${presentationTemplate}` : ''}`,
         relPath

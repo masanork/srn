@@ -1,30 +1,29 @@
-
-import { verifyWebA } from '../verify-core.ts';
+import { verifyWebALtv } from '../core/verify-ltv.ts';
+import { initWasm } from '../core/wasm_core.ts';
 import fs from 'fs-extra';
 import path from 'path';
 
 /**
- * Web/A CLI Validator
+ * Web/A CLI Validator (LTV Aware)
  * Usage: bun run src/bin/weba-verify.ts [file|url] [--hmp] [--json]
  */
 
 async function main() {
+    await initWasm();
+    
     const args = process.argv.slice(2);
     const target = args.find(arg => !arg.startsWith('-'));
     const checkHmp = args.includes('--hmp');
     const outputJson = args.includes('--json');
-    const didPathIndex = args.indexOf('--did');
-    const didPath = didPathIndex !== -1 ? args[didPathIndex + 1] : null;
 
     if (!target) {
         console.log(`
-Web/A CLI Validator
+Web/A CLI Validator (LTV Edition)
 Usage: weba-verify [file|url] [options]
 
 Options:
-  --hmp        Enable Human-Machine Parity check (compares HTML content with data)
-  --json       Output result in JSON format for machines/AI agents
-  --did [path] Path to a local DID document (did.json) to use for key resolution
+  --hmp        Enable Human-Machine Parity check
+  --json       Output result in JSON format
 `);
         process.exit(0);
     }
@@ -46,18 +45,7 @@ Options:
         process.exit(1);
     }
 
-    let didDocument = null;
-    if (didPath) {
-        try {
-            const didDoc = await fs.readJson(path.resolve(process.cwd(), didPath));
-            didDocument = didDoc;
-        } catch (err: any) {
-            console.error(`Error loading DID document: ${err.message}`);
-            process.exit(1);
-        }
-    }
-
-    const result = await verifyWebA(htmlContent, { checkHmp, didDocument: didDocument || undefined });
+    const result = await verifyWebALtv(htmlContent, { checkHmp });
 
     if (outputJson) {
         console.log(JSON.stringify(result, null, 2));
@@ -65,43 +53,60 @@ Options:
     }
 
     // Human Readable Output
-    console.log('\n--- Web/A Verification Result ---');
+    console.log('\n=====================================');
+    console.log(' Web/A LTV Verification Report');
+    console.log('=====================================');
     console.log(`Target: ${target}`);
+    console.log('');
 
-    if (result.metadata) {
-        console.log(`Title:  ${result.metadata.title || 'N/A'}`);
-        console.log(`Author: ${result.metadata.author || 'N/A'}`);
-        console.log(`Date:   ${result.metadata.date || 'N/A'}`);
-    }
-    console.log('---------------------------------');
+    // L4
+    const l4Icon = result.l4.valid ? '✅' : '❌';
+    console.log(`[L4] Container Integrity: ${l4Icon} ${result.l4.valid ? 'VALID' : 'INVALID'}`);
+    if (result.l4.error) console.log(`     Error: ${result.l4.error}`);
 
-    if (result.isValid) {
-        console.log('\x1b[32m✅ VALID: Signatures are correct.\x1b[0m');
-    } else {
-        console.log('\x1b[31m❌ INVALID: Verification failed.\x1b[0m');
-        if (result.error) console.log(`Error: ${result.error}`);
-    }
+    // L3
+    const l3Icon = result.l3.valid ? '✅' : '❌';
+    console.log(`[L3] Context History:    ${l3Icon} ${result.l3.valid ? 'VALID' : 'INVALID'}`);
+    console.log(`     Chain Length: ${result.l3.length} (Pruned: ${result.l3.pruned})`);
+    if (result.l3.error) console.log(`     Error: ${result.l3.error}`);
 
-    console.log(`\nProofs:`);
-    console.log(`- Ed25519 (Classic):      ${result.checks.ed25519 ? 'Pass' : 'Fail'}`);
-    console.log(`- ML-DSA-44 (Quantum):    ${result.checks.pqc ? 'Pass' : 'Fail'}`);
+    // L2
+    const l2Icon = result.l2.isValid ? '✅' : '❌';
+    console.log(`[L2] Payload Signature:  ${l2Icon} ${result.l2.isValid ? 'VALID' : 'INVALID'}`);
+    console.log(`     Ed25519: ${result.l2.checks.ed25519 ? 'Pass' : 'Fail'}`);
+    console.log(`     ML-DSA:  ${result.l2.checks.pqc ? 'Pass' : 'Fail'}`);
 
-    if (checkHmp && result.hmpResult) {
-        console.log(`\nHMP (Human-Machine Parity):`);
-        if (result.hmpResult.isValid) {
-            console.log('\x1b[32m  ✅ Consistent: HTML matches signed data.\x1b[0m');
-        } else {
-            console.log('\x1b[31m  ❌ Inconsistent: HTML/Data divergence detected.\x1b[0m');
-        }
+    // L1
+    const l1Icon = result.l1.valid ? '✅' : '⚠️';
+    console.log(`[L1] Schema/Structure:   ${l1Icon} ${result.l1.valid ? 'VALID' : 'WARNING'}`);
+    if (result.l1.errors.length) result.l1.errors.forEach(e => console.log(`     Warning: ${e}`));
 
-        console.log('  Details:');
-        result.hmpResult.details.forEach(d => {
-            const color = d.match ? '\x1b[32m' : '\x1b[31m';
-            console.log(`    [${color}${d.match ? 'OK' : 'FAIL'}\x1b[0m] ${d.field}: "${d.htmlValue}" vs "${d.jsonValue}"`);
+    // TSA
+    const tsaIcon = result.tsa.valid ? '✅' : '⚠️';
+    console.log(`[TSA] Timestamp:         ${tsaIcon} ${result.tsa.valid ? 'VALID' : 'NONE'}`);
+    if (result.tsa.timestamp) console.log(`     Sealed At: \x1b[1m${result.tsa.timestamp}\x1b[0m`);
+    if (result.tsa.error) console.log(`     Error: ${result.tsa.error}`);
+
+    // HMP
+    if (checkHmp && result.hmp) {
+        const hmpIcon = result.hmp.valid ? '✅' : '❌';
+        console.log(`[HMP] Human-Machine Parity: ${hmpIcon} ${result.hmp.valid ? 'VALID' : 'INVALID'}`);
+        result.hmp.details.forEach(d => {
+             const mark = d.match ? 'OK' : 'FAIL';
+             const color = d.match ? '\x1b[32m' : '\x1b[31m';
+             console.log(`     [${color}${mark}\x1b[0m] ${d.field}: ${d.htmlValue} vs ${d.jsonValue}`);
         });
     }
 
-    process.exit(result.isValid && (!checkHmp || result.hmpResult?.isValid) ? 0 : 1);
+    console.log('-------------------------------------');
+    if (result.isValid) {
+        console.log('\x1b[32mFINAL RESULT: PASS\x1b[0m');
+    } else {
+        console.log('\x1b[31mFINAL RESULT: FAIL\x1b[0m');
+    }
+    console.log('=====================================');
+
+    process.exit(result.isValid ? 0 : 1);
 }
 
 main().catch(err => {

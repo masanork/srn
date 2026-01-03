@@ -3,7 +3,7 @@ export interface BaseLayoutProps {
     content: string;
     fontCss: string;
     fontFamilies: string[]; // For Mermaid config
-    jsonLd?: object;
+    jsonLd?: object | object[];
     lang?: string;
     className?: string;
     relPath?: string;
