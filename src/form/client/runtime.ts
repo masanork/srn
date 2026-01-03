@@ -79,6 +79,7 @@ export function initRuntime() {
             w.generatedJsonStructure = s;
             console.log('[Runtime] generatedJsonStructure set');
             uim.applyI18n(); uim.initTelFormatter(); calc.recalculate(); uim.updateVisibility();
+            updateSubmitButtonState(); // Validate once structure is checked
 
             // Initialize SearchEngine after structure data is loaded
             if (w.SearchEngine && typeof w.SearchEngine.init === 'function') {
@@ -351,8 +352,15 @@ export function initRuntime() {
             });
         }
         calc.recalculate(); uim.updateVisibility(); dm.updateJsonLd();
+
+        // D. Validation Check
+        updateSubmitButtonState();
+
         clearTimeout(tm); tm = setTimeout(() => dm.saveToLS(), 1000);
     });
+
+    // Initial check
+    setTimeout(updateSubmitButtonState, 500);
 
     // Change event for datalist selection (LG autocomplete)
     document.addEventListener('change', (e) => {
@@ -417,6 +425,65 @@ export function initRuntime() {
     });
 
     console.log("Web/A Runtime Ready.");
+}
+
+function checkRequired(): boolean {
+    const w = window as any;
+    // Check fields based on jsonStructure.fields definitions
+    if (!w.generatedJsonStructure || !w.generatedJsonStructure.fields) {
+        // If config not loaded yet, disable submit to be safe
+        return false;
+    }
+
+    // Filter visible inputs that are required
+    const inputs = Array.from(document.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
+    for (const input of inputs) {
+        // Skip hidden inputs (e.g. by show_if)
+        if (input.offsetParent === null) continue;
+
+        const key = input.dataset.jsonPath || input.name;
+        if (!key) continue;
+
+        // Find field definition
+        const fieldDef = w.generatedJsonStructure.fields.find((f: any) => f.key === key);
+        if (fieldDef && fieldDef.required) {
+            if (input.type === 'checkbox') {
+                if (!input.checked) {
+                    console.log(`[Validation] Required Checkbox missing: ${key}`);
+                    return false;
+                }
+            } else if (input.type === 'radio') {
+                const group = document.getElementsByName(input.name);
+                let checked = false;
+                for (let i = 0; i < group.length; i++) {
+                    if ((group[i] as HTMLInputElement).checked) {
+                        checked = true;
+                        break;
+                    }
+                }
+                if (!checked) {
+                    console.log(`[Validation] Required Radio missing: ${key}`);
+                    return false;
+                }
+            } else {
+                if (!input.value.trim()) {
+                    console.log(`[Validation] Required Field empty: ${key}`);
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function updateSubmitButtonState() {
+    const btn = document.getElementById('btn-submit') as HTMLButtonElement;
+    if (!btn) return;
+    const valid = checkRequired();
+    btn.disabled = !valid;
+    btn.style.opacity = valid ? '1' : '0.5';
+    btn.style.cursor = valid ? 'pointer' : 'not-allowed';
+    btn.title = valid ? '' : 'Please fill in all required fields';
 }
 
 /**

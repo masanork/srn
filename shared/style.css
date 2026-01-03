@@ -36,20 +36,27 @@ body {
 
 /* Widen layout for Web/A Forms and give them a document feel */
 
-/* Widen layout for Web/A Forms and give them a document feel */
+
+/* Infinite Canvas Layout for Web/A Forms */
 body:has(.weba-form-container) {
-    max-width: 1200px;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background-color: var(--card-bg);
+    /* Unified background */
 }
 
 body:has(.weba-form-container) main {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 4px;
-    /* Sharper corners for documents */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--border-color);
+    background: transparent;
+    padding: 1.5rem;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    max-width: none;
+    width: 100%;
 }
 
+/* Default Main (Card Style for normal pages) */
 main {
     background: var(--card-bg);
     padding: 2rem;
@@ -59,9 +66,29 @@ main {
     transition: transform 0.2s ease;
 }
 
-/* Reduce padding for forms to save space */
+/* Ensure global main style doesn't interfere with Forms */
 main:has(.weba-form-container) {
     padding: 1.5rem;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+}
+
+/* Toolbar adjustments for flat layout */
+.form-toolbar {
+    background-color: var(--bg-color);
+    /* Light gray usually */
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    /* Negative margin to span full width */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 h1,
@@ -444,6 +471,7 @@ button.tab-btn {
     justify-content: center;
     gap: 0.4rem;
     border: 1px solid transparent;
+    white-space: nowrap;
 }
 
 /* 提出版を保存 (Submit) */

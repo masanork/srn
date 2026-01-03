@@ -108,7 +108,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 type: typeStr,
                 context: contextMatch ? contextMatch[1] : undefined,
                 property: propertyMatch ? propertyMatch[1] : undefined,
-                show_if: (attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/))?.[1]
+                show_if: (attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/))?.[1],
+                required: attrStr.includes('required')
             });
 
             // Render tag (already produces safe HTML)
@@ -340,7 +341,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     type: type || 'text',
                     context: contextMatch ? contextMatch[1] : undefined,
                     property: propertyMatch ? propertyMatch[1] : undefined,
-                    show_if: showIfMatch ? showIfMatch[1] : undefined
+                    show_if: showIfMatch ? showIfMatch[1] : undefined,
+                    required: attrStr.includes('required')
                 });
 
                 // Explicit dispatch to avoid dynamic property access issues
@@ -404,7 +406,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             <div style="flex:1"></div>
             <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
             <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
-            <button class="primary" onclick="window.signAndDownload()" data-i18n="sign_btn">Submit</button>
+            <button class="primary" id="btn-submit" onclick="window.signAndDownload()" data-i18n="sign_btn" disabled>Submit</button>
     `;
 
     if (tabs.length > 0) {
