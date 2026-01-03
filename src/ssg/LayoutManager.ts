@@ -290,9 +290,14 @@ export class LayoutManager {
             // 1. Inject Trust Store
             const didDoc = idManager.getDidDocument();
             if (didDoc) {
+                const trustStore = {
+                    didDocuments: [didDoc],
+                    revocationList: [], // Future use (LTV Level 3)
+                    trustedTimestamps: [] // Future use (LTV Level 2/4)
+                };
                 const trustStoreScript = `
 <script type="application/vnd.weba+trust-store" id="weba-trust-store">
-${JSON.stringify({ didDocuments: [didDoc] }, null, 2)}
+${JSON.stringify(trustStore, null, 2)}
 </script>
 `;
                 finalHtml = finalHtml.replace('</body>', `${trustStoreScript}</body>`);

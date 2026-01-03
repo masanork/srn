@@ -54,6 +54,26 @@ describe("SSG Integration", () => {
         expect(html).toContain("発行元による真正性の証明");
     });
 
+    test("verifies LTV Trust Store structure in generated HTML", async () => {
+        // article-1.html was already generated in the previous test
+        const html = await fs.readFile(path.join(TEST_DIST_DIR, "article-1.html"), "utf-8");
+        
+        expect(html).toContain('id="weba-trust-store"');
+        expect(html).toContain('"didDocuments":');
+        expect(html).toContain('"revocationList":');
+        expect(html).toContain('"trustedTimestamps":');
+        
+        // Verify it's valid JSON
+        const match = html.match(/id="weba-trust-store">([\s\S]*?)<\/script>/);
+        expect(match).toBeTruthy();
+        if (match) {
+            const json = JSON.parse(match[1].trim());
+            expect(json.didDocuments).toBeArray();
+            expect(json.revocationList).toBeArray();
+            expect(json.trustedTimestamps).toBeArray();
+        }
+    });
+
     test("generates form and report", async () => {
         const md = `---\ntitle: My Form\nlayout: form\n---\n# Submit\n- [text:name] Name`;
         await fs.writeFile(path.join(TEST_SITE_DIR, "content/form.md"), md);
