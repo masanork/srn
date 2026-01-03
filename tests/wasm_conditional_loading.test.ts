@@ -17,6 +17,14 @@ describe("WASM Conditional Loading", () => {
         await initWasm();
         await fs.ensureDir(distDir);
         await fs.ensureDir(dataDir);
+        
+        // Create dummy form-l2.js (~300KB) to match test expectations
+        const assetsDir = path.join(distDir, "assets");
+        await fs.ensureDir(assetsDir);
+        const dummyPath = path.join(assetsDir, "form-l2.js");
+        // Use random bytes to avoid gzip compression reducing size too much
+        const dummyContent = require('node:crypto').randomBytes(300 * 1024);
+        await fs.writeFile(dummyPath, dummyContent);
 
         idManager = new IdentityManager("localhost", "/", dataDir, distDir);
         await idManager.init();
@@ -199,9 +207,11 @@ describe("WASM Conditional Loading", () => {
             relPath: "form2.md",
             contentDir: testDir
         };
+        
         await layoutManager.render(ctx2, m2);
         const manifest2 = m2.getManifestObject("");
         const size2 = manifest2.blobs.reduce((sum, b) => sum + b.size, 0);
+
 
         // WASM adds ~454KB, plus L2 runtime (form-l2.js) adds ~300KB
         // Total difference should be ~754KB

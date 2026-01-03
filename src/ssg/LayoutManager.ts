@@ -186,7 +186,8 @@ export class LayoutManager {
                         }
                         latestArticleData = { ...aData, path: latest.path };
                         const normalizedContent = stripLeadingTitleHeading(aContent, aData.title);
-                        latestArticleContent = await marked.parse(normalizedContent) as string;
+                        const rawHtml = await marked.parse(normalizedContent) as string;
+                        latestArticleContent = rawHtml.replace(/href="([^"]+)\.md(#|")/g, 'href="$1.html$2');
                         latestArticlePath = latest.path;
                     }
                 }
