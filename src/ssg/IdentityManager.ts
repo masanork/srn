@@ -9,6 +9,7 @@ import { encodeDidKey, encodePqcPublicKeyJwk } from '../core/did.ts';
 import { hexToBytes } from '../core/encoding.ts';
 import { PrunableHashChain } from '../core/phc.js';
 import type { PHCEventType } from '../core/phc.js';
+import { getTimestamp } from '../tools/tsa_client.ts';
 
 export class IdentityManager {
     public currentKeys!: HybridKeys;
@@ -19,14 +20,17 @@ export class IdentityManager {
     private distDir: string;
     private signatureStore: Record<string, any> = {};
     private contextStore: Record<string, any[]> = {};
+    private timestampStore: Record<string, string> = {}; // sigValue -> Base64 Token
+    private tsaUrl?: string;
 
-    constructor(siteDomain: string, sitePath: string, dataDir: string, distDir: string) {
+    constructor(siteDomain: string, sitePath: string, dataDir: string, distDir: string, tsaUrl?: string) {
         const normalizedPath = sitePath.replace(/^\//, '').replace(/\/$/, '');
         const didSubPath = normalizedPath ? ':' + normalizedPath.replace(/\//g, ':') : '';
         this.siteDid = `did:web:${siteDomain}${didSubPath}`;
         this.dataDir = dataDir;
         this.distDir = distDir;
         this.buildId = `build-${Date.now()}`;
+        this.tsaUrl = tsaUrl;
     }
 
     async init() {
@@ -57,6 +61,11 @@ export class IdentityManager {
             try { this.contextStore = await fs.readJson(contextStorePath); } catch (e) { console.warn("Failed to load context store", e); }
         }
 
+        const timestampStorePath = path.join(this.dataDir, 'timestamp-store.json');
+        if (await fs.pathExists(timestampStorePath)) {
+            try { this.timestampStore = await fs.readJson(timestampStorePath); } catch (e) { console.warn("Failed to load timestamp store", e); }
+        }
+
         await this.updateKeyHistory();
         await this.generateDidDoc();
     }
@@ -67,6 +76,9 @@ export class IdentityManager {
 
         const contextStorePath = path.join(this.dataDir, 'context-store.json');
         await fs.writeJson(contextStorePath, this.contextStore, { spaces: 2 });
+
+        const timestampStorePath = path.join(this.dataDir, 'timestamp-store.json');
+        await fs.writeJson(timestampStorePath, this.timestampStore, { spaces: 2 });
     }
 
     private async updateKeyHistory() {
@@ -140,12 +152,21 @@ export class IdentityManager {
         return crypto.createHash('sha256').update(canon || '').digest('hex');
     }
 
+    public getTrustedTimestamps(vc?: any): string[] {
+        if (!vc || !vc.proof || !vc.proof[0]) return [];
+        const sigValue = vc.proof[0].proofValue;
+        const token = this.timestampStore[sigValue];
+        return token ? [token] : [];
+    }
+
     async signDocument(payload: any, metadata?: any): Promise<any> {
         // LTV Phase 2: Stable Signatures
         const canon = canonicalize(payload);
         const hash = crypto.createHash('sha256').update(canon || '').digest('hex');
+        let vc: any;
 
         if (this.signatureStore[hash]) {
+            vc = this.signatureStore[hash];
             const phc = PrunableHashChain.fromJSON(this.contextStore[hash]);
             const links = phc.getLinks();
 
@@ -156,7 +177,7 @@ export class IdentityManager {
                 const l = links[i];
                 if (!l || !l.event) continue;
                 const e = l.event;
-                if (e.type === 'MetadataUpdate' || e.type === 'Genesis') {
+                if ((e.type === 'MetadataUpdate' || e.type === 'Genesis') && e.payload) {
                     lastMeta = e.payload.metadata;
                     break;
                 }
@@ -179,7 +200,7 @@ export class IdentityManager {
             const MAX_CHAIN_LENGTH = 10;
             const KEEP_LATEST = 5;
             const currentLinks = phc.getLinks();
-            
+
             if (currentLinks.length > MAX_CHAIN_LENGTH) {
                 const keepIndices = [0]; // Always keep Genesis
                 const total = currentLinks.length;
@@ -192,25 +213,46 @@ export class IdentityManager {
             // -----------------------------
 
             this.contextStore[hash] = phc.toJSON();
-            await this.saveStore();
-            return this.signatureStore[hash];
+        } else {
+            vc = await createHybridVC(payload, this.currentKeys, this.siteDid, this.buildId);
+
+            // PHC Initialization (Genesis)
+            const phc = new PrunableHashChain();
+            await phc.append('Genesis', {
+                issuer: this.siteDid,
+                payloadHash: hash,
+                metadata: metadata || {}
+            });
+
+            // Save to store
+            this.signatureStore[hash] = vc;
+            this.contextStore[hash] = phc.toJSON();
         }
 
-        const vc = await createHybridVC(payload, this.currentKeys, this.siteDid, this.buildId);
+        // --- LTV Phase 3: Trusted Timestamping ---
+        if (this.tsaUrl && vc.proof && vc.proof[0]) {
+            const sigValue = vc.proof[0].proofValue;
+            if (!this.timestampStore[sigValue]) {
+                try {
+                    // Timestamp the Signature Value (Base58 -> Bytes)
+                    // Note: sigValue is Multibase Base58btc string. 
+                    // getTimestamp expects Uint8Array. 
+                    // We don't have a decoder imported here, but we can treat the string as bytes or decode it.
+                    // Ideally, we timestamp the BYTES of the signature.
+                    // But standard 'TextEncoder' is fine for proving existence of the string.
+                    const sigBytes = new TextEncoder().encode(sigValue);
+                    const tokenBuffer = await getTimestamp(sigBytes, this.tsaUrl);
+                    this.timestampStore[sigValue] = Buffer.from(tokenBuffer).toString('base64');
+                    console.log(`[LTV] Fetched new timestamp for VC signature`);
+                } catch (e) {
+                    console.warn(`[LTV] Failed to fetch timestamp:`, e);
+                }
+            }
+        }
+        // -----------------------------------------
 
-        // PHC Initialization (Genesis)
-        const phc = new PrunableHashChain();
-        await phc.append('Genesis', {
-            issuer: this.siteDid,
-            payloadHash: hash,
-            metadata: metadata || {}
-        });
-
-        // Save to store
-        this.signatureStore[hash] = vc;
-        this.contextStore[hash] = phc.toJSON();
         await this.saveStore();
-
         return vc;
     }
 }
+

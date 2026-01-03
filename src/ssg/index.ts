@@ -74,7 +74,13 @@ async function build() {
         await fs.ensureDir(DATA_DIR);
 
         // Initialize Managers
-        const idManager = new IdentityManager(config.identity.domain, config.identity.path, DATA_DIR, DIST_DIR);
+        const idManager = new IdentityManager(
+            config.identity.domain, 
+            config.identity.path, 
+            DATA_DIR, 
+            DIST_DIR,
+            config.identity.tsaUrl
+        );
         await idManager.init();
 
         const fontProcessor = new FontProcessor(config, process.cwd());

@@ -293,7 +293,7 @@ export class LayoutManager {
                 const trustStore = {
                     didDocuments: [didDoc],
                     revocationList: [], // Future use (LTV Level 3)
-                    trustedTimestamps: [] // Future use (LTV Level 2/4)
+                    trustedTimestamps: idManager.getTrustedTimestamps(vc)
                 };
                 const trustStoreScript = `
 <script type="application/vnd.weba+trust-store" id="weba-trust-store">
