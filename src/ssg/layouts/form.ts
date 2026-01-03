@@ -228,11 +228,15 @@ export async function formLayout(params: {
     };
 
     // Generate custom bundle with only required plugins
-    if (manifestManager && pluginDetection.plugins.length > 0) {
+    if (manifestManager) {
         try {
-            console.log(`[FormLayout] Generating custom bundle for: ${pluginDetection.plugins.join(', ')}`);
+            const pluginsToBundle = pluginDetection.plugins.length > 0
+                ? pluginDetection.plugins
+                : []; // Empty array = basic runtime only
+
+            console.log(`[FormLayout] Generating custom bundle for: ${pluginsToBundle.length > 0 ? pluginsToBundle.join(', ') : '(basic runtime)'}`);
             const bundle = await bundlePlugins({
-                plugins: pluginDetection.plugins,
+                plugins: pluginsToBundle,
                 minify: true,
                 cache: true
             });
@@ -242,17 +246,20 @@ export async function formLayout(params: {
                 content: Buffer.from(bundle.code, 'utf-8'),
                 mediaType: 'application/javascript',
                 fileName: `form-runtime-${bundle.hash}.js`,
-                description: `Custom plugin runtime (${pluginDetection.plugins.join(', ')})`
+                description: pluginsToBundle.length > 0
+                    ? `Custom plugin runtime (${pluginsToBundle.join(', ')})`
+                    : 'Basic form runtime'
             });
 
             console.log(`[FormLayout] Custom bundle registered: ${bundle.size} bytes`);
         } catch (error) {
-            console.warn('[FormLayout] Custom bundler failed, falling back to form-core-plugin.js:', error);
-            await inlineScript('form-core-plugin.js', 'weba-js-core');
+            console.warn('[FormLayout] Custom bundler failed:', error);
+            // Try fallback to form-core.js (non-plugin version)
+            await inlineScript('form-core.js', 'weba-js-core');
         }
     } else {
-        // Fallback to standard plugin runtime
-        await inlineScript('form-core-plugin.js', 'weba-js-core');
+        // No manifest manager, try to inline form-core.js
+        await inlineScript('form-core.js', 'weba-js-core');
     }
 
     if (needsL2) await inlineScript('form-l2.js', 'weba-js-l2');
