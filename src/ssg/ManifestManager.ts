@@ -113,6 +113,10 @@ export class ManifestManager {
 
         for (const blob of this.blobs) {
             const b = blob as any;
+            if (!b.urls || b.urls.length === 0) {
+                console.warn(`[ManifestManager] Blob ${b.id} has no URLs, skipping injection`);
+                continue;
+            }
             const id = b.urls[0].substring(1);
             html += '<script id="' + id + '" type="' + b.mediaType + '">' + b._content + '</script>\n';
         }
@@ -122,6 +126,12 @@ export class ManifestManager {
 (async function() {
   const m = window.__WEBA_MANIFEST;
   if (!m || !m.blobs) return;
+
+  // Initialize process shim for libraries that expect it
+  window.process = window.process || {};
+  window.process.env = window.process.env || { NODE_ENV: 'production' };
+  window.process.browser = true;
+  window.global = window.global || window;
   
   const processBlob = async (b) => {
     const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);

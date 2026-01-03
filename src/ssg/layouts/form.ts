@@ -266,6 +266,13 @@ export async function formLayout(params: {
             ${customStyle}
             ${html}
             ${l2Toggle}
+            <script>
+                // Early switchTab shim to prevent ReferenceErrors
+                window.switchTab = window.switchTab || function(btn, tabId) {
+                    console.log('Early switchTab called for:', tabId);
+                    // Actual implementation will overwrite this when runtime loads
+                };
+            </script>
 
             <footer class="no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem;">
                 <div style="display: flex; flex-direction: column; gap: 0.2rem;">

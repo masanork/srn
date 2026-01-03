@@ -193,10 +193,13 @@ async function copyStaticAssets(siteDir: string, distDir: string, schemasDir: st
     else if (await fs.pathExists(sharedStyle)) await fs.copy(sharedStyle, styleTarget);
 
     // Copy shared data (e.g., postal codes)
+    // Note: Postal data is now managed via ManifestManager as blobs, so this full copy is redundant.
+    /*
     const sharedData = path.resolve(process.cwd(), 'shared', 'data');
     if (await fs.pathExists(sharedData)) {
         await fs.copy(sharedData, path.join(distDir, 'data'));
     }
+    */
 
     // Copy shared images (e.g., architecture diagrams)
     const sharedImages = path.resolve(process.cwd(), 'shared', 'images');
@@ -349,7 +352,11 @@ export async function bundleClientScripts(distDir: string) {
             outdir: assetsDir,
             naming: "verify-bundle.js",
             minify: true,
-            plugins: [wasmStubPlugin]
+            plugins: [wasmStubPlugin],
+            define: {
+                global: 'window',
+                process: 'window.process',
+            },
         });
     }
 
@@ -362,7 +369,11 @@ export async function bundleClientScripts(distDir: string) {
                 outdir: assetsDir,
                 naming: name,
                 minify: true,
-                plugins: [wasmStubPlugin]
+                plugins: [wasmStubPlugin],
+                define: {
+                    global: 'window',
+                    process: 'window.process',
+                },
             });
         }
     };
