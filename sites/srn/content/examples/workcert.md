@@ -1,205 +1,219 @@
 ---
-title: "就労証明書（世田谷区版）"
-layout: form
-description: "就労証明書のWeb/A Form版（Excel様式の主要項目を整理）"
-date: 2025-01-04
-author: "Sorane Project"
+title: "Certificate of Employment (就労証明書)"
+layout: article
+description: "A standard Certificate of Employment verified by Web/A."
+style: |
+    .cert-container {
+        font-family: "Hiragino Mincho ProN", serif;
+        max-width: A4;
+        margin: 2rem auto;
+        padding: 3rem;
+        background: #fff;
+        border: 1px solid #ddd;
+        position: relative;
+    }
+    .cert-title {
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 3rem;
+        letter-spacing: 0.5em;
+        text-decoration: underline;
+    }
+    .cert-date {
+        text-align: right;
+        margin-bottom: 2rem;
+    }
+    .recipient {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #000;
+        display: inline-block;
+        min-width: 200px;
+    }
+    
+    .cert-body {
+        margin: 2rem 0;
+        line-height: 2;
+    }
+    
+    table.cert-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 2rem;
+    }
+    table.cert-table th, table.cert-table td {
+        border: 1px solid #000;
+        padding: 0.8rem;
+    }
+    table.cert-table th {
+        background: #f0f0f0;
+        width: 30%;
+        text-align: left;
+    }
+    
+    .issuer-block {
+        margin-top: 4rem;
+        float: right;
+        width: 50%;
+        text-align: left;
+    }
+    .issuer-seal {
+        position: absolute;
+        bottom: 4rem;
+        right: 4rem;
+        width: 80px;
+        height: 80px;
+        border: 3px solid #d00;
+        border-radius: 50%;
+        color: #d00;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transform: rotate(-10deg);
+        opacity: 0.8;
+        pointer-events: none;
+    }
+    .verification-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-family: sans-serif;
+        font-size: 0.8rem;
+        color: #2e7d32;
+        border: 1px solid #2e7d32;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        background: #e8f5e9;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Print settings */
+    @media print {
+        .verification-status { display: none; }
+        body { background: #fff; }
+        .cert-container { border: none; margin: 0; padding: 0; }
+    }
 ---
 
-# 就労証明書（世田谷区版）
+<div class="cert-container">
+    <div class="verification-status">
+        🔒 Verified by Sorane Inc.
+    </div>
 
-### 事業所・証明情報
+    <div class="cert-date">Date: 2026-01-04</div>
+    
+    <div class="recipient">To: Mr. Taro Sorane</div>
 
-- [date:certificate.date] 証明日
-- [text:employer.name] 事業所名
-- [text:employer.representative] 代表者名
-- [text:employer.address (placeholder="所在地")] 所在地
-- [text:employer.phone (placeholder="03-1234-5678")] 電話番号
-- [text:employer.contact_name] 担当者名
-- [text:employer.contact_phone] 記載者連絡先
+    <div class="cert-title">CERTIFICATE OF EMPLOYMENT</div>
 
----
+    <div class="cert-body">
+        This is to certify that the person named below is employed by our company as follows:
+    </div>
 
-### 就労者情報
+    <table class="cert-table">
+        <tr>
+            <th>Employee Name</th>
+            <td>Taro Sorane</td>
+        </tr>
+        <tr>
+            <th>Date of Birth</th>
+            <td>1990-05-15</td>
+        </tr>
+        <tr>
+            <th>Department</th>
+            <td>Engineering Division, Cloud Infrastructure Team</td>
+        </tr>
+        <tr>
+            <th>Position</th>
+            <td>Senior Software Engineer</td>
+        </tr>
+        <tr>
+            <th>Employment Date</th>
+            <td>2020-04-01</td>
+        </tr>
+        <tr>
+            <th>Employment Status</th>
+            <td>Full-time (Permanent)</td>
+        </tr>
+        <tr>
+            <th>Annual Salary (Prev. Year)</th>
+            <td>JPY 8,500,000</td>
+        </tr>
+    </table>
 
-- [text:employee.kana] フリガナ
-- [text:employee.name] 本人氏名
-- [date:employee.birth_date] 生年月日
+    <div class="issuer-block">
+        <p><strong>Employer:</strong> Sorane Inc.</p>
+        <p><strong>Address:</strong> 1-1-1 Tech Valley, Shibuya-ku, Tokyo, Japan</p>
+        <p><strong>Representative:</strong> Masanori Kusunoki, CEO</p>
+    </div>
 
----
+    <div class="issuer-seal">
+        Sorane<br>Inc.<br>Seal
+    </div>
 
-### 雇用（予定）期間等
+    <div style="clear:both;"></div>
+</div>
 
-- [radio:employment.term] 雇用（予定）期間
-  - 無期
-  - 有期
-- [date:employment.start_date] 雇用開始日
-- [date:employment.end_date] 雇用終了日（有期の場合）
+<div style="text-align:center; margin-top:2rem; font-family:sans-serif; color:#666; font-size:0.9rem;">
+    <p>This document acts as a verified digital proof of employment.</p>
+    <details>
+        <summary style="cursor:pointer; color:#0056b3;">View JSON-LD Data (System Readable)</summary>
+        <pre style="text-align:left; background:#f4f4f4; padding:1rem; border-radius:8px; overflow-x:auto; max-width:600px; margin:1rem auto;">
+{
+  "@context": "https://schema.org",
+  "@type": "EmployeeRole",
+  "employee": {
+    "@type": "Person",
+    "name": "Taro Sorane",
+    "birthDate": "1990-05-15"
+  },
+  "employer": {
+    "@type": "Organization",
+    "name": "Sorane Inc.",
+    "address": "1-1-1 Tech Valley, Shibuya-ku, Tokyo, Japan",
+    "founder": { "@type": "Person", "name": "Masanori Kusunoki" }
+  },
+  "roleName": "Senior Software Engineer",
+  "startDate": "2020-04-01",
+  "baseSalary": {
+    "@type": "PriceSpecification",
+    "price": 8500000,
+    "priceCurrency": "JPY",
+    "referenceQuantity": { "@type": "QuantitativeValue", "unitCode": "ANN" }
+  }
+}
+        </pre>
+    </details>
+</div>
 
----
-
-### 本人就労先事業所
-
-- [text:workplace.name] 名称
-- [text:workplace.address] 住所
-
----
-
-- [datalist:employment.industry (src:industry label:1 placeholder="業種を入力")] 業種
-述）
-- [datalist:employment.type (src:employment_type label:1 placeholder="雇用形態を入力")] 雇用の形態
-
-### 就労時間（固定就労）
-
-| 曜日 | 月 | 火 | 水 | 木 | 金 | 土 | 日 | 祝日 | 週間合計（時間） | 月間合計（時間） | 休憩時間（分） |
-| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
-| 出勤 | [checkbox:fixed.mon (align:C)] | [checkbox:fixed.tue (align:C)] | [checkbox:fixed.wed (align:C)] | [checkbox:fixed.thu (align:C)] | [checkbox:fixed.fri (align:C)] | [checkbox:fixed.sat (align:C)] | [checkbox:fixed.sun (align:C)] | [checkbox:fixed.holiday (align:C)] | [number:fixed.week_hours] | [number:fixed.month_hours] | [number:fixed.break_minutes] |
-
-| 平日開始 | 平日終了 | 土曜開始 | 土曜終了 | 日祝開始 | 日祝終了 |
-| -- | -- | -- | -- | -- | -- |
-| [text:fixed.weekday_start (placeholder="09:00")] | [text:fixed.weekday_end (placeholder="18:00")] | [text:fixed.sat_start (placeholder="09:00")] | [text:fixed.sat_end (placeholder="18:00")] | [text:fixed.sun_start (placeholder="09:00")] | [text:fixed.sun_end (placeholder="18:00")] |
-
----
-
-### 就労時間（変則就労）
-
-- [number:variable.total_hours] 合計時間（時間/月）
-- [radio:variable.unit] 単位
-  - 月間
-  - 週間
-- [number:variable.work_days] 就労日数（日）
-- [text:variable.shift_time (placeholder="例: 09:00-18:00")] 主な就労時間帯・シフト時間帯
-- [number:variable.break_minutes] 休憩時間（分）
-
----
-
-### 就労実績（直近3か月）
-
-[dynamic-table:work_records]
-| 年月 | 日数/月 | 時間/月 |
-| -- | -- | -- |
-| [text:ym (placeholder="2025-01")] | [number:days] | [number:hours] |
-
----
-
-### 休業等の取得状況
-
-- [radio:leave.maternity] 産前・産後休業
-  - 取得予定
-  - 取得中
-- [date:leave.maternity_start] 産前・産後開始日
-- [date:leave.maternity_end] 産前・産後終了日
-
-- [radio:leave.childcare] 育児休業
-  - 取得予定
-  - 取得中
-  - 取得済み
-- [date:leave.childcare_start] 育児休業開始日
-- [date:leave.childcare_end] 育児休業終了日
-
-- [radio:leave.other] 産休・育休以外の休業
-  - 取得予定
-  - 取得中
-  - 取得済み
-- [radio:leave.other_reason] 理由
-  - 介護休業
-  - 病休
-  - その他
-- [text:leave.other_reason_detail] 理由（その他）
-- [date:leave.other_start] 休業開始日
-- [date:leave.other_end] 休業終了日
-
----
-
-### 復職・短時間勤務
-
-- [radio:return.to_work] 復職
-  - 復職予定
-  - 復職済み
-- [date:return.date] 復職（予定）年月日
-
-- [radio:shorttime.use] 育児のための短時間勤務制度
-  - 取得予定
-  - 取得中
-- [date:shorttime.start] 期間（開始）
-- [date:shorttime.end] 期間（終了）
-- [text:shorttime.shift (placeholder="例: 10:00-16:00")] 主な就労時間帯・シフト時間帯
-
----
-
-### 保育士等としての勤務実態
-
-- [radio:employment.nursery] 保育士等としての勤務実態
-  - 有
-  - 有（予定）
-  - 無
-
----
-
-### 備考欄
-
-- [textarea:notes (placeholder="特記事項があれば記載")] 備考
-
----
-
-### 追加的記載項目
-
-- [radio:additional.tanshin] 就労の状況（単身赴任）
-  - 有
-  - 無
-- [date:additional.tanshin_start] 期間（開始）
-- [date:additional.tanshin_end] 期間（終了）
-
-- [radio:additional.employment_insurance] 雇用保険加入状況
-  - 加入
-  - 非加入
-
-- [number:additional.changed_work_days (placeholder="週あたり日数")] 変更後の就労日数（週）
-
----
-
-### 保護者記入欄
-
-- [text:child.name] 児童氏名
-- [date:child.birth_date] 生年月日
-- [text:child.address (placeholder="世田谷区○丁目○番○号")] 住所
-
----
-
-[master:industry]
-| 農業・林業 |
-| 漁業 |
-| 鉱業・採石業・砂利採取業 |
-| 建設業 |
-| 製造業 |
-| 電気・ガス・熱供給・水道業 |
-| 情報通信業 |
-| 運輸業・郵便業 |
-| 卸売業・小売業 |
-| 金融業・保険業 |
-| 不動産業・物品賃貸業 |
-| 学術研究・専門・技術サービス業 |
-| 宿泊業・飲食サービス業 |
-| 生活関連サービス業・娯楽業 |
-| 医療・福祉 |
-| 教育・学習支援業 |
-| 複合サービス事業 |
-| 公務 |
-| その他 |
-
-[master:employment_type]
-| 雇用形態 |
-| --- |
-| 正社員 |
-| パート・アルバイト |
-| 派遣社員 |
-| 契約社員 |
-| 会計年度任用職員 |
-| 非常勤・臨時職員 |
-| 役員 |
-| 自営業主 |
-| 自営業専従者 |
-| 家族従業者 |
-| 内職 |
-| 業務委託 |
-| その他 |
+<script type="application/json" id="wa-input-data">
+{
+    "@context": "https://schema.org",
+    "@type": "EmployeeRole",
+    "employee": {
+        "@type": "Person",
+        "name": "Taro Sorane",
+        "birthDate": "1990-05-15"
+    },
+    "employer": {
+        "@type": "Organization",
+        "name": "Sorane Inc.",
+        "address": "1-1-1 Tech Valley, Shibuya-ku, Tokyo, Japan",
+        "founder": { "@type": "Person", "name": "Masanori Kusunoki" }
+    },
+    "roleName": "Senior Software Engineer",
+    "startDate": "2020-04-01",
+    "baseSalary": {
+        "@type": "PriceSpecification",
+        "price": 8500000,
+        "priceCurrency": "JPY",
+        "referenceQuantity": { "@type": "QuantitativeValue", "unitCode": "ANN" }
+    }
+}
+</script>

@@ -108,4 +108,30 @@ layout: article
             }
         }
     }, 30000); // 30s timeout for network
+
+    test("CLI tool verifies the generated LTV container", () => {
+        const htmlPath = path.join(TEST_DIST_DIR, "tsa.html");
+        // Ensure file exists (it should if previous test passed)
+        if (!fs.existsSync(htmlPath)) {
+            console.warn("Skipping CLI test because tsa.html was not generated");
+            return;
+        }
+
+        const proc = Bun.spawnSync(["bun", "run", "src/bin/weba-verify.ts", htmlPath, "--hmp", "--json"]);
+
+        if (!proc.success) {
+            console.log("CLI Stdout:", proc.stdout.toString());
+            console.error("CLI Stderr:", proc.stderr.toString());
+            throw new Error(`CLI failed with code ${proc.exitCode}`);
+        }
+
+        const outputStr = proc.stdout.toString();
+        const output = JSON.parse(outputStr);
+        
+        expect(output.isValid).toBe(true);
+        expect(output.l4.valid).toBe(true);
+        expect(output.l3.valid).toBe(true);
+        expect(output.l2.isValid).toBe(true);
+        expect(output.tsa.valid).toBe(true);
+    });
 });

@@ -34,6 +34,7 @@ ai_generated: true
 <div data-lang-ja>
 <ul class="doc-list">
     <li><a href="./governance/minutes-2026-01-04-committee.ja.html"><strong>2026-01-04 Governance Committee</strong></a><br><small>インシデント対応の事後承認と、Folio CLI / Web/A VP (Juminhyo) への戦略転換を合意。</small></li>
+    <li><a href="./governance/marketing-plan-2026.ja.html"><strong>SRN Rebranding Plan 2026</strong></a><br><small>「SSG」から「信頼のインフラ」へ。市場戦略の転換計画。</small></li>
     <li><a href="./governance/minutes-2026-01-01-committee.ja.html"><strong>2026-01-01 Governance Committee</strong></a><br><small>ドラフト文書の公表審査結果 (VP Generator, API Economy, L2 Hybrid KEM)。</small></li>
     <li><a href="./governance/agenda-2026-01-04-committee.ja.html">Agenda: 2026-01-04 Committee (Simulated)</a></li>
     <li><a href="./governance/minutes-2025-12-31-tf-vp-generator.ja.html"><strong>2025-12-31 TF Minutes: VP Generator Spec</strong></a><br><small>行政証明書提示ツール仕様案に関するタスクフォース決議（承認済）。</small></li>

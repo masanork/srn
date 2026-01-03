@@ -198,6 +198,12 @@ async function copyStaticAssets(siteDir: string, distDir: string, schemasDir: st
         await fs.copy(sharedData, path.join(distDir, 'data'));
     }
 
+    // Copy shared images (e.g., architecture diagrams)
+    const sharedImages = path.resolve(process.cwd(), 'shared', 'images');
+    if (await fs.pathExists(sharedImages)) {
+        await fs.copy(sharedImages, path.join(distDir, 'images'));
+    }
+
     const staticDir = path.join(siteDir, 'static');
     if (await fs.pathExists(staticDir)) {
         await fs.copy(staticDir, distDir, { overwrite: true, filter: (src) => !src.endsWith('style.css') });
