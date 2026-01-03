@@ -206,9 +206,22 @@ td input[type="date"].form-input {
     min-width: 140px;
 }
 
+
 td input[type="checkbox"].form-input {
     min-width: auto;
     width: auto;
+}
+
+/* Dynamic Table Layout Tweaks */
+.data-table td:first-child {
+    white-space: nowrap;
+    background-color: rgba(0, 0, 0, 0.02);
+    /* Slight distinction for row header */
+}
+
+/* If first column is serial number (auto-num), make 2nd column (item name) nowrap too */
+.data-table tr:has(td:first-child .auto-num) td:nth-child(2) {
+    white-space: nowrap;
 }
 
 
