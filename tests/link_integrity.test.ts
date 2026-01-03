@@ -31,7 +31,14 @@ describe("Link Integrity Check", () => {
                 const targetRelativePath = link.split(/[?#]/)[0];
                 if (!targetRelativePath) continue;
 
-                const absoluteTarget = path.resolve(DIST_DIR, path.dirname(file), targetRelativePath);
+                let absoluteTarget;
+                if (targetRelativePath.startsWith("/")) {
+                    // Root-relative path (e.g. /images/logo.png) -> resolve from DIST_DIR
+                    absoluteTarget = path.join(DIST_DIR, targetRelativePath);
+                } else {
+                    // Relative path (e.g. ../images/logo.png) -> resolve from current file's directory
+                    absoluteTarget = path.resolve(DIST_DIR, path.dirname(file), targetRelativePath);
+                }
 
                 if (!(await fs.pathExists(absoluteTarget))) {
                     // Try to handle implicit index.html for directories
