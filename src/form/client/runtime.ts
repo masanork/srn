@@ -46,8 +46,15 @@ export function initRuntime() {
                             const bin = atob(el.textContent.trim());
                             const ui8 = new Uint8Array(bin.length);
                             for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
-                            const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
-                            jsonString = await new Response(stream).text();
+
+                            // Check if the blob is gzip-compressed
+                            if (structureBlob.mediaType === 'application/x-gzip') {
+                                const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+                                jsonString = await new Response(stream).text();
+                            } else {
+                                // For JSON, just decode the binary data
+                                jsonString = new TextDecoder().decode(ui8);
+                            }
                         } else {
                             const resp = await fetch(url);
                             if (!resp.ok) continue;

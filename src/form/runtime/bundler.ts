@@ -415,7 +415,7 @@ export async function bundlePlugins(options: BundleOptions): Promise<BundleResul
     console.log(`[Bundler] Building custom bundle for plugins: ${plugins.join(', ')}...`);
 
     try {
-        // Build with Bun
+        // Build with Bun for browser - Node.js modules should not be imported in client code
         const result = await build({
             entrypoints: [entryFile],
             outdir: tempDir,

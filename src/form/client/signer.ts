@@ -3,7 +3,9 @@ import canonicalize from 'canonicalize';
 import { decode } from 'cbor-x';
 import { registerPasskey, signWithPasskey, derivePasskeyPrf } from './webauthn';
 
-import { encodeDidKey, bytesToHex, hexToBytes, bytesToMultibaseBase58btc } from "@srn/core";
+// Import from specific modules to avoid bundling server-side code
+import { encodeDidKey } from "@srn/core/did";
+import { bytesToHex, hexToBytes, bytesToMultibaseBase58btc } from "@srn/core/encoding";
 
 const EDDSA_JCS_2022 = 'eddsa-jcs-2022';
 

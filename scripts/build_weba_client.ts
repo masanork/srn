@@ -5,7 +5,7 @@ async function build() {
     console.log("Building Web/A client bundle...");
 
     // 1. Build Bundle
-    const buildProc = Bun.spawn(["bun", "build", "src/form/client/index.ts", "--outfile", "src/form/client/bundle.js"]);
+    const buildProc = Bun.spawn(["bun", "build", "src/form/client/maker_entry.ts", "--outfile", "src/form/client/bundle.js"]);
     await buildProc.exited;
 
     if (buildProc.exitCode !== 0) {

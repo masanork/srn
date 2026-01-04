@@ -320,12 +320,10 @@ export async function formLayout(params: {
         ${customScript}
     `;
 
-    // Generate manifest and blob injection HTML
-    const manifestHtml = manifestManager ? manifestManager.generateInjectionHtml() : '';
-
+    // Manifest injection is handled by LayoutManager
     return baseLayout({
         title: data.title,
-        content: content + manifestHtml,
+        content: content,
         fontCss: fontCss + (sharedCss ? `<style>${sharedCss}</style>` : ''),
         fontFamilies,
         lang: lang,

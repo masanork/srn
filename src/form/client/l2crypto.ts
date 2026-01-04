@@ -1,4 +1,5 @@
 import canonicalize from "canonicalize";
+// Import from specific modules to avoid bundling server-side code
 import {
   initWasmFromB64,
   buildL2Envelope as wasmBuildL2,
@@ -6,7 +7,7 @@ import {
   getPaddingTargetSize as wasmGetPaddingTargetSize,
   hkdfSha256,
   x25519GetPublicKey
-} from "@srn/core";
+} from "@srn/core/wasm_core";
 import { createMlKem768Provider, installBrowserPqcProvider } from './pqc';
 import './guest_did';
 import { initL2Viewer } from './l2viewer';

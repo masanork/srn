@@ -335,10 +335,27 @@ export async function bundleClientScripts(distDir: string) {
     const projectRoot = path.resolve(import.meta.dirname, '../../');
 
     // Stub out the heavy WASM base64 string for client bundles
-    const wasmStubPlugin = {
-        name: 'wasm-stub',
+    const l2StubPlugin = {
+        name: 'l2-stub',
         setup(build: any) {
-            build.onLoad({ filter: /wasm_binary\.ts$/ }, () => {
+            const stubPath = path.resolve(projectRoot, 'src/form/client/l2crypto-stub.ts');
+
+            build.onResolve({ filter: /l2crypto|guest_did/ }, (args: any) => {
+                // Ensure we don't redirect the stub itself if it matches the regex (unlikely with strict name)
+                if (args.path.includes('l2crypto-stub')) return;
+                return { path: args.path, namespace: 'l2-stub-ns' };
+            });
+
+            build.onLoad({ filter: /.*/, namespace: 'l2-stub-ns' }, async () => {
+                const contents = await fs.readFile(stubPath, 'utf-8');
+                return { contents, loader: 'ts' };
+            });
+
+            // Keep the wasm stub as a safety net
+            build.onResolve({ filter: /wasm_binary/ }, (args: any) => {
+                return { path: args.path, namespace: 'wasm-stub-ns' };
+            });
+            build.onLoad({ filter: /.*/, namespace: 'wasm-stub-ns' }, () => {
                 return { contents: 'export const WASM_BINARY_B64 = "";', loader: 'ts' };
             });
         }
@@ -352,7 +369,7 @@ export async function bundleClientScripts(distDir: string) {
             outdir: assetsDir,
             naming: "verify-bundle.js",
             minify: true,
-            plugins: [wasmStubPlugin],
+            plugins: [], // Verify app needs full crypto, no stubs
             define: {
                 global: 'window',
                 process: 'window.process',
@@ -361,7 +378,7 @@ export async function bundleClientScripts(distDir: string) {
     }
 
     // --- Modular Form Bundles ---
-    const buildBundle = async (entry: string, name: string) => {
+    const buildBundle = async (entry: string, name: string, plugins: any[] = []) => {
         const fullPath = path.join(projectRoot, entry);
         if (await fs.pathExists(fullPath)) {
             await Bun.build({
@@ -369,7 +386,7 @@ export async function bundleClientScripts(distDir: string) {
                 outdir: assetsDir,
                 naming: name,
                 minify: true,
-                plugins: [wasmStubPlugin],
+                plugins: plugins,
                 define: {
                     global: 'window',
                     process: 'window.process',
@@ -378,17 +395,17 @@ export async function bundleClientScripts(distDir: string) {
         }
     };
 
-    // 1. Core (Validation, basic logic, always needed)
-    await buildBundle('src/form/client/index.ts', 'form-core.js');
+    // 1. Core (Validation, basic logic, always needed) - Stub L2 for size
+    await buildBundle('src/form/client/index.ts', 'form-core.js', [l2StubPlugin]);
 
     // 2. Postal Lookup (Handled by bundlePlugins)
     // await buildBundle('src/form/client/postal.ts', 'form-postal.js');
 
-    // 3. L2 Cryptography (Encryption, Signatures, Guest DID)
-    await buildBundle('src/form/client/l2crypto.ts', 'form-l2.js');
+    // 3. L2 Cryptography (Encryption, Signatures, Guest DID) - Full Features
+    await buildBundle('src/form/client/l2crypto.ts', 'form-l2.js', []);
 
-    // 4. Aggregator (Heavy UI, Client-side parsing)
-    await buildBundle('src/form/client/aggregator_browser.ts', 'form-aggregator.js');
+    // 4. Aggregator (Heavy UI, Client-side parsing) - Full Features
+    await buildBundle('src/form/client/aggregator_browser.ts', 'form-aggregator.js', []);
 
     // --- Vendor Assets ---
     const vendorSrc = path.join(projectRoot, 'src', 'ssg', 'assets', 'vendor');
