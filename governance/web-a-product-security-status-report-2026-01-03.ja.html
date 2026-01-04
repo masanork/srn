@@ -311,11 +311,15 @@
     </main>
 
 <!-- Web/A L1 Manifest & Blobs -->
-<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-03T08:47:29.099Z"};</script>
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-04T07:40:26.487Z"};</script>
 <script type="module">
 (async function() {
   const m = window.__WEBA_MANIFEST;
   if (!m || !m.blobs) return;
+
+  // NOTE: Node.js shims removed (2025-01-04) after bundle optimization.
+  // Bundle now uses native browser APIs (Uint8Array, atob, btoa) with feature detection fallbacks.
+  // All bundled code (cbor-x, encoding.ts) gracefully falls back when Buffer/process are unavailable.
   
   const processBlob = async (b) => {
     const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
@@ -360,6 +364,7 @@
     }
   }
 })();
+
 </script>
 
 <script type="application/vnd.weba+trust-store" id="weba-trust-store">
@@ -379,13 +384,13 @@
           "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+          "id": "did:web:masanork.github.io:srn#build-1767512403334-ed25519",
           "type": "Ed25519VerificationKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
         },
         {
-          "id": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+          "id": "did:web:masanork.github.io:srn#build-1767512403334-pqc",
           "type": "JsonWebKey2020",
           "controller": "did:web:masanork.github.io:srn",
           "publicKeyJwk": {
@@ -397,8 +402,8 @@
       ],
       "assertionMethod": [
         "did:web:masanork.github.io:srn#root-ed25519",
-        "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
-        "did:web:masanork.github.io:srn#build-1767430028077-pqc"
+        "did:web:masanork.github.io:srn#build-1767512403334-ed25519",
+        "did:web:masanork.github.io:srn#build-1767512403334-pqc"
       ]
     }
   ],
@@ -428,9 +433,7 @@
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T03:17:12.200Z",
-      "payload": {
-        "buildId": "build-1767410212520"
-      }
+      "pruned": true
     },
     "eventHash": "b6429f1caeaff656afacecb3938087cb5f5f1eabf2467715c7bedc58e68421b2",
     "chainHash": "b8c52a5590c22bbf58a087b8eee335b81a24334e71800eca3fc493d7c733f984"
@@ -440,9 +443,7 @@
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T07:49:30.939Z",
-      "payload": {
-        "buildId": "build-1767426550147"
-      }
+      "pruned": true
     },
     "eventHash": "69bceb53eeac1e132f8eb0062dae8eb718a81fb01214911b88d82fc2e7509081",
     "chainHash": "632943af745ff3a9b4ea02339a1eedbd68cbbae8c4dab0a4801efe6cc665033f"
@@ -452,12 +453,190 @@
     "event": {
       "type": "L4Rebuild",
       "timestamp": "2026-01-03T08:47:29.025Z",
-      "payload": {
-        "buildId": "build-1767430028077"
-      }
+      "pruned": true
     },
     "eventHash": "16e84dea35fa71c170bceee34f5c154e1410e0baddbdc5be8ec3a208b29462f6",
     "chainHash": "a13d42a3df7d4c265f317222ff399eff8000ca1ee6a5eaf892f351e8dff1c665"
+  },
+  {
+    "prevHash": "a13d42a3df7d4c265f317222ff399eff8000ca1ee6a5eaf892f351e8dff1c665",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T10:40:07.278Z",
+      "pruned": true
+    },
+    "eventHash": "4c000cac48549fc2e5983f6d8eb8ad9bbcfb23c9378af94b2ed14e8986096a44",
+    "chainHash": "7c49837477f99ad42decbecc16481f9fbc1981ae7be9df5117acfd7d6ce2b14a"
+  },
+  {
+    "prevHash": "7c49837477f99ad42decbecc16481f9fbc1981ae7be9df5117acfd7d6ce2b14a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T10:47:48.810Z",
+      "pruned": true
+    },
+    "eventHash": "3d3e56889409fa19c5b697fea0ea4fc90cc475c0a267aebad7e626e6a238c8c3",
+    "chainHash": "e3a6fcc914ca8ee3ee809c5058aa6e9abddc20279aa5c4cd62403045cd98e7a4"
+  },
+  {
+    "prevHash": "e3a6fcc914ca8ee3ee809c5058aa6e9abddc20279aa5c4cd62403045cd98e7a4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T10:50:51.330Z",
+      "pruned": true
+    },
+    "eventHash": "12a428855710b6f173d43aad80292dc6e4160ff90c21abf0f6dec1caf1cfce19",
+    "chainHash": "d145bec2cdddaaf45a4bcd63dfe03627ce144d509441a1c89c5229a6df7c636d"
+  },
+  {
+    "prevHash": "d145bec2cdddaaf45a4bcd63dfe03627ce144d509441a1c89c5229a6df7c636d",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T12:21:29.954Z",
+      "pruned": true
+    },
+    "eventHash": "9bf4a611030b437722c7bd17626a8fc898f93de54d634e00583639addcb3351a",
+    "chainHash": "71a59393f2f243dddc434d30cac46cf64bf4c7e165fc458ef312dc144eef33f5"
+  },
+  {
+    "prevHash": "71a59393f2f243dddc434d30cac46cf64bf4c7e165fc458ef312dc144eef33f5",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T12:32:57.582Z",
+      "pruned": true
+    },
+    "eventHash": "7d3418b889199c2aac68d83d32d861fd57bac9c7764d80e82cbe225e12db1d85",
+    "chainHash": "641edfb8165c7b8781345a22a37e35bf8a167cd2292d0414d197389ba49b7741"
+  },
+  {
+    "prevHash": "641edfb8165c7b8781345a22a37e35bf8a167cd2292d0414d197389ba49b7741",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T13:33:25.180Z",
+      "pruned": true
+    },
+    "eventHash": "7f36c0bcec6a13df2a45865f422e842ed0ca821a53aa15cd16bcf0cfc26195be",
+    "chainHash": "fa9e7d6297d29158e2e51f308f0393dd1a620614c80e34ddaa06f4157698ef99"
+  },
+  {
+    "prevHash": "fa9e7d6297d29158e2e51f308f0393dd1a620614c80e34ddaa06f4157698ef99",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T13:39:08.593Z",
+      "pruned": true
+    },
+    "eventHash": "ef1d4aa9f745a081b214cb08b3f5cd253a06fdb682cc9ea2c1279f29cbec7dd5",
+    "chainHash": "0137029a57a7bd5d68ed3add382832eda20dab5843eeff7b1bebda0eee89fb32"
+  },
+  {
+    "prevHash": "0137029a57a7bd5d68ed3add382832eda20dab5843eeff7b1bebda0eee89fb32",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T13:43:22.202Z",
+      "pruned": true
+    },
+    "eventHash": "22dedee154345887f1045f74812b770dfad383f48b6ba030707541225d7da909",
+    "chainHash": "b0385f152f65caa844b3871a75898b94ef186ef1adaa4ce01d0760f5b9934f0a"
+  },
+  {
+    "prevHash": "b0385f152f65caa844b3871a75898b94ef186ef1adaa4ce01d0760f5b9934f0a",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T14:13:41.157Z",
+      "pruned": true
+    },
+    "eventHash": "eb99531c27ba5e517a592ffedddff08145c9556885a07daa8e71915e31a72c94",
+    "chainHash": "e7bc0033739362127d04dbf05ac013963918e5992ddfe138f3e1cb26a31043eb"
+  },
+  {
+    "prevHash": "e7bc0033739362127d04dbf05ac013963918e5992ddfe138f3e1cb26a31043eb",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T23:38:22.702Z",
+      "pruned": true
+    },
+    "eventHash": "05769e5df4c60a93f0b51ae54cd3ef1e6eb73414f9c6708e80e3ce2e47063b1a",
+    "chainHash": "f445cfbf176153b6c8d0bf3ba330dbc957d9e458ea44946f8447b4c194aff285"
+  },
+  {
+    "prevHash": "f445cfbf176153b6c8d0bf3ba330dbc957d9e458ea44946f8447b4c194aff285",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T23:46:28.425Z",
+      "pruned": true
+    },
+    "eventHash": "87f1aebb75e22235662d1823518cb551d6c4069bf548f7a7c63d8ea85c9e635c",
+    "chainHash": "08c3a26279ecc33cb99bed8438edae844404f6cfeb2424d705d27bcd95284052"
+  },
+  {
+    "prevHash": "08c3a26279ecc33cb99bed8438edae844404f6cfeb2424d705d27bcd95284052",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T00:20:25.162Z",
+      "pruned": true
+    },
+    "eventHash": "7d749492f49420e41e63d91e73f0634cb45c62606d7f2dfa384c942e6612c051",
+    "chainHash": "a1d18e21bff27d7b9aa9056d8d49cbe019788631a6843c0524590c51d2d7cda4"
+  },
+  {
+    "prevHash": "a1d18e21bff27d7b9aa9056d8d49cbe019788631a6843c0524590c51d2d7cda4",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T01:17:31.626Z",
+      "payload": {
+        "buildId": "build-1767489426941"
+      }
+    },
+    "eventHash": "9981503f0bc5a3f29d1c3eb1b852993601b1f2c29843ccc03b7f90bb50be26dd",
+    "chainHash": "e93222329ad93be866b846adf5c886f1783c18c2b353ee6f181a7ca7b706aa01"
+  },
+  {
+    "prevHash": "e93222329ad93be866b846adf5c886f1783c18c2b353ee6f181a7ca7b706aa01",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T01:27:12.407Z",
+      "payload": {
+        "buildId": "build-1767490010742"
+      }
+    },
+    "eventHash": "7c223f0891a651f83f031da4251e3c9a8ccc2dcf5dc64f24ef68ee268c848e1e",
+    "chainHash": "5481954ea6b15a3f1271045cf5e0c78deed3456c0622356bf51319b560ac8788"
+  },
+  {
+    "prevHash": "5481954ea6b15a3f1271045cf5e0c78deed3456c0622356bf51319b560ac8788",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T03:16:07.418Z",
+      "payload": {
+        "buildId": "build-1767496545833"
+      }
+    },
+    "eventHash": "0769a142dcdfe281e5c9aa62b1d9eb7f29ebbd6dd54dc819d2d4d602823c0295",
+    "chainHash": "8def130e995a9e6c42e71deacc892752f8990cb6daf09fa519447fe80d305d76"
+  },
+  {
+    "prevHash": "8def130e995a9e6c42e71deacc892752f8990cb6daf09fa519447fe80d305d76",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T07:05:37.879Z",
+      "payload": {
+        "buildId": "build-1767510316684"
+      }
+    },
+    "eventHash": "24fed40148fdd5a7c28d008ff9f50933996e08a45e2788d313a48d3b34713913",
+    "chainHash": "1fbf97b481e12aca05bc43368402c489a418785cad56245e73710bb4ac27616f"
+  },
+  {
+    "prevHash": "1fbf97b481e12aca05bc43368402c489a418785cad56245e73710bb4ac27616f",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T07:40:26.384Z",
+      "payload": {
+        "buildId": "build-1767512403334"
+      }
+    },
+    "eventHash": "7eb49d710d545f84298fcd11affe32f945536d21182212fa07e9d9ca01e9ff6b",
+    "chainHash": "65495a128cb58447a757875420bf19af1a5a781e9f485226a1fc7e4bec497285"
   }
 ]
 </script>
@@ -471,29 +650,29 @@
     "WebAContainerSignature"
   ],
   "issuer": "did:web:masanork.github.io:srn",
-  "issuanceDate": "2026-01-03T08:47:29.100Z",
+  "issuanceDate": "2026-01-04T07:40:26.488Z",
   "credentialSubject": {
     "id": "did:web:masanork.github.io:srn/governance/web-a-product-security-status-report-2026-01-03.ja#container",
-    "containerHash": "5edb55049b5dae26dd97a4be93c71100dbe39d9024c654675824b3077e0f3d2c",
-    "buildId": "build-1767430028077",
-    "latestContextHash": "e848be075be2ac0077b71a5d01fdbebc537af055781ac0926354afd7295c1d31"
+    "containerHash": "bedf6d0b731a32a8d4f5b2408fbaa2bce334122f80d674298925eb517c553c0c",
+    "buildId": "build-1767512403334",
+    "latestContextHash": "dc898da9a1b818064822f3e4ef3a99835ea7f1499c5b83e908d6c0b8c88cdda5"
   },
   "proof": [
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-ed25519",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767512403334-ed25519",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-03T08:47:29.100Z",
-      "proofValue": "z5fXg9eoDp3wNqKdpKzdFWr8FFYSdR2GRffzY2hjh48BTRYRaGiCrAtC79S1vbHduus6zWE2ughkdrncZDv8AYD6q"
+      "created": "2026-01-04T07:40:26.488Z",
+      "proofValue": "z3sMKbCNysWsfNXTmBEfGHXjQfsJdJ8CZuPpRfUaKbQJuTKUbReeFh9R3jY9iX5Gx9tPhnnK5njFKwURJ5SkgTBTY"
     },
     {
       "type": "DataIntegrityProof",
       "cryptosuite": "ml-dsa-44-jcs-2025",
-      "verificationMethod": "did:web:masanork.github.io:srn#build-1767430028077-pqc",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767512403334-pqc",
       "proofPurpose": "assertionMethod",
-      "created": "2026-01-03T08:47:29.100Z",
-      "proofValue": "z19V874vDWVuafcPWaxeBLn19gWpGrFLjSEmhVTf5kFcd6DPgFHbrnvunX9Wf3Gaa2MVes6oZGux91Sr6eB3kTrt2JmiB6VvSWNS3ynhvwkU9NzWJPwAD8RgYDmbEatRokvxQenXAE9eDcAP6SCZnrPakB3x3HSvgALcA4yz6PEjpw2q1TuVnupBvaYH3KwuK46G8dEhYwzwnk6VJiZrGiutAe9Fno8P8hB2oViKvv7BPTQHaja4jZXZ65Djz4BG3jDvHwbA9acvijCzUQnmbx2KR1ZWGvK2khST5gqmDdSvxoKgUErdve5NdvK7o3vo5XQs24F9fU9ob1esbxKSsM42N3ie1qxqdpYZ2wEjNDTd7Z8JWJ3R6oiPXVxMwe4LMBFwc3h1gTjHWgDWN38PcUyYc4Y2U58Zq2N3X1uvvo3PdDhjxKyB6EYiWNUi9CqKxDuGtvb6544bGZVP2TnLzrCuxLncPEpTNzrVqPNFACD7jpp85NVb4259onhmEk47Ji1bc3PsD2PrYpTd1L9YkEPJHJ1p8vVHDY8VSUFbATr7tExUh2pTs6v29xVqErJRciGgjLBQAF5z3DTSXFikaj2hinsxN4JmPkmQFB8mNWp5uCEd5chJydxPVijqK8p2uD1HGYFJrL3soVWWWGuyT3xKQLznGdMmnDizCLhmRfXKege21r4Lzynn9NMkwYw7gv2F6fspBPiNTbuNKFKeX5cxN6hcDT2T2dcxsMKNi7zZDDmKDQB3xcsZJ2sc8P7WYvE5W2ys1uAGVSWFhbMxxRU84RuaaSRYE41CrSb2Zomq1Xdd3iZehA9iGKa7Ao3UdDmn73whoD8Jggtc7hrtYiaKW5mrvkE69cwCwKAZEpdkvECb8q6jChzHvw4PiU5QJRSzHbZVzf4uM3wUoCEexNnCEDRRV4q6cBaSsDUhNEu6UjLeG39bTMsSQpohDcCNCGVvxVHuoL6qcvY14XEM4qWemiopS62W97XioCBLkYUxcPDGPmm6VduzV1XXegZ2rDh66HuM3YyWVZ5NsA2WxxgakVNNj62KKUQv7nv282SdMju9uzoAeNDiLK9RWHJsumYpkpjukhpt8dHwnRHoSDi3xessPytwBvyiexhowKKtxt5L3BD7as7WpVhWtgJWkuhMYjihhsNkifGBPWUuvAu8CE7RVsbPPLrVBoaWTsTiQyM4RdC9JPnT3o9S2xfVnXRf2ohpazohF2gTyDUbeCzXeNhWP7Da81o7pZphsLZxtqnyT6Eyux5VKiyfutwpCWqZBZHxWDGHRNwztLhAWtLLYSswKv7mhLtMXsgok1mMWobwwYTDjrM5tVGFZtnjQets9fEJGzuPhNCCm89FW5ZZ8vgbHxBWvbVNPsBpPjGUKbS7s3PSBq2LoJUqW9fh4cZPwtRbN5mcHkKi1tmcbrQyX2gx4Uf6boev4L4g4XWx8PguVL7HqDcoeuAKp1tFpLLR5hZzSJcCVLAN98H8uY3T6sMeaHu2Mun9iYa1fByePvz5mzt56e3RjMEUErzyGMrKCqgJUoNjb7nUUyAJLTd7Rs18jxNxgR5TRCyw5p2hP1kBobm9P9JUfKkGgSmbJUqcRJR1zm6HSdSfDdzapbG8w5SpQkovCJGhCgKMxjFYifWd3ckj3Hb3DaoJWW95Uq9JERqCUSKMSyfQEDnDYSQ7SGvxaFxj5qp4tP9xRaZ4Q8PiKNBJhjUyXizdKR4u5SRUVsUS98vJRXEoP5qxUdUGWViYQm9HXkNmH4m8KJnPC17n3SMp7KLNxH6sHVeeNapUXdd3BEyG3Wpiti8UPxWBLbMWiDW1DBau2ULvNZWQMKNJ1JL24uwAV5riH3YyEPeSUwQW94HoD1QvHeSQNbZmGY7zZE65LXjeWs6to6wS8QspMXQQZnSPZmdnfBT8vpMUjVnHxKuz6BGv5vJ43WbjC8Bsu7cvXa8WZEjokbjDMhUXPcEdRdh3y7KVzTv6HcwnBmQAtedvZ5cgnhgyRd7NEJLqFVeGSUKegbn57kbfQr6vu2xwYkZ5GEK4cc8kCJY7HH9ieNS4fRApxNMo2uV5rBh6xN8hNP1VaiCpMwQEcyQM2ofZjqRSVcAJEZnjH7566xGdsNQJihqkKwFq18XWntfyT9xN1s5hqAirAfDP2eEnwwZw4BgUP2B6z1FDWDZUyxRjPbYFjeWsm4knHyrv5BbCvTBxWESD3tt9Zn7xYyp94waHWyNYntAaJK14GC6miP4LJaT6qAmM98kmBt1CeNeAMQBiqsyVC9vB9FQ8r9q4Qzzv73atXBrZTVpmtMSGcEniFmby12dWjPbsee1Dzat9FoW1QCUWVjcok8UQCXgWxHu3a8JjoMZgUgt4z8yF1U6AceZX1Lq5GkC5m4zWjrMU78fYNfDZWP9NXscJ2hq9qZvD8VRJPuVvLpC4uUk3yrmifxz7NZKyJRxDe4nUUuyH2xTurtsK14LK49E4Zv15CE68mHGRyEcg2qMSQiYNVV1Re4rroYroRgJ6aiqTEyXwY3aU1vc8AHs25SvugHii1cqhi2QgUbcLQ9D3K4bahFqEooMEmrhNZzMNmuCTDGiGq1Dn1u1Pt5whvZYEMmS2i6A8waxWMJiXiDTWZwuoAJcRFthgVHD47KDUYQEEDf3YWmH2nGLJV836VbgC5ZSEdADBpj89JGTS1fD1WLCweTC34PqThi2gnbPAnSGwXskNc6iHTmccjussJbziyyyRePAioCSUx4rzSvDV4iRFYACP9X6qEcjkm7PWqpai5AjdqLP9Ht2a39rbwTkqEP67SDVjQT8U92utWtBJiTo6bPb6xhqUN3CvsmxKpNHgvhjqEaofievZaU2kEnhm7fMY89Gmntz1JNRqu1vWQQWYeXN6oS3uoKEFSwhGLZRf3RPKvmNYVRv293UMQUk7K9sMot7x5G2JjneK3H5mkuQrnwe6XXrAB8BUHvNpKDGn1YLDWf1ncYETKtxNC7G5e9ikhDqjFTspZiniXPx93Jv9vzA52pNdzXXVFTP5Zy7eAkjvFeEcefcELphVt7NZBbBVw8YVS6ZsVXdG4zwkxR9m2aPhKEUxdXz5SagNQr4zgxfEBPqgw4a9DXej62zLJ6srGjkYtG6QLV1M56zVSybHH8MsCzVrGHYMuTiJELyka9a33Ms7eb91skToBZpmt5L9qGVYswqRrJnfoKu5J6a3tjRGSiwRy7pz5K4U41zj2eQNoXNubEMd7VQPhDK416uE4GYuYs5fzEA52p19SduP7h2gpq8F414VkDL2Aq4xTs1qf1vRiTWkb92Yk2"
+      "created": "2026-01-04T07:40:26.488Z",
+      "proofValue": "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"
     }
   ]
 }

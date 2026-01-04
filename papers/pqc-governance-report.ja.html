@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data: blob:; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' blob:;">
+    <title>PQC (耐量子暗号) 導入に関する現状評価と今後のガバナンス方針</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI1MCUiIHk9IjU2JSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjlmYWZiIiBmb250LXdlaWdodD0iNzAwIj5TUjwvdGV4dD48L3N2Zz4=">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <link rel="help" type="text/plain" href="../llms.txt">
+    
+    <script type="application/ld+json">[
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "PQC (耐量子暗号) 導入に関する現状評価と今後のガバナンス方針",
+    "description": "Web/A プロジェクトにおけるPQC導入の現状（Mandatory implementation）を評価し、CBOMの観点からみた過剰な依存を是正するためのExperimental Opt-inへの移行計画を提言する。",
+    "datePublished": "2026-01-03",
+    "author": {
+      "@type": "Person",
+      "name": "Web/A Architecture Board"
+    },
+    "provenance": {
+      "metadata": {
+        "title": "PQC (耐量子暗号) 導入に関する現状評価と今後のガバナンス方針",
+        "format": "application/x.web-a+html",
+        "schema": "https://masanork.github.io/srn/schemas/weba-v1.json"
+      },
+      "producer": {
+        "name": "Sorane (SRN) SSG",
+        "version": "1.0.0",
+        "identifier": "did:web:masanork.github.io:srn"
+      },
+      "assertions": [
+        {
+          "label": "srn.hmp_declaration",
+          "data": {
+            "assertion": "Human-Machine Parity (HMP) Guaranteed",
+            "generator_hash": "unknown"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1"
+    ],
+    "type": [
+      "VerifiableCredential",
+      "WebADocument"
+    ],
+    "issuer": "did:web:masanork.github.io:srn",
+    "issuanceDate": "2026-01-03T14:59:10.121Z",
+    "credentialSubject": {
+      "id": "did:web:masanork.github.io:srn/papers/pqc-governance-report.ja",
+      "name": "PQC (耐量子暗号) 導入に関する現状評価と今後のガバナンス方針",
+      "contentDigest": "af64128317134388ce6825ac7e32aab58218963cd7f98f88ba0cc76186127ffb"
+    },
+    "proof": [
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "eddsa-jcs-2022",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767452338904-ed25519",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T14:59:10.121Z",
+        "proofValue": "z4fW1wz8nTDUPwwNEuM9BJZivoHbxbdKRjn7oqt3Bnyfu2gpBsmebXtWfG8wjHFpKkGztDu9AhSJYCLdiKzLiB2tM"
+      },
+      {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "ml-dsa-44-jcs-2025",
+        "verificationMethod": "did:web:masanork.github.io:srn#build-1767452338904-pqc",
+        "proofPurpose": "assertionMethod",
+        "created": "2026-01-03T14:59:10.121Z",
+        "proofValue": "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"
+      }
+    ]
+  }
+]</script>
+    
+    <style>
+        /* Hide by default, show based on body class */
+        [data-lang-ja], [data-lang-en] { display: none !important; }
+        
+        .js-lang-ja [data-lang-ja] { display: contents !important; }
+        .js-lang-ja span[data-lang-ja], .js-lang-ja a[data-lang-ja], .js-lang-ja i[data-lang-ja] { display: inline !important; }
+        
+        .js-lang-en [data-lang-en] { display: contents !important; }
+        .js-lang-en span[data-lang-en], .js-lang-en a[data-lang-en], .js-lang-en i[data-lang-en] { display: inline !important; }
+    </style>
+    <script>
+        (() => {
+            const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+            if (lang === 'ja') {
+                document.documentElement.lang = 'ja';
+                document.documentElement.classList.add('js-lang-ja');
+            } else {
+                document.documentElement.lang = 'en';
+                document.documentElement.classList.add('js-lang-en');
+            }
+            // Backward compatibility for simple data-i18n replacements
+            window.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-i18n-ja]').forEach((el) => {
+                    const ja = el.getAttribute('data-i18n-ja') || '';
+                    const en = el.getAttribute('data-i18n-en') || ja;
+                    el.textContent = lang === 'ja' ? ja : en;
+                });
+            });
+        })();
+    </script>
+</head>
+<body class="layout-article">
+    <main>
+        
+        
+        <article class="weba-article">
+            
+            <header>
+                <h1>PQC (耐量子暗号) 導入に関する現状評価と今後のガバナンス方針</h1>
+                <div class="article-meta">
+                    <span><time datetime="2026-01-03">2026-01-03</time></span>
+                    
+                    <span>By Web/A Architecture Board</span>
+                    
+                    
+                </div>
+            </header>
+            
+            <div class="article-body">
+                <h2>1. 概要と背景</h2>
+<p>Web/A (Signed Resource Network) プロジェクトでは、長期的な真正性 (Long Term Validation: LTV) を保証するために、昨今の標準化動向を先取りする形で PQC (Post-Quantum Cryptography) の導入を進めてきました。</p>
+<p>具体的には、電子署名に <strong>ML-DSA (Dilithium)</strong>、鍵カプセル化メカニズム(KEM)に <strong>ML-KEM (Kyber)</strong> を採用し、RustベースのWASMモジュールとして実装・統合しました。</p>
+<p>しかし、現時点での実装状況を検証したところ、これらは「強制 (Mandatory)」あるいは「既定 (Default)」として組み込まれており、以下の懸念が浮上しています。</p>
+<ol>
+<li><strong>時期尚早な強制適用</strong>: クライアントサイド (Passkey等) のPQC対応が未成熟な中で、アプリケーション層だけで先行してPQCを必須化している。</li>
+<li><strong>バンドルサイズの肥大化</strong>: 利用の有無に関わらず、巨大な格子暗号ライブラリがWASMに含まれ、ロードされている。</li>
+<li><strong>柔軟性の欠如</strong>: 将来的なアルゴリズム変更や、軽量な利用シナリオ（IoTや低帯域環境）への対応が困難。</li>
+</ol>
+<p>本報告書は、現状の暗号資産 (Cryptography Bill of Materials: CBOM) を精査し、PQCを「Experimental (実験的) な Opt-in 機能」へと再定義するための移行計画を策定するものです。</p>
+<h2>2. 現状のCBOM (Cryptography Bill of Materials) 分析</h2>
+<p>現在の <code>packages/core</code> および <code>src/crypto-wasm</code> の依存関係を分析した結果は以下の通りです。</p>
+<h3>2.1 Rust/WASM (<code>weba-crypto-wasm</code>)</h3>
+<p>現状のWASMバイナリには、以下のライブラリが静的リンクされています。</p>
+<ul>
+<li><strong>PQC (Heavy)</strong><ul>
+<li><code>ml-kem = &quot;0.2&quot;</code> (Kyber): L2暗号化で利用。鍵サイズ・暗号文ともに大きく、計算コストも比較的高い。</li>
+<li><code>ml-dsa = &quot;0.0.4&quot;</code> (Dilithium): VC署名で利用。署名サイズが極めて大きい (数KBオーダー)。</li>
+</ul>
+</li>
+<li><strong>Classic (Light/Standard)</strong><ul>
+<li><code>ed25519-dalek</code>, <code>x25519-dalek</code>: 高速・軽量。現在の主役。</li>
+<li><code>p256</code>: Passkey (WebAuthn) 互換用。</li>
+<li><code>aes-gcm</code>, <code>sha2</code>, <code>hkdf</code>: 共通鍵・ハッシュ等のプリミティブ。</li>
+</ul>
+</li>
+</ul>
+<p><strong>課題</strong>: <code>initWasm()</code> を呼び出した時点で、これら全てが含まれるWASMバイナリがロードされます。PQCを使わないユーザーにとっても、ML-DSA/ML-KEMのコードサイズは「Dead Code」に近い状態でありながら帯域とメモリを消費しています。</p>
+<h3>2.2 TypeScript (<code>@srn/core</code>)</h3>
+<ul>
+<li><code>generateHybridKeys()</code>: 引数なしで呼び出すと、<strong>必ず</strong> <code>mlDsa44GenerateKeyPair()</code> を実行し、Ed25519とセットで鍵を生成します。</li>
+<li><code>createHybridVC()</code>: 鍵ペアにPQC鍵が含まれていれば、<strong>必ず</strong> PQC署名を追加します。これによりVCのJSONサイズが数KB増加します。</li>
+</ul>
+<h2>3. ガバナンス上のリスク評価</h2>
+<table>
+<thead>
+<tr>
+<th align="left">リスク項目</th>
+<th align="left">評価</th>
+<th align="left">詳細</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>相互運用性</strong></td>
+<td align="left">High</td>
+<td align="left">FIPS 204/203 は確定したが、ブラウザ実装やOSの実装（Keychain等）との整合性はこれから。独自実装の先行は孤立を招く恐れがある。</td>
+</tr>
+<tr>
+<td align="left"><strong>パフォーマンス</strong></td>
+<td align="left">Medium</td>
+<td align="left">通信帯域の細いモバイル環境において、ML-DSAの署名サイズは無視できないオーバーヘッドとなる。</td>
+</tr>
+<tr>
+<td align="left"><strong>セキュリティ</strong></td>
+<td align="left">Low</td>
+<td align="left">実装自体は <code>Rust Crypto</code> 系の定評あるクレートを利用しており、メモリ安全性等は確保されているが、攻撃対象領域 (Attack Surface) は拡大している。</td>
+</tr>
+<tr>
+<td align="left"><strong>移行コスト</strong></td>
+<td align="left">High</td>
+<td align="left">現在の「Default PQC」で発行されたVCや鍵は、将来仕様変更があった場合に「負の遺産」となるリスクが高い。</td>
+</tr>
+</tbody></table>
+<h2>4. 移行戦略: &quot;PQC Agility&quot; Plan</h2>
+<p>PQCを否定するのではなく、「必要な時に、必要な強度で」利用できるアーキテクチャ (Crypto Agility) へ移行します。</p>
+<h3>Phase 1: Experimental Opt-in (即時対応)</h3>
+<p><strong>目的</strong>: デフォルトの軽量化と、PQCの明示的な選択制導入。</p>
+<ol>
+<li><strong>鍵生成のOpt-in化</strong>:<ul>
+<li><code>generateHybridKeys(enablePqc: boolean = false)</code> のようにフラグを導入し、デフォルトでは <strong>Ed25519のみ</strong> を生成する。</li>
+<li>既存のコードへの影響を最小限に抑えるため、型定義では <code>pqc</code> プロパティを <code>Optional</code> に変更する。</li>
+</ul>
+</li>
+<li><strong>署名の適応的処理</strong>:<ul>
+<li><code>createHybridVC</code> は、渡された鍵束にPQC鍵が含まれている場合のみ、ML-DSA署名を付与する挙動とする（現状の実装ロジックで対応可能だが、明示的にテストする）。</li>
+</ul>
+</li>
+<li><strong>L2暗号化の分離</strong>:<ul>
+<li>L2E (Layer 2 Encryption) においても、受信者がPQC鍵 (Kyber) を公開している場合のみ Hybrid Encryption を行い、なければ X25519 のみで暗号化するフォールバックを正式仕様とする。</li>
+</ul>
+</li>
+</ol>
+<h3>Phase 2: Modular WASM (中期的対応)</h3>
+<p><strong>目的</strong>: バンドルサイズの削減。</p>
+<ol>
+<li><strong>WASMの分割</strong>:<ul>
+<li><code>weba-crypto-core.wasm</code>: Ed25519, X25519, SHA2, AES-GCM (必須機能)</li>
+<li><code>weba-crypto-pqc.wasm</code>: ML-KEM, ML-DSA (拡張機能)</li>
+</ul>
+</li>
+<li><strong>Dynamic Import</strong>:<ul>
+<li>PQC機能が必要になった時点（PQC鍵の生成要求、あるいはPQC署名の検証要求）で、初めて <code>pqc.wasm</code> をフェッチ・ロードする仕組みを導入する。</li>
+</ul>
+</li>
+</ol>
+<h3>Phase 3: Native Passkey Integration (長期的対応)</h3>
+<p><strong>目的</strong>: プラットフォーム機能への委譲。</p>
+<ol>
+<li>ブラウザ/OSがPQC対応Passkey (PRF extension等でKyber鍵共有など) をサポートした段階で、WASMによる独自実装を廃止し、WebAuthn API経由のネイティブ実装へ切り替える。</li>
+</ol>
+<h2>5. 推奨される当面のロードマップ</h2>
+<p>ガバナンス委員会に対し、以下のロードマップの承認を求めます。</p>
+<ol>
+<li><strong>[Week 1] API仕様変更</strong>: <code>generateHybridKeys</code> のデフォルト挙動を「Classic Only」に変更し、PQCをOpt-inとする。</li>
+<li><strong>[Week 2] ドキュメント改訂</strong>: 技術文書における「必須要件」としての記述を「推奨拡張 (High Assurance Profile)」へと書き換える。</li>
+<li><strong>[Month 1] 影響調査</strong>: 既存のPoC（住民票VC等）において、PQC鍵を利用している箇所の特定と、再発行を含めた移行措置の実施。</li>
+</ol>
+<p>以上</p>
+
+            </div>
+            
+        <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div></div>
+                
+                <details>
+                    <summary style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <span>✓</span>
+                        <span data-i18n-ja="発行元による真正性の証明" data-i18n-en="Issuer Authenticity Proof">発行元による真正性の証明</span>
+                    </summary>
+                    <div style="padding: 1rem 0;">
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.4;">{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebADocument"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-03T14:59:10.121Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/pqc-governance-report.ja",
+    "name": "PQC (耐量子暗号) 導入に関する現状評価と今後のガバナンス方針",
+    "contentDigest": "af64128317134388ce6825ac7e32aab58218963cd7f98f88ba0cc76186127ffb"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767452338904-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T14:59:10.121Z",
+      "proofValue": "z4fW1wz8nTDUPwwNEuM9BJZivoHbxbdKRjn7oqt3Bnyfu2gpBsmebXtWfG8wjHFpKkGztDu9AhSJYCLdiKzLiB2tM"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767452338904-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-03T14:59:10.121Z",
+      "proofValue": "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"
+    }
+  ]
+}</pre>
+                    </div>
+                </details>
+                
+            </div>
+        </footer>
+    
+        </article>
+        
+    
+    </main>
+
+<!-- Web/A L1 Manifest & Blobs -->
+<script>window.__WEBA_MANIFEST = {"templateDigest":"","blobs":[],"createdAt":"2026-01-04T07:40:53.389Z"};</script>
+<script type="module">
+(async function() {
+  const m = window.__WEBA_MANIFEST;
+  if (!m || !m.blobs) return;
+
+  // NOTE: Node.js shims removed (2025-01-04) after bundle optimization.
+  // Bundle now uses native browser APIs (Uint8Array, atob, btoa) with feature detection fallbacks.
+  // All bundled code (cbor-x, encoding.ts) gracefully falls back when Buffer/process are unavailable.
+  
+  const processBlob = async (b) => {
+    const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
+    if (!el) return null;
+
+    const bin = atob(el.textContent.trim());
+    const ui8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) ui8[i] = bin.charCodeAt(i);
+    
+    if (b.mediaType === 'application/x-gzip' || b.id.endsWith('.gz')) {
+      const stream = new Blob([ui8]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).arrayBuffer();
+    }
+    return ui8.buffer;
+  };
+
+  const sortedBlobs = [...m.blobs].sort((a, b) => {
+    const score = (type) => type.includes('font') ? 1 : (type.includes('wasm') ? 2 : 3);
+    return score(a.mediaType) - score(b.mediaType);
+  });
+
+  for (const b of sortedBlobs) {
+    if (b.mediaType.includes('font') || b.id.startsWith('font-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const family = b.id.replace('font-', '');
+      const blobUrl = URL.createObjectURL(new Blob([data], {type: 'font/woff2'}));
+      const css = "@font-face { font-family: '" + family + "'; src: url('" + blobUrl + "') format('woff2'); font-display: swap; }";
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    } else if (b.mediaType.includes('javascript') || b.id.startsWith('js-')) {
+      const data = await processBlob(b);
+      if (!data) continue;
+      const code = new TextDecoder().decode(data);
+      const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = blobUrl;
+      document.body.appendChild(script);
+      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
+    }
+  }
+})();
+
+</script>
+
+<script type="application/vnd.weba+trust-store" id="weba-trust-store">
+{
+  "didDocuments": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:masanork.github.io:srn",
+      "verificationMethod": [
+        {
+          "id": "did:web:masanork.github.io:srn#root-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "f2569d042d7af2c15da4c519052e858dd12d3af5f9806ee191b7dffa60504afd"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767512403334-ed25519",
+          "type": "Ed25519VerificationKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyHex": "332a76fcee9f154ab03b42855b5acb7b10de15117ad4e2efcdfde9fcc7e29a7e"
+        },
+        {
+          "id": "did:web:masanork.github.io:srn#build-1767512403334-pqc",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:masanork.github.io:srn",
+          "publicKeyJwk": {
+            "kty": "PQC",
+            "crv": "ML-DSA-44",
+            "x": "4yx9QLZU_i_6AyXcCCthWN0raG47BKjKAw5vtSgIHrL8c1zALelvUiKKo2myeTQMKs_VdxQ1TrybmIx-FYi4IQdk7jKqz_7ZCDaLazRQ-v7hkZ8RFrZnvtZE6FKFs1wUqs8I6eTiDioTh135VQ5jQ_ul_ZMBWLWi8hsRX5-qL6yBMG4QhJXYeh5MsL_DbNg9Wlk2YZdV5Ly4BIiwUfmMrf6e6nhyNSOnnax1nUfB2TfTxU3z3FO1JLu5puPOCnVuMs1ch0agRoUQU2b81ksV-ajDpjgL1udkhQRKKki8Kbnbp_8-l90Eufxw4ZEI3bkneK2r6aLvl6AAKll0HyDYjQMKsyLeE2PPpvBcNnDvVxH-2_FrExKZ7y97SZr-W6trVOPW7noUAOVP8C-Xkpw7Zu1mkPOxmI6gUhfR8V72N6t74pNJUGlqRJiXvSGfJSqaE7UM_lR3bmaNasFyl1_A-4j1lUiFTtF5UNKgyWepxpYQYBOWI4WcAbXvhTgzDHy3I3_e9zEM-L1gKlmxe7K4faotY-Lsllqo6k4TyNea8MEQixh3YjjWmXzl2c63RA9hD-TLgIIJ6wC2WJBuEq_zVEjszuRH1UEH2KCqcc5KYAzMyYn0KSxuUCFYk73FxqkGhPgCZ9oQOUF63oKZFn0hOjj8f7C0Afi9JTl3st5kCini0ELyFrMCyGODBhE_J06sq4GqSuo2O4F-aiKOITAVA0PH0iNVTCyEiLgvtCI4daGcoXkAMrbL-3ZkA-HosRWisLVBCUixlsQWfKwuq38Q-rOafqo7Wgh0ZZJAwbWMS8r3ObHeDYVhvwn4wBqy25D_oumHF_DVSqN9swnRUQaGp_rT91NA7G1bdIjy7AZC9BihbvlbQDyBSs8cWNy5U8b-1pVa2ZO0tOGPejjJZskOoqk1HIPUjfSTgFhsEem6k2pmf0MwykAjnMQW9g8pvZN9qPOqvu6Ba1j9p1y9dF-tqcyu1tdFz2SWDZownVEPLiA770vxXvTwVIdvheEiPE1Q1kcyJ6GcrFwkUemRy4nJF_LdnmjAyJl-osw1Vr0vI6EZ6xiiK0IjEGPAJcXYiOSQyejMfUGfbvDFFnkTQPsNZ_brh-RCYSVBU3HyRvLnPxiF2i9WPXR6OZ_CHblH_TiUfFoh9qO3ni3Ai1cCK50QCgy-yLyKZNANGtzGimKN86Bn6X5_v5ZvEsU9gK1nPEwPyeqs6X0ChysLEg3AYXBePqCVuLmC6YyaHyl2EhG_V3qoCPykQLXWpNOtVR-gylAhPA3QJuL1pYzMC-ZBmTzAm5ggVayzJ8kbQme14aBvd9SaBGO4kYmHR8BcqWAk9-JxEtq7pbXm6JPCbayBl45m2fRO9_C_qTLUzznFoPPopmY0y9vmR3ab2-p_mY5nZYM73y0zUo3nSEuKlK8aNrg9KGLW4zdFQb6hbOhg9m_v0M3UdEHpF2yH77fTneJ54hn-2tjAki55_64LT7XQ1j9YCFHSBkk79LU-YPwryMGR0iWnsHWGDJVKNHV0I40gVYe6BrI6nlykvs_6I5TeBBBGxzkSXVsJN624rFomPsoUedC2-kjNc1XgVxAouqwZ40iUEeDykfJMM2B3w_PxyA_tKdaU_Bwr1_wkUfNlr35rSjT4ASuJHzCmqj4ePff6KykIachco7OjPeB2N1BhsKc32i3vqoGBvGpY25E72ej-6zc6hwTGVz4XOv_B5DCj_aoHmQmNnfqVhHf_hJSbXrK4nQ"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:masanork.github.io:srn#root-ed25519",
+        "did:web:masanork.github.io:srn#build-1767512403334-ed25519",
+        "did:web:masanork.github.io:srn#build-1767512403334-pqc"
+      ]
+    }
+  ],
+  "revocationList": [],
+  "trustedTimestamps": []
+}
+</script>
+
+<script type="application/vnd.weba+context-chain" id="weba-context-chain">
+[
+  {
+    "prevHash": null,
+    "event": {
+      "type": "Genesis",
+      "timestamp": "2026-01-03T14:59:10.154Z",
+      "payload": {
+        "issuer": "did:web:masanork.github.io:srn",
+        "payloadHash": "403eaf9cf8d6dbbcdb411feb7dda716921e9d877f874e5235047d6264afb2f5f",
+        "metadata": {}
+      }
+    },
+    "eventHash": "ec6279d9da78a4501fde63136d92d12b7437b922d0b8d6aa7982e6da45fac855",
+    "chainHash": "54793253bbfeb07622106d790c7198c290b78792d55f139987b8ef4bf2aeb939"
+  },
+  {
+    "prevHash": "54793253bbfeb07622106d790c7198c290b78792d55f139987b8ef4bf2aeb939",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T23:38:48.659Z",
+      "payload": {
+        "buildId": "build-1767483478980"
+      }
+    },
+    "eventHash": "0fc68bec7682e618e9e8a0532e2ec971d1ff8ec834085c72b053eb984d678396",
+    "chainHash": "fc6a86a417b6d1f94cc106d0604605b7dd38c25651a9e52949195f787edc7803"
+  },
+  {
+    "prevHash": "fc6a86a417b6d1f94cc106d0604605b7dd38c25651a9e52949195f787edc7803",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-03T23:46:57.768Z",
+      "payload": {
+        "buildId": "build-1767483967144"
+      }
+    },
+    "eventHash": "c5c2b56eca7de0f9033cbbccad64b8bc3e3f905dbf117a223b51ea5ab268e39a",
+    "chainHash": "dc614c42bec64503136ec487ef98551cae804272739ddcf8238163a73eb3b2be"
+  },
+  {
+    "prevHash": "dc614c42bec64503136ec487ef98551cae804272739ddcf8238163a73eb3b2be",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T00:20:51.249Z",
+      "payload": {
+        "buildId": "build-1767486004054"
+      }
+    },
+    "eventHash": "aa3c318e8bb9d0588e293f698124d004f470b69280bbb916d9a3b33bf89d7288",
+    "chainHash": "8a836f85b9210feee61e06a19b3254fb9fa485c6e06826d9e72f59ae979a1490"
+  },
+  {
+    "prevHash": "8a836f85b9210feee61e06a19b3254fb9fa485c6e06826d9e72f59ae979a1490",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T01:17:58.985Z",
+      "payload": {
+        "buildId": "build-1767489426941"
+      }
+    },
+    "eventHash": "f9e18c4d231a05cdeb56e3844840a1d66df6a9cb71567c3251828561fce995bf",
+    "chainHash": "547a742eec2d40460bc157141d7a292edb39ae7eafddbce1d563f1eee6b78378"
+  },
+  {
+    "prevHash": "547a742eec2d40460bc157141d7a292edb39ae7eafddbce1d563f1eee6b78378",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T01:27:37.599Z",
+      "payload": {
+        "buildId": "build-1767490010742"
+      }
+    },
+    "eventHash": "86fc111951fdb9c4b2ebd1c55fd91f6d9966d5424fe974aa0e6cf9434d7951b4",
+    "chainHash": "7fc0acbe1afc30e9b6207967bf6e62ba059e1413f9fd230c1fd86df5f45a13a1"
+  },
+  {
+    "prevHash": "7fc0acbe1afc30e9b6207967bf6e62ba059e1413f9fd230c1fd86df5f45a13a1",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T03:16:37.478Z",
+      "payload": {
+        "buildId": "build-1767496545833"
+      }
+    },
+    "eventHash": "f503ca7299d1e8a56c3b30c44724faaf6553b0f117fbc933bc6bb29077861186",
+    "chainHash": "7cec6876e78978de1ad46c61a7bf7338f30427f473fbb920acaa01df66cca8b7"
+  },
+  {
+    "prevHash": "7cec6876e78978de1ad46c61a7bf7338f30427f473fbb920acaa01df66cca8b7",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T07:06:05.059Z",
+      "payload": {
+        "buildId": "build-1767510316684"
+      }
+    },
+    "eventHash": "6e91cae423bc7de30cb7e337675272bc4a27843e05ea9d9136c4d86212de7630",
+    "chainHash": "33ae7e30cfe0369bad498424466de1b03829bb0c0cc4952d417fa75f47d5b488"
+  },
+  {
+    "prevHash": "33ae7e30cfe0369bad498424466de1b03829bb0c0cc4952d417fa75f47d5b488",
+    "event": {
+      "type": "L4Rebuild",
+      "timestamp": "2026-01-04T07:40:53.283Z",
+      "payload": {
+        "buildId": "build-1767512403334"
+      }
+    },
+    "eventHash": "7164438937aed772a9249d67205127e1e282f3ef05fb959fdb5d95e6f51573c7",
+    "chainHash": "f1f333d34cd1d34205d2cb59e34402b01812a23009fc1159e8597d871f6fd052"
+  }
+]
+</script>
+<script type="application/vnd.weba+container-signature" id="weba-container-signature">
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "WebAContainerSignature"
+  ],
+  "issuer": "did:web:masanork.github.io:srn",
+  "issuanceDate": "2026-01-04T07:40:53.390Z",
+  "credentialSubject": {
+    "id": "did:web:masanork.github.io:srn/papers/pqc-governance-report.ja#container",
+    "containerHash": "95fa814c42213048a78dca16e33ac6fc9442ddfcca4965480043c475fd527856",
+    "buildId": "build-1767512403334",
+    "latestContextHash": "7e879ae166e654718a2647bed7c7662f1e708af8626a32fc2fdebf7070999f0c"
+  },
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767512403334-ed25519",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-04T07:40:53.390Z",
+      "proofValue": "z4QPjiF9SU6Lds2GcxzGd46a6JKGneF6au2eC2BCgs6qnLXmDLhQwgq1on5fgcqbxtHV5iE1LcCxWnN5XrGTHK3LU"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "ml-dsa-44-jcs-2025",
+      "verificationMethod": "did:web:masanork.github.io:srn#build-1767512403334-pqc",
+      "proofPurpose": "assertionMethod",
+      "created": "2026-01-04T07:40:53.390Z",
+      "proofValue": "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"
+    }
+  ]
+}
+</script></body>
+</html>
