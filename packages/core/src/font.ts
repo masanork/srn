@@ -411,7 +411,7 @@ export async function subsetFont(
     let ivsMap: IVSMap | null = null;
     try {
         ivsMap = parseCmapFormat14(arrayBuffer, font);
-    } catch (e) { }
+    } catch (e) { console.error("[Font] Cmap14 Parse Error:", e); }
 
     const glyphs: opentype.Glyph[] = [];
     const addedGlyphs = new Map<opentype.Glyph, number>();
@@ -439,6 +439,7 @@ export async function subsetFont(
         if (i + 1 < chars.length) {
             const nextCode = chars[i + 1]!.codePointAt(0)!;
             if (isVariationSelector(nextCode)) {
+                console.log(`[Font] IVS Detected: Base U+${code.toString(16)} + VS U+${nextCode.toString(16)}`);
                 vsCode = nextCode;
                 i++;
             }
@@ -446,6 +447,7 @@ export async function subsetFont(
 
         const vsSubMap = vsCode && ivsMap ? ivsMap[vsCode] : undefined;
         if (vsSubMap && vsSubMap[code] !== undefined) {
+            console.log(`[Font] Resolved IVS to GID: ${vsSubMap[code]}`);
             const originalGid = vsSubMap[code]!;
             const variantGlyph = font.glyphs.get(originalGid);
             if (variantGlyph) {
@@ -458,6 +460,8 @@ export async function subsetFont(
                 const subsetGid = addGlyphToSubset(g);
                 ivsRecords.push({ vs: vsCode, code, gid: subsetGid });
             }
+        } else if (vsCode) {
+            console.log(`[Font] FAILED to resolve IVS for U+${code.toString(16)} + VS U+${vsCode.toString(16)}`);
         }
 
         const baseGlyph = font.charToGlyph(char);

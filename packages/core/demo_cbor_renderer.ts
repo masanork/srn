@@ -44,27 +44,72 @@ export async function createCborDoc(outputPath: string) {
     // 1. Generate mDoc (Same as before)
     const docData: any = {
         certificateTitle: "住民票の写し",
-        address: "東京都千代田区霞が関１丁目２番３号",
-        householder: "日本　太郎",
+        address: "東京都港区虎ノ門2-2-1 虎ノ門ハイツ101号",
+        householder: "䶒藤󠄃 太朗󠄅",
+        title: "（見本）住民票の写し（世帯連記式）",
         members: [
             {
-                name: "日本　太郎",
-                kana: "ニッポン　タロウ",
-                birthDate: "1960-01-01",
+                name: "䶒藤󠄃 太朗󠄅",
+                kana: "サイトウ タロウ",
+                birthDate: "1989-01-01",
                 gender: "男",
-                domiciles: ["東京都千代田区霞が関１丁目", "日本　太郎"],
+                domiciles: ["東京都千代田区千代田1-1", "筆頭者：䶒藤󠄃 太朗󠄅"],
                 relationship: "世帯主",
-                code: "12345678901",
-                becameResidentDate: "2000-01-01",
-                addressSetDate: "2000-01-01",
-                notificationDate: "2000-01-01",
-                prevAddress: "千葉県千葉市中央区",
-                maidenName: "鈴木",
-                maidenKana: "スズキ",
-                individualNumber: "123456789012",
-                remarks: ["住民票コード：12345678901", "", "", ""]
+                residentCode: "24727059608",
+                becameResidentDate: "2019-12-04",
+                addressSetDate: "2019-12-04",
+                notificationDate: "2019-12-01",
+                prevAddress: "東京都千代田区霞が関2丁目2番1号",
+                individualNumber: "379474484458",
+                remarks: ["自動交付機利用者", "", "", ""]
+            },
+            {
+                name: "䶒藤󠄃 花󠄃子",
+                kana: "サイトウ ハナコ",
+                birthDate: "1993-05-05",
+                gender: "女",
+                domiciles: ["東京都千代田区千代田1-1", "筆頭者：䶒藤󠄃 太朗󠄅"],
+                relationship: "妻",
+                residentCode: "24846016224",
+                becameResidentDate: "2019-12-04",
+                addressSetDate: "2019-12-04",
+                notificationDate: "2019-12-01",
+                prevAddress: "東京都千代田区霞が関2丁目2番1号",
+                maidenName: "渡𮞽",
+                maidenKana: "ワタナベ",
+                individualNumber: "454972364860",
+                remarks: ["", "", "", ""]
+            },
+            {
+                name: "䶒藤󠄃 一朗󠄅",
+                kana: "サイトウ イチロウ",
+                birthDate: "2019-05-01",
+                gender: "男",
+                domiciles: ["東京都千代田区千代田1-1", "筆頭者：䶒藤󠄃 太朗󠄅"],
+                relationship: "子",
+                residentCode: "25208017643",
+                becameResidentDate: "2019-12-04",
+                addressSetDate: "2019-12-04", // Set same date as logic default or specific
+                notificationDate: "2019-12-01",
+                prevAddress: "東京都千代田区霞が関2丁目2番1号",
+                individualNumber: "507957100721",
+                remarks: ["", "", "", ""]
+            },
+            {
+                name: "䶒藤󠄃 二朗󠄅",
+                kana: "サイトウ ジロウ",
+                birthDate: "2019-05-01",
+                gender: "男",
+                domiciles: ["東京都千代田区千代田1-1", "筆頭者：䶒藤󠄃 太朗󠄅"],
+                relationship: "子",
+                residentCode: "25208017644",
+                becameResidentDate: "2019-12-04",
+                addressSetDate: "2019-12-04",
+                notificationDate: "2019-12-01",
+                prevAddress: "東京都千代田区霞が関2丁目2番1号",
+                individualNumber: "507957100722",
+                remarks: ["", "", "", ""]
             }
-            // Add more members if needed for demo
         ]
     };
 
@@ -77,7 +122,13 @@ export async function createCborDoc(outputPath: string) {
 
     // We need to import 'encode' from cbor-x here in Node context
     const { encode } = await import('cbor-x');
-    const mDocBytes = encode(mDoc); // Documents array
+
+    // Wrap in standard ISO 18013-5 mDoc structure
+    const standardMDoc = {
+        version: "1.0",
+        documents: [mDoc]
+    };
+    const mDocBytes = encode(standardMDoc);
     const mDocBase64 = Buffer.from(mDocBytes).toString('base64');
 
     // 2. Prepare Font (Subset)
@@ -95,7 +146,7 @@ export async function createCborDoc(outputPath: string) {
     // Generate subset font CSS (and woff2 files)
     const { fontCss, safeFontFamilies } = await fontProcessor.processPageFonts(
         `<div id="cbor-content">${knownText}</div>`, // Dummy HTML for scanner
-        { title: 'Juminhyo PoC' },
+        { title: 'Juminhyo PoC', font: 'GJM' },
         config,
         idManager.currentKeys,
         issuerDid,
@@ -159,6 +210,10 @@ export async function createCborDoc(outputPath: string) {
             text-align: center; 
             border-bottom: 2px solid #000 !important; 
             padding-bottom: 5px;
+        }
+        .name-cell {
+            font-size: 18px; 
+            font-weight: bold;
         }
         .label-text { display: flex; justify-content: space-between; }
         
