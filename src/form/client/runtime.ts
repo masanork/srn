@@ -487,10 +487,18 @@ function updateSubmitButtonState() {
     const btn = document.getElementById('btn-submit') as HTMLButtonElement;
     if (!btn) return;
     const valid = checkRequired();
-    btn.disabled = !valid;
-    btn.style.opacity = valid ? '1' : '0.5';
-    btn.style.cursor = valid ? 'pointer' : 'not-allowed';
-    btn.title = valid ? '' : 'Please fill in all required fields';
+
+    // Update visual classes instead of disabled attribute
+    if (valid) {
+        btn.classList.remove('btn-submit-incomplete');
+        btn.classList.add('btn-submit-ready');
+        btn.title = '';
+    } else {
+        btn.classList.remove('btn-submit-ready');
+        btn.classList.add('btn-submit-incomplete');
+        const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+        btn.title = isJa ? '必須項目が未入力です（クリックして確認）' : 'Required fields missing (click to review)';
+    }
 }
 
 /**

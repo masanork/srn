@@ -1,5 +1,5 @@
 import { decodeDidKey, resolveDidDocument, extractPublicKeyBytes, collectVerificationMethods } from "@srn/core/did";
-import { initWasm, ed25519PublicKeyToX25519PublicKey } from "@srn/core/wasm_core";
+import { initWasmFromB64, ed25519PublicKeyToX25519PublicKey } from "@srn/core/wasm_core";
 import { generateRecipientKeyPair, decryptLayer2, encryptLayer2, fromBase64Url } from "@srn/core/l2crypto";
 
 // Helper to resolve DID and find encryption key (Browser version)
@@ -92,7 +92,7 @@ async function resolveEncryptionKey(did: string): Promise<{ publicKey: Uint8Arra
 }
 
 export async function sendGuestMessage(did: string, recipientDid: string, messageText: string): Promise<any> {
-    await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+    await initWasmFromB64();
 
     const credentialId = localStorage.getItem(`guest-did:${did}`);
     if (!credentialId) throw new Error("Credential ID not found for DID");
@@ -273,7 +273,7 @@ export async function getOrCreateGuestDid(forceNew = false): Promise<GuestDidRes
  */
 async function createGuestDidWithPasskey(): Promise<string> {
     try {
-        await initWasm(fetch("weba_crypto_wasm_bg.wasm")); // Ensure WASM is loaded for crypto
+        await initWasmFromB64(); // Ensure WASM is loaded for crypto
 
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
@@ -397,7 +397,7 @@ async function exportPublicKeyAsJWK(response: AuthenticatorAttestationResponse):
 }
 
 export async function fetchGuestInbox(did: string): Promise<any[]> {
-    await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+    await initWasmFromB64();
     const credentialId = localStorage.getItem(`guest-did:${did}`);
     if (!credentialId) throw new Error("Credential ID not found for DID");
 

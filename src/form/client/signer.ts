@@ -107,8 +107,8 @@ export class Signer {
     }
 
     private async generateEdKey() {
-        const { initWasm, ed25519GenerateKeyPair } = await import("@srn/core/wasm_core");
-        await initWasm(fetch('/assets/weba_crypto_wasm_bg.wasm'));
+        const { initWasmFromB64, ed25519GenerateKeyPair } = await import("@srn/core/wasm_core");
+        await initWasmFromB64();
         const { privateKey, publicKey } = ed25519GenerateKeyPair();
         this.edPrivateKey = privateKey;
         this.publicKey = publicKey;
@@ -157,8 +157,8 @@ export class Signer {
             };
         } else {
             if (!this.edPrivateKey) await this.generateEdKey();
-            const { initWasm, ed25519Sign } = await import("@srn/core/wasm_core");
-            await initWasm(fetch('/assets/weba_crypto_wasm_bg.wasm'));
+            const { initWasmFromB64, ed25519Sign } = await import("@srn/core/wasm_core");
+            await initWasmFromB64();
             const signature = ed25519Sign(this.edPrivateKey!, dataBytes);
             return {
                 ...payload,

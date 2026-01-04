@@ -29,25 +29,14 @@ export class FolioManager {
     public async reindex() {
         console.log("Re-indexing Folio...");
 
-        // Scan target directories
-        const dirs = ['history', 'certificates', 'inbox', 'folio/history', 'folio/certificates', 'shared/forms'];
+        // Scan target directories inside Folio
+        const dirs = ['history', 'certificates', 'inbox', 'folio/history', 'folio/certificates'];
         let count = 0;
 
         for (const target of dirs) {
             const fullPath = path.join(this.folioDir, target);
             if (await fs.pathExists(fullPath)) {
-                if ((await fs.stat(fullPath)).isDirectory()) {
-                    // Directory scan
-                    const files = await glob('**/*.{html,json,md}', { cwd: fullPath });
-                    for (const file of files) {
-                        await this.indexFile(path.join(target, file));
-                        count++;
-                    }
-                } else {
-                    // Single file (e.g. profile.html)
-                    await this.indexFile(target);
-                    count++;
-                }
+                count += await this.ingestDir(fullPath);
             }
         }
 
@@ -55,12 +44,29 @@ export class FolioManager {
     }
 
     /**
+     * Ingest all files from a directory
+     */
+    public async ingestDir(dirPath: string): Promise<number> {
+        let count = 0;
+        if (await fs.pathExists(dirPath)) {
+            const files = await glob('**/*.{html,json,md}', { cwd: dirPath });
+            for (const file of files) {
+                await this.indexFile(path.join(dirPath, file));
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Index a single file into the KVS
      */
-    public async indexFile(relPath: string) {
-        const fullPath = path.join(this.folioDir, relPath);
+    public async indexFile(fullPath: string) {
+        if (!await fs.pathExists(fullPath)) return;
+        
         const content = await fs.readFile(fullPath, 'utf-8');
-        const ext = path.extname(relPath).toLowerCase();
+        const ext = path.extname(fullPath).toLowerCase();
+        const relPath = path.relative(this.folioDir, fullPath);
 
         let extracted: any = null;
         let docType = 'Unknown';
@@ -71,7 +77,7 @@ export class FolioManager {
             try {
                 extracted = JSON.parse(content);
             } catch (e) {
-                console.warn(`Failed to parse JSON: ${relPath}`);
+                console.warn(`Failed to parse JSON: ${fullPath}`);
                 return;
             }
         } else if (ext === '.html') {
@@ -97,10 +103,9 @@ export class FolioManager {
         }
 
         // Generate a semantic KVS key
-        // Scheme: {docType}:{timestamp}:{hash_or_filename}
-        // Ideally we use a stable ID inside the doc, but filename is a good proxy for CLI
-        const safeName = path.basename(relPath).replace(/\.[^.]+$/, '');
-        const folder = path.dirname(relPath) === '.' ? 'root' : path.dirname(relPath);
+        // Scheme: {folder}:{hash_or_filename}
+        const safeName = path.basename(fullPath).replace(/\.[^.]+$/, '');
+        const folder = path.dirname(relPath).startsWith('..') ? 'external' : (path.dirname(relPath) === '.' ? 'root' : path.dirname(relPath));
         const key = `${folder}:${safeName}`;
 
         // Create Text Summary for FTS
@@ -108,7 +113,7 @@ export class FolioManager {
 
         const record: FolioRecord = {
             key: key,
-            file_path: relPath,
+            file_path: fullPath, // Store absolute path for easy retrieval
             doc_type: docType,
             metadata: {
                 created: extracted.created || extracted.date || new Date().toISOString(),
@@ -157,5 +162,62 @@ export class FolioManager {
         };
         walk(data);
         return parts.join(' ').slice(0, 5000); // Limit summary size
+    }
+
+    /**
+     * Scan all documents and aggregate field values for profile generation
+     */
+    public async aggregateFields(): Promise<Record<string, any>> {
+        const records = this.storage.getAll();
+        const fieldMap: Record<string, Map<string, number>> = {};
+
+        // Exclude internal metadata from templates
+        const excludedFields = new Set(['title', 'form', 'version', 'id', 'type', 'label', 'placeholder', 'options', 'required', 'pattern']);
+
+        for (const record of records) {
+            // Prioritize filled data
+            if (record.doc_type === 'WebAForm') continue; 
+
+            const data = record.raw_content;
+            
+            // Look for fields in credentialSubject or weba-state data
+            const subject = data.credentialSubject || data.data || data;
+            
+            const walk = (obj: any) => {
+                if (typeof obj !== 'object' || obj === null) return;
+                
+                for (const [key, value] of Object.entries(obj)) {
+                    if (key.startsWith('@')) continue; 
+                    if (excludedFields.has(key)) continue;
+                    
+                    if (typeof value === 'string' || typeof value === 'number') {
+                        if (!fieldMap[key]) fieldMap[key] = new Map();
+                        const valStr = String(value);
+                        fieldMap[key].set(valStr, (fieldMap[key].get(valStr) || 0) + 1);
+                    } else if (typeof value === 'object') {
+                        walk(value);
+                    }
+                }
+            };
+            walk(subject);
+        }
+
+        // Pick the most frequent value for each field
+        const profile: Record<string, any> = {};
+        for (const [key, values] of Object.entries(fieldMap)) {
+            let maxCount = 0;
+            let bestValue = null;
+            for (const [val, count] of values.entries()) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    bestValue = val;
+                }
+            }
+            if (bestValue !== null) {
+                profile[key] = bestValue;
+            }
+        }
+
+        return profile;
     }
 }

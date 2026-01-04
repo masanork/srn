@@ -1625,7 +1625,7 @@ async function resolveEncryptionKey(did) {
   throw new Error("No X25519 encryption key found in DID Document");
 }
 async function sendGuestMessage(did, recipientDid, messageText) {
-  await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+  await initWasmFromB64();
   const credentialId = localStorage.getItem(`guest-did:${did}`);
   if (!credentialId)
     throw new Error("Credential ID not found for DID");
@@ -1758,7 +1758,7 @@ async function createGuestDidWithPasskey() {
       }
       return btoa(binary);
     };
-    await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+    await initWasmFromB64();
     const challenge = new Uint8Array(32);
     crypto.getRandomValues(challenge);
     const userId = new Uint8Array(16);
@@ -1833,7 +1833,7 @@ async function createGuestDidWithPasskey() {
   }
 }
 async function fetchGuestInbox(did) {
-  await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+  await initWasmFromB64();
   const credentialId = localStorage.getItem(`guest-did:${did}`);
   if (!credentialId)
     throw new Error("Credential ID not found for DID");
@@ -4905,8 +4905,8 @@ class Signer {
     }
   }
   async generateEdKey() {
-    const { initWasm: initWasm2, ed25519GenerateKeyPair: ed25519GenerateKeyPair2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
-    await initWasm2(fetch("/assets/weba_crypto_wasm_bg.wasm"));
+    const { initWasmFromB64: initWasmFromB642, ed25519GenerateKeyPair: ed25519GenerateKeyPair2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
+    await initWasmFromB642();
     const { privateKey, publicKey } = ed25519GenerateKeyPair2();
     this.edPrivateKey = privateKey;
     this.publicKey = publicKey;
@@ -4949,8 +4949,8 @@ class Signer {
     } else {
       if (!this.edPrivateKey)
         await this.generateEdKey();
-      const { initWasm: initWasm2, ed25519Sign: ed25519Sign2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
-      await initWasm2(fetch("/assets/weba_crypto_wasm_bg.wasm"));
+      const { initWasmFromB64: initWasmFromB642, ed25519Sign: ed25519Sign2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
+      await initWasmFromB642();
       const signature = ed25519Sign2(this.edPrivateKey, dataBytes);
       return {
         ...payload,

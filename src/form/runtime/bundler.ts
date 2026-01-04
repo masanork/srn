@@ -33,7 +33,8 @@ import '${path.join(SRC_DIR, 'client/postal.js')}';`,
 import '${path.join(SRC_DIR, 'client/lg.js')}';`,
     'validation-email': `// TODO: import { emailValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-email.js')}';`,
     'validation-tel': `// TODO: import { telValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-tel.js')}';`,
-    'validation-required': `// TODO: import { requiredValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-required.js')}';`,
+    'validation-required': `import { requiredValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-required.js')}';
+import '${path.join(SRC_DIR, 'client/validation-dialog.js')}';`,
 };
 
 export const PLUGIN_EXPORTS: Record<string, string> = {
@@ -41,7 +42,7 @@ export const PLUGIN_EXPORTS: Record<string, string> = {
     'lg': 'lgPlugin',
     'validation-email': '// emailValidationPlugin',
     'validation-tel': '// telValidationPlugin',
-    'validation-required': '// requiredValidationPlugin',
+    'validation-required': 'requiredValidationPlugin',
 };
 
 /**

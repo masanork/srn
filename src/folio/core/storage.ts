@@ -144,6 +144,19 @@ export class FolioStorage {
         }
     }
 
+    public getAll(): FolioRecord[] {
+        const stmt = this.db.prepare(`SELECT * FROM kv_index ORDER BY updated_at DESC`);
+        const results = stmt.all() as any[];
+        return results.map(res => ({
+            key: res.key,
+            file_path: res.file_path,
+            doc_type: res.doc_type,
+            metadata: JSON.parse(res.metadata),
+            raw_content: JSON.parse(res.raw_content),
+            updated_at: res.updated_at
+        }));
+    }
+
     public close() {
         this.db.close();
     }

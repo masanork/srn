@@ -14,3 +14,4 @@ export * from './font';
 export * from './phc';
 export * from './pqc';
 export * from './tsa_client';
+export * from './mdoc';

@@ -63,6 +63,23 @@ export function generateHtml(markdown: string): string {
         .action-btn { flex: 1; min-width: calc(50% - 0.25rem); padding: 0.7rem 1rem; font-size: 0.9rem; }
     }
     @media print { .pilot-banner, .action-bar { display: none; } .watermark { color: rgba(59, 130, 246, 0.08); } body { padding-bottom: 0; } }
+    .btn-submit-incomplete { background: #9ca3af !important; color: #f3f4f6 !important; opacity: 0.6; cursor: pointer; transition: all 0.3s ease; }
+    .btn-submit-incomplete:hover { background: #6b7280 !important; opacity: 0.75; }
+    .btn-submit-ready { background: var(--primary) !important; color: white !important; opacity: 1; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn-submit-ready:hover { background: var(--primary-hover) !important; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .validation-dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.2s ease; }
+    .validation-dialog { background: white; border-radius: 12px; padding: 1.5rem; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
+    .validation-dialog-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: var(--primary); }
+    .validation-dialog-message { font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.25rem; color: #374151; }
+    .validation-missing-fields { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 6px; padding: 0.75rem; margin-bottom: 1.25rem; }
+    .validation-missing-fields ul { margin: 0.5rem 0 0 1.25rem; padding: 0; color: #92400e; }
+    .validation-dialog-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+    .validation-dialog-btn { padding: 0.625rem 1.25rem; border-radius: 6px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; min-height: 40px; transition: all 0.2s; }
+    .validation-dialog-btn-cancel { background: white; color: var(--primary); border: 1px solid var(--border); }
+    .validation-dialog-btn-cancel:hover { background: var(--bg-subtle); }
+    .validation-dialog-btn-submit { background: #dc2626; color: white; }
+    .validation-dialog-btn-submit:hover { background: #b91c1c; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style></head><body>
     <div class="watermark">PILOT</div>
