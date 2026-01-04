@@ -41,8 +41,20 @@ export async function formLayout(params: {
     jsonStructure?: any; // Added optional structure
 }) {
     const { data, rawMarkdown, fontCss, fontFamilies, vc, relPath = '', config, distDir, manifestManager } = params;
-    const { html, jsonStructure: internalStructure } = parseMarkdown(rawMarkdown);
+    let { html, jsonStructure: internalStructure } = parseMarkdown(rawMarkdown);
     const jsonStructure = params.jsonStructure || internalStructure;
+
+    // Add frontmatter settings to jsonStructure
+    jsonStructure.require_signature = data.require_signature ?? false; // Default: no signature required
+
+    // Update submit button action based on signature requirement
+    // Parser generates default action, we override it here based on frontmatter
+    const targetAction = jsonStructure.require_signature ? 'sign-download' : 'submit-document';
+    html = html.replace(
+        /(<button[^>]*id="btn-submit"[^>]*data-action=")([^"]+)(")/,
+        `$1${targetAction}$3`
+    );
+
     const lang = (data.lang || 'ja').toString();
 
     // Load Shared CSS

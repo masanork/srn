@@ -2,15 +2,18 @@
 import { globalSigner } from './signer';
 import { downloadHtml, type DownloadHtmlOptions, type DraftState } from './download';
 import type { L2Config, Layer2Encrypted, L2Keywrap } from './l2crypto';
+import { ValidationDialog, checkRequiredFields } from './validation-dialog';
 
 export class DataManager {
     private formId: string;
     private static readonly DRAFT_STATE_VERSION = 1;
     private static readonly L2_REPLAY_STORE_KEY = "weba_l2_nonces";
     private currentSecurityTier: 'high' | 'standard' | 'offline' = 'standard';
+    private validationDialog: ValidationDialog;
 
     constructor() {
         this.formId = 'WebA_' + window.location.pathname;
+        this.validationDialog = new ValidationDialog();
     }
 
     private updateSecurityUI(tier: 'high' | 'standard' | 'offline') {
@@ -81,6 +84,31 @@ export class DataManager {
     }
 
     public async signAndDownload() {
+        // CHECK VALIDATION FIRST
+        const validationResult = checkRequiredFields();
+
+        if (!validationResult.isValid) {
+            // Show confirmation dialog
+            this.validationDialog.show({
+                missingFields: validationResult.missingFields,
+                onCancel: () => {
+                    console.log('[DataManager] User cancelled submission');
+                    // Return to form - nothing to do
+                },
+                onSubmit: () => {
+                    console.log('[DataManager] User confirmed submission despite missing fields');
+                    // Proceed with actual submission
+                    this.performSignAndDownload();
+                }
+            });
+            return; // Stop here - let dialog handle next steps
+        }
+
+        // If valid, proceed directly
+        this.performSignAndDownload();
+    }
+
+    private async performSignAndDownload() {
         const data = this.updateJsonLd();
         const w = window as any;
         const formName = (w.generatedJsonStructure && w.generatedJsonStructure.name) || 'Response';
@@ -375,6 +403,31 @@ export class DataManager {
     }
 
     public submitDocument() {
+        // CHECK VALIDATION FIRST (same as signAndDownload)
+        const validationResult = checkRequiredFields();
+
+        if (!validationResult.isValid) {
+            // Show confirmation dialog
+            this.validationDialog.show({
+                missingFields: validationResult.missingFields,
+                onCancel: () => {
+                    console.log('[DataManager] User cancelled submission');
+                    // Return to form - nothing to do
+                },
+                onSubmit: () => {
+                    console.log('[DataManager] User confirmed submission despite missing fields');
+                    // Proceed with actual submission
+                    this.performSubmitDocument();
+                }
+            });
+            return; // Stop here - let dialog handle next steps
+        }
+
+        // If valid, proceed directly
+        this.performSubmitDocument();
+    }
+
+    private performSubmitDocument() {
         this.bakeValues();
         document.querySelectorAll('.search-suggestions').forEach(el => el.remove());
         this.downloadHtml('submit', true);

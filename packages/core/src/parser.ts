@@ -270,6 +270,33 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     appendHtml(Renderers.tableRow(cells));
                 } else {
                     // Static table (no master, no dynamic)
+                    // Extract field metadata from cells before rendering
+                    cells.forEach(cell => {
+                        const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+                        if (match) {
+                            let [_, type, keyPart, attrsParen, attrsColon] = match;
+                            let key = (keyPart || '').trim();
+                            let extraAttrs = attrsParen || attrsColon || '';
+
+                            if (key.includes(' ')) {
+                                const parts = key.split(/\s+/);
+                                key = parts[0]!;
+                                extraAttrs = parts.slice(1).join(' ') + ' ' + extraAttrs;
+                            }
+
+                            const placeholderMatch = extraAttrs.match(/placeholder="([^"]+)"/) || extraAttrs.match(/placeholder='([^']+)'/);
+                            const cleanLabel = placeholderMatch ? placeholderMatch[1] : key;
+                            const showIfMatch = extraAttrs.match(/show_if="([^"]+)"/) || extraAttrs.match(/show_if='([^']+)'/);
+
+                            jsonStructure.fields.push({
+                                key,
+                                label: cleanLabel,
+                                type: type || 'text',
+                                show_if: showIfMatch ? showIfMatch[1] : undefined,
+                                required: extraAttrs.includes('required')
+                            });
+                        }
+                    });
                     // @ts-ignore
                     appendHtml(Renderers.tableRow(cells));
                 }
@@ -449,11 +476,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     if (currentTabId) appendHtml('</div>'); // Close last tab
 
     // Final Assembly: Inject Tab Nav if tabs exist
+    // Determine submit action based on signature requirement
+    const submitAction = jsonStructure.require_signature ? 'sign-download' : 'submit-document';
     const toolbarButtons = `
             <div style="flex:1"></div>
             <button class="btn-clear" data-action="clear-data" data-i18n="clear_btn">Clear</button>
             <button class="secondary" data-action="save-draft" data-i18n="work_save_btn">Save Progress</button>
-            <button class="primary" id="btn-submit" data-action="sign-download" data-i18n="sign_btn" disabled>Submit</button>
+            <button class="primary btn-submit-incomplete" id="btn-submit" data-action="${submitAction}" data-i18n="sign_btn">Submit</button>
     `;
 
     if (tabs.length > 0) {
