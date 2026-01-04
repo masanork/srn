@@ -5,11 +5,11 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
-## v3.3.0 - Form Validation & mdoc Identity Integration
+## v3.3.0 - Form Validation & mdoc Identity PoC
 
 **Date:** 2026-01-04
 
-Major enhancements to Web/A Form submission workflow and experimental mdoc (mobile driver's license) support for identity verification.
+Major enhancements to Web/A Form submission workflow and a standalone Proof of Concept for mdoc (mobile driver's license) identity verification.
 
 *   **Form Validation & Submission UX**:
     *   **Visual Validation Feedback**: Submit button now dynamically changes appearance based on form completeness:
@@ -34,11 +34,11 @@ Major enhancements to Web/A Form submission workflow and experimental mdoc (mobi
     *   **submitDocument Mode**: Plain HTML download without cryptographic signing for accessibility
     *   **Backward Compatibility**: Existing forms automatically default to no-signature mode
 
-*   **mdoc Identity Support (Experimental)**:
-    *   **ISO/IEC 18013-5 Implementation**: Initial support for mobile driver's license (mDL) format
-    *   **PCSC Integration**: Added PC/SC smart card reader support for reading mdoc data
-    *   **Credential Viewer**: New demo interface for visualizing mdoc credentials
-    *   **⚠️ Experimental Status**: This feature is under active development and not yet production-ready
+*   **mdoc Identity PoC (Standalone)**:
+    *   **ISO/IEC 18013-5 Implementation**: Initial support for mobile driver's license (mDL) format.
+    *   **Credential Viewer**: New demo interface for visualizing mdoc credentials (`demo_cbor_renderer`).
+    *   **PCSC Integration**: Added PC/SC smart card reader support for reading mdoc data.
+    *   **Separate Module**: Currently implemented as a standalone viewer and **not yet integrated** into the core SSG build pipeline or Web/A document format.
 
 *   **Form Runtime Improvements**:
     *   **Event Delegation**: Implemented document-level event delegation for better performance and dynamic content support
@@ -51,25 +51,18 @@ Major enhancements to Web/A Form submission workflow and experimental mdoc (mobi
     *   **Known Issues Documentation**: Created `KNOWN_ISSUES.md` documenting Bun test concurrency limitations
     *   **Build System Fixes**: Restored l2crypto-stub.ts for proper bundling
 
-## v3.2.0 - Core SDK Monorepo & Developer Experience
+## v3.2.0 - Internal Maintenance & Bug Fixes
 
 **Date:** 2026-01-03
 
-Major structural refactoring to improve **Developer Experience (DX)** for OSS contributors and AI hackers. This version transitions the project to a monorepo architecture and decouples the internal logic from the SSG engine.
-
-*   **Core SDK Monorepo Architecture**:
-    *   **`packages/core` Creation**: Successfully decoupled all shared cryptographic, parsing, and identity logic into a standalone workspace.
-    *   **Unified @srn/core Namespace**: Consolidated all internal imports to use the `@srn/core` package. This eliminates brittle relative paths and prepares the SDK for public distribution.
-    *   **Monorepo Stabilization**: Updated `tsconfig.json` and `package.json` with workspace support, ensuring seamless module resolution across Bun build and test environments.
+Internal updates focusing on test stability and bug fixes. The previously planned monorepo restructuring has been rolled back and is not included in this release.
 
 *   **Developer Experience (DX) Improvements**:
     *   **"Clone & Test" Ready**: Simplified the developer onboarding workflow. New contributors can now run the entire test suite immediately after cloning with `bun test`.
-    *   **100% Test Coverage for Core**: Fixed directory resolution issues and missing module imports in the test environment, achieving a stable baseline of 346 passing tests.
-    *   **Architecture Decoupling**: Clearly separated **Tier 1 (Core SDK)**, **Tier 2 (Folio CLI)**, and **Tier 3 (SSG App)** logic, paving the way for MCP server integrations.
+    *   **Test Stabilization**: Addressed directory resolution issues and missing module imports in the test environment.
 
 *   **Bug Fixes & Refinements**:
-    *   **Module Resolution**: Fixed `IsDir` and `NotOpenForReading` errors encountered in parallel test execution by forcing direct source resolution for the core package.
-    *   **Generator Cleanup**: Fixed `generator.ts` to correctly utilize the new core parser, resolving failures in standalone HTML generation.
+    *   **Generator Cleanup**: Fixed `generator.ts` to correctly handle parser edge cases, resolving failures in standalone HTML generation.
 
 ## v3.1.0 - Web/A LTV & Verifier Overhaul
 
