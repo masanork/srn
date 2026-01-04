@@ -5,6 +5,52 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v3.3.0 - Form Validation & mdoc Identity Integration
+
+**Date:** 2026-01-04
+
+Major enhancements to Web/A Form submission workflow and experimental mdoc (mobile driver's license) support for identity verification.
+
+*   **Form Validation & Submission UX**:
+    *   **Visual Validation Feedback**: Submit button now dynamically changes appearance based on form completeness:
+        *   `btn-submit-incomplete` (dimmed) when required fields are missing
+        *   `btn-submit-ready` (highlighted) when all required fields are filled
+    *   **Validation Dialog**: New confirmation dialog when submitting incomplete forms, displaying:
+        *   List of missing required fields with user-friendly labels
+        *   Options: "Go Back" to fix or "Submit Anyway" to proceed
+        *   i18n support (Japanese/English)
+    *   **Field Metadata Extraction Fix**: Fixed critical parser bug where fields defined in markdown tables weren't being extracted to `jsonStructure`, causing validation to fail completely
+    *   **Conditional Field Support**: Respects `show_if` logic - hidden conditional fields (e.g., state field when country != USA) don't block submission
+
+*   **Optional Signature Requirement**:
+    *   **Frontmatter Configuration**: Added `require_signature` option (default: `false`) to control submission behavior:
+        ```yaml
+        ---
+        require_signature: false  # No PassKey required (default)
+        # require_signature: true # Requires PassKey signature
+        ---
+        ```
+    *   **Flexible Authentication**: Forms no longer assume all users have FIDO devices
+    *   **submitDocument Mode**: Plain HTML download without cryptographic signing for accessibility
+    *   **Backward Compatibility**: Existing forms automatically default to no-signature mode
+
+*   **mdoc Identity Support (Experimental)**:
+    *   **ISO/IEC 18013-5 Implementation**: Initial support for mobile driver's license (mDL) format
+    *   **PCSC Integration**: Added PC/SC smart card reader support for reading mdoc data
+    *   **Credential Viewer**: New demo interface for visualizing mdoc credentials
+    *   **⚠️ Experimental Status**: This feature is under active development and not yet production-ready
+
+*   **Form Runtime Improvements**:
+    *   **Event Delegation**: Implemented document-level event delegation for better performance and dynamic content support
+    *   **Bundle Optimization**: Eliminated barrel imports and Node.js shims, reducing client bundle size
+    *   **Browser Compatibility**: Fixed runtime errors in generated forms
+    *   **CBOR-X Integration**: Added client-side CBOR encoding/decoding for mdoc support
+
+*   **Developer Experience**:
+    *   **Test Infrastructure**: Added validation test form (`submit-validation-test.md`) with comprehensive test cases
+    *   **Known Issues Documentation**: Created `KNOWN_ISSUES.md` documenting Bun test concurrency limitations
+    *   **Build System Fixes**: Restored l2crypto-stub.ts for proper bundling
+
 ## v3.2.0 - Core SDK Monorepo & Developer Experience
 
 **Date:** 2026-01-03
