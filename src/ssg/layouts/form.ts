@@ -281,9 +281,17 @@ export async function formLayout(params: {
             ${html}
             ${l2Toggle}
             <script>
-                // Early switchTab shim to prevent ReferenceErrors
+                // Early shims to prevent ReferenceErrors
                 window.switchTab = window.switchTab || function(btn, tabId) {
                     console.log('Early switchTab called for:', tabId);
+                    // Actual implementation will overwrite this when runtime loads
+                };
+                window.addTableRow = window.addTableRow || function(btn, tableKey) {
+                    console.log('Early addTableRow called for:', tableKey);
+                    // Actual implementation will overwrite this when runtime loads
+                };
+                window.removeTableRow = window.removeTableRow || function(btn) {
+                    console.log('Early removeTableRow called');
                     // Actual implementation will overwrite this when runtime loads
                 };
             </script>

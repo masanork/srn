@@ -253,6 +253,108 @@ export async function initPluginRuntime() {
     uim.initTables();
     calc.recalculate();
 
+    // Setup event delegation (works alongside onclick for backward compatibility)
+    function setupEventDelegation() {
+        console.log('[EventDelegation] Setting up document-level click handlers');
+
+        document.addEventListener('click', (e: Event) => {
+            const target = e.target as HTMLElement;
+            const btn = target.closest('[data-action]') as HTMLElement;
+            if (!btn) return;
+
+            const action = btn.dataset.action;
+
+            switch (action) {
+                case 'add-row':
+                    const tableKey = btn.dataset.tableKey;
+                    if (tableKey) {
+                        uim.addTableRow(btn, tableKey);
+                    }
+                    break;
+
+                case 'remove-row':
+                    uim.removeTableRow(btn);
+                    break;
+
+                case 'switch-tab':
+                    const tabId = btn.dataset.tabId;
+                    if (tabId) {
+                        uim.switchTab(btn, tabId);
+                    }
+                    break;
+
+                case 'clear-data':
+                    dm.clearData();
+                    break;
+
+                case 'save-draft':
+                    dm.saveDraft();
+                    break;
+
+                case 'sign-download':
+                    dm.signAndDownload();
+                    break;
+
+                default:
+                    console.warn('[EventDelegation] Unknown action:', action);
+            }
+        });
+    }
+
+    // Call after UI initialization
+    setupEventDelegation();
+
+    // Setup event delegation (works alongside onclick for backward compatibility)
+    function setupEventDelegation() {
+        console.log('[EventDelegation] Setting up document-level click handlers');
+
+        document.addEventListener('click', (e: Event) => {
+            const target = e.target as HTMLElement;
+            const btn = target.closest('[data-action]') as HTMLElement;
+            if (!btn) return;
+
+            const action = btn.dataset.action;
+
+            switch (action) {
+                case 'add-row':
+                    const tableKey = btn.dataset.tableKey;
+                    if (tableKey) {
+                        uim.addTableRow(btn, tableKey);
+                    }
+                    break;
+
+                case 'remove-row':
+                    uim.removeTableRow(btn);
+                    break;
+
+                case 'switch-tab':
+                    const tabId = btn.dataset.tabId;
+                    if (tabId) {
+                        uim.switchTab(btn, tabId);
+                    }
+                    break;
+
+                case 'clear-data':
+                    dm.clearData();
+                    break;
+
+                case 'save-draft':
+                    dm.saveDraft();
+                    break;
+
+                case 'sign-download':
+                    dm.signAndDownload();
+                    break;
+
+                default:
+                    console.warn('[EventDelegation] Unknown action:', action);
+            }
+        });
+    }
+
+    // Call after UI initialization
+    setupEventDelegation();
+
     // Expose to window for debugging
     w.__pluginRuntime = runtime;
     w.__pluginManager = pluginManager;

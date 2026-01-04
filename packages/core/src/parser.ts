@@ -229,7 +229,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                         // @ts-ignore
                         let trHtml = Renderers.tableRow(cells, true);
                         // Inject Delete Button cell for dynamic rows
-                        trHtml = trHtml.replace('</tr>', '<td class="row-action-cell"><button type="button" class="remove-row-btn" onclick="removeTableRow(this)" tabindex="-1">×</button></td></tr>');
+                        trHtml = trHtml.replace('</tr>', '<td class="row-action-cell"><button type="button" class="remove-row-btn" data-action="remove-row" onclick="removeTableRow(this)" tabindex="-1">×</button></td></tr>');
                         appendHtml(trHtml);
                     }
                 } else if (inMasterTable) {
@@ -393,7 +393,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     if (inTable) {
         appendHtml('</tbody></table></div>');
         if (currentDynamicTableKey) {
-            appendHtml(`<button type="button" class="add-row-btn" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ 行を追加</button>`);
+            appendHtml(`<button type="button" class="add-row-btn" data-action="add-row" data-table-key="${currentDynamicTableKey}" onclick="addTableRow(this, '${currentDynamicTableKey}')" data-i18n="add_row">+ 行を追加</button>`);
             currentDynamicTableKey = null;
         }
         appendHtml('</div>');
@@ -404,9 +404,9 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     // Final Assembly: Inject Tab Nav if tabs exist
     const toolbarButtons = `
             <div style="flex:1"></div>
-            <button class="btn-clear" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
-            <button class="secondary" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
-            <button class="primary" id="btn-submit" onclick="window.signAndDownload()" data-i18n="sign_btn" disabled>Submit</button>
+            <button class="btn-clear" data-action="clear-data" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" data-action="save-draft" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" id="btn-submit" data-action="sign-download" onclick="window.signAndDownload()" data-i18n="sign_btn" disabled>Submit</button>
     `;
 
     if (tabs.length > 0) {
@@ -417,7 +417,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             // @ts-ignore
             if (tab.isSystem) return;
             const activeClass = visibleTabCount === 0 ? ' active' : '';
-            navHtml += `<button class="tab-btn${activeClass}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
+            navHtml += `<button class="tab-btn${activeClass}" data-action="switch-tab" data-tab-id="${tab.id}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
             visibleTabCount++;
         });
 
