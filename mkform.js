@@ -1,4 +1,4 @@
-window.__WEBA_BUILD_TIME__='2026-01-04T07:40:03Z';
+window.__WEBA_BUILD_TIME__='2026-01-04T10:36:01Z';
 var t={_context:{masterData:{}},setMasterData(A){this._context.masterData=A},escapeHtml(A){if(!A)return"";return A.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")},formatHint(A){return this.escapeHtml(A).replace(/&lt;br\s*\/?&gt;/gi,"<br>").replace(/\r?\n/g,"<br>")},getStyle(A){if(!A)return"";let I="";if(A.includes("size:L"))I+="font-size: 1.25em;";if(A.includes("size:S"))I+="font-size: 0.8em;";if(A.includes("size:XL"))I+="font-size: 1.5em; font-weight: bold;";if(A.includes("align:R"))I+="text-align: right;";if(A.includes("align:C"))I+="text-align: center;";if(A.includes("bold"))I+="font-weight: bold;";return I},getSemanticAttrs(A,I){if(!I)return"";let g="",Q=A.toLowerCase();if(Q.includes("phone")||Q.includes("tel")||Q.includes("電話"))g+=' type="tel" inputmode="tel" autocomplete="tel"';else if(Q.includes("email")||Q.includes("mail")||Q.includes("メール"))g+=' type="email" inputmode="email" autocomplete="email"';else if(Q.includes("zip")||Q.includes("postal")||Q.includes("郵便"))g+=' inputmode="numeric" autocomplete="postal-code"';else if(Q.includes("name")||Q.includes("氏名")||Q.includes("名前"))if(Q.includes("sei")||Q.includes("姓")||Q.includes("family"))g+=' autocomplete="family-name"';else if(Q.includes("mei")||Q.includes("名")||Q.includes("given"))g+=' autocomplete="given-name"';else g+=' autocomplete="name"';else if(Q.includes("company")||Q.includes("organization")||Q.includes("会社")||Q.includes("組織"))g+=' autocomplete="organization"';else if(Q.includes("address")||Q.includes("住所"))if(Q.includes("1")||Q.includes("line1"))g+=' autocomplete="address-line1"';else if(Q.includes("2")||Q.includes("line2"))g+=' autocomplete="address-line2"';else g+=' autocomplete="street-address"';else if(Q.includes("pref")||Q.includes("都道府県")||Q.includes("state"))g+=' autocomplete="address-level1"';else if(Q.includes("city")||Q.includes("市区町村"))g+=' autocomplete="address-level2"';let B=(I||"").match(/autocomplete="([^"]+)"/)||(I||"").match(/autocomplete='([^']+)'/);if(B)g=g.replace(/autocomplete="[^"]*"/,""),g+=` autocomplete="${B[1]}"`;let E=(I||"").match(/inputmode="([^"]+)"/)||(I||"").match(/inputmode='([^']+)'/);if(E)g=g.replace(/inputmode="[^"]*"/,""),g+=` inputmode="${E[1]}"`;return g},getExtraAttrs(A){if(!A)return"";let I="",g=A.match(/(?:len|max):(\d+)/);if(g)I+=` maxlength="${g[1]}"`;let Q=A.match(/(?:val|value)="([^"]+)"/);if(Q)I+=` value="${this.escapeHtml(Q[1])}"`;else{let D=A.match(/(?:val|value)=([^\s\)]+)/);if(D)I+=` value="${this.escapeHtml(D[1])}"`}let B=A.match(/context="([^"]+)"/)||A.match(/context='([^']+)'/);if(B)I+=` data-context="${this.escapeHtml(B[1])}"`;let E=A.match(/property="([^"]+)"/)||A.match(/property='([^']+)'/);if(E)I+=` data-property="${this.escapeHtml(E[1])}"`;let C=A.match(/show_if="([^"]+)"/)||A.match(/show_if='([^']+)'/);if(C)I+=` data-show-if="${this.escapeHtml(C[1])}"`;let i=A.match(/autofill:([a-z:]+)/);if(i)I+=` data-autofill="${this.escapeHtml(i[1])}"`;return["min","max","step","pattern","required","readonly","disabled","minlength","maxlength"].forEach((D)=>{let w=A.match(new RegExp(`${D}="([^"]+)"`))||A.match(new RegExp(`${D}='([^']+)'`))||A.match(new RegExp(`${D}=([^\\s\\)]+)`));if(w)I+=` ${D}="${this.escapeHtml(w[1])}"`;else if(new RegExp(`\\b${D}\\b`).test(A))I+=` ${D}`}),I},text:function(A,I,g){let Q=(g||"").match(/(?:val|value)="([^"]+)"/)||(g||"").match(/(?:val|value)='([^']+)'/)||(g||"").match(/(?:val|value)=([^ ]+)/),B=(g||"").match(/placeholder="([^"]+)"/)||(g||"").match(/placeholder='([^']+)'/),E=(g||"").match(/hint="([^"]+)"/)||(g||"").match(/hint='([^']+)'/),C=Q?Q[1]:"",i=B?B[1]:"",o=(g||"").match(/context="([^"]+)"/)||(g||"").match(/context='([^']+)'/),D=E?E[1]:o?o[1]:"",w=D?`<div class="form-hint">${this.formatHint(D)}</div>`:"",n=this.getSemanticAttrs(A,g);return`
         <div class="form-row" style="${this.getStyle(g)}">
             <label class="form-label">${this.escapeHtml(I)}</label>
@@ -1713,7 +1713,7 @@ async function resolveEncryptionKey(did) {
   throw new Error("No X25519 encryption key found in DID Document");
 }
 async function sendGuestMessage(did, recipientDid, messageText) {
-  await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+  await initWasmFromB64();
   const credentialId = localStorage.getItem(\`guest-did:\${did}\`);
   if (!credentialId)
     throw new Error("Credential ID not found for DID");
@@ -1846,7 +1846,7 @@ async function createGuestDidWithPasskey() {
       }
       return btoa(binary);
     };
-    await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+    await initWasmFromB64();
     const challenge = new Uint8Array(32);
     crypto.getRandomValues(challenge);
     const userId = new Uint8Array(16);
@@ -1921,7 +1921,7 @@ async function createGuestDidWithPasskey() {
   }
 }
 async function fetchGuestInbox(did) {
-  await initWasm(fetch("weba_crypto_wasm_bg.wasm"));
+  await initWasmFromB64();
   const credentialId = localStorage.getItem(\`guest-did:\${did}\`);
   if (!credentialId)
     throw new Error("Credential ID not found for DID");
@@ -4993,8 +4993,8 @@ class Signer {
     }
   }
   async generateEdKey() {
-    const { initWasm: initWasm2, ed25519GenerateKeyPair: ed25519GenerateKeyPair2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
-    await initWasm2(fetch("/assets/weba_crypto_wasm_bg.wasm"));
+    const { initWasmFromB64: initWasmFromB642, ed25519GenerateKeyPair: ed25519GenerateKeyPair2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
+    await initWasmFromB642();
     const { privateKey, publicKey } = ed25519GenerateKeyPair2();
     this.edPrivateKey = privateKey;
     this.publicKey = publicKey;
@@ -5037,8 +5037,8 @@ class Signer {
     } else {
       if (!this.edPrivateKey)
         await this.generateEdKey();
-      const { initWasm: initWasm2, ed25519Sign: ed25519Sign2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
-      await initWasm2(fetch("/assets/weba_crypto_wasm_bg.wasm"));
+      const { initWasmFromB64: initWasmFromB642, ed25519Sign: ed25519Sign2 } = await Promise.resolve().then(() => (init_wasm_core(), exports_wasm_core));
+      await initWasmFromB642();
       const signature = ed25519Sign2(this.edPrivateKey, dataBytes);
       return {
         ...payload,
