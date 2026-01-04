@@ -1,6 +1,6 @@
-import { generateRecipientKeyPair, decryptLayer2, encryptLayer2, fromBase64Url } from "@srn/core";
-import { initWasm, ed25519PublicKeyToX25519PublicKey } from "@srn/core";
-import { decodeDidKey, resolveDidDocument, extractPublicKeyBytes, collectVerificationMethods } from "@srn/core";
+import { decodeDidKey, resolveDidDocument, extractPublicKeyBytes, collectVerificationMethods } from "@srn/core/did";
+import { initWasm, ed25519PublicKeyToX25519PublicKey } from "@srn/core/wasm_core";
+import { generateRecipientKeyPair, decryptLayer2, encryptLayer2, fromBase64Url } from "@srn/core/l2crypto";
 
 // Helper to resolve DID and find encryption key (Browser version)
 async function resolveEncryptionKey(did: string): Promise<{ publicKey: Uint8Array, kid: string }> {

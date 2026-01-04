@@ -137,29 +137,9 @@ export class ManifestManager {
   const m = window.__WEBA_MANIFEST;
   if (!m || !m.blobs) return;
 
-  // Initialize process shim for libraries that expect it
-  window.process = window.process || {};
-  window.process.env = window.process.env || { NODE_ENV: 'production' };
-  window.process.version = window.process.version || 'v16.0.0'; // Fake version for browser
-  window.process.versions = window.process.versions || { node: '16.0.0' };
-  window.process.platform = window.process.platform || 'browser';
-  window.process.browser = true;
-  window.process.nextTick = window.process.nextTick || ((fn) => Promise.resolve().then(fn));
-  window.global = window.global || window;
-
-  // Add Buffer stub if not available (Uint8Array fallback)
-  if (typeof window.Buffer === 'undefined') {
-    window.Buffer = Uint8Array;
-    window.Buffer.isBuffer = (obj) => obj instanceof Uint8Array;
-    window.Buffer.from = (data) => new Uint8Array(data);
-    window.Buffer.allocUnsafe = (size) => new Uint8Array(size);
-    window.Buffer.allocUnsafeSlow = (size) => new Uint8Array(size);
-    window.Buffer.alloc = (size) => new Uint8Array(size);
-  }
-  // Ensure globalThis also has these
-  if (typeof globalThis !== 'undefined' && typeof globalThis.Buffer === 'undefined') {
-    globalThis.Buffer = window.Buffer;
-  }
+  // NOTE: Node.js shims removed (2025-01-04) after bundle optimization.
+  // Bundle now uses native browser APIs (Uint8Array, atob, btoa) with feature detection fallbacks.
+  // All bundled code (cbor-x, encoding.ts) gracefully falls back when Buffer/process are unavailable.
   
   const processBlob = async (b) => {
     const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);

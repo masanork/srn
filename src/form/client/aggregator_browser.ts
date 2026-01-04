@@ -3,7 +3,7 @@ import { buildCsv, buildRowFromPlain } from "./aggregator_browser_csv";
 import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf, ReplayGuard, LocalStorageReplayStore } from "./l2crypto";
 import type { L2KeyFile, Layer2Signature } from "./l2crypto";
 import { globalSigner } from "./signer";
-import { parseMarkdown } from "@srn/core";
+import { parseMarkdown } from "@srn/core/parser";
 
 const BUILD_TIME = (typeof window !== "undefined" && (window as any).__WEBA_BUILD_TIME__)
   ? (window as any).__WEBA_BUILD_TIME__
