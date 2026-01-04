@@ -60,15 +60,25 @@ export function detectRequiredPlugins(context: DetectionContext): PluginDetectio
         metadata.hasLg = true;
     }
 
-    // Email validation detection
-    const hasEmailValidation = rawMarkdown.includes('validation:email');
+    // Email validation detection (auto-detect from field types)
+    const hasEmailFields = structure.fields?.some(f =>
+        f.type === 'email' ||
+        f.key?.toLowerCase().includes('email') ||
+        f.key?.toLowerCase().includes('mail')
+    );
+    const hasEmailValidation = hasEmailFields || rawMarkdown.includes('validation:email');
     if (hasEmailValidation) {
         plugins.add('validation-email');
         metadata.hasEmailValidation = true;
     }
 
-    // Tel validation detection
-    const hasTelValidation =
+    // Tel validation detection (auto-detect from field types)
+    const hasTelFields = structure.fields?.some(f =>
+        f.type === 'tel' ||
+        f.key?.toLowerCase().includes('phone') ||
+        f.key?.toLowerCase().includes('tel')
+    );
+    const hasTelValidation = hasTelFields ||
         rawMarkdown.includes('validation:tel') ||
         rawMarkdown.includes('autofill:tel');
 

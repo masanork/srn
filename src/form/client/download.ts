@@ -18,6 +18,10 @@ export type DownloadHtmlOptions = {
 };
 
 function stripPlaintext(doc: Document) {
+  // Save json-debug content before stripping (it contains the baked data)
+  const debug = doc.getElementById("json-debug");
+  const savedDebugContent = debug?.textContent || "";
+
   doc.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
     if (input.type === "checkbox" || input.type === "radio") {
       input.checked = false;
@@ -37,8 +41,11 @@ function stripPlaintext(doc: Document) {
   });
   doc.getElementById("json-ld")?.remove();
   doc.getElementById("data-layer")?.remove();
-  const debug = doc.getElementById("json-debug");
-  if (debug) debug.textContent = "";
+
+  // Restore json-debug with the baked data (don't clear it!)
+  if (debug && savedDebugContent) {
+    debug.textContent = savedDebugContent;
+  }
 }
 
 function embedVc(doc: Document, vc: any) {
@@ -99,7 +106,19 @@ function buildFilename(title: string, filenameSuffix: string): string {
   return `${title}_${dateStr}_${filenameSuffix}_${randomId}.html`;
 }
 
-export function buildDownloadHtml(documentHtml: string, options?: DownloadHtmlOptions): string {
+function markAsSubmitted(doc: Document) {
+  // Add submitted marker
+  const submittedMarker = doc.createElement("script");
+  submittedMarker.id = "weba-submitted";
+  submittedMarker.type = "application/json";
+  submittedMarker.textContent = JSON.stringify({
+    submitted: true,
+    submittedAt: new Date().toISOString()
+  });
+  doc.body.appendChild(submittedMarker);
+}
+
+export function buildDownloadHtml(documentHtml: string, isFinal: boolean, options?: DownloadHtmlOptions): string {
   const parser = new DOMParser();
   const doc = parser.parseFromString(documentHtml, "text/html");
   if (options?.stripPlaintext) {
@@ -114,6 +133,9 @@ export function buildDownloadHtml(documentHtml: string, options?: DownloadHtmlOp
   if (options?.draftState) {
     embedDraftState(doc, options.draftState);
   }
+  if (isFinal) {
+    markAsSubmitted(doc);
+  }
   return doc.documentElement.outerHTML;
 }
 
@@ -124,7 +146,7 @@ export function downloadHtml(params: {
   isFinal: boolean;
   options?: DownloadHtmlOptions;
 }) {
-  const htmlContent = buildDownloadHtml(params.documentHtml, params.options);
+  const htmlContent = buildDownloadHtml(params.documentHtml, params.isFinal, params.options);
   const blob = new Blob([htmlContent], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

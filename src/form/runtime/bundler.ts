@@ -31,8 +31,8 @@ export const PLUGIN_IMPORTS: Record<string, string> = {
 import '${path.join(SRC_DIR, 'client/postal.js')}';`,
     'lg': `import { lgPlugin } from '${path.join(SRC_DIR, 'plugins/lg.js')}';
 import '${path.join(SRC_DIR, 'client/lg.js')}';`,
-    'validation-email': `// TODO: import { emailValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-email.js')}';`,
-    'validation-tel': `// TODO: import { telValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-tel.js')}';`,
+    'validation-email': `import { emailValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-email.js')}';`,
+    'validation-tel': `import { telValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-tel.js')}';`,
     'validation-required': `import { requiredValidationPlugin } from '${path.join(SRC_DIR, 'plugins/validation-required.js')}';
 import '${path.join(SRC_DIR, 'client/validation-dialog.js')}';`,
 };
@@ -40,8 +40,8 @@ import '${path.join(SRC_DIR, 'client/validation-dialog.js')}';`,
 export const PLUGIN_EXPORTS: Record<string, string> = {
     'postal': 'postalPlugin',
     'lg': 'lgPlugin',
-    'validation-email': '// emailValidationPlugin',
-    'validation-tel': '// telValidationPlugin',
+    'validation-email': 'emailValidationPlugin',
+    'validation-tel': 'telValidationPlugin',
     'validation-required': 'requiredValidationPlugin',
 };
 
@@ -248,8 +248,56 @@ export async function initPluginRuntime() {
     w.clearData = () => dm.clearData();
     w.recalculate = () => calc.recalculate();
 
+    // Check if form has been submitted (read-only mode)
+    function checkSubmittedStatus() {
+        const submittedMarker = document.getElementById('weba-submitted');
+        if (!submittedMarker) return false;
+
+        try {
+            const data = JSON.parse(submittedMarker.textContent || '{}');
+            if (data.submitted) {
+                console.log('[CustomRuntime] Form is submitted - entering read-only mode');
+
+                // Disable all inputs
+                document.querySelectorAll('input, select, textarea').forEach((el: Element) => {
+                    (el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).disabled = true;
+                });
+
+                // Hide action bar or replace with submitted message
+                const actionBar = document.querySelector('.action-bar, .toolbar');
+                if (actionBar) {
+                    const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+                    const statusDiv = document.createElement('div');
+                    statusDiv.style.cssText = 'flex: 1; text-align: center; padding: 1rem; color: #047857; font-weight: 600;';
+
+                    const statusText = isJa ? '✓ 提出済み' : '✓ Submitted';
+                    let timeText = '';
+                    if (data.submittedAt) {
+                        const submittedDate = new Date(data.submittedAt);
+                        timeText = ' (' + submittedDate.toLocaleString() + ')';
+                    }
+
+                    statusDiv.textContent = statusText + timeText;
+                    actionBar.innerHTML = '';
+                    actionBar.appendChild(statusDiv);
+                }
+
+                return true;
+            }
+        } catch (e) {
+            console.error('[CustomRuntime] Failed to parse submitted marker:', e);
+        }
+        return false;
+    }
+
     // Initialize UI and restore data
-    dm.restoreFromLS();
+    const isSubmitted = checkSubmittedStatus();
+
+    if (!isSubmitted) {
+        // Only restore and enable interactions for non-submitted forms
+        dm.restoreFromLS();
+    }
+
     uim.applyI18n();
     uim.initTables();
     calc.recalculate();
@@ -308,6 +356,30 @@ export async function initPluginRuntime() {
 
     // Call after UI initialization
     setupEventDelegation();
+
+    // Setup live json-debug update on input
+    let updateTimeout: any;
+    document.addEventListener('input', (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+            // Debounce updates to avoid excessive recalculation
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+                calc.recalculate();
+                uim.updateVisibility();
+                dm.updateJsonLd();
+            }, 100);
+        }
+    });
+
+    document.addEventListener('change', (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+            calc.recalculate();
+            uim.updateVisibility();
+            dm.updateJsonLd();
+        }
+    });
 
     // Expose to window for debugging
     w.__pluginRuntime = runtime;
