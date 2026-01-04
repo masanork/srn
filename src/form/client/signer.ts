@@ -58,7 +58,7 @@ export class Signer {
 
     public async register() {
         try {
-            const username = prompt("Enter a name for this Passkey:", "demo-user") || "User";
+            const username = "Form Signer";
             console.log(`Registering Passkey for ${username}...`);
             const result = await registerPasskey(username);
 

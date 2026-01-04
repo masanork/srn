@@ -221,8 +221,7 @@ let lastGeneratedKeys: any = null;
 
 async function setupEncryption() {
     try {
-        const username = prompt("User Name for Passkey:", "demo-user");
-        if (!username) return;
+        const username = "Form Signer";
 
         // Force Enable PQC
         const usePqc = true;
