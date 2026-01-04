@@ -296,6 +296,10 @@ export async function initPluginRuntime() {
                     dm.signAndDownload();
                     break;
 
+                case 'submit-document':
+                    dm.submitDocument();
+                    break;
+
                 default:
                     console.warn('[EventDelegation] Unknown action:', action);
             }
