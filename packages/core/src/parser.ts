@@ -66,6 +66,9 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     let inMasterTable = false;
     let currentMasterKey: string = '';
 
+    // Auto 2-column grid for consecutive single-line fields
+    let singleLineFieldBuffer: string[] = [];
+
     // Aggregator Schema
     jsonStructure.fields = [];
     jsonStructure.tables = {};
@@ -81,6 +84,23 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     // Helper to append to the correct buffer
     const appendHtml = (str: string) => {
         mainContentHtml += str;
+    };
+
+    // Flush single-line field buffer with auto 2-column grid
+    const flushSingleLineFields = () => {
+        if (singleLineFieldBuffer.length === 0) return;
+
+        if (singleLineFieldBuffer.length >= 2) {
+            // Wrap in 2-column grid
+            appendHtml('<div class="form-grid-2col">');
+            singleLineFieldBuffer.forEach(html => appendHtml(html));
+            appendHtml('</div>');
+        } else {
+            // Single field, output as-is
+            appendHtml(singleLineFieldBuffer[0]!);
+        }
+
+        singleLineFieldBuffer = [];
     };
 
     const processInlineTags = (text: string) => {
@@ -172,6 +192,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         // 0b. Table Logic
         if (trimmed.startsWith('|')) {
             if (!inTable) { // Start a new table if we aren't in one
+                flushSingleLineFields(); // Flush before table
                 appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
 
                 let tableClass = 'data-table';
@@ -271,6 +292,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         // 1. Headers
         const headerMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
         if (headerMatch) {
+            flushSingleLineFields(); // Flush before header
             const level = headerMatch[1] ? headerMatch[1].length : 1;
             const content = headerMatch[2] || '';
 
@@ -345,27 +367,46 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     required: attrStr.includes('required')
                 });
 
+                // Determine if this is a vertical (multi-line) field
+                const isVerticalField = type === 'radio' || type === 'textarea';
+
+                // Flush buffer if we encounter a vertical field
+                if (isVerticalField) {
+                    flushSingleLineFields();
+                }
+
+                // Render the field
+                let fieldHtml = '';
                 // Explicit dispatch to avoid dynamic property access issues
                 if (type === 'radio') {
                     currentRadioGroup = { key, label: cleanLabel, attrs: attrStr };
-                    appendHtml(Renderers.radioStart(key, cleanLabel, attrStr));
+                    fieldHtml = Renderers.radioStart(key, cleanLabel, attrStr);
                 }
-                else if (type === 'text') appendHtml(Renderers.text(key, cleanLabel, attrStr));
-                else if (type === 'number') appendHtml(Renderers.number(key, cleanLabel, attrStr));
-                else if (type === 'date') appendHtml(Renderers.date(key, cleanLabel, attrStr));
-                else if (type === 'textarea') appendHtml(Renderers.textarea(key, cleanLabel, attrStr));
-                else if (type === 'search') appendHtml(Renderers.search(key, cleanLabel, attrStr));
-                else if (type === 'calc') appendHtml(Renderers.calc(key, cleanLabel, attrStr));
-                else if (type === 'datalist') appendHtml(Renderers.renderInput(type, key, attrStr));
+                else if (type === 'text') fieldHtml = Renderers.text(key, cleanLabel, attrStr);
+                else if (type === 'number') fieldHtml = Renderers.number(key, cleanLabel, attrStr);
+                else if (type === 'date') fieldHtml = Renderers.date(key, cleanLabel, attrStr);
+                else if (type === 'textarea') fieldHtml = Renderers.textarea(key, cleanLabel, attrStr);
+                else if (type === 'search') fieldHtml = Renderers.search(key, cleanLabel, attrStr);
+                else if (type === 'calc') fieldHtml = Renderers.calc(key, cleanLabel, attrStr);
+                else if (type === 'datalist') fieldHtml = Renderers.renderInput(type, key, attrStr);
                 else if (type && Renderers[type]) {
-                    appendHtml((Renderers as any)[type](key, cleanLabel, attrStr));
+                    fieldHtml = (Renderers as any)[type](key, cleanLabel, attrStr);
                 } else {
                     console.warn(`Unknown type: ${type}`, Object.keys(Renderers));
-                    appendHtml(`<p style="color:red">Unknown type: ${type}</p>`);
+                    fieldHtml = `<p style="color:red">Unknown type: ${type}</p>`;
+                }
+
+                // Add to buffer or append directly
+                if (isVerticalField) {
+                    appendHtml(fieldHtml);
+                } else {
+                    // Single-line field: add to buffer
+                    singleLineFieldBuffer.push(fieldHtml);
                 }
             }
         }
         else if (trimmed.startsWith('---')) {
+            flushSingleLineFields(); // Flush before horizontal rule
             if (!currentTabId) { // Only render HR if not in tabs (tabs replace HR separation usually)
                 appendHtml('<hr>');
             }
@@ -373,6 +414,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
         // HTML Passthrough for layout
         else if (trimmed.startsWith('<')) {
+            flushSingleLineFields(); // Flush before HTML passthrough
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
             // Pure HTML tags (div, span, etc.) should pass through without escaping
             // Only process inline form tags if they exist within the HTML
@@ -383,12 +425,17 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             }
         }
         else if (trimmed.length > 0) {
+            flushSingleLineFields(); // Flush before paragraph
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
             appendHtml(`<p>${processInlineTags(trimmed)}</p>`);
         } else {
+            flushSingleLineFields(); // Flush on empty line
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
         }
     });
+
+    // Flush any remaining buffered fields
+    flushSingleLineFields();
 
     if (inTable) {
         appendHtml('</tbody></table></div>');
@@ -404,9 +451,9 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     // Final Assembly: Inject Tab Nav if tabs exist
     const toolbarButtons = `
             <div style="flex:1"></div>
-            <button class="btn-clear" data-action="clear-data" onclick="window.clearData()" data-i18n="clear_btn">Clear</button>
-            <button class="secondary" data-action="save-draft" onclick="window.saveDraft()" data-i18n="work_save_btn">Save Progress</button>
-            <button class="primary" id="btn-submit" data-action="sign-download" onclick="window.signAndDownload()" data-i18n="sign_btn" disabled>Submit</button>
+            <button class="btn-clear" data-action="clear-data" data-i18n="clear_btn">Clear</button>
+            <button class="secondary" data-action="save-draft" data-i18n="work_save_btn">Save Progress</button>
+            <button class="primary" id="btn-submit" data-action="sign-download" data-i18n="sign_btn" disabled>Submit</button>
     `;
 
     if (tabs.length > 0) {
