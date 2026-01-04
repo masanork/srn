@@ -61,16 +61,16 @@ export const requiredValidationPlugin: FormPlugin = {
 
             const isValid = checkRequired();
 
-            // Update visual classes instead of disabled attribute
+            // Update visual classes and tooltip
+            const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
             if (isValid) {
                 btn.classList.remove('btn-submit-incomplete');
                 btn.classList.add('btn-submit-ready');
-                btn.title = '';
+                btn.title = isJa ? 'すべての必須項目が入力されています。クリックして提出できます。' : 'All required fields completed. Click to submit.';
             } else {
                 btn.classList.remove('btn-submit-ready');
                 btn.classList.add('btn-submit-incomplete');
-                const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
-                btn.title = isJa ? '必須項目が未入力です（クリックして確認）' : 'Required fields missing (click to review)';
+                btn.title = isJa ? '⚠️ 必須項目が未入力です。クリックして確認してください。' : '⚠️ Required fields missing. Click to review.';
             }
 
             console.log(`[RequiredValidationPlugin] Submit button state updated: isValid=${isValid}`);

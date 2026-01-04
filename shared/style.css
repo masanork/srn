@@ -666,3 +666,141 @@ button.tab-btn:hover:not(.active) {
 .security-badge.tier-offline .status-dot {
     background: #f97316;
 }
+/* Form Validation Button States */
+.btn-submit-incomplete {
+    background: #d1d5db !important;
+    color: #6b7280 !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #9ca3af !important;
+    position: relative;
+}
+.btn-submit-incomplete:hover {
+    background: #e5e7eb !important;
+    border-color: #6b7280 !important;
+}
+.btn-submit-incomplete::before {
+    content: "⚠️";
+    margin-right: 0.5rem;
+}
+.btn-submit-ready {
+    background: #10b981 !important;
+    color: white !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    border: 2px solid #059669 !important;
+    position: relative;
+}
+.btn-submit-ready:hover {
+    background: #059669 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+}
+.btn-submit-ready::before {
+    content: "✓";
+    margin-right: 0.5rem;
+    font-weight: bold;
+}
+
+/* Validation Dialog */
+.validation-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+.validation-dialog {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: slideUp 0.3s ease;
+}
+.validation-dialog-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+.validation-dialog-message {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+    color: #374151;
+}
+.validation-missing-fields {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+}
+.validation-missing-fields strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #92400e;
+}
+.validation-missing-fields ul {
+    margin-left: 1.25rem;
+    margin-top: 0.5rem;
+}
+.validation-missing-fields li {
+    margin: 0.25rem 0;
+    color: #78350f;
+}
+.validation-dialog-buttons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+.validation-dialog-btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.validation-dialog-btn-cancel {
+    background: #f3f4f6;
+    color: #374151;
+}
+.validation-dialog-btn-cancel:hover {
+    background: #e5e7eb;
+}
+.validation-dialog-btn-submit {
+    background: #dc2626;
+    color: white;
+}
+.validation-dialog-btn-submit:hover {
+    background: #b91c1c;
+}
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

@@ -63,10 +63,12 @@ export function generateHtml(markdown: string): string {
         .action-btn { flex: 1; min-width: calc(50% - 0.25rem); padding: 0.7rem 1rem; font-size: 0.9rem; }
     }
     @media print { .pilot-banner, .action-bar { display: none; } .watermark { color: rgba(59, 130, 246, 0.08); } body { padding-bottom: 0; } }
-    .btn-submit-incomplete { background: #9ca3af !important; color: #f3f4f6 !important; opacity: 0.6; cursor: pointer; transition: all 0.3s ease; }
-    .btn-submit-incomplete:hover { background: #6b7280 !important; opacity: 0.75; }
-    .btn-submit-ready { background: var(--primary) !important; color: white !important; opacity: 1; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .btn-submit-ready:hover { background: var(--primary-hover) !important; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .btn-submit-incomplete { background: #d1d5db !important; color: #6b7280 !important; cursor: pointer; transition: all 0.3s ease; border: 2px solid #9ca3af !important; position: relative; }
+    .btn-submit-incomplete:hover { background: #e5e7eb !important; border-color: #6b7280 !important; }
+    .btn-submit-incomplete::before { content: "⚠️"; margin-right: 0.5rem; }
+    .btn-submit-ready { background: #10b981 !important; color: white !important; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); border: 2px solid #059669 !important; position: relative; }
+    .btn-submit-ready:hover { background: #059669 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); transform: translateY(-1px); }
+    .btn-submit-ready::before { content: "✓"; margin-right: 0.5rem; font-weight: bold; }
     .validation-dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.2s ease; }
     .validation-dialog { background: white; border-radius: 12px; padding: 1.5rem; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
     .validation-dialog-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: var(--primary); }
