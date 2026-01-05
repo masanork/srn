@@ -243,7 +243,7 @@ function getFormTemplate(): { html: string; structure: any } | null {
   return { html: parsed.html, structure: parsed.jsonStructure };
 }
 
-function getValueByPath(source: any, path: string): any {
+export function getValueByPath(source: any, path: string): any {
   if (!path) return undefined;
   const normalized = path.trim().replace(/^\$\./, "");
   if (!normalized) return undefined;
@@ -264,7 +264,7 @@ function getValueByPath(source: any, path: string): any {
   return current;
 }
 
-function setInputValue(input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: any) {
+export function setInputValue(input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: any) {
   if (input instanceof HTMLInputElement && input.type === "checkbox") {
     input.checked = !!value;
     return;
@@ -273,7 +273,7 @@ function setInputValue(input: HTMLInputElement | HTMLTextAreaElement | HTMLSelec
   (input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value = normalized;
 }
 
-function renderExtraFields(raw: any, structure: any): string {
+export function renderExtraFields(raw: any, structure: any): string {
   const fields = Array.isArray(structure?.fields) ? structure.fields : [];
   const fieldKeys = new Set(fields.map((f: any) => f.key));
   const tableKeys = new Set(Object.keys(structure?.tables || {}));
@@ -297,7 +297,7 @@ function renderExtraFields(raw: any, structure: any): string {
   return extraHtml;
 }
 
-function populateFormPreview(root: HTMLElement, raw: any) {
+export function populateFormPreview(root: HTMLElement, raw: any) {
   const plain = raw || {};
 
   root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
@@ -359,7 +359,7 @@ function populateFormPreview(root: HTMLElement, raw: any) {
   });
 }
 
-function showRecordDetail(idx: number) {
+export function showRecordDetail(idx: number) {
   const rows = (window as any)._aggRows;
   if (!rows || !rows[idx]) return;
   const row = rows[idx];

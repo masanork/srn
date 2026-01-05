@@ -1,6 +1,6 @@
 import { describe, expect, test, beforeEach } from "bun:test";
 import { Window } from "happy-dom";
-import { initAggregatorBrowser, selectValues, computeMetric, renderDashboard, renderTable } from "./aggregator_browser";
+import { initAggregatorBrowser, selectValues, computeMetric, renderDashboard, renderTable, showRecordDetail, renderExtraFields, populateFormPreview } from "./aggregator_browser";
 import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
 import { buildRowFromPlain, flattenForCsv } from "./aggregator_browser_csv";
 import type { Layer2Encrypted } from "./l2crypto";
@@ -9,11 +9,20 @@ describe("aggregator browser utils", () => {
   test("selectValues extracts nested data", () => {
     const data = { user: { profile: { age: 25 } } };
     expect(selectValues(data, "user.profile.age")).toEqual([25]);
+    expect(selectValues(data, "$.user.profile.age")).toEqual([25]); // Handle $. prefix
+  });
+
+  test("selectValues handles missing paths gracefully", () => {
+    const data = { a: 1 };
+    expect(selectValues(data, "b.c")).toEqual([]);
+    expect(selectValues(null, "a")).toEqual([]);
+    expect(selectValues(data, "")).toEqual([]);
   });
 
   test("selectValues handles array indexing", () => {
     const data = { items: [{ name: "A" }, { name: "B" }] };
     expect(selectValues(data, "items[1].name")).toEqual(["B"]);
+    expect(selectValues(data, "items[99].name")).toEqual([]); // Out of bounds
   });
 
   test("selectValues handles array wildcard", () => {
@@ -21,31 +30,23 @@ describe("aggregator browser utils", () => {
     expect(selectValues(data, "items[].val")).toEqual([10, 20]);
   });
 
-  test("computeMetric calculates sum", () => {
-    const payloads = [
-      { filename: "a", plain: { score: 10 } },
-      { filename: "b", plain: { score: 20 } }
-    ];
-    const val = computeMetric({ id: "sum", name: "S", type: "sum", path: "score" }, payloads);
-    expect(val).toBe(30);
+  test("selectValues handles deep wildcards", () => {
+    const data = { groups: [{ items: [{ v: 1 }, { v: 2 }] }, { items: [{ v: 3 }] }] };
+    expect(selectValues(data, "groups[].items[].v")).toEqual([1, 2, 3]);
   });
 
-  test("computeMetric calculates average", () => {
+  test("computeMetric calculates various types", () => {
     const payloads = [
-      { filename: "a", plain: { score: 10 } },
-      { filename: "b", plain: { score: 20 } }
+      { filename: "a", plain: { score: 10, ok: true, cat: "A" } },
+      { filename: "b", plain: { score: 20, ok: false, cat: "B" } },
+      { filename: "c", plain: { score: "30", ok: true, cat: "A" } } // String number
     ];
-    const val = computeMetric({ id: "avg", name: "A", type: "avg", path: "score" }, payloads);
-    expect(val).toBe(15);
-  });
-
-  test("computeMetric calculates percentage", () => {
-    const payloads = [
-      { filename: "a", plain: { ok: true } },
-      { filename: "b", plain: { ok: false } }
-    ];
-    const val = computeMetric({ id: "pct", name: "P", type: "percent", path: "ok" }, payloads);
-    expect(val).toBe("50.0%");
+    
+    expect(computeMetric({ id: "sum", name: "S", type: "sum", path: "score" }, payloads)).toBe(60);
+    expect(computeMetric({ id: "avg", name: "A", type: "avg", path: "score" }, payloads)).toBe(20);
+    expect(computeMetric({ id: "bool", name: "B", type: "boolean_count", path: "ok" }, payloads)).toBe(2);
+    expect(computeMetric({ id: "pct", name: "P", type: "percent", path: "ok" }, payloads)).toBe("66.7%");
+    expect(computeMetric({ id: "count", name: "C", type: "count", path: "cat" }, payloads)).toBe(3);
   });
 });
 
@@ -110,9 +111,20 @@ describe("aggregator browser UI", () => {
     (globalThis as any).HTMLElement = window.HTMLElement;
     (globalThis as any).HTMLInputElement = window.HTMLInputElement;
     (globalThis as any).HTMLButtonElement = window.HTMLButtonElement;
+    (globalThis as any).HTMLTableElement = window.HTMLTableElement;
+    (globalThis as any).HTMLTableRowElement = window.HTMLTableRowElement;
     (globalThis as any).Event = window.Event;
     (globalThis as any).DOMParser = window.DOMParser;
     (globalThis as any).Intl = Intl;
+
+    // Mock localStorage
+    const store = new Map();
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => store.get(k) || null,
+      setItem: (k: string, v: string) => store.set(k, v),
+      removeItem: (k: string) => store.delete(k),
+      clear: () => store.clear(),
+    };
   });
 
   test("renders UI with empty key status", () => {
@@ -140,26 +152,37 @@ describe("aggregator browser UI", () => {
     expect(status.classList.contains("ready")).toBe(true);
   });
 
-  test("renders dashboard cards", () => {
+  test("renders dashboard cards and charts", () => {
     const root = document.createElement("div");
     const spec = {
       dashboard: {
         cards: [
           { id: "c1", label: "Total Count", op: "count" },
-          { id: "c2", label: "Value Sum", op: "sum", path: "val" }
+          { id: "c2", label: "Value Sum", op: "sum", path: "val", format: "currency" }
+        ],
+        charts: [
+          { id: "ch1", type: "bar", title: "Category Distribution", source: "items[]", x: "cat" }
         ]
       }
     };
     const payloads = [
-      { filename: "f1", plain: { val: 10 } },
-      { filename: "f2", plain: { val: 25 } }
+      { filename: "f1", plain: { val: 1000, items: [{ cat: "A" }, { cat: "B" }] } },
+      { filename: "f2", plain: { val: 2500, items: [{ cat: "A" }] } }
     ];
 
     renderDashboard(root as any, spec as any, payloads as any);
 
     expect(root.innerHTML).toContain("Total Count");
     expect(root.innerHTML).toContain("Value Sum");
-    expect(root.innerHTML).toContain("35"); // Sum of 10 and 25
+    expect(root.innerHTML).toMatch(/[¥￥]3,500/); // Support both half and full width currency symbols
+    expect(root.innerHTML).toContain("Category Distribution");
+    expect(root.innerHTML).toContain("chart-bar-fill");
+  });
+
+  test("renders empty state when no records", () => {
+    const root = document.createElement("div");
+    renderTable(root as any, [], []);
+    expect(root.innerHTML).toContain("No records found");
   });
 
   test("renders records table", () => {
@@ -176,5 +199,130 @@ describe("aggregator browser UI", () => {
     expect(root.innerHTML).toContain("Bob");
     expect(root.innerHTML).toContain("f1.html");
     expect(root.innerHTML).toContain("2 records");
+  });
+
+  test("showRecordDetail and populateFormPreview", () => {
+    // 1. Setup elements
+    document.body.innerHTML = `
+      <div id="weba-agg-detail"></div>
+      <div id="weba-structure">{"fields":[{"key":"name","label":"Name","type":"text"}]}</div>
+      <script id="weba-source-markdown" type="text/plain"># Test\n- [text:name] Name</script>
+    `;
+    
+    const rows = [{
+      _filename: "test.html",
+      name: "Alice",
+      _raw: { name: "Alice", items: [{ cat: "X" }] }
+    }] as any[];
+    (window as any)._aggRows = rows;
+
+    // Trigger detail view
+    showRecordDetail(0);
+
+    const overlay = document.querySelector(".detail-overlay");
+    expect(overlay).toBeTruthy();
+    expect(overlay?.innerHTML).toContain("Alice");
+
+    // 3. Check if form preview was populated
+    const preview = document.querySelector("#weba-agg-form-preview");
+    expect(preview).toBeTruthy();
+    const input = preview?.querySelector('input[data-json-path="name"]') as HTMLInputElement;
+    expect(input.value).toBe("Alice");
+    expect(input.disabled).toBe(true);
+  });
+
+  test("renderExtraFields: identifies data not in structure", () => {
+    const raw = { known: 1, unknown: "secret" };
+    const structure = { fields: [{ key: "known" }] };
+    const html = renderExtraFields(raw, structure);
+    expect(html).toContain("Extra Information");
+    expect(html).toContain("unknown");
+    expect(html).toContain("secret");
+    expect(html).not.toContain("detail-key\">known</div>");
+  });
+
+  test("populateFormPreview: handles radio and dynamic tables", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <input type="radio" name="r1" value="v1">
+      <input type="radio" name="r1" value="v2">
+      <table class="data-table dynamic" data-table-key="tbl">
+        <tbody>
+          <tr class="template-row">
+            <td><input data-base-key="col1"></td>
+            <td><input class="auto-num"></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    
+    const data = {
+      r1: "v2",
+      tbl: [{ col1: "row1" }, { col1: "row2" }]
+    };
+
+    populateFormPreview(root, data);
+
+    expect((root.querySelector('input[value="v2"]') as HTMLInputElement).checked).toBe(true);
+    expect((root.querySelector('input[value="v1"]') as HTMLInputElement).checked).toBe(false);
+    
+    const rows = root.querySelectorAll("tbody tr:not(.template-row)");
+    expect(rows.length).toBe(2);
+    expect((rows[0].querySelector('input') as HTMLInputElement).value).toBe("row1");
+    expect((rows[1].querySelector('input') as HTMLInputElement).value).toBe("row2");
+  });
+
+  test("runAggregation: processes multiple files", async () => {
+    document.body.innerHTML = `
+      <div id="aggregator-root">
+        <div id="weba-agg-status"></div>
+        <div id="weba-agg-dashboard"></div>
+        <div id="weba-agg-output"></div>
+        <div id="weba-agg-results" class="is-hidden"></div>
+        <div class="agg-brand"><h1>Aggregator</h1></div>
+        <button id="weba-agg-run"></button>
+        <button id="weba-agg-download"></button>
+        <button id="weba-agg-download-jsonl"></button>
+        <input id="weba-agg-files" type="file" />
+        <input id="weba-agg-dirs" type="file" />
+        <input id="weba-agg-include-json" type="checkbox" />
+        <div id="weba-agg-key-status"></div>
+        <div id="weba-agg-build"></div>
+      </div>
+    `;
+    initAggregatorBrowser();
+
+    // Mock File objects
+    const html1 = `<html><body><script type="application/ld+json">${JSON.stringify({
+      type: "VerifiableCredential",
+      credentialSubject: { answers: { score: 10 } }
+    })}</script></body></html>`;
+    
+    // In Happy-DOM/Node environment, File and blob.text() might need polyfills or careful handling
+    // but Bun provides them.
+    const file1 = new File([html1], "test1.html", { type: "text/html" });
+    
+    const fileInput = document.querySelector("#weba-agg-files") as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [file1],
+      writable: true,
+      configurable: true
+    });
+
+    // Manually trigger run button
+    const runBtn = document.querySelector("#weba-agg-run") as HTMLButtonElement;
+    runBtn.click();
+
+    // Wait for async processing (since runAggregation is async)
+    // We might need to wait for several ticks
+    for(let i=0; i<10; i++) await new Promise(resolve => setTimeout(resolve, 10));
+
+    const status = document.querySelector("#weba-agg-status") as HTMLElement;
+    expect(status.textContent).toContain("Completed");
+    expect(status.textContent).toContain("Processed 1 entries");
+
+    const output = document.querySelector("#weba-agg-output") as HTMLElement;
+    expect(output.innerHTML).toContain("test1.html");
+    expect(output.innerHTML).toContain("score");
   });
 });
