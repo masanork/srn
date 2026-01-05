@@ -250,7 +250,7 @@ export async function formLayout(params: {
                 const bundle = await bundlePlugins({
                     plugins: pluginsToBundle,
                     minify: true,
-                    cache: true
+                    cache: false // Force rebuild to prevent stale bundles
                 });
 
                 await manifestManager.addBlob({
