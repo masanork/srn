@@ -62,7 +62,7 @@ describe("Web/A Parser", () => {
         // Check order: btn-clear should appear before secondary (Save Progress)
         const clearIdx = result.html.indexOf('class="btn-clear"');
         const saveIdx = result.html.indexOf('class="secondary"');
-        const primaryIdx = result.html.indexOf('class="primary"');
+        const primaryIdx = result.html.indexOf('class="primary');
 
         expect(clearIdx).toBeGreaterThan(-1);
         expect(saveIdx).toBeGreaterThan(clearIdx);

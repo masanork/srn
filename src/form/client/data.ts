@@ -105,7 +105,7 @@ export class DataManager {
         }
 
         // If valid, proceed directly
-        this.performSignAndDownload();
+        await this.performSignAndDownload();
     }
 
     private async performSignAndDownload() {

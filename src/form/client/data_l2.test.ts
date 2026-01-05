@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeEach, mock } from "bun:test";
 import { Window } from "happy-dom";
 
-const buildLayer2Envelope = mock(async () => ({
+const wasmBuildL2 = mock((plain, sk, kid, config, created) => JSON.stringify({
   weba_version: "0.1",
   layer1_ref: "sha256:abcd",
   layer2: {
@@ -13,11 +13,15 @@ const buildLayer2Envelope = mock(async () => ({
     auth_tag: "tag",
     aad: "z",
   },
-  meta: { created_at: "2025-12-27T00:00:00Z", nonce: "n" },
+  meta: { created_at: created, nonce: "n" },
 }));
 
-mock.module("./l2crypto", () => ({
-  buildLayer2Envelope,
+mock.module("@srn/core/wasm_core", () => ({
+  initWasmFromB64: async () => {},
+  buildL2Envelope: wasmBuildL2,
+  getPaddingTargetSize: async (s: number) => s,
+  hkdfSha256: () => new Uint8Array(32),
+  x25519GetPublicKey: () => new Uint8Array(32),
 }));
 
 const signMock = mock(async (payload: any) => ({
@@ -47,7 +51,7 @@ let window: Window;
 let document: Document;
 
 beforeEach(() => {
-  buildLayer2Envelope.mockClear();
+  wasmBuildL2.mockClear();
   signMock.mockClear();
   getPublicKeyMock.mockClear();
   registerMock.mockClear();
@@ -60,6 +64,13 @@ beforeEach(() => {
   (globalThis as any).Event = window.Event;
   (globalThis as any).DOMParser = window.DOMParser;
   (globalThis as any).alert = mock(() => {});
+  
+  const store = new Map();
+  (globalThis as any).localStorage = {
+      getItem: (k: string) => store.get(k) || null,
+      setItem: (k: string, v: string) => store.set(k, v),
+      removeItem: (k: string) => store.delete(k),
+  };
 });
 
 describe("Web/A Client Runtime > Data Manager (L2)", () => {
@@ -83,9 +94,10 @@ describe("Web/A Client Runtime > Data Manager (L2)", () => {
 
     await dataMgr.signAndDownload();
 
-    expect(buildLayer2Envelope).toHaveBeenCalled();
-    const args = buildLayer2Envelope.mock.calls[0][0];
-    expect(args.config.recipient_kid).toBe("issuer#kem-2025");
+    expect(wasmBuildL2).toHaveBeenCalled();
+    const args = wasmBuildL2.mock.calls[0];
+    const config = JSON.parse(args[3]); // 4th arg is config JSON
+    expect(config.recipient_kid).toBe("issuer#kem-2025");
     expect(downloadMock).toHaveBeenCalled();
     const call = downloadMock.mock.calls[0];
     expect(call[0]).toBe("submit");
@@ -105,7 +117,7 @@ describe("Web/A Client Runtime > Data Manager (L2)", () => {
 
     await dataMgr.signAndDownload();
 
-    expect(buildLayer2Envelope).not.toHaveBeenCalled();
+    expect(wasmBuildL2).not.toHaveBeenCalled();
     expect(signMock).toHaveBeenCalled();
     const call = downloadMock.mock.calls[0];
     expect(call[0]).toBe("submitted");
@@ -134,7 +146,7 @@ describe("Web/A Client Runtime > Data Manager (L2)", () => {
     await dataMgr.signAndDownload();
 
     expect(alertMock).toHaveBeenCalled();
-    expect(buildLayer2Envelope).not.toHaveBeenCalled();
+    expect(wasmBuildL2).not.toHaveBeenCalled();
     expect(downloadMock).not.toHaveBeenCalled();
   });
 });

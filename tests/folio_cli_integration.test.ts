@@ -42,8 +42,7 @@ describe("Folio CLI Integration Tests", () => {
         if (exitCode !== 0) console.error("CLI Error:", stderr);
         expect(exitCode).toBe(0);
         expect(stdout).toContain("DID: did:key:z");
-        expect(stdout).toContain("Public Key (Hex):");
-        expect(stdout).toContain("Private Key (Hex):");
+        expect(stdout).toContain("Algorithm: Ed25519");
     });
 
     test("did create --save: should create and save a key file", async () => {

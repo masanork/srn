@@ -106,6 +106,6 @@ describe("Guest DID Client", () => {
         localStorageMock.set("guest-did:test", "cred-id");
         const msgs = await fetchGuestInbox("test");
         expect(msgs).toEqual([]);
-        expect(fetchMock).toHaveBeenCalledTimes(3); // WASM fetch + Challenge + GuestInbox
+        expect(fetchMock).toHaveBeenCalledTimes(2); // Challenge + GuestInbox (WASM is base64 inlined)
     });
 });
