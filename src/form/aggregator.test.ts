@@ -4,9 +4,9 @@ import {
   extractL2EnvelopeFromHtml,
   extractPlainFromHtml,
   buildRowFromPlain,
-  flattenForCsv,
   type L2KeyFile,
 } from "./aggregator";
+import { flattenForCsv } from "./aggregator_engine";
 import {
   encryptLayer2,
   generateRecipientKeyPair,

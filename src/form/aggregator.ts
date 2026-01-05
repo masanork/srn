@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as cheerio from 'cheerio';
 import * as csv from 'fast-csv';
 import { decryptLayer2, deriveOrgX25519KeyPair, type OrgKeyPolicy, ReplayGuard, createMlKem768Provider } from "@srn/core";
+import { flattenForCsv } from './aggregator_engine';
 
 export type L2KeyFile = {
     recipient_kid?: string;
@@ -146,35 +147,6 @@ export async function extractPlainFromHtml(
     const jsonLd = extractJsonLdFromHtml(html);
     if (jsonLd) return { plain: jsonLd, source: 'jsonld' };
     return { source: null };
-}
-
-export function flattenForCsv(obj: Record<string, any>): Record<string, string | number | boolean | null> {
-    const out: Record<string, string | number | boolean | null> = {};
-    const walk = (value: any, prefix: string) => {
-        if (value === null || value === undefined) {
-            out[prefix] = null;
-            return;
-        }
-        if (Array.isArray(value)) {
-            value.forEach((entry, idx) => {
-                walk(entry, prefix ? `${prefix}[${idx}]` : `[${idx}]`);
-            });
-            return;
-        }
-        if (typeof value === 'object') {
-            Object.entries(value).forEach(([k, v]) => {
-                const next = prefix ? `${prefix}.${k}` : k;
-                walk(v, next);
-            });
-            return;
-        }
-        out[prefix] = value;
-    };
-    walk(obj, '');
-    if ('' in out) {
-        delete out[''];
-    }
-    return out;
 }
 
 export function buildRowFromPlain(params: {

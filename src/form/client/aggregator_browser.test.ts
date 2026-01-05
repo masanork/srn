@@ -1,6 +1,7 @@
 import { describe, expect, test, beforeEach } from "bun:test";
 import { Window } from "happy-dom";
-import { initAggregatorBrowser, selectValues, computeMetric, renderDashboard, renderTable, showRecordDetail, renderExtraFields, populateFormPreview } from "./aggregator_browser";
+import { initAggregatorBrowser, renderDashboard, renderTable, showRecordDetail, renderExtraFields, populateFormPreview } from "./aggregator_browser";
+import { selectValues, computeMetric } from "../aggregator_engine";
 import { extractJsonLdFromHtml, extractL2EnvelopeFromHtml } from "./aggregator_browser_parse";
 import { buildRowFromPlain, flattenForCsv } from "./aggregator_browser_csv";
 import { b64urlEncode } from "./l2crypto";

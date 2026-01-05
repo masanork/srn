@@ -4,6 +4,7 @@ import { b64urlEncode, b64urlDecode, decryptLayer2Envelope, deriveKeyPairFromPrf
 import type { L2KeyFile, Layer2Signature } from "./l2crypto";
 import { globalSigner } from "./signer";
 import { parseMarkdown } from "@srn/core/parser";
+import { selectValues, computeMetric } from "../aggregator_engine";
 
 const BUILD_TIME = (typeof window !== "undefined" && (window as any).__WEBA_BUILD_TIME__)
   ? (window as any).__WEBA_BUILD_TIME__
@@ -41,75 +42,14 @@ export interface AggSpec {
 
 export interface RawPayload {
   filename: string;
-  plain: any;
-  sig?: Layer2Signature | undefined;
-}
-
-/**
- * UTILS: Selector and Metrics
- */
-export function selectValues(source: any, path: string): any[] {
-  const normalized = path.trim().replace(/^\$\./, "");
-  if (!normalized) return [];
-  const segments = normalized.split(".");
-  let current: any[] = [source];
-  for (const segment of segments) {
-    const match = segment.match(/^(.*)\[(\d*)\]$/);
-    const key = match ? match[1] : segment;
-    const indexPart = match ? match[2] : null;
-    const isArrayAll = match && indexPart === "";
-    const index = (match && indexPart !== "" && indexPart !== null) ? parseInt(indexPart as string, 10) : null;
-    const next: any[] = [];
-    for (const item of current) {
-      if (item === null || item === undefined) continue;
-      const value = key ? (item as any)[key] : item;
-      if (isArrayAll) {
-        if (Array.isArray(value)) next.push(...value);
-        continue;
-      }
-      if (index !== null) {
-        if (Array.isArray(value) && value[index] !== undefined) {
-          next.push(value[index]);
-        }
-        continue;
-      }
-      if (value !== undefined) next.push(value);
-    }
-    current = next;
+    plain: any;
+    sig?: Layer2Signature | undefined;
   }
-  return current;
-}
-
-export function computeMetric(metric: MetricSpec, payloads: RawPayload[]): number | string {
-  const values: any[] = [];
-  payloads.forEach((p) => {
-    const extracted = selectValues(p.plain, metric.path);
-    values.push(...extracted);
-  });
-
-  switch (metric.type) {
-    case "count":
-      return values.length;
-    case "sum":
-      return values.reduce((a, b) => a + (Number(b) || 0), 0);
-    case "avg":
-      return values.length ? values.reduce((a, b) => a + (Number(b) || 0), 0) / values.length : 0;
-    case "boolean_count":
-      return values.filter((v) => !!v).length;
-    case "percent": {
-      const positive = values.filter((v) => !!v).length;
-      return values.length ? `${((positive / values.length) * 100).toFixed(1)}%` : "0%";
-    }
-    default:
-      return 0;
-  }
-}
-
-/**
- * UI Components
- */
-export function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawPayload[]) {
-  if (!spec) {
+  
+  /**
+   * UI Components
+   */
+  export function renderDashboard(root: HTMLElement, spec: AggSpec | null, payloads: RawPayload[]) {  if (!spec) {
     root.innerHTML = "";
     return;
   }
