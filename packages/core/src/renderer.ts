@@ -1,4 +1,4 @@
-import { parseAttribute, hasAttribute, escapeHtml } from './utils';
+import { parseAttribute, hasAttribute, escapeHtml, stripAttribute } from './utils';
 
 export interface RendererContext {
     masterData: Record<string, string[][]>;
@@ -226,6 +226,10 @@ export const Renderers: Record<string, any> = {
         const labelIndexAttr = labelIdx ? ` data-master-label-index="${labelIdx}"` : '';
         const valueIndexAttr = valueIdx ? ` data-master-value-index="${valueIdx}"` : '';
 
+        let cleanAttrs = stripAttribute(attrs, 'value');
+        cleanAttrs = stripAttribute(cleanAttrs, 'label');
+        cleanAttrs = stripAttribute(cleanAttrs, 'src');
+
         return `
         <div class="form-row autocomplete-container" style="position:relative; z-index:100;">
             <label class="form-label">${this.escapeHtml(label)}</label>
@@ -234,7 +238,7 @@ export const Renderers: Record<string, any> = {
                     data-json-path="${key}" 
                     data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr}
                     placeholder="${this.escapeHtml(placeholder)}" 
-                    style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+                    style="${this.getStyle(attrs)}"${this.getExtraAttrs(cleanAttrs)}>
                 <div class="search-suggestions" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:0 0 4px 4px; z-index:1001;"></div>
             </div>
             ${hint}
@@ -287,8 +291,12 @@ export const Renderers: Record<string, any> = {
             const copyAttr = copyFrom ? ` data-copy-from="${this.escapeHtml(copyFrom)}"` : '';
             const bgStyle = copyFrom ? 'background-color: #ffffea;' : '';
 
+            let cleanAttrs = stripAttribute(attrs, 'value');
+            cleanAttrs = stripAttribute(cleanAttrs, 'label');
+            cleanAttrs = stripAttribute(cleanAttrs, 'src');
+
             return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
-                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>
+                        <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(cleanAttrs)}${suggestAttr}${copyAttr}>
                     </div>`;
         }
 

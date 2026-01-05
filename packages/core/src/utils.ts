@@ -105,3 +105,19 @@ export function hasAttribute(attrs: string | undefined, name: string): boolean {
     if (!attrs) return false;
     return new RegExp(`\\b${name}\\b`).test(attrs);
 }
+
+/**
+ * Removes a specific attribute from the attributes string.
+ */
+export function stripAttribute(attrs: string | undefined, name: string): string {
+    if (!attrs) return '';
+    let res = attrs;
+    // Remove quoted
+    res = res.replace(new RegExp(`\\b${name}=(["'])(.*?)\\1`, 'g'), '');
+    // Remove colon
+    res = res.replace(new RegExp(`\\b${name}:([^\\s\\)]+)`, 'g'), '');
+    // Remove unquoted equal
+    res = res.replace(new RegExp(`\\b${name}=([^\\s\\)]+)`, 'g'), '');
+    
+    return res.trim();
+}

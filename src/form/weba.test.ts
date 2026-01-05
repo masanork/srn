@@ -171,4 +171,10 @@ describe("Web/A Renderer", () => {
         const html = Renderers.renderInput('search', 's1', 'src:m autofill="vendor:3"');
         expect(html).toContain('data-autofill="vendor:3"');
     });
+
+    test("renders search input without value attribute if value:idx is used", () => {
+        const html = Renderers.renderInput('search', 's1', 'src:m value:2');
+        expect(html).not.toContain('value="2"');
+        expect(html).toContain('data-master-value-index="2"');
+    });
 });
