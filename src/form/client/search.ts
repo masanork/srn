@@ -51,7 +51,7 @@ export class SearchEngine {
             if (jsonStructure.masterDataRefs) {
                 await this.loadMasterDataFromBlobs(jsonStructure);
             }
-            
+
             if (jsonStructure.masterData) {
                 const keys = Object.keys(jsonStructure.masterData);
                 console.log("Master Data Keys available:", keys.join(', '));
@@ -261,7 +261,7 @@ export class SearchEngine {
         }
 
         console.log('[fillPostalData] Source field group:', sourceField.group,
-                    'separator:', sourceField.separator);
+            'separator:', sourceField.separator);
 
         // 同じ行または近隣のフィールドを検索（スコープ検出）
         // dynamic-rowがある場合はそれを優先、なければtableまたはformを使用
@@ -273,14 +273,14 @@ export class SearchEngine {
             || document;
 
         const containerType = container === document ? 'document' :
-                             input.closest('tr') ? 'tr' :
-                             input.closest('.dynamic-row') ? 'dynamic-row' :
-                             input.closest('.address-group') ? 'address-group' :
-                             input.closest('table') ? 'table' :
-                             input.closest('form') ? 'form' : 'form-row';
+            input.closest('tr') ? 'tr' :
+                input.closest('.dynamic-row') ? 'dynamic-row' :
+                    input.closest('.address-group') ? 'address-group' :
+                        input.closest('table') ? 'table' :
+                            input.closest('form') ? 'form' : 'form-row';
 
         console.log('[fillPostalData] Container type:', containerType,
-                    'Source group:', sourceField.group);
+            'Source group:', sourceField.group);
 
         const allInputs = Array.from(container.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
 
@@ -290,7 +290,7 @@ export class SearchEngine {
             .filter(({ parsed }) => isSameGroup(sourceField, parsed));
 
         console.log('[fillPostalData] Found', groupedFields.length,
-                    'fields in same group:', sourceField.group);
+            'fields in same group:', sourceField.group);
 
         // タイプ別にフィールドを探して自動入力
         const fieldMap = new Map<string, HTMLInputElement>();
@@ -489,6 +489,8 @@ export class SearchEngine {
             }
 
             const allRows = master[srcKey];
+            const seenVals = new Set<string>();
+
             allRows.forEach((row: string[], idx: number) => {
                 if (idx === 0) return; // Skip header
                 const match = row.some(col => this.normalize(col || '').includes(normQuery));
@@ -496,7 +498,14 @@ export class SearchEngine {
                     const labelVal = labelIdx >= 0 ? row[labelIdx] || '' : '';
                     const valueVal = valueIdx >= 0 ? row[valueIdx] || '' : '';
                     const val = valueIdx >= 0 ? valueVal : (labelIdx >= 0 ? labelVal : (row[1] || row[0] || ''));
-                    hits.push({ val, row, label: labelVal, score: 10, idx });
+
+                    // Deduplicate based on val+label combination
+                    const uniqueKey = val + '|' + labelVal;
+
+                    if (!seenVals.has(uniqueKey)) {
+                        seenVals.add(uniqueKey);
+                        hits.push({ val, row, label: labelVal, score: 10, idx });
+                    }
                 }
             });
         }
@@ -601,7 +610,54 @@ export class SearchEngine {
 
         } catch (e) { console.error(e); }
 
+        // 2. Custom Autofill (via data-autofill attribute)
+        // Format: "targetKey:sourceIndex" (e.g. "vendor_name:3")
+        const autofillAttr = input.dataset.autofill;
+        if (autofillAttr && !autofillAttr.startsWith('postal:') && !autofillAttr.startsWith('lg:')) {
+            try {
+                const rowData = JSON.parse(rowJson);
+                const mappings = autofillAttr.split(',');
+                mappings.forEach(mapping => {
+                    const [targetKey, sourceIdxRaw] = mapping.split(':');
+                    const sourceIdx = parseInt(sourceIdxRaw, 10);
+                    if (targetKey && !isNaN(sourceIdx)) {
+                        // 1-based index to 0-based
+                        const val = rowData[sourceIdx - 1];
+                        if (val !== undefined) {
+                            this.fillFieldByKey(input, targetKey, val);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn('[SearchEngine] Autofill error:', e);
+            }
+        }
+
         this.hideSuggestions();
+    }
+
+    private fillFieldByKey(origin: HTMLInputElement, targetKey: string, value: string) {
+        const container = origin.closest('tr') || origin.closest('.dynamic-row') || origin.closest('form') || document.body;
+        const normKey = this.normalize(targetKey);
+
+        const inputs = Array.from(container.querySelectorAll('input, select, textarea')) as HTMLInputElement[];
+        const target = inputs.find(inp => {
+            if (inp === origin) return false;
+            const k = inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || '';
+            // Basic normalization for matching
+            return k === targetKey || this.normalize(k) === normKey;
+        });
+
+        if (target) {
+            console.log('[SearchEngine] Autofill target found:', targetKey, '->', value);
+            target.value = value;
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+            // Trigger change for libraries that listen to change
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            console.log('[SearchEngine] Autofill target NOT found:', targetKey);
+        }
+
     }
 
     private fillField(inputs: any[], header: string, value: string, sourceInput: HTMLInputElement, onSelfFilled: () => void) {

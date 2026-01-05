@@ -42,7 +42,7 @@ export class UIManager {
         const RESOURCES: any = {
             "en": {
                 "add_row": "+ Add Row",
-                "work_save_btn": "Save",
+                "work_save_btn": "Save Draft",
                 "clear_btn": "Clear",
                 "sign_btn": "Confirm",
                 "withdraw_btn": "Withdraw",
@@ -50,7 +50,7 @@ export class UIManager {
             },
             "ja": {
                 "add_row": "+ 行を追加",
-                "work_save_btn": "保存",
+                "work_save_btn": "下書き保存",
                 "clear_btn": "消去",
                 "sign_btn": "確定",
                 "withdraw_btn": "取下",

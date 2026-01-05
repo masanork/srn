@@ -631,7 +631,7 @@ function initGuestDidOpt(l2Config: any) {
  * - Display confirmation time banner
  * - Replace action buttons with withdrawal/return buttons
  */
-function initSubmittedState() {
+export function initSubmittedState() {
     const submittedScript = document.getElementById('weba-submitted') as HTMLScriptElement;
     if (!submittedScript || !submittedScript.textContent) return;
 
@@ -660,7 +660,7 @@ function initSubmittedState() {
 /**
  * Display confirmation time banner at the top
  */
-function displayConfirmationBanner(confirmedAt: string) {
+export function displayConfirmationBanner(confirmedAt: string) {
     const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
     const date = new Date(confirmedAt);
     const formattedDate = date.toLocaleString(isJa ? 'ja-JP' : 'en-US', {
@@ -699,22 +699,25 @@ function displayConfirmationBanner(confirmedAt: string) {
 /**
  * Replace action buttons with withdrawal/return buttons
  */
-function replaceActionButtons() {
-    const actionBar = document.querySelector('.action-bar');
+export function replaceActionButtons() {
+    // Support both .action-bar and .no-print (form toolbar)
+    const actionBar = document.querySelector('.action-bar') ||
+                      document.querySelector('.no-print[style*="display: flex"]');
     if (!actionBar) return;
 
     const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
 
     actionBar.innerHTML = `
-        <button class="action-btn action-btn-secondary" onclick="withdrawDocument()" data-i18n="withdraw_btn">${isJa ? '取下' : 'Withdraw'}</button>
-        <button class="action-btn action-btn-secondary" onclick="returnDocument()" data-i18n="return_btn">${isJa ? '差戻' : 'Return'}</button>
+        <div style="flex: 1"></div>
+        <button class="warning" onclick="withdrawDocument()" data-i18n="withdraw_btn">${isJa ? '取下' : 'Withdraw'}</button>
+        <button class="warning" onclick="returnDocument()" data-i18n="return_btn">${isJa ? '差戻' : 'Return'}</button>
     `;
 }
 
 /**
  * Make form inputs read-only
  */
-function makeFormReadOnly() {
+export function makeFormReadOnly() {
     document.querySelectorAll('input, textarea, select').forEach((el: any) => {
         el.setAttribute('readonly', 'readonly');
         el.setAttribute('disabled', 'disabled');
@@ -726,7 +729,7 @@ function makeFormReadOnly() {
 /**
  * Handle withdrawal or return action
  */
-function handleWithdrawOrReturn(actionType: 'Withdraw' | 'Return') {
+export function handleWithdrawOrReturn(actionType: 'Withdraw' | 'Return') {
     const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
     const actionLabel = actionType === 'Withdraw'
         ? (isJa ? '取下' : 'Withdrawal')
@@ -837,15 +840,18 @@ function makeFormEditable() {
 /**
  * Restore original action buttons
  */
-function restoreActionButtons() {
-    const actionBar = document.querySelector('.action-bar');
+export function restoreActionButtons() {
+    // Support both .action-bar and .no-print (form toolbar)
+    const actionBar = document.querySelector('.action-bar') ||
+                      document.querySelector('.no-print[style*="display: flex"]');
     if (!actionBar) return;
 
     const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
 
     actionBar.innerHTML = `
-        <button class="action-btn action-btn-secondary" onclick="saveDraft()">💾 ${isJa ? '下書き保存' : 'Save Draft'}</button>
-        <button class="action-btn action-btn-primary" onclick="submitDocument()" data-i18n="sign_btn">${isJa ? '確定' : 'Confirm'}</button>
-        <button class="action-btn action-btn-secondary" onclick="clearData()">🗑️ ${isJa ? '消去' : 'Clear'}</button>
+        <div style="flex: 1"></div>
+        <button class="btn-clear" data-action="clear-data" data-i18n="clear_btn">${isJa ? '消去' : 'Clear'}</button>
+        <button class="secondary" data-action="save-draft" data-i18n="work_save_btn">${isJa ? '下書き保存' : 'Save Draft'}</button>
+        <button class="primary btn-submit-incomplete" id="btn-submit" data-action="submit-document" data-i18n="sign_btn">${isJa ? '確定' : 'Confirm'}</button>
     `;
 }

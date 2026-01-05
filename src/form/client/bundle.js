@@ -5628,7 +5628,7 @@ class UIManager {
     const RESOURCES = {
       en: {
         add_row: "+ Add Row",
-        work_save_btn: "Save",
+        work_save_btn: "Save Draft",
         clear_btn: "Clear",
         sign_btn: "Confirm",
         withdraw_btn: "Withdraw",
@@ -5636,7 +5636,7 @@ class UIManager {
       },
       ja: {
         add_row: "+ 行を追加",
-        work_save_btn: "保存",
+        work_save_btn: "下書き保存",
         clear_btn: "消去",
         sign_btn: "確定",
         withdraw_btn: "取下",
@@ -6478,13 +6478,14 @@ function displayConfirmationBanner(confirmedAt) {
   }
 }
 function replaceActionButtons() {
-  const actionBar = document.querySelector(".action-bar");
+  const actionBar = document.querySelector(".action-bar") || document.querySelector('.no-print[style*="display: flex"]');
   if (!actionBar)
     return;
   const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
   actionBar.innerHTML = `
-        <button class="action-btn action-btn-secondary" onclick="withdrawDocument()" data-i18n="withdraw_btn">${isJa ? "取下" : "Withdraw"}</button>
-        <button class="action-btn action-btn-secondary" onclick="returnDocument()" data-i18n="return_btn">${isJa ? "差戻" : "Return"}</button>
+        <div style="flex: 1"></div>
+        <button class="warning" onclick="withdrawDocument()" data-i18n="withdraw_btn">${isJa ? "取下" : "Withdraw"}</button>
+        <button class="warning" onclick="returnDocument()" data-i18n="return_btn">${isJa ? "差戻" : "Return"}</button>
     `;
 }
 function makeFormReadOnly() {
@@ -6556,14 +6557,15 @@ function makeFormEditable() {
   });
 }
 function restoreActionButtons() {
-  const actionBar = document.querySelector(".action-bar");
+  const actionBar = document.querySelector(".action-bar") || document.querySelector('.no-print[style*="display: flex"]');
   if (!actionBar)
     return;
   const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
   actionBar.innerHTML = `
-        <button class="action-btn action-btn-secondary" onclick="saveDraft()">\uD83D\uDCBE ${isJa ? "下書き保存" : "Save Draft"}</button>
-        <button class="action-btn action-btn-primary" onclick="submitDocument()" data-i18n="sign_btn">${isJa ? "確定" : "Confirm"}</button>
-        <button class="action-btn action-btn-secondary" onclick="clearData()">\uD83D\uDDD1️ ${isJa ? "消去" : "Clear"}</button>
+        <div style="flex: 1"></div>
+        <button class="btn-clear" data-action="clear-data" data-i18n="clear_btn">${isJa ? "消去" : "Clear"}</button>
+        <button class="secondary" data-action="save-draft" data-i18n="work_save_btn">${isJa ? "下書き保存" : "Save Draft"}</button>
+        <button class="primary btn-submit-incomplete" id="btn-submit" data-action="submit-document" data-i18n="sign_btn">${isJa ? "確定" : "Confirm"}</button>
     `;
 }
 
@@ -7183,6 +7185,7 @@ class SearchEngine {
         return;
       }
       const allRows = master[srcKey];
+      const seenVals = new Set;
       allRows.forEach((row, idx) => {
         if (idx === 0)
           return;
@@ -7191,7 +7194,11 @@ class SearchEngine {
           const labelVal = labelIdx >= 0 ? row[labelIdx] || "" : "";
           const valueVal = valueIdx >= 0 ? row[valueIdx] || "" : "";
           const val = valueIdx >= 0 ? valueVal : labelIdx >= 0 ? labelVal : row[1] || row[0] || "";
-          hits.push({ val, row, label: labelVal, score: 10, idx });
+          const uniqueKey = val + "|" + labelVal;
+          if (!seenVals.has(uniqueKey)) {
+            seenVals.add(uniqueKey);
+            hits.push({ val, row, label: labelVal, score: 10, idx });
+          }
         }
       });
     }
@@ -7272,7 +7279,45 @@ class SearchEngine {
     } catch (e) {
       console.error(e);
     }
+    const autofillAttr = input.dataset.autofill;
+    if (autofillAttr && !autofillAttr.startsWith("postal:") && !autofillAttr.startsWith("lg:")) {
+      try {
+        const rowData = JSON.parse(rowJson);
+        const mappings = autofillAttr.split(",");
+        mappings.forEach((mapping) => {
+          const [targetKey, sourceIdxRaw] = mapping.split(":");
+          const sourceIdx = parseInt(sourceIdxRaw, 10);
+          if (targetKey && !isNaN(sourceIdx)) {
+            const val2 = rowData[sourceIdx - 1];
+            if (val2 !== undefined) {
+              this.fillFieldByKey(input, targetKey, val2);
+            }
+          }
+        });
+      } catch (e) {
+        console.warn("[SearchEngine] Autofill error:", e);
+      }
+    }
     this.hideSuggestions();
+  }
+  fillFieldByKey(origin, targetKey, value) {
+    const container = origin.closest("tr") || origin.closest(".dynamic-row") || origin.closest("form") || document.body;
+    const normKey = this.normalize(targetKey);
+    const inputs = Array.from(container.querySelectorAll("input, select, textarea"));
+    const target2 = inputs.find((inp) => {
+      if (inp === origin)
+        return false;
+      const k2 = inp.dataset.jsonPath || inp.dataset.baseKey || inp.name || "";
+      return k2 === targetKey || this.normalize(k2) === normKey;
+    });
+    if (target2) {
+      console.log("[SearchEngine] Autofill target found:", targetKey, "->", value);
+      target2.value = value;
+      target2.dispatchEvent(new Event("input", { bubbles: true }));
+      target2.dispatchEvent(new Event("change", { bubbles: true }));
+    } else {
+      console.log("[SearchEngine] Autofill target NOT found:", targetKey);
+    }
   }
   fillField(inputs, header, value, sourceInput, onSelfFilled) {
     const normHeader = this.normalize(header);

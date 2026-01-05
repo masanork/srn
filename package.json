@@ -14,7 +14,7 @@
     "build:wasm": "if command -v wasm-pack >/dev/null; then cd packages/civ && wasm-pack build --target web --out-dir ../../sites/srn/static/wasm/civ; else echo 'wasm-pack not found, skipping WASM build'; fi",
     "build:blog": "bun run src/ssg/index.ts --site my-blog",
     "build:srn": "bun scripts/build_weba_client.ts && rm -rf .cache/plugin-bundles && bun build src/form/browser_maker.ts --outfile sites/srn/static/mkform.js --minify --define \"global=window\" --define \"process=window.process\" --banner=\"window.__WEBA_BUILD_TIME__='$(date -u +%Y-%m-%dT%H:%M:%SZ)';\" && cp src/form/index.html sites/srn/static/maker.html && bun run src/ssg/index.ts --site srn",
-    "convert": "bun run src/bin/weba-convert.ts",
+    "convert": "rm -rf .cache/plugin-bundles && bun run src/bin/weba-convert.ts",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
     "test:links": "bun test tests/link_integrity.test.ts",

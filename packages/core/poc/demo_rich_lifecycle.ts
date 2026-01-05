@@ -399,7 +399,7 @@ async function runLifecycle() {
 <body>
 
 <div class="container">
-    <h1 style="text-align: center; margin-bottom: 50px;">住民票電子交付 PoC 選択的開示手順</h1>
+    <h1 style="text-align: center; margin-bottom: 50px;">住民票の写し電子交付 PoC 選択的開示手順</h1>
 
     <!-- 1. Application -->
     <div class="timeline-step">
@@ -451,7 +451,8 @@ async function runLifecycle() {
             <h2>同意・選択 <span class="actor">住民 &rarr; 提出先</span></h2>
             <div class="desc">
                 提出先からの提示要求に対し、Walletは同意画面を表示します。
-                要求された「氏名・生年月日・マイナンバー」のみが提供範囲として表示されます。
+                要求された「氏名・生年月日・マイナンバー」のみが提供範囲として表示されます。<br>
+                住民は求められた項目について開示範囲を確認し、求められている項目に加えて交付申請時に使用したマイナンバーカードと紐付いたFIDO秘密鍵を用いて署名（Binding Proofの提示）を行います。
             </div>
             <div class="code-block" style="max-height: 400px;">
 // OID4VP Presentation Definition
@@ -460,7 +461,7 @@ async function runLifecycle() {
   "input_descriptors": [
     {
       "id": "juminhyo_family",
-      "purpose": "Verify family member MyNumbers for tax purposes.",
+      "purpose": "Collect family member MyNumbers for tax purposes.",
       "constraints": {
         "fields": [
           { "path": ["$.credentialSubject.世帯員_0_氏名"] },
@@ -501,7 +502,7 @@ async function runLifecycle() {
                 <div class="verified-ribbon">✅ SIGNATURE VERIFIED</div>
                 <div style="background: #e3f2fd; color: #0d47a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-family: sans-serif; font-size: 0.9em; border: 1px solid #90caf9;">
                     <strong>提出先:</strong> ○×株式会社 総務部 御中<br>
-                    <strong>利用目的:</strong> 入社手続（税・社会保険関係）に伴う扶養親族確認
+                    <strong>利用目的:</strong> 入社手続（税・社会保険関係）に伴う扶養親族の個人番号収集
                 </div>
                 ${renderJuminhyoTable(flattened, requestFields, false)}
             </div>

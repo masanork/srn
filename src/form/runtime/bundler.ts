@@ -65,6 +65,7 @@ export function generateEntryPoint(plugins: string[]): string {
         `import { DataManager } from '${path.join(SRC_DIR, 'client/data.js')}';`,
         `import { UIManager } from '${path.join(SRC_DIR, 'client/ui.js')}';`,
         `import { SearchEngine } from '${path.join(SRC_DIR, 'client/search.js')}';`,
+        `import { initSubmittedState, handleWithdrawOrReturn } from '${path.join(SRC_DIR, 'client/runtime.js')}';`,
         "",
         "// Plugin imports",
         ...plugins.map(p => PLUGIN_IMPORTS[p] || `// Unknown plugin: ${p}`),
@@ -247,51 +248,15 @@ export async function initPluginRuntime() {
     w.signAndDownload = () => dm.signAndDownload();
     w.clearData = () => dm.clearData();
     w.recalculate = () => calc.recalculate();
+    w.withdrawDocument = () => handleWithdrawOrReturn('Withdraw');
+    w.returnDocument = () => handleWithdrawOrReturn('Return');
 
-    // Check if form has been submitted (read-only mode)
-    function checkSubmittedStatus() {
-        const submittedMarker = document.getElementById('weba-submitted');
-        if (!submittedMarker) return false;
+    // Initialize submitted state (uses shared runtime function)
+    initSubmittedState();
 
-        try {
-            const data = JSON.parse(submittedMarker.textContent || '{}');
-            if (data.submitted) {
-                console.log('[CustomRuntime] Form is submitted - entering read-only mode');
-
-                // Disable all inputs
-                document.querySelectorAll('input, select, textarea').forEach((el: Element) => {
-                    (el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).disabled = true;
-                });
-
-                // Hide action bar or replace with submitted message
-                const actionBar = document.querySelector('.action-bar, .toolbar');
-                if (actionBar) {
-                    const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
-                    const statusDiv = document.createElement('div');
-                    statusDiv.style.cssText = 'flex: 1; text-align: center; padding: 1rem; color: #047857; font-weight: 600;';
-
-                    const statusText = isJa ? '✓ 提出済み' : '✓ Submitted';
-                    let timeText = '';
-                    if (data.submittedAt) {
-                        const submittedDate = new Date(data.submittedAt);
-                        timeText = ' (' + submittedDate.toLocaleString() + ')';
-                    }
-
-                    statusDiv.textContent = statusText + timeText;
-                    actionBar.innerHTML = '';
-                    actionBar.appendChild(statusDiv);
-                }
-
-                return true;
-            }
-        } catch (e) {
-            console.error('[CustomRuntime] Failed to parse submitted marker:', e);
-        }
-        return false;
-    }
-
-    // Initialize UI and restore data
-    const isSubmitted = checkSubmittedStatus();
+    // Check if form was submitted to skip data restoration
+    const submittedMarker = document.getElementById('weba-submitted');
+    const isSubmitted = submittedMarker && JSON.parse(submittedMarker.textContent || '{}').submitted;
 
     if (!isSubmitted) {
         // Only restore and enable interactions for non-submitted forms
