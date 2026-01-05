@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation Test Form</title>
+    <style>
+        :root { --primary: #111827; --primary-hover: #1f2937; --border: #e5e7eb; --bg-subtle: #f9fafb; }
+        body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 600px; margin: 0 auto; }
+        .form-row { margin-bottom: 1rem; }
+        .form-label { font-weight: 600; display: block; margin-bottom: 0.5rem; }
+        .form-input { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; }
+        .action-bar { margin-top: 2rem; display: flex; gap: 0.5rem; }
+        .action-btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+        .action-btn-primary { background: var(--primary); color: white; }
+        .action-btn-secondary { background: white; color: var(--primary); border: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <h1>Test Form</h1>
+        <div class="form-row">
+            <label class="form-label" for="name">Name *</label>
+            <input type="text" id="name" class="form-input" data-json-path="name" required>
+        </div>
+        <div class="form-row">
+            <label class="form-label" for="email">Email *</label>
+            <input type="email" id="email" class="form-input" data-json-path="email" required>
+        </div>
+        <div class="form-row">
+            <label class="form-label" for="comments">Comments</label>
+            <textarea id="comments" class="form-input" data-json-path="comments" rows="3"></textarea>
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="action-btn action-btn-secondary" onclick="saveDraft()">Save Draft</button>
+        <button id="btn-submit" class="action-btn action-btn-primary" onclick="submitDocument()" data-i18n="sign_btn">Confirm</button>
+        <button class="action-btn action-btn-secondary" onclick="clearData()">Clear</button>
+    </div>
+
+    <script id="weba-structure" type="application/json">
+    {
+        "name": "Test Form",
+        "fields": [
+            { "key": "name", "type": "text", "label": "Name", "required": true },
+            { "key": "email", "type": "email", "label": "Email", "required": true },
+            { "key": "comments", "type": "textarea", "label": "Comments" }
+        ]
+    }
+    </script>
+    <script id="json-ld" type="application/ld+json">{}</script>
+    <script id="json-debug" type="application/json">{}</script>
+    <script>
+        // Mock runtime functions for testing
+        window.generatedJsonStructure = JSON.parse(document.getElementById('weba-structure').textContent);
+
+        window.saveDraft = function() {
+            const data = {};
+            document.querySelectorAll('[data-json-path]').forEach(el => {
+                data[el.dataset.jsonPath] = el.value;
+            });
+            localStorage.setItem('draft', JSON.stringify(data));
+            alert('Draft saved');
+        };
+
+        window.submitDocument = function() {
+            const data = {};
+            document.querySelectorAll('[data-json-path]').forEach(el => {
+                data[el.dataset.jsonPath] = el.value;
+            });
+
+            // Create submitted HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(document.documentElement.outerHTML, 'text/html');
+
+            // Add weba-submitted marker
+            const submittedMarker = doc.createElement('script');
+            submittedMarker.id = 'weba-submitted';
+            submittedMarker.type = 'application/json';
+            const confirmedAt = new Date().toISOString();
+            submittedMarker.textContent = JSON.stringify({
+                submitted: true,
+                confirmedAt: confirmedAt,
+                submittedAt: confirmedAt,
+                l3Metadata: {
+                    events: [{
+                        type: 'Confirm',
+                        timestamp: confirmedAt,
+                        payload: {}
+                    }]
+                }
+            }, null, 2);
+            doc.body.appendChild(submittedMarker);
+
+            // Download
+            const blob = new Blob([doc.documentElement.outerHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test-form-confirmed.html';
+            a.click();
+
+            setTimeout(() => window.location.reload(), 1000);
+        };
+
+        window.withdrawDocument = function() {
+            const reason = prompt('取下の理由を入力してください：');
+            if (!reason || reason.trim() === '') {
+                alert('理由が入力されていません。');
+                return;
+            }
+
+            const submittedScript = document.getElementById('weba-submitted');
+            const data = JSON.parse(submittedScript.textContent);
+
+            data.l3Metadata.events.push({
+                type: 'Withdraw',
+                timestamp: new Date().toISOString(),
+                payload: { reason: reason.trim() }
+            });
+            data.submitted = false;
+            data.withdrawnOrReturned = true;
+            data.lastAction = 'Withdraw';
+
+            submittedScript.textContent = JSON.stringify(data, null, 2);
+
+            // Download updated HTML
+            const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test-form-withdrawn.html';
+            a.click();
+
+            alert('取下が完了しました。');
+        };
+
+        window.returnDocument = function() {
+            const reason = prompt('差戻の理由を入力してください：');
+            if (!reason || reason.trim() === '') {
+                alert('理由が入力されていません。');
+                return;
+            }
+
+            const submittedScript = document.getElementById('weba-submitted');
+            const data = JSON.parse(submittedScript.textContent);
+
+            data.l3Metadata.events.push({
+                type: 'Return',
+                timestamp: new Date().toISOString(),
+                payload: { reason: reason.trim() }
+            });
+            data.submitted = false;
+            data.withdrawnOrReturned = true;
+            data.lastAction = 'Return';
+
+            submittedScript.textContent = JSON.stringify(data, null, 2);
+
+            const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test-form-returned.html';
+            a.click();
+
+            alert('差戻が完了しました。');
+        };
+
+        window.clearData = function() {
+            if (confirm('Clear all data?')) {
+                localStorage.removeItem('draft');
+                window.location.reload();
+            }
+        };
+
+        // Initialize submitted state if marker exists
+        function initSubmittedState() {
+            const submittedScript = document.getElementById('weba-submitted');
+            if (!submittedScript || !submittedScript.textContent) return;
+
+            try {
+                const data = JSON.parse(submittedScript.textContent);
+                if (!data.submitted) return;
+
+                const confirmedAt = data.confirmedAt || data.submittedAt;
+                if (!confirmedAt) return;
+
+                // Display banner
+                const isJa = navigator.language.startsWith('ja');
+                const date = new Date(confirmedAt);
+                const formattedDate = date.toLocaleString(isJa ? 'ja-JP' : 'en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+
+                const banner = document.createElement('div');
+                banner.className = 'weba-confirmation-banner';
+                banner.style.cssText = 'background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #10b981; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;';
+                banner.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.5rem;">✓</span>
+                        <div>
+                            <div style="font-weight: 600; color: #047857;">${isJa ? '確定済みフォーム' : 'Confirmed Form'}</div>
+                            <div style="color: #065f46;">${isJa ? '確定時刻' : 'Confirmed at'}: <strong>${formattedDate}</strong></div>
+                        </div>
+                    </div>
+                `;
+
+                const page = document.querySelector('.page');
+                if (page && page.parentElement) {
+                    page.parentElement.insertBefore(banner, page);
+                }
+
+                // Replace buttons
+                const actionBar = document.querySelector('.action-bar');
+                if (actionBar) {
+                    actionBar.innerHTML = `
+                        <button class="action-btn action-btn-secondary" onclick="withdrawDocument()">取下</button>
+                        <button class="action-btn action-btn-secondary" onclick="returnDocument()">差戻</button>
+                    `;
+                }
+
+                // Make form readonly
+                document.querySelectorAll('input, textarea, select').forEach(el => {
+                    el.setAttribute('readonly', 'readonly');
+                    el.setAttribute('disabled', 'disabled');
+                    el.style.backgroundColor = '#f3f4f6';
+                    el.style.cursor = 'not-allowed';
+                });
+            } catch (e) {
+                console.error('Failed to initialize submitted state:', e);
+            }
+        }
+
+        // Run on load
+        document.addEventListener('DOMContentLoaded', initSubmittedState);
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            initSubmittedState();
+        }
+    </script>
+</body>
+</html>

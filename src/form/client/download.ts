@@ -107,14 +107,25 @@ function buildFilename(title: string, filenameSuffix: string): string {
 }
 
 function markAsSubmitted(doc: Document) {
-  // Add submitted marker
+  // Add submitted marker with L3 metadata
   const submittedMarker = doc.createElement("script");
   submittedMarker.id = "weba-submitted";
   submittedMarker.type = "application/json";
+  const confirmedAt = new Date().toISOString();
   submittedMarker.textContent = JSON.stringify({
     submitted: true,
-    submittedAt: new Date().toISOString()
-  });
+    submittedAt: confirmedAt, // Legacy field
+    confirmedAt: confirmedAt,
+    l3Metadata: {
+      events: [
+        {
+          type: 'Confirm',
+          timestamp: confirmedAt,
+          payload: {}
+        }
+      ]
+    }
+  }, null, 2);
   doc.body.appendChild(submittedMarker);
 }
 

@@ -93,7 +93,7 @@ export function generateHtml(markdown: string): string {
     <div class="page">${html}</div>
     <div class="action-bar">
         <button class="action-btn action-btn-secondary" onclick="saveDraft()">💾 Save Draft</button>
-        <button class="action-btn action-btn-primary" onclick="submitDocument()">📤 Submit</button>
+        <button class="action-btn action-btn-primary" onclick="submitDocument()" data-i18n="sign_btn">Confirm</button>
         <button class="action-btn action-btn-secondary" onclick="clearData()">🗑️ Clear</button>
     </div>
     <script id="weba-structure" type="application/json">${JSON.stringify(jsonStructure)}</script><script id="weba-source-markdown" type="text/plain">${sourceMd}</script><script>${RUNTIME_SCRIPT}</script></body></html>`;

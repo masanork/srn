@@ -44,13 +44,17 @@ export class UIManager {
                 "add_row": "+ Add Row",
                 "work_save_btn": "Save",
                 "clear_btn": "Clear",
-                "sign_btn": "Submit",
+                "sign_btn": "Confirm",
+                "withdraw_btn": "Withdraw",
+                "return_btn": "Return",
             },
             "ja": {
                 "add_row": "+ 行を追加",
                 "work_save_btn": "保存",
                 "clear_btn": "消去",
-                "sign_btn": "提出",
+                "sign_btn": "確定",
+                "withdraw_btn": "取下",
+                "return_btn": "差戻",
             }
         };
         const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';

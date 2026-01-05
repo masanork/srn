@@ -88,6 +88,9 @@ export function initRuntime() {
             uim.applyI18n(); uim.initTelFormatter(); calc.recalculate(); uim.updateVisibility();
             updateSubmitButtonState(); // Validate once structure is checked
 
+            // Check if document is in submitted state and update UI accordingly
+            initSubmittedState();
+
             // Initialize SearchEngine after structure data is loaded
             if (w.SearchEngine && typeof w.SearchEngine.init === 'function') {
                 console.log('[Runtime] Calling SearchEngine.init()...');
@@ -114,6 +117,8 @@ export function initRuntime() {
     w.submitDocument = () => dm.submitDocument();
     w.signAndDownload = () => dm.signAndDownload();
     w.clearData = () => dm.clearData();
+    w.withdrawDocument = () => handleWithdrawOrReturn('Withdraw');
+    w.returnDocument = () => handleWithdrawOrReturn('Return');
     w.removeTableRow = (btn: any) => uim.removeTableRow(btn);
     w.addTableRow = (btn: any, tableKey: string) => uim.addTableRow(btn, tableKey);
     w.switchTab = (btn: any, tabId: string) => uim.switchTab(btn, tabId);
@@ -619,4 +624,228 @@ function initGuestDidOpt(l2Config: any) {
         opt.innerHTML = `<input type="checkbox" id="weba-guest-did-opt"><label for="weba-guest-did-opt" style="font-size:13px;color:#555;cursor:pointer;">返信を受け取る (Passkey)</label>`;
         submitBtn.parentElement.insertBefore(opt, submitBtn);
     }
+}
+
+/**
+ * Initialize submitted state UI
+ * - Display confirmation time banner
+ * - Replace action buttons with withdrawal/return buttons
+ */
+function initSubmittedState() {
+    const submittedScript = document.getElementById('weba-submitted') as HTMLScriptElement;
+    if (!submittedScript || !submittedScript.textContent) return;
+
+    try {
+        const submittedData = JSON.parse(submittedScript.textContent);
+        if (!submittedData.submitted) return;
+
+        const confirmedAt = submittedData.confirmedAt || submittedData.submittedAt;
+        if (!confirmedAt) return;
+
+        // Display confirmation time banner
+        displayConfirmationBanner(confirmedAt);
+
+        // Replace action buttons
+        replaceActionButtons();
+
+        // Make form read-only
+        makeFormReadOnly();
+
+        console.log('[Runtime] Submitted state initialized');
+    } catch (e) {
+        console.error('[Runtime] Failed to parse submitted data:', e);
+    }
+}
+
+/**
+ * Display confirmation time banner at the top
+ */
+function displayConfirmationBanner(confirmedAt: string) {
+    const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+    const date = new Date(confirmedAt);
+    const formattedDate = date.toLocaleString(isJa ? 'ja-JP' : 'en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+
+    const banner = document.createElement('div');
+    banner.className = 'weba-confirmation-banner';
+    banner.style.cssText = 'background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #10b981; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);';
+    banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.5rem;">✓</span>
+            <div>
+                <div style="font-weight: 600; color: #047857; font-size: 1rem; margin-bottom: 0.25rem;">
+                    ${isJa ? '確定済みフォーム' : 'Confirmed Form'}
+                </div>
+                <div style="color: #065f46; font-size: 0.9rem;">
+                    ${isJa ? '確定時刻' : 'Confirmed at'}: <strong>${formattedDate}</strong>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const page = document.querySelector('.page');
+    if (page && page.parentElement) {
+        page.parentElement.insertBefore(banner, page);
+    }
+}
+
+/**
+ * Replace action buttons with withdrawal/return buttons
+ */
+function replaceActionButtons() {
+    const actionBar = document.querySelector('.action-bar');
+    if (!actionBar) return;
+
+    const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+
+    actionBar.innerHTML = `
+        <button class="action-btn action-btn-secondary" onclick="withdrawDocument()" data-i18n="withdraw_btn">${isJa ? '取下' : 'Withdraw'}</button>
+        <button class="action-btn action-btn-secondary" onclick="returnDocument()" data-i18n="return_btn">${isJa ? '差戻' : 'Return'}</button>
+    `;
+}
+
+/**
+ * Make form inputs read-only
+ */
+function makeFormReadOnly() {
+    document.querySelectorAll('input, textarea, select').forEach((el: any) => {
+        el.setAttribute('readonly', 'readonly');
+        el.setAttribute('disabled', 'disabled');
+        el.style.backgroundColor = '#f3f4f6';
+        el.style.cursor = 'not-allowed';
+    });
+}
+
+/**
+ * Handle withdrawal or return action
+ */
+function handleWithdrawOrReturn(actionType: 'Withdraw' | 'Return') {
+    const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+    const actionLabel = actionType === 'Withdraw'
+        ? (isJa ? '取下' : 'Withdrawal')
+        : (isJa ? '差戻' : 'Return');
+
+    // Show dialog asking for reason
+    const reason = prompt(
+        isJa
+            ? `${actionLabel}の理由を入力してください：`
+            : `Please enter the reason for ${actionLabel.toLowerCase()}:`
+    );
+
+    if (!reason || reason.trim() === '') {
+        alert(isJa ? '理由が入力されていません。' : 'Reason is required.');
+        return;
+    }
+
+    // Update L3 metadata
+    const submittedScript = document.getElementById('weba-submitted') as HTMLScriptElement;
+    if (!submittedScript || !submittedScript.textContent) {
+        console.error('[Runtime] No submitted data found');
+        return;
+    }
+
+    try {
+        const submittedData = JSON.parse(submittedScript.textContent);
+
+        // Add new event to L3 metadata
+        if (!submittedData.l3Metadata) {
+            submittedData.l3Metadata = { events: [] };
+        }
+
+        submittedData.l3Metadata.events.push({
+            type: actionType,
+            timestamp: new Date().toISOString(),
+            payload: { reason: reason.trim() }
+        });
+
+        // Mark as no longer in submitted state
+        submittedData.submitted = false;
+        submittedData.withdrawnOrReturned = true;
+        submittedData.lastAction = actionType;
+        submittedData.lastActionReason = reason.trim();
+
+        // Update the script element
+        submittedScript.textContent = JSON.stringify(submittedData, null, 2);
+
+        // Make form editable again
+        makeFormEditable();
+
+        // Remove confirmation banner
+        const banner = document.querySelector('.weba-confirmation-banner');
+        if (banner) banner.remove();
+
+        // Restore original action buttons
+        restoreActionButtons();
+
+        // Download updated HTML
+        const w = window as any;
+        const title = (w.generatedJsonStructure && w.generatedJsonStructure.name) || 'web-a-form';
+        const htmlContent = document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        const now = new Date();
+        const dateStr = now.getFullYear() +
+            ('0' + (now.getMonth() + 1)).slice(-2) +
+            ('0' + now.getDate()).slice(-2) +
+            '-' +
+            ('0' + now.getHours()).slice(-2) +
+            ('0' + now.getMinutes()).slice(-2);
+        const randomId = Math.random().toString(36).substring(2, 8);
+        const suffix = actionType.toLowerCase();
+        a.download = `${title}_${dateStr}_${suffix}_${randomId}.html`;
+
+        a.click();
+
+        alert(
+            isJa
+                ? `${actionLabel}が完了しました。更新されたフォームがダウンロードされました。`
+                : `${actionLabel} completed. Updated form has been downloaded.`
+        );
+
+    } catch (e) {
+        console.error('[Runtime] Failed to process withdrawal/return:', e);
+        alert(
+            isJa
+                ? 'エラーが発生しました。'
+                : 'An error occurred.'
+        );
+    }
+}
+
+/**
+ * Make form inputs editable
+ */
+function makeFormEditable() {
+    document.querySelectorAll('input, textarea, select').forEach((el: any) => {
+        el.removeAttribute('readonly');
+        el.removeAttribute('disabled');
+        el.style.backgroundColor = '';
+        el.style.cursor = '';
+    });
+}
+
+/**
+ * Restore original action buttons
+ */
+function restoreActionButtons() {
+    const actionBar = document.querySelector('.action-bar');
+    if (!actionBar) return;
+
+    const isJa = (navigator.language || '').toLowerCase().startsWith('ja');
+
+    actionBar.innerHTML = `
+        <button class="action-btn action-btn-secondary" onclick="saveDraft()">💾 ${isJa ? '下書き保存' : 'Save Draft'}</button>
+        <button class="action-btn action-btn-primary" onclick="submitDocument()" data-i18n="sign_btn">${isJa ? '確定' : 'Confirm'}</button>
+        <button class="action-btn action-btn-secondary" onclick="clearData()">🗑️ ${isJa ? '消去' : 'Clear'}</button>
+    `;
 }
