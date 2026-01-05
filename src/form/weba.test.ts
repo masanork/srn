@@ -166,4 +166,9 @@ describe("Web/A Renderer", () => {
         const html = Renderers.renderInput('number', 'n1', '');
         expect(html).toContain('text-align:right');
     });
+
+    test("renders search input with autofill attribute (quoted)", () => {
+        const html = Renderers.renderInput('search', 's1', 'src:m autofill="vendor:3"');
+        expect(html).toContain('data-autofill="vendor:3"');
+    });
 });
