@@ -119,15 +119,21 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             
             const cleanLabel = parseAttribute(attrStr, 'placeholder') || key;
 
-            jsonStructure.fields.push({
-                key,
-                label: cleanLabel,
-                type: typeStr,
-                context: parseAttribute(attrStr, 'context') ?? undefined,
-                property: parseAttribute(attrStr, 'property') ?? undefined,
-                show_if: parseAttribute(attrStr, 'show_if') ?? undefined,
-                required: hasAttribute(attrStr, 'required')
-            });
+                        jsonStructure.fields.push({
+
+                            key, label: cleanLabel, type: typeStr,
+
+                            context: parseAttribute(attrStr, 'context') ?? undefined,
+
+                            property: parseAttribute(attrStr, 'property') ?? undefined,
+
+                            show_if: parseAttribute(attrStr, 'show_if') ?? undefined,
+
+                            required: hasAttribute(attrStr, 'required'),
+
+                            attributes: attrStr
+
+                        });
 
             // Render tag (already produces safe HTML)
             result += Renderers.renderInput(typeStr, key, attrStr);
@@ -250,13 +256,17 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                             let [_, type, key, attrs] = tagMatch;
                             const cleanLabel = parseAttribute(attrs, 'placeholder') || key;
 
-                            jsonStructure.fields.push({
-                                key,
-                                label: cleanLabel,
-                                type: type || 'text',
-                                show_if: parseAttribute(attrs, 'show_if') ?? undefined,
-                                required: hasAttribute(attrs, 'required')
-                            });
+                                                        jsonStructure.fields.push({
+
+                                                            key, label: cleanLabel, type: type || 'text',
+
+                                                            show_if: parseAttribute(attrs, 'show_if') ?? undefined,
+
+                                                            required: hasAttribute(attrs, 'required'),
+
+                                                            attributes: attrs
+
+                                                        });
                         }
                     });
                     // @ts-ignore
@@ -345,7 +355,8 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     context: parseAttribute(attrStr, 'context') ?? undefined,
                     property: parseAttribute(attrStr, 'property') ?? undefined,
                     show_if: parseAttribute(attrStr, 'show_if') ?? undefined,
-                    required: hasAttribute(attrStr, 'required')
+                    required: hasAttribute(attrStr, 'required'),
+                    attributes: attrStr
                 });
 
                 // Determine if this is a vertical (multi-line) field
