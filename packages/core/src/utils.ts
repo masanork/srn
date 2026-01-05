@@ -1,4 +1,3 @@
-
 /**
  * Converts an ISO date string (YYYY-MM-DD) to Japanese Era (Wareki) format.
  */
@@ -55,4 +54,54 @@ export function toLegalFormat(val: any): string {
     }
 
     return val;
+}
+
+/**
+ * Escapes HTML special characters.
+ */
+export function escapeHtml(str: string): string {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Extracts a specific attribute value from a string of attributes.
+ * Supports: 
+ * - key="value"
+ * - key='value'
+ * - key:value
+ * - key=value (no quotes)
+ */
+export function parseAttribute(attrs: string | undefined, name: string): string | null {
+    if (!attrs) return null;
+
+    // Support quoted: name="value" or name='value'
+    const quotedRegex = new RegExp(`\\b${name}=(["'])(.*?)\\1`);
+    const quotedMatch = attrs.match(quotedRegex);
+    if (quotedMatch) return quotedMatch[2] ?? '';
+
+    // Support colon: name:value (stopped by space or closing paren)
+    const colonRegex = new RegExp(`\\b${name}:([^\\s\\)]+)`);
+    const colonMatch = attrs.match(colonRegex);
+    if (colonMatch) return colonMatch[1] ?? '';
+
+    // Support unquoted equal: name=value (stopped by space or closing paren)
+    const unquotedRegex = new RegExp(`\\b${name}=([^\\s\\)]+)`);
+    const unquotedMatch = attrs.match(unquotedRegex);
+    if (unquotedMatch) return unquotedMatch[1] ?? '';
+
+    return null;
+}
+
+/**
+ * Checks if a specific boolean attribute exists in the attributes string.
+ */
+export function hasAttribute(attrs: string | undefined, name: string): boolean {
+    if (!attrs) return false;
+    return new RegExp(`\\b${name}\\b`).test(attrs);
 }

@@ -1,6 +1,6 @@
-
 import { Renderers } from './renderer';
 import yaml from 'js-yaml';
+import { parseAttribute, hasAttribute, escapeHtml } from './utils';
 
 export function parseMarkdown(text: string): { html: string, jsonStructure: any } {
     const lines = text.split('\n');
@@ -14,10 +14,10 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         if (!trimmed) return null;
         try {
             return JSON.parse(trimmed);
-        } catch { }
+        } catch { } 
         try {
             return yaml.load(trimmed);
-        } catch { }
+        } catch { } 
         return null;
     };
 
@@ -104,7 +104,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     };
 
     const processInlineTags = (text: string) => {
-        const tagRegex = /\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/g;
+        const tagRegex = /\ \[(?:([a-z]+):)?([^\ ]+)(?:\ \((.*?)\))?\]/g;
         let lastIndex = 0;
         let result = '';
         let match;
@@ -116,20 +116,17 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             const [fullMatch, type, key, attrs] = match;
             const attrStr = attrs || '';
             const typeStr = type || 'text';
-            const labelMatch = attrStr.match(/placeholder="([^"]+)"/) || attrStr.match(/placeholder='([^']+)'/);
-            const cleanLabel = labelMatch ? labelMatch[1] : key;
-
-            const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
-            const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
+            
+            const cleanLabel = parseAttribute(attrStr, 'placeholder') || key;
 
             jsonStructure.fields.push({
                 key,
                 label: cleanLabel,
                 type: typeStr,
-                context: contextMatch ? contextMatch[1] : undefined,
-                property: propertyMatch ? propertyMatch[1] : undefined,
-                show_if: (attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/))?.[1],
-                required: attrStr.includes('required')
+                context: parseAttribute(attrStr, 'context') ?? undefined,
+                property: parseAttribute(attrStr, 'property') ?? undefined,
+                show_if: parseAttribute(attrStr, 'show_if') ?? undefined,
+                required: hasAttribute(attrStr, 'required')
             });
 
             // Render tag (already produces safe HTML)
@@ -189,11 +186,10 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
 
         // 0b. Table Logic
-        // 0b. Table Logic
         if (trimmed.startsWith('|')) {
             if (!inTable) { // Start a new table if we aren't in one
                 flushSingleLineFields(); // Flush before table
-                appendHtml(`<div class="form-row vertical"><div class="table-wrapper">`);
+                appendHtml('<div class="form-row vertical"><div class="table-wrapper">');
 
                 let tableClass = 'data-table';
                 let extraAttrs = '';
@@ -218,7 +214,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
             const isSeparator = cells.every(c => c.match(/^-+$/));
 
             if (isSeparator) {
-                // ignore separator lines in HTML usually, or could render them if strictly following MD-to-HTML but usually skipped in custom parsers
+                // ignore separator lines in HTML usually
             } else {
                 if (currentDynamicTableKey) {
                     const hasInput = cells.some(c => c.includes('['));
@@ -228,23 +224,12 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                         // Extract schema
                         const tableKey = currentDynamicTableKey!;
                         cells.forEach(cell => {
-                            const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
-                            if (match) {
-                                let [_, type, keyPart, attrsParen, attrsColon] = match;
-                                // Handle cases where keyPart contains attributes like "idx autonum"
-                                let key = (keyPart || '').trim();
-                                let extraAttrs = attrsParen || attrsColon || '';
-                                if (key.includes(' ')) {
-                                    const parts = key.split(/\s+/);
-                                    key = parts[0]!;
-                                    extraAttrs = parts.slice(1).join(' ') + ' ' + extraAttrs;
-                                }
-                                const placeholderMatch = extraAttrs.match(/placeholder="([^"]+)"/) || extraAttrs.match(/placeholder='([^']+)'/);
-                                const label = placeholderMatch ? placeholderMatch[1] : key;
+                            const tagMatch = cell.match(/\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/);
+                            if (tagMatch) {
+                                let [_, type, key, attrs] = tagMatch;
+                                const label = parseAttribute(attrs, 'placeholder') || key;
                                 const tableData = jsonStructure.tables[tableKey];
-                                if (tableData) {
-                                    tableData.push({ key, label, type: type || 'text' });
-                                }
+                                if (tableData) { tableData.push({ key, label, type: type || 'text' }); } 
                             }
                         });
                         // @ts-ignore
@@ -254,46 +239,23 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                         appendHtml(trHtml);
                     }
                 } else if (inMasterTable) {
-                    // Check if header row (heuristic: usually first row, but here we can check if it looks like a header or data)
-                    // Simple heuristic: if we just started the table (masterData entry is empty or just initialized), treat first row as header?
-                    // Actually, parser.ts "Phase 0" already consumed master data into JSON.
-                    // Here we just want to render it visually.
-                    // Let's treat the first row of any table (if not separator) as header if it doesn't contain inputs?
-                    // Or simplified: Just render everything as rows. The CSS will style the first row if needed, 
-                    // OR we can explicitly detect headers.
-                    // Standard MD tables: Row 1 = Header, Row 2 = Sep, Row 3+ = Data.
-                    // Since we are iterating line by line, detecting header vs body is stateful.
-                    // For now, let's just use Renderers.tableRow. To make it look like a header, we might want <th>.
-                    // But Renderers.tableRow uses <td>.
-                    // Let's just render as normal rows for visibility.
                     // @ts-ignore
                     appendHtml(Renderers.tableRow(cells));
                 } else {
                     // Static table (no master, no dynamic)
                     // Extract field metadata from cells before rendering
                     cells.forEach(cell => {
-                        const match = cell.trim().match(/^\[(?:([a-z]+):)?([^\]:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
-                        if (match) {
-                            let [_, type, keyPart, attrsParen, attrsColon] = match;
-                            let key = (keyPart || '').trim();
-                            let extraAttrs = attrsParen || attrsColon || '';
-
-                            if (key.includes(' ')) {
-                                const parts = key.split(/\s+/);
-                                key = parts[0]!;
-                                extraAttrs = parts.slice(1).join(' ') + ' ' + extraAttrs;
-                            }
-
-                            const placeholderMatch = extraAttrs.match(/placeholder="([^"]+)"/) || extraAttrs.match(/placeholder='([^']+)'/);
-                            const cleanLabel = placeholderMatch ? placeholderMatch[1] : key;
-                            const showIfMatch = extraAttrs.match(/show_if="([^"]+)"/) || extraAttrs.match(/show_if='([^']+)'/);
+                        const tagMatch = cell.match(/\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*?)\))?\]/);
+                        if (tagMatch) {
+                            let [_, type, key, attrs] = tagMatch;
+                            const cleanLabel = parseAttribute(attrs, 'placeholder') || key;
 
                             jsonStructure.fields.push({
                                 key,
                                 label: cleanLabel,
                                 type: type || 'text',
-                                show_if: showIfMatch ? showIfMatch[1] : undefined,
-                                required: extraAttrs.includes('required')
+                                show_if: parseAttribute(attrs, 'show_if') ?? undefined,
+                                required: hasAttribute(attrs, 'required')
                             });
                         }
                     });
@@ -312,7 +274,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 appendHtml('</div>');
                 inTable = false;
                 inMasterTable = false;
-                currentMasterKey = ''; // Clear master key when table ends
+                currentMasterKey = ''; 
             }
         }
 
@@ -335,14 +297,10 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 const isSystem = content.includes('(Config)') || content.includes('(Hidden)') || content.includes('(System)');
                 const tabId = 'tab-' + (tabs.length + 1);
 
-                // Only add to tabs list if NOT system (or handle in loop)
-                // Actually we want tabs in list to map IDs, but mark them hidden from nav.
-                // Or simply: content still rendered, but style is hidden.
                 tabs.push({ id: tabId, title: content, isSystem });
                 currentTabId = tabId;
 
                 const activeClass = (!isSystem && tabs.filter(t => !t.isSystem).length === 1) ? ' active' : '';
-                // If system, force hidden style
                 const styleAttr = isSystem ? ' style="display:none !important;"' : '';
                 appendHtml(`<div id="${tabId}" class="tab-content${activeClass}" data-tab-title="${Renderers.escapeHtml(content)}"${styleAttr}>`);
             } else {
@@ -366,7 +324,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         }
         // 3. Syntax: - [type:key (attrs)] Label
         else if (trimmed.startsWith('- [')) {
-            const match = trimmed.match(/^-\s*\[([a-z]+):([^\]\s:\(\)]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
+            const match = trimmed.match(/^-\s*\[(?:([a-z]+):)?([^\]\s:\(\)]+)(?:\s*\((.*)\))?\]\s*(.*)$/);
 
             if (match) {
                 const [_, type, key, attrs, label] = match;
@@ -374,13 +332,9 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                 const cleanLabel = (label || '').trim();
                 const attrStr = attrs || '';
 
-                const contextMatch = attrStr.match(/context="([^"]+)"/) || attrStr.match(/context='([^']+)'/);
-                const propertyMatch = attrStr.match(/property="([^"]+)"/) || attrStr.match(/property='([^']+)'/);
-                const showIfMatch = attrStr.match(/show_if="([^"]+)"/) || attrStr.match(/show_if='([^']+)'/);
-                const autofillMatch = attrStr.match(/autofill:([a-z]+)/);
-
                 // Check if this field needs postal data
-                if (autofillMatch && autofillMatch[1] === 'postal') {
+                const autofillVal = parseAttribute(attrStr, 'autofill');
+                if (autofillVal === 'postal') {
                     jsonStructure.needsPostal = true;
                 }
 
@@ -388,10 +342,10 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     key,
                     label: cleanLabel,
                     type: type || 'text',
-                    context: contextMatch ? contextMatch[1] : undefined,
-                    property: propertyMatch ? propertyMatch[1] : undefined,
-                    show_if: showIfMatch ? showIfMatch[1] : undefined,
-                    required: attrStr.includes('required')
+                    context: parseAttribute(attrStr, 'context') ?? undefined,
+                    property: parseAttribute(attrStr, 'property') ?? undefined,
+                    show_if: parseAttribute(attrStr, 'show_if') ?? undefined,
+                    required: hasAttribute(attrStr, 'required')
                 });
 
                 // Determine if this is a vertical (multi-line) field
@@ -404,7 +358,6 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
 
                 // Render the field
                 let fieldHtml = '';
-                // Explicit dispatch to avoid dynamic property access issues
                 if (type === 'radio') {
                     currentRadioGroup = { key, label: cleanLabel, attrs: attrStr };
                     fieldHtml = Renderers.radioStart(key, cleanLabel, attrStr);
@@ -423,18 +376,16 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
                     fieldHtml = `<p style="color:red">Unknown type: ${type}</p>`;
                 }
 
-                // Add to buffer or append directly
                 if (isVerticalField) {
                     appendHtml(fieldHtml);
                 } else {
-                    // Single-line field: add to buffer
                     singleLineFieldBuffer.push(fieldHtml);
                 }
             }
         }
         else if (trimmed.startsWith('---')) {
             flushSingleLineFields(); // Flush before horizontal rule
-            if (!currentTabId) { // Only render HR if not in tabs (tabs replace HR separation usually)
+            if (!currentTabId) { // Only render HR if not in tabs
                 appendHtml('<hr>');
             }
             currentRadioGroup = null;
@@ -443,8 +394,6 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         else if (trimmed.startsWith('<')) {
             flushSingleLineFields(); // Flush before HTML passthrough
             if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
-            // Pure HTML tags (div, span, etc.) should pass through without escaping
-            // Only process inline form tags if they exist within the HTML
             if (trimmed.includes('[') && trimmed.includes(']')) {
                 appendHtml(processInlineTags(trimmed));
             } else {
@@ -475,8 +424,7 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     if (currentRadioGroup) appendHtml('</div></div>');
     if (currentTabId) appendHtml('</div>'); // Close last tab
 
-    // Final Assembly: Inject Tab Nav if tabs exist
-    // Determine submit action based on signature requirement
+    // Final Assembly
     const submitAction = jsonStructure.require_signature ? 'sign-download' : 'submit-document';
     const toolbarButtons = `
             <div style="flex:1"></div>
@@ -489,15 +437,13 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         let navHtml = '<div class="tabs-nav">';
         let visibleTabCount = 0;
 
-        tabs.forEach((tab, idx) => {
-            // @ts-ignore
+        tabs.forEach((tab) => {
             if (tab.isSystem) return;
             const activeClass = visibleTabCount === 0 ? ' active' : '';
             navHtml += `<button class="tab-btn${activeClass}" data-action="switch-tab" data-tab-id="${tab.id}" onclick="switchTab(this, '${tab.id}')">${Renderers.escapeHtml(tab.title)}</button>`;
             visibleTabCount++;
         });
 
-        // Add Save/Clear buttons to the tab nav
         navHtml += `
             <div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-grow: 1; padding-left: 20px;">
                 ${toolbarButtons}
@@ -505,7 +451,6 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
         `;
         navHtml += '</div>';
 
-        // Find position to insert Nav: After H1
         if (mainContentHtml.includes('</h1>')) {
             html = mainContentHtml.replace('</h1>', '</h1>' + navHtml);
         } else {

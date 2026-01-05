@@ -1,3 +1,4 @@
+import { parseAttribute, hasAttribute, escapeHtml } from './utils';
 
 export interface RendererContext {
     masterData: Record<string, string[][]>;
@@ -11,13 +12,7 @@ export const Renderers: Record<string, any> = {
     },
 
     escapeHtml(str: string): string {
-        if (!str) return '';
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return escapeHtml(str);
     },
 
     formatHint(text: string): string {
@@ -92,17 +87,17 @@ export const Renderers: Record<string, any> = {
         }
 
         // Explicit attribute overrides
-        const autocompleteMatch = (attrs || '').match(/autocomplete="([^"]+)"/) || (attrs || '').match(/autocomplete='([^']+)'/);
-        if (autocompleteMatch) {
+        const autocomplete = parseAttribute(attrs, 'autocomplete');
+        if (autocomplete) {
             // Replace inferred autocomplete with explicit one
             semantic = semantic.replace(/autocomplete="[^"]*"/, '');
-            semantic += ` autocomplete="${autocompleteMatch[1]}"`;
+            semantic += ` autocomplete="${this.escapeHtml(autocomplete)}"`;
         }
 
-        const inputmodeMatch = (attrs || '').match(/inputmode="([^"]+)"/) || (attrs || '').match(/inputmode='([^']+)'/);
-        if (inputmodeMatch) {
+        const inputmode = parseAttribute(attrs, 'inputmode');
+        if (inputmode) {
             semantic = semantic.replace(/inputmode="[^"]*"/, '');
-            semantic += ` inputmode="${inputmodeMatch[1]}"`;
+            semantic += ` inputmode="${this.escapeHtml(inputmode)}"`;
         }
 
         return semantic;
@@ -111,35 +106,35 @@ export const Renderers: Record<string, any> = {
     getExtraAttrs(attrs: string | undefined): string {
         if (!attrs) return '';
         let extra = '';
-        const lenMatch = attrs.match(/(?:len|max):(\d+)/);
-        if (lenMatch) extra += ` maxlength="${lenMatch[1]}"`;
+        
+        const len = parseAttribute(attrs, 'len') || parseAttribute(attrs, 'max');
+        if (len && /^\d+$/.test(len)) extra += ` maxlength="${len}"`;
 
-        const valMatch = attrs.match(/(?:val|value)="([^"]+)"/);
-        if (valMatch) {
-            extra += ` value="${this.escapeHtml(valMatch[1])}"`;
-        } else {
-            const valMatchSimple = attrs.match(/(?:val|value)=([^\s\)]+)/);
-            if (valMatchSimple) extra += ` value="${this.escapeHtml(valMatchSimple[1])}"`;
-        }
+        const val = parseAttribute(attrs, 'val') || parseAttribute(attrs, 'value');
+        if (val) extra += ` value="${this.escapeHtml(val)}"`;
 
-        const contextMatch = attrs.match(/context="([^"]+)"/) || attrs.match(/context='([^']+)'/);
-        if (contextMatch) extra += ` data-context="${this.escapeHtml(contextMatch[1])}"`;
+        const context = parseAttribute(attrs, 'context');
+        if (context) extra += ` data-context="${this.escapeHtml(context)}"`;
 
-        const propertyMatch = attrs.match(/property="([^"]+)"/) || attrs.match(/property='([^']+)'/);
-        if (propertyMatch) extra += ` data-property="${this.escapeHtml(propertyMatch[1])}"`;
+        const property = parseAttribute(attrs, 'property');
+        if (property) extra += ` data-property="${this.escapeHtml(property)}"`;
 
-        const showIfMatch = attrs.match(/show_if="([^"]+)"/) || attrs.match(/show_if='([^']+)'/);
-        if (showIfMatch) extra += ` data-show-if="${this.escapeHtml(showIfMatch[1])}"`;
+        const showIf = parseAttribute(attrs, 'show_if');
+        if (showIf) extra += ` data-show-if="${this.escapeHtml(showIf)}"`;
 
-        const autofillMatch = attrs.match(/autofill:([a-z:]+)/) || attrs.match(/autofill="([^"]+)"/) || attrs.match(/autofill='([^']+)'/);
-        if (autofillMatch) extra += ` data-autofill="${this.escapeHtml(autofillMatch[1])}"`;
+        const autofill = parseAttribute(attrs, 'autofill');
+        if (autofill) extra += ` data-autofill="${this.escapeHtml(autofill)}"`;
 
         // Pass through standard validation attributes
         const validationAttrs = ['min', 'max', 'step', 'pattern', 'required', 'readonly', 'disabled', 'minlength', 'maxlength'];
         validationAttrs.forEach(attr => {
-            const match = attrs.match(new RegExp(`${attr}="([^"]+)"`)) || attrs.match(new RegExp(`${attr}='([^']+)'`)) || attrs.match(new RegExp(`${attr}=([^\\s\\)]+)`));
-            if (match) extra += ` ${attr}="${this.escapeHtml(match[1])}"`;
-            else if (new RegExp(`\\b${attr}\\b`).test(attrs)) extra += ` ${attr}`;
+            const value = parseAttribute(attrs, attr);
+            if (value !== null) {
+                if (value === 'true' || value === '') extra += ` ${attr}`;
+                else extra += ` ${attr}="${this.escapeHtml(value)}"`;
+            } else if (hasAttribute(attrs, attr)) {
+                extra += ` ${attr}`;
+            }
         });
 
         return extra;
@@ -148,15 +143,10 @@ export const Renderers: Record<string, any> = {
     // --- Component Renderers ---
 
     'text': function (key: string, label: string, attrs: string | undefined) {
-        const valMatch = (attrs || '').match(/(?:val|value)="([^"]+)"/) || (attrs || '').match(/(?:val|value)='([^']+)'/) || (attrs || '').match(/(?:val|value)=([^ ]+)/);
-        const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
-        const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
-
-        const val = valMatch ? valMatch[1] : '';
-        const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const contextMatch = (attrs || '').match(/context="([^"]+)"/) || (attrs || '').match(/context='([^']+)'/);
-        const effectiveHint = hintMatch ? hintMatch[1] : (contextMatch ? contextMatch[1] : '');
-        const hint = effectiveHint ? `<div class="form-hint">${this.formatHint(effectiveHint)}</div>` : '';
+        const val = parseAttribute(attrs, 'val') || parseAttribute(attrs, 'value') || '';
+        const placeholder = parseAttribute(attrs, 'placeholder') || '';
+        const hintText = parseAttribute(attrs, 'hint') || parseAttribute(attrs, 'context') || '';
+        const hint = hintText ? `<div class="form-hint">${this.formatHint(hintText)}</div>` : '';
         const semanticAttrs = this.getSemanticAttrs(key, attrs);
 
         return `
@@ -168,13 +158,9 @@ export const Renderers: Record<string, any> = {
     },
 
     'number': function (key: string, label: string, attrs: string | undefined) {
-        const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
-        const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
-
-        const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const contextMatch = (attrs || '').match(/context="([^"]+)"/) || (attrs || '').match(/context='([^']+)'/);
-        const effectiveHint = hintMatch ? hintMatch[1] : (contextMatch ? contextMatch[1] : '');
-        const hint = effectiveHint ? `<div class="form-row"><div class="form-hint">${this.formatHint(effectiveHint)}</div></div>` : '';
+        const placeholder = parseAttribute(attrs, 'placeholder') || '';
+        const hintText = parseAttribute(attrs, 'hint') || parseAttribute(attrs, 'context') || '';
+        const hint = hintText ? `<div class="form-row"><div class="form-hint">${this.formatHint(hintText)}</div></div>` : '';
 
         return `
         <div class="form-row">
@@ -193,15 +179,10 @@ export const Renderers: Record<string, any> = {
     },
 
     'textarea': function (key: string, label: string, attrs: string | undefined) {
-        const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
-        const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
-
-        const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const contextMatch = (attrs || '').match(/context="([^"]+)"/) || (attrs || '').match(/context='([^']+)'/);
-        const effectiveHint = hintMatch ? hintMatch[1] : (contextMatch ? contextMatch[1] : '');
-        const hint = effectiveHint ? `<div class="form-hint">${this.formatHint(effectiveHint)}</div>` : '';
-        const valMatch = (attrs || '').match(/(?:val|value)="([^"]+)"/) || (attrs || '').match(/(?:val|value)='([^']+)'/) || (attrs || '').match(/(?:val|value)=([^ ]+)/);
-        const val = valMatch ? valMatch[1] : '';
+        const placeholder = parseAttribute(attrs, 'placeholder') || '';
+        const hintText = parseAttribute(attrs, 'hint') || parseAttribute(attrs, 'context') || '';
+        const hint = hintText ? `<div class="form-hint">${this.formatHint(hintText)}</div>` : '';
+        const val = parseAttribute(attrs, 'val') || parseAttribute(attrs, 'value') || '';
 
         return `
         <div class="form-row vertical" style="${this.getStyle(attrs)}">
@@ -226,8 +207,7 @@ export const Renderers: Record<string, any> = {
     },
 
     'calc': function (key: string, label: string, attrs: string | undefined) {
-        const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
-        const formula = formulaMatch ? formulaMatch[1] : '';
+        const formula = parseAttribute(attrs, 'formula') || '';
         return `
         <div class="form-row">
             <label class="form-label">${this.escapeHtml(label)}</label>
@@ -236,18 +216,15 @@ export const Renderers: Record<string, any> = {
     },
 
     'search': function (key: string, label: string, attrs: string | undefined) {
-        // Allow dots, slashes, colons, etc. in src key. Stop at space or closing paren.
-        const srcMatch = (attrs || '').match(/src:([^\s)]+)/);
-        const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
-        const valueIndexMatch = (attrs || '').match(/value:(\d+)/);
-        const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
-        const hintMatch = (attrs || '').match(/hint="([^"]+)"/) || (attrs || '').match(/hint='([^']+)'/);
-
-        const srcKey = srcMatch ? srcMatch[1] : '';
-        const placeholder = placeholderMatch ? placeholderMatch[1] : '';
-        const hint = hintMatch ? `<div class="form-hint">${this.formatHint(hintMatch[1])}</div>` : '';
-        const labelIndexAttr = labelIndexMatch ? ` data-master-label-index="${labelIndexMatch[1]}"` : '';
-        const valueIndexAttr = valueIndexMatch ? ` data-master-value-index="${valueIndexMatch[1]}"` : '';
+        const srcKey = parseAttribute(attrs, 'src') || '';
+        const labelIdx = parseAttribute(attrs, 'label') || '';
+        const valueIdx = parseAttribute(attrs, 'value') || '';
+        const placeholder = parseAttribute(attrs, 'placeholder') || '';
+        const hintText = parseAttribute(attrs, 'hint') || '';
+        const hint = hintText ? `<div class="form-hint">${this.formatHint(hintText)}</div>` : '';
+        
+        const labelIndexAttr = labelIdx ? ` data-master-label-index="${labelIdx}"` : '';
+        const valueIndexAttr = valueIdx ? ` data-master-value-index="${valueIdx}"` : '';
 
         return `
         <div class="form-row autocomplete-container" style="position:relative; z-index:100;">
@@ -265,25 +242,24 @@ export const Renderers: Record<string, any> = {
     },
 
     renderInput(type: string, key: string, attrs: string | undefined, isTemplate: boolean = false): string {
-        const placeholderMatch = (attrs || '').match(/placeholder="([^"]+)"/) || (attrs || '').match(/placeholder='([^']+)'/);
-        const placeholder = placeholderMatch ? `placeholder="${this.escapeHtml(placeholderMatch[1])}"` : '';
+        const placeholderVal = parseAttribute(attrs, 'placeholder') || '';
+        const placeholder = placeholderVal ? `placeholder="${this.escapeHtml(placeholderVal)}"` : '';
         const commonClass = isTemplate ? 'form-input template-input' : 'form-input';
         const dataAttr = isTemplate ? `data-base-key="${key}"` : `data-json-path="${key}"`;
 
         if (type === 'calc') {
-            const formulaMatch = (attrs || '').match(/formula="([^"]+)"/) || (attrs || '').match(/formula='([^']+)'/);
-            const formula = formulaMatch ? formulaMatch[1] : '';
-            return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; text-align:right; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+            const formula = parseAttribute(attrs, 'formula') || '';
+            return `<input type="text" readonly class="${commonClass}" ${dataAttr} data-formula="${this.escapeHtml(formula)}" style="background:#f9f9f9; text-align:right; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+`;
         }
 
         if (type === 'datalist') {
-            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
-            const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
+            const srcKey = parseAttribute(attrs, 'src') || '';
+            const labelIdx = parseAttribute(attrs, 'label') || '1';
             let optionsHtml = '';
-            const srcKey = srcMatch ? srcMatch[1] : '';
             if (srcKey && this._context.masterData && this._context.masterData[srcKey]) {
                 const data = this._context.masterData[srcKey];
-                const lIdx = labelIndexMatch ? parseInt(labelIndexMatch[1] || '1') - 1 : 1;
+                const lIdx = parseInt(labelIdx, 10) - 1;
                 data.forEach((row: string[]) => {
                     if (row.length > lIdx) {
                         optionsHtml += `<option value="${this.escapeHtml(row[lIdx] || '')}"></option>`;
@@ -295,22 +271,21 @@ export const Renderers: Record<string, any> = {
         }
 
         if (type === 'search') {
-            const srcMatch = (attrs || '').match(/src:([a-zA-Z0-9_\-\u0080-\uFFFF]+)/);
-            const labelIndexMatch = (attrs || '').match(/label:(\d+)/);
-            const valueIndexMatch = (attrs || '').match(/value:(\d+)/);
-            const srcKey = srcMatch ? srcMatch[1] : '';
-            const labelIndexAttr = labelIndexMatch ? ` data-master-label-index="${labelIndexMatch[1]}"` : '';
-            const valueIndexAttr = valueIndexMatch ? ` data-master-value-index="${valueIndexMatch[1]}"` : '';
+            const srcKey = parseAttribute(attrs, 'src') || '';
+            const labelIdx = parseAttribute(attrs, 'label') || '';
+            const valueIdx = parseAttribute(attrs, 'value') || '';
+            
+            const labelIndexAttr = labelIdx ? ` data-master-label-index="${labelIdx}"` : '';
+            const valueIndexAttr = valueIdx ? ` data-master-value-index="${valueIdx}"` : '';
             const searchClass = commonClass + ' search-input';
 
-            // Note: search-suggestions are now global, no need for inner div
             let suggestAttr = '';
-            if ((attrs || '').includes('suggest:column')) {
+            if (hasAttribute(attrs, 'suggest:column')) {
                 suggestAttr = ' data-suggest-source="column"';
             }
-            const copyMatch = (attrs || '').match(/copy:([^\s)]+)/);
-            const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : '';
-            const bgStyle = copyMatch ? 'background-color: #ffffea;' : '';
+            const copyFrom = parseAttribute(attrs, 'copy');
+            const copyAttr = copyFrom ? ` data-copy-from="${this.escapeHtml(copyFrom)}"` : '';
+            const bgStyle = copyFrom ? 'background-color: #ffffea;' : '';
 
             return `<div style="display:inline-block; position:relative; width: 100%; min-width: 100px;">
                         <input type="text" class="${searchClass}" ${dataAttr} autocomplete="off" data-master-src="${srcKey}"${labelIndexAttr}${valueIndexAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>
@@ -318,35 +293,38 @@ export const Renderers: Record<string, any> = {
         }
 
         if (type === 'number') {
-            const copyMatch = (attrs || '').match(/copy:([^\s)]+)/);
-            const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : '';
-            const bgStyle = copyMatch ? 'background-color: #ffffea;' : '';
+            const copyFrom = parseAttribute(attrs, 'copy');
+            const copyAttr = copyFrom ? ` data-copy-from="${this.escapeHtml(copyFrom)}"` : '';
+            const bgStyle = copyFrom ? 'background-color: #ffffea;' : '';
             return `<input type="number" class="${commonClass}" ${dataAttr} ${placeholder} style="text-align:right; ${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${copyAttr}>`;
         }
 
         if (type === 'date') {
-            return `<input type="date" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+            return `<input type="date" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+`;
         }
 
         if (type === 'checkbox') {
-            return `<input type="checkbox" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+            return `<input type="checkbox" class="${commonClass}" ${dataAttr} style="${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+`;
         }
 
-        if (type === 'autonum' || (attrs || '').includes('autonum')) {
+        if (type === 'autonum' || hasAttribute(attrs, 'autonum')) {
             const classList = commonClass + ' auto-num';
-            return `<input type="number" readonly class="${classList}" ${dataAttr} data-autonum="true" style="background:transparent; border:none; text-align:center; width:100%; font-weight:bold; cursor:default; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>`;
+            return `<input type="number" readonly class="${classList}" ${dataAttr} data-autonum="true" style="background:transparent; border:none; text-align:center; width:100%; font-weight:bold; cursor:default; ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}>
+`;
         }
 
         // Default text
         let suggestAttr = '';
         let suggestClass = '';
-        if ((attrs || '').includes('suggest:column')) {
+        if (hasAttribute(attrs, 'suggest:column')) {
             suggestClass = ' search-input';
             suggestAttr = ' data-suggest-source="column"';
         }
-        const copyMatch = (attrs || '').match(/copy:([^\s)]+)/);
-        const copyAttr = copyMatch ? ` data-copy-from="${copyMatch[1]}"` : '';
-        const bgStyle = copyMatch ? 'background-color: #ffffea;' : '';
+        const copyFrom = parseAttribute(attrs, 'copy');
+        const copyAttr = copyFrom ? ` data-copy-from="${this.escapeHtml(copyFrom)}"` : '';
+        const bgStyle = copyFrom ? 'background-color: #ffffea;' : '';
         const semanticAttrs = this.getSemanticAttrs(key, attrs);
 
         return `<input ${semanticAttrs ? semanticAttrs : 'type="text"'} class="${commonClass}${suggestClass}" ${dataAttr} ${placeholder} style="${bgStyle} ${this.getStyle(attrs)}"${this.getExtraAttrs(attrs)}${suggestAttr}${copyAttr}>`;
@@ -356,6 +334,7 @@ export const Renderers: Record<string, any> = {
         const tds = cells.map(cell => {
             const trimmed = cell.trim();
             const match = trimmed.match(/^\[(?:([a-z]+):)?([^\]:\(\)]+)(?:\s*\((.*)\)|:([^\]]+))?\]$/);
+            // console.log('tableRow match check:', trimmed, !!match);
 
             if (match) {
                 let [_, type, keyPart, attrsParen, attrsColon] = match;
