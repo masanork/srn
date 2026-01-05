@@ -239,86 +239,52 @@ export class UIManager {
             const condition = el.dataset.showIf;
             if (!condition) return;
 
-            // Target scope extraction
-            // Simple parser: key operator value
-            // Supports: key == 'value', key != 'value', key (truthy)
+            // Simple parser: key operator value OR just key (truthy)
             const match = condition.match(/^([a-zA-Z0-9_]+)\s*(==|!=)\s*(['"]?)(.*?)\3$/);
+            const key = match ? match[1] : condition.trim();
+            const op = match ? match[2] : null;
+            const value = match ? match[4] : null;
 
-            let visible = true;
+            // Find input element: Prioritize local scope (same row) then global
+            const row = el.closest('tr') || el.closest('.dynamic-row');
+            let targetInput = (row ? row.querySelector(`[data-json-path="${key}"], [data-base-key="${key}"]`) : null) as HTMLInputElement | HTMLSelectElement;
+            
+            if (!targetInput) {
+                targetInput = document.querySelector(`[data-json-path="${key}"]`) as HTMLInputElement | HTMLSelectElement;
+            }
 
-            if (match) {
-                const [_, key, op, quote, value] = match;
-                // Find input element for key
-                // Try global lookup
-                let targetInput = document.querySelector(`[data-json-path="${key}"]`) as HTMLInputElement | HTMLSelectElement;
+            let visible = false;
 
-                // If not found global, try searching within the same table row if we are inside one
-                if (!targetInput) {
-                    const row = el.closest('tr');
-                    if (row) {
-                        targetInput = row.querySelector(`[data-json-path="${key}"]`) as HTMLInputElement;
-                        // Also check by name/class if json-path is not sufficient in template
-                    }
+            if (targetInput) {
+                let val = targetInput.value;
+                
+                if (targetInput.type === 'checkbox') {
+                    val = (targetInput as HTMLInputElement).checked ? 'true' : 'false';
+                } else if (targetInput.type === 'radio') {
+                    const name = targetInput.name;
+                    const scope = targetInput.closest('tr') || targetInput.closest('.dynamic-row') || document;
+                    const checked = scope.querySelector(`input[name="${name}"]:checked`) as HTMLInputElement;
+                    val = checked ? checked.value : '';
                 }
 
-                if (targetInput) {
-                    const currentVal = ((targetInput.type === 'checkbox' || targetInput.type === 'radio') && (targetInput as HTMLInputElement).checked)
-                        ? 'true'
-                        : (((targetInput.type === 'checkbox' || targetInput.type === 'radio') && !(targetInput as HTMLInputElement).checked) ? 'false' : targetInput.value);
-
-                    // For radio buttons, we need to check the checked one in the group
-                    if (targetInput.type === 'radio') {
-                        const groupName = targetInput.name;
-                        const checked = document.querySelector(`input[name="${groupName}"]:checked`) as HTMLInputElement;
-                        if (checked) {
-                            // Use the value of the checked radio
-                            // currentVal logic above is flawed for radio group
-                            // Wait, parser assigns distinct keys? No, radio share keys but different values usually?
-                            // Web/A Form parser uses `radio:groupName (value="val")`. The key passes as json-path?
-                            // Let's assume standard behavior: we check value of key.
-                        }
-                    }
-
-                    // Simplified value extraction
-                    let val = targetInput.value;
+                if (op === '==') {
+                    visible = val == value;
+                } else if (op === '!=') {
+                    visible = val != value;
+                } else {
+                    // Truthy check
                     if (targetInput.type === 'checkbox') {
-                        val = (targetInput as HTMLInputElement).checked ? 'true' : 'false';
+                        visible = (targetInput as HTMLInputElement).checked;
+                    } else {
+                        visible = !!val && val !== 'false';
                     }
-                    if (targetInput.type === 'radio') {
-                        // Find the checked radio with this name
-                        const name = targetInput.name;
-                        const checked = document.querySelector(`input[name="${name}"]:checked`) as HTMLInputElement;
-                        val = checked ? checked.value : '';
-                    }
-
-                    if (op === '==') visible = val == value;
-                    if (op === '!=') visible = val != value;
-                } else {
-                    // Key not found, default to hidden or visible?
-                    // Let's keep visible safe if logic fails, or hidden?
-                    // Safe behavior: if dependency missing, show it? No, usually hide.
-                    visible = false;
-                }
-            } else {
-                // Boolean check (truthy/falsy)
-                const key = condition.trim();
-                let targetInput = document.querySelector(`[data-json-path="${key}"]`) as HTMLInputElement;
-                if (targetInput) {
-                    if (targetInput.type === 'checkbox') visible = (targetInput as HTMLInputElement).checked;
-                    else visible = !!targetInput.value;
-                } else {
-                    visible = false;
                 }
             }
 
             // Toggle visibility
-            // If the element is an input wrapper (.form-row), toggle that
-            // If it's inside a table cell, toggle the content or just the input?
-            // Usually we toggle the closest .form-row
             const container = el.closest('.form-row') as HTMLElement;
             if (container) {
                 container.style.display = visible ? '' : 'none';
-                // Also disable/enable inputs to prevent submission of hidden data
                 const inputs = container.querySelectorAll('input, select, textarea');
                 inputs.forEach((inp: any) => {
                     inp.disabled = !visible;
@@ -326,7 +292,7 @@ export class UIManager {
             } else {
                 el.style.display = visible ? '' : 'none';
                 if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
-                    el.disabled = !visible;
+                    (el as any).disabled = !visible;
                 }
             }
         });
