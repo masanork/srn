@@ -1,42 +1,57 @@
----
+--- 
 title: "Sorane (空音) Release Notes"
 layout: article
 description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
-## v3.4.0 - Quality Hardening & Shared Aggregator Engine
+## v3.5.0 - Quality Hardening & Shared Aggregator Engine
 
 **Date:** 2026-01-06
 
-A major release focused on production readiness, architectural consolidation, and rigorous testing of the trust layer.
+Focus on production reliability, verification logic integrity, and architectural consolidation of the data processing layer.
 
 *   **Trust Layer Verification Hardening**:
     *   **Comprehensive Test Suite**: Added exhaustive unit tests for `verifyWebA` and `verifyWebALtv` covering L1-L4 layers.
     *   **HMP Validation Fix**: Resolved a critical bug where the core verifier would report a document as valid even if the Human-Machine Parity (HMP) check failed.
-    *   **Coverage Milestone**: Increased verification logic line coverage from 3% to **over 80%**, ensuring the "Root of Trust" is programmatically protected against regressions.
+    *   **Coverage Milestone**: Increased verification logic line coverage to **over 80%**, ensuring the "Root of Trust" is programmatically protected.
 
-*   **Unified Aggregator Engine**:
-    *   **Aggregator Engine (Shared)**: Extracted core aggregation logic into a platform-agnostic module (`aggregator_engine.ts`), now shared by both the CLI and Browser runtimes.
+*   **Unified Aggregator Engine 2.0**:
+    *   **Shared Core**: Extracted core aggregation logic into a platform-agnostic module (`aggregator_engine.ts`), unifying CLI and Browser behavior.
     *   **Robust Data Selection**: Rewrote `selectValues` to support advanced path resolution, including array wildcards (`items[].value`) and root prefixes.
-    *   **Standardized CSV Export**: Unified the `flattenForCsv` logic to ensure consistent, indexed array representation (`items[0].key`) across all environments.
-    *   **Browser UI Stability**: Increased Aggregator UI test coverage from 25% to **73%** and resolved memory-leak concerns through code modularization.
+    *   **Standardized CSV Export**: Unified `flattenForCsv` to ensure consistent, indexed array representation (`items[0].key`) across all environments.
 
 *   **Markdown Static Analysis (Linter)**:
-    *   **Web/A Validator**: Introduced a new CLI tool (`src/tools/validator.ts`) to detect logical errors in Markdown definitions *before* they are distributed.
-    *   **Integrity Checks**: Automatically validates master data references (`src`), autofill column indices, and `show_if` conditional dependencies.
+    *   **Web/A Validator**: Introduced a new CLI tool (`src/tools/validator.ts`) to detect logical errors in Markdown definitions (master references, autofill indices, `show_if` dependencies) *before* distribution.
 
 *   **Parser & Renderer Refinement**:
     *   **Centralized Attribute Parsing**: Standardized attribute extraction logic in `utils.ts`, improving robustness for quoted values and special characters.
-    *   **UI Bug Fixes**: Resolved issues where `autofill` indices were incorrectly rendered as initial values in search fields.
     *   **Scoped Visibility**: Refactored `updateVisibility` to correctly resolve field dependencies within dynamic table rows.
+    *   **UI Bug Fixes**: Resolved issues where `autofill` metadata was incorrectly rendered as initial input values.
 
-*   **Developer Experience (DX)**:
-    *   **CI Stability**: Fixed race conditions in client tests by resolving floating promises in the data manager.
-    *   **Build Reliability**: Disabled aggressive bundle caching in development to ensure core library changes are immediately reflected in form runtimes.
+## v3.4.0 - Form Confirmation Workflow & Identity Demos
+
+**Date:** 2026-01-05
+
+Significant functional updates including a new form submission lifecycle and expanded identity document support.
+
+*   **Form Confirmation Workflow**:
+    *   **Lifecycle Management**: Implemented "Confirm" (確定) action with L3 metadata event tracking.
+    *   **Post-Submission Actions**: Added "Withdraw" (取下) and "Return" (差戻) functionality, allowing users to retract or issuers to return forms with reason tracking.
+    *   **Visual State Transitions**: Forms now transition to a specialized read-only view with a confirmation banner and timestamp upon submission.
+
+*   **Identity & Credential Demos**:
+    *   **mDoc Support**: Implementation of ISO/IEC 18013-5 (Mobile Driver's License) issuance and presentation flows.
+    *   **SD-JWT Integration**: Demonstrated selective disclosure capabilities using the SD-JWT standard for flexible data sharing.
+
+*   **Form Client Refinements**:
+    *   **UI Customization**: Enhanced action button styling and added support for custom labels via I18N attributes.
+    *   **Master Data Optimization**: Improved deduplication logic in search components and added support for quoted `autofill` syntax in Markdown.
+
+*   **Environment Stabilization**:
+    *   **CI/CD Fixes**: Resolved race conditions in asynchronous tests and updated CLI integration tests to match the latest output formats.
 
 ## v3.3.0 - Form Validation & mdoc Identity PoC
-
 **Date:** 2026-01-04
 
 Major enhancements to Web/A Form submission workflow and a standalone Proof of Concept for mdoc (mobile driver's license) identity verification.
