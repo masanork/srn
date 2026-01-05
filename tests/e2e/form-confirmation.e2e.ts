@@ -22,21 +22,28 @@ test.describe('Form Confirmation Workflow E2E', () => {
   // TC-1: Form submission creates confirmed state
   // =============================================================================
 
-  test('TC-1: Form submission creates confirmed state', async ({ page }) => {
-    // 1. Load form
+  test('TC-1: Form submission creates confirmed state', async ({ page, context }) => {
+    // 1. Set Japanese locale for proper banner display
+    await context.addInitScript(() => {
+      Object.defineProperty(navigator, 'language', {
+        get: () => 'ja-JP'
+      });
+    });
+
+    // 2. Load form
     await page.goto(TEST_FORM_PATH);
     await page.waitForLoadState('networkidle');
 
-    // 2. Fill required fields
+    // 3. Fill required fields
     await page.fill('input[data-json-path="name"]', 'John Doe');
     await page.fill('input[data-json-path="email"]', 'john@example.com');
     await page.fill('textarea[data-json-path="comments"]', 'This is a test submission');
 
-    // 3. Click Confirm button
+    // 4. Click Confirm button
     const downloadPromise = page.waitForEvent('download');
     await page.click('#btn-submit');
 
-    // 4. Wait for download
+    // 5. Wait for download
     const download = await downloadPromise;
     expect(download).toBeTruthy();
     expect(download.suggestedFilename()).toContain('test-form-confirmed.html');
@@ -108,11 +115,21 @@ test.describe('Form Confirmation Workflow E2E', () => {
     // Verify confirmed state
     await expect(page.locator('.weba-confirmation-banner')).toBeVisible();
 
-    // 3. Click Withdraw button and handle dialog
+    // 3. Click Withdraw button and handle dialogs
+    let dialogCount = 0;
     page.on('dialog', async dialog => {
-      expect(dialog.type()).toBe('prompt');
-      expect(dialog.message()).toContain('取下の理由');
-      await dialog.accept('誤って提出しました');
+      dialogCount++;
+      if (dialogCount === 1) {
+        // First dialog: prompt for reason
+        expect(dialog.type()).toBe('prompt');
+        expect(dialog.message()).toContain('取下の理由');
+        await dialog.accept('誤って提出しました');
+      } else if (dialogCount === 2) {
+        // Second dialog: alert confirming completion
+        expect(dialog.type()).toBe('alert');
+        expect(dialog.message()).toContain('取下が完了しました');
+        await dialog.accept();
+      }
     });
 
     // 4. Wait for download
@@ -166,11 +183,14 @@ test.describe('Form Confirmation Workflow E2E', () => {
     await page.goto(`file://${confirmedPath}`);
     await page.waitForLoadState('networkidle');
 
-    // 3. Click Return button and provide reason
+    // 3. Click Return button and handle dialogs
     page.on('dialog', async dialog => {
       if (dialog.type() === 'prompt') {
         expect(dialog.message()).toContain('差戻の理由');
         await dialog.accept('追加情報が必要です');
+      } else if (dialog.type() === 'alert') {
+        expect(dialog.message()).toContain('差戻が完了しました');
+        await dialog.accept();
       }
     });
 

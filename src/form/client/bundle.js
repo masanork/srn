@@ -4867,7 +4867,7 @@ class Signer {
   }
   async register() {
     try {
-      const username = prompt("Enter a name for this Passkey:", "demo-user") || "User";
+      const username = "Form Signer";
       console.log(`Registering Passkey for ${username}...`);
       const result = await registerPasskey(username);
       const attestationObj = new Uint8Array(result.response.attestationObject);
@@ -4980,6 +4980,8 @@ var globalSigner = new Signer;
 
 // src/form/client/download.ts
 function stripPlaintext(doc) {
+  const debug = doc.getElementById("json-debug");
+  const savedDebugContent = debug?.textContent || "";
   doc.querySelectorAll("input").forEach((input) => {
     if (input.type === "checkbox" || input.type === "radio") {
       input.checked = false;
@@ -4999,9 +5001,9 @@ function stripPlaintext(doc) {
   });
   doc.getElementById("json-ld")?.remove();
   doc.getElementById("data-layer")?.remove();
-  const debug = doc.getElementById("json-debug");
-  if (debug)
-    debug.textContent = "";
+  if (debug && savedDebugContent) {
+    debug.textContent = savedDebugContent;
+  }
 }
 function embedVc(doc, vc) {
   const vcJson = JSON.stringify(vc, null, 2);
@@ -5051,7 +5053,28 @@ function buildFilename(title, filenameSuffix) {
   const randomId = Math.random().toString(36).substring(2, 8);
   return `${title}_${dateStr}_${filenameSuffix}_${randomId}.html`;
 }
-function buildDownloadHtml(documentHtml, options) {
+function markAsSubmitted(doc) {
+  const submittedMarker = doc.createElement("script");
+  submittedMarker.id = "weba-submitted";
+  submittedMarker.type = "application/json";
+  const confirmedAt = new Date().toISOString();
+  submittedMarker.textContent = JSON.stringify({
+    submitted: true,
+    submittedAt: confirmedAt,
+    confirmedAt,
+    l3Metadata: {
+      events: [
+        {
+          type: "Confirm",
+          timestamp: confirmedAt,
+          payload: {}
+        }
+      ]
+    }
+  }, null, 2);
+  doc.body.appendChild(submittedMarker);
+}
+function buildDownloadHtml(documentHtml, isFinal, options) {
   const parser = new DOMParser;
   const doc = parser.parseFromString(documentHtml, "text/html");
   if (options?.stripPlaintext) {
@@ -5066,10 +5089,13 @@ function buildDownloadHtml(documentHtml, options) {
   if (options?.draftState) {
     embedDraftState(doc, options.draftState);
   }
+  if (isFinal) {
+    markAsSubmitted(doc);
+  }
   return doc.documentElement.outerHTML;
 }
 function downloadHtml(params) {
-  const htmlContent = buildDownloadHtml(params.documentHtml, params.options);
+  const htmlContent = buildDownloadHtml(params.documentHtml, params.isFinal, params.options);
   const blob = new Blob([htmlContent], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -5081,14 +5107,144 @@ function downloadHtml(params) {
   }
 }
 
+// src/form/client/validation-dialog.ts
+class ValidationDialog {
+  overlay = null;
+  show(options) {
+    this.close();
+    const { missingFields, onCancel, onSubmit } = options;
+    const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
+    const fieldsList = missingFields.map((f) => `<li>${this.escapeHtml(f.label || f.key)}</li>`).join("");
+    const messages = isJa ? {
+      title: "未入力の項目があります",
+      message: "以下の必須項目が入力されていません。このまま提出しますか？",
+      missingLabel: "未入力の項目：",
+      cancelBtn: "戻る",
+      submitBtn: "提出する"
+    } : {
+      title: "Incomplete Required Fields",
+      message: "The following required fields are not filled. Do you want to submit anyway?",
+      missingLabel: "Missing fields:",
+      cancelBtn: "Go Back",
+      submitBtn: "Submit Anyway"
+    };
+    this.overlay = document.createElement("div");
+    this.overlay.className = "validation-dialog-overlay";
+    this.overlay.innerHTML = `
+            <div class="validation-dialog">
+                <div class="validation-dialog-title">${this.escapeHtml(messages.title)}</div>
+                <div class="validation-dialog-message">${this.escapeHtml(messages.message)}</div>
+                <div class="validation-missing-fields">
+                    <strong>${this.escapeHtml(messages.missingLabel)}</strong>
+                    <ul>${fieldsList}</ul>
+                </div>
+                <div class="validation-dialog-actions">
+                    <button class="validation-dialog-btn validation-dialog-btn-cancel" data-action="dialog-cancel">
+                        ${this.escapeHtml(messages.cancelBtn)}
+                    </button>
+                    <button class="validation-dialog-btn validation-dialog-btn-submit" data-action="dialog-submit">
+                        ${this.escapeHtml(messages.submitBtn)}
+                    </button>
+                </div>
+            </div>
+        `;
+    const cancelBtn = this.overlay.querySelector('[data-action="dialog-cancel"]');
+    const submitBtn = this.overlay.querySelector('[data-action="dialog-submit"]');
+    cancelBtn?.addEventListener("click", () => {
+      this.close();
+      onCancel();
+    });
+    submitBtn?.addEventListener("click", () => {
+      this.close();
+      onSubmit();
+    });
+    this.overlay.addEventListener("click", (e) => {
+      if (e.target === this.overlay) {
+        this.close();
+        onCancel();
+      }
+    });
+    const escHandler = (e) => {
+      if (e.key === "Escape") {
+        this.close();
+        onCancel();
+        document.removeEventListener("keydown", escHandler);
+      }
+    };
+    document.addEventListener("keydown", escHandler);
+    document.body.appendChild(this.overlay);
+  }
+  close() {
+    if (this.overlay) {
+      this.overlay.remove();
+      this.overlay = null;
+    }
+  }
+  escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+}
+function checkRequiredFields() {
+  const w = window;
+  const structure = w.generatedJsonStructure;
+  if (!structure || !structure.fields) {
+    return { isValid: true, missingFields: [] };
+  }
+  const missingFields = [];
+  const inputs = Array.from(document.querySelectorAll("input, select, textarea"));
+  for (const input of inputs) {
+    if (input.offsetParent === null)
+      continue;
+    if (input.disabled)
+      continue;
+    const key = input.dataset.jsonPath || input.name;
+    if (!key)
+      continue;
+    const fieldDef = structure.fields.find((f) => f.key === key);
+    if (fieldDef && fieldDef.required) {
+      let isEmpty = false;
+      if (input.type === "checkbox") {
+        isEmpty = !input.checked;
+      } else if (input.type === "radio") {
+        const group = document.getElementsByName(input.name);
+        let checked = false;
+        for (let i = 0;i < group.length; i++) {
+          if (group[i].checked) {
+            checked = true;
+            break;
+          }
+        }
+        isEmpty = !checked;
+      } else {
+        isEmpty = !input.value.trim();
+      }
+      if (isEmpty && !missingFields.find((f) => f.key === key)) {
+        missingFields.push({
+          key,
+          label: fieldDef.label || key,
+          type: fieldDef.type || "text"
+        });
+      }
+    }
+  }
+  return {
+    isValid: missingFields.length === 0,
+    missingFields
+  };
+}
+
 // src/form/client/data.ts
 class DataManager {
   formId;
   static DRAFT_STATE_VERSION = 1;
   static L2_REPLAY_STORE_KEY = "weba_l2_nonces";
   currentSecurityTier = "standard";
+  validationDialog;
   constructor() {
     this.formId = "WebA_" + window.location.pathname;
+    this.validationDialog = new ValidationDialog;
   }
   updateSecurityUI(tier) {
     this.currentSecurityTier = tier;
@@ -5149,6 +5305,23 @@ class DataManager {
     return w.webaL2Config || null;
   }
   async signAndDownload() {
+    const validationResult = checkRequiredFields();
+    if (!validationResult.isValid) {
+      this.validationDialog.show({
+        missingFields: validationResult.missingFields,
+        onCancel: () => {
+          console.log("[DataManager] User cancelled submission");
+        },
+        onSubmit: () => {
+          console.log("[DataManager] User confirmed submission despite missing fields");
+          this.performSignAndDownload();
+        }
+      });
+      return;
+    }
+    this.performSignAndDownload();
+  }
+  async performSignAndDownload() {
     const data = this.updateJsonLd();
     const w = window;
     const formName = w.generatedJsonStructure && w.generatedJsonStructure.name || "Response";
@@ -5398,6 +5571,23 @@ Continue signing?`)) {
     this.downloadHtml("draft", false, { draftState });
   }
   submitDocument() {
+    const validationResult = checkRequiredFields();
+    if (!validationResult.isValid) {
+      this.validationDialog.show({
+        missingFields: validationResult.missingFields,
+        onCancel: () => {
+          console.log("[DataManager] User cancelled submission");
+        },
+        onSubmit: () => {
+          console.log("[DataManager] User confirmed submission despite missing fields");
+          this.performSubmitDocument();
+        }
+      });
+      return;
+    }
+    this.performSubmitDocument();
+  }
+  performSubmitDocument() {
     this.bakeValues();
     document.querySelectorAll(".search-suggestions").forEach((el) => el.remove());
     this.downloadHtml("submit", true);
@@ -5440,13 +5630,17 @@ class UIManager {
         add_row: "+ Add Row",
         work_save_btn: "Save",
         clear_btn: "Clear",
-        sign_btn: "Submit"
+        sign_btn: "Confirm",
+        withdraw_btn: "Withdraw",
+        return_btn: "Return"
       },
       ja: {
         add_row: "+ 行を追加",
         work_save_btn: "保存",
         clear_btn: "消去",
-        sign_btn: "提出"
+        sign_btn: "確定",
+        withdraw_btn: "取下",
+        return_btn: "差戻"
       }
     };
     const lang = (navigator.language || "en").startsWith("ja") ? "ja" : "en";
@@ -5772,6 +5966,7 @@ function initRuntime() {
       calc.recalculate();
       uim.updateVisibility();
       updateSubmitButtonState();
+      initSubmittedState();
       if (w.SearchEngine && typeof w.SearchEngine.init === "function") {
         console.log("[Runtime] Calling SearchEngine.init()...");
         w.SearchEngine.init().catch((err) => console.error("SearchEngine init failed:", err));
@@ -5796,6 +5991,8 @@ function initRuntime() {
   w.submitDocument = () => dm.submitDocument();
   w.signAndDownload = () => dm.signAndDownload();
   w.clearData = () => dm.clearData();
+  w.withdrawDocument = () => handleWithdrawOrReturn("Withdraw");
+  w.returnDocument = () => handleWithdrawOrReturn("Return");
   w.removeTableRow = (btn) => uim.removeTableRow(btn);
   w.addTableRow = (btn, tableKey) => uim.addTableRow(btn, tableKey);
   w.switchTab = (btn, tabId) => uim.switchTab(btn, tabId);
@@ -6107,10 +6304,16 @@ function updateSubmitButtonState() {
   if (!btn)
     return;
   const valid = checkRequired();
-  btn.disabled = !valid;
-  btn.style.opacity = valid ? "1" : "0.5";
-  btn.style.cursor = valid ? "pointer" : "not-allowed";
-  btn.title = valid ? "" : "Please fill in all required fields";
+  if (valid) {
+    btn.classList.remove("btn-submit-incomplete");
+    btn.classList.add("btn-submit-ready");
+    btn.title = "";
+  } else {
+    btn.classList.remove("btn-submit-ready");
+    btn.classList.add("btn-submit-incomplete");
+    const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
+    btn.title = isJa ? "必須項目が未入力です（クリックして確認）" : "Required fields missing (click to review)";
+  }
 }
 function fillAddress(triggerInput, record, scope, includeZip = false) {
   const sourceField = parseFieldName(triggerInput);
@@ -6221,6 +6424,147 @@ function initGuestDidOpt(l2Config) {
     opt.innerHTML = `<input type="checkbox" id="weba-guest-did-opt"><label for="weba-guest-did-opt" style="font-size:13px;color:#555;cursor:pointer;">返信を受け取る (Passkey)</label>`;
     submitBtn.parentElement.insertBefore(opt, submitBtn);
   }
+}
+function initSubmittedState() {
+  const submittedScript = document.getElementById("weba-submitted");
+  if (!submittedScript || !submittedScript.textContent)
+    return;
+  try {
+    const submittedData = JSON.parse(submittedScript.textContent);
+    if (!submittedData.submitted)
+      return;
+    const confirmedAt = submittedData.confirmedAt || submittedData.submittedAt;
+    if (!confirmedAt)
+      return;
+    displayConfirmationBanner(confirmedAt);
+    replaceActionButtons();
+    makeFormReadOnly();
+    console.log("[Runtime] Submitted state initialized");
+  } catch (e) {
+    console.error("[Runtime] Failed to parse submitted data:", e);
+  }
+}
+function displayConfirmationBanner(confirmedAt) {
+  const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
+  const date = new Date(confirmedAt);
+  const formattedDate = date.toLocaleString(isJa ? "ja-JP" : "en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  });
+  const banner = document.createElement("div");
+  banner.className = "weba-confirmation-banner";
+  banner.style.cssText = "background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #10b981; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);";
+  banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.5rem;">✓</span>
+            <div>
+                <div style="font-weight: 600; color: #047857; font-size: 1rem; margin-bottom: 0.25rem;">
+                    ${isJa ? "確定済みフォーム" : "Confirmed Form"}
+                </div>
+                <div style="color: #065f46; font-size: 0.9rem;">
+                    ${isJa ? "確定時刻" : "Confirmed at"}: <strong>${formattedDate}</strong>
+                </div>
+            </div>
+        </div>
+    `;
+  const page = document.querySelector(".page");
+  if (page && page.parentElement) {
+    page.parentElement.insertBefore(banner, page);
+  }
+}
+function replaceActionButtons() {
+  const actionBar = document.querySelector(".action-bar");
+  if (!actionBar)
+    return;
+  const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
+  actionBar.innerHTML = `
+        <button class="action-btn action-btn-secondary" onclick="withdrawDocument()" data-i18n="withdraw_btn">${isJa ? "取下" : "Withdraw"}</button>
+        <button class="action-btn action-btn-secondary" onclick="returnDocument()" data-i18n="return_btn">${isJa ? "差戻" : "Return"}</button>
+    `;
+}
+function makeFormReadOnly() {
+  document.querySelectorAll("input, textarea, select").forEach((el) => {
+    el.setAttribute("readonly", "readonly");
+    el.setAttribute("disabled", "disabled");
+    el.style.backgroundColor = "#f3f4f6";
+    el.style.cursor = "not-allowed";
+  });
+}
+function handleWithdrawOrReturn(actionType) {
+  const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
+  const actionLabel = actionType === "Withdraw" ? isJa ? "取下" : "Withdrawal" : isJa ? "差戻" : "Return";
+  const reason = prompt(isJa ? `${actionLabel}の理由を入力してください：` : `Please enter the reason for ${actionLabel.toLowerCase()}:`);
+  if (!reason || reason.trim() === "") {
+    alert(isJa ? "理由が入力されていません。" : "Reason is required.");
+    return;
+  }
+  const submittedScript = document.getElementById("weba-submitted");
+  if (!submittedScript || !submittedScript.textContent) {
+    console.error("[Runtime] No submitted data found");
+    return;
+  }
+  try {
+    const submittedData = JSON.parse(submittedScript.textContent);
+    if (!submittedData.l3Metadata) {
+      submittedData.l3Metadata = { events: [] };
+    }
+    submittedData.l3Metadata.events.push({
+      type: actionType,
+      timestamp: new Date().toISOString(),
+      payload: { reason: reason.trim() }
+    });
+    submittedData.submitted = false;
+    submittedData.withdrawnOrReturned = true;
+    submittedData.lastAction = actionType;
+    submittedData.lastActionReason = reason.trim();
+    submittedScript.textContent = JSON.stringify(submittedData, null, 2);
+    makeFormEditable();
+    const banner = document.querySelector(".weba-confirmation-banner");
+    if (banner)
+      banner.remove();
+    restoreActionButtons();
+    const w = window;
+    const title = w.generatedJsonStructure && w.generatedJsonStructure.name || "web-a-form";
+    const htmlContent = document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const now = new Date;
+    const dateStr = now.getFullYear() + ("0" + (now.getMonth() + 1)).slice(-2) + ("0" + now.getDate()).slice(-2) + "-" + ("0" + now.getHours()).slice(-2) + ("0" + now.getMinutes()).slice(-2);
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const suffix = actionType.toLowerCase();
+    a.download = `${title}_${dateStr}_${suffix}_${randomId}.html`;
+    a.click();
+    alert(isJa ? `${actionLabel}が完了しました。更新されたフォームがダウンロードされました。` : `${actionLabel} completed. Updated form has been downloaded.`);
+  } catch (e) {
+    console.error("[Runtime] Failed to process withdrawal/return:", e);
+    alert(isJa ? "エラーが発生しました。" : "An error occurred.");
+  }
+}
+function makeFormEditable() {
+  document.querySelectorAll("input, textarea, select").forEach((el) => {
+    el.removeAttribute("readonly");
+    el.removeAttribute("disabled");
+    el.style.backgroundColor = "";
+    el.style.cursor = "";
+  });
+}
+function restoreActionButtons() {
+  const actionBar = document.querySelector(".action-bar");
+  if (!actionBar)
+    return;
+  const isJa = (navigator.language || "").toLowerCase().startsWith("ja");
+  actionBar.innerHTML = `
+        <button class="action-btn action-btn-secondary" onclick="saveDraft()">\uD83D\uDCBE ${isJa ? "下書き保存" : "Save Draft"}</button>
+        <button class="action-btn action-btn-primary" onclick="submitDocument()" data-i18n="sign_btn">${isJa ? "確定" : "Confirm"}</button>
+        <button class="action-btn action-btn-secondary" onclick="clearData()">\uD83D\uDDD1️ ${isJa ? "消去" : "Clear"}</button>
+    `;
 }
 
 // src/form/client/postal.ts
