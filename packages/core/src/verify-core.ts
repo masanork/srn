@@ -1,4 +1,3 @@
-
 import * as cheerio from 'cheerio';
 import { verifyHybridVC } from './vc.ts';
 import type { VerificationResult } from './vc.ts';
@@ -52,7 +51,10 @@ export async function verifyWebA(
     jsonLdScripts.each((_, script) => {
         try {
             const json = JSON.parse($(script).text());
-            if (json.type && (json.type.includes('VerifiableCredential') || json.type.includes('WebADocument'))) {
+            if (json.type && (
+                (Array.isArray(json.type) && (json.type.includes('VerifiableCredential') || json.type.includes('WebADocument'))) ||
+                (typeof json.type === 'string' && (json.type === 'VerifiableCredential' || json.type === 'WebADocument'))
+            )) {
                 vc = json;
                 return false; // found it
             }
@@ -136,6 +138,12 @@ export async function verifyWebA(
             isValid: hmpValid,
             details: hmpDetails
         };
+
+        // Update overall validity based on HMP
+        if (!hmpValid) {
+            webaResult.isValid = false;
+            webaResult.error = "Human-Machine Parity (HMP) check failed. Display text does not match signed data.";
+        }
     }
 
     return webaResult;
