@@ -70,6 +70,7 @@ export class ManifestManager {
             ...(params.description ? { description: params.description } : {})
         };
 
+        // Web/A Core Principle: Portability via Inlining
         (ref as any)._content = buffer.toString('base64');
         this.blobs.push(ref);
         return ref;
@@ -137,10 +138,6 @@ export class ManifestManager {
   const m = window.__WEBA_MANIFEST;
   if (!m || !m.blobs) return;
 
-  // NOTE: Node.js shims removed (2025-01-04) after bundle optimization.
-  // Bundle now uses native browser APIs (Uint8Array, atob, btoa) with feature detection fallbacks.
-  // All bundled code (cbor-x, encoding.ts) gracefully falls back when Buffer/process are unavailable.
-  
   const processBlob = async (b) => {
     const el = document.getElementById('weba-blob-' + b.digest.split(':')[1]);
     if (!el) return null;

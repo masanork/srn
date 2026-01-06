@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'node:crypto';
 import canonicalize from 'canonicalize';
-import { createHybridVC, generateHybridKeys, createStatusListVC } from "@srn/core";
+import { createHybridVC, generateHybridKeys, createStatusListVC, initWasm } from "@srn/core";
 import type { HybridKeys } from "@srn/core";
 import { encodeDidKey, encodePqcPublicKeyJwk } from "@srn/core";
 import { hexToBytes } from "@srn/core";
@@ -34,6 +34,7 @@ export class IdentityManager {
     }
 
     async init() {
+        await initWasm();
         const rootKeyPath = path.join(this.dataDir, 'root-key.json');
 
         if (await fs.pathExists(rootKeyPath)) {
@@ -83,12 +84,32 @@ export class IdentityManager {
 
     private async updateKeyHistory() {
         const historyPath = path.join(this.dataDir, 'key-history.json');
-        let history: any[] = [];
+        let phc: PrunableHashChain;
+
         if (await fs.pathExists(historyPath)) {
-            try { history = await fs.readJson(historyPath); } catch (e) { }
+            try {
+                const data = await fs.readJson(historyPath);
+                if (Array.isArray(data) && data.length > 0 && !data[0].chainHash) {
+                    // Convert legacy array to PHC
+                    console.log("[IdentityManager] Converting legacy key-history to PHC...");
+                    phc = new PrunableHashChain();
+                    for (const entry of data) {
+                        const type: PHCEventType = phc.getLinks().length === 0 ? 'Genesis' : 'KeyRotation';
+                        await phc.append(type, entry);
+                    }
+                } else {
+                    phc = PrunableHashChain.fromJSON(data);
+                }
+            } catch (e) {
+                console.warn("[IdentityManager] Failed to load key history, starting new chain", e);
+                phc = new PrunableHashChain();
+            }
+        } else {
+            phc = new PrunableHashChain();
         }
 
-        history.push({
+        const type: PHCEventType = phc.getLinks().length === 0 ? 'Genesis' : 'KeyRotation';
+        await phc.append(type, {
             timestamp: new Date().toISOString(),
             buildId: this.buildId,
             revoked: false,
@@ -96,11 +117,27 @@ export class IdentityManager {
             ...(this.currentKeys.pqc ? { pqcParams: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey)) } : {})
         });
 
-        await fs.writeJson(historyPath, history, { spaces: 2 });
-        await fs.writeJson(path.join(this.distDir, 'key-history.json'), history, { spaces: 2 });
+        // --- Pruning Strategy for Key History ---
+        const KEEP_LATEST = 2;
+        const links = phc.getLinks();
+        if (links.length > KEEP_LATEST + 1) {
+            const keepIndices = [0]; // Always keep Genesis
+            for (let i = links.length - KEEP_LATEST; i < links.length; i++) {
+                keepIndices.push(i);
+            }
+            phc.prune(keepIndices);
+        }
+        // ----------------------------------------
 
-        // Generate Status List
-        const revoked = history.filter(k => k.revoked).map(k => k.buildId);
+        const historyData = phc.toJSON();
+        await fs.writeJson(historyPath, historyData, { spaces: 2 });
+        await fs.writeJson(path.join(this.distDir, 'key-history.json'), historyData, { spaces: 2 });
+
+        // Generate Status List from PHC links
+        const revoked = links
+            .filter(link => !link.event.pruned && link.event.payload && link.event.payload.revoked)
+            .map(link => link.event.payload.buildId);
+        
         const statusListVc = await createStatusListVC(revoked, this.rootKeys, `${this.siteDid}/status-list.json`, this.siteDid);
         await fs.writeJson(path.join(this.distDir, 'status-list.json'), statusListVc, { spaces: 2 });
     }
@@ -135,6 +172,33 @@ export class IdentityManager {
         await fs.ensureDir(path.join(this.distDir, '.well-known'));
         await fs.writeJson(path.join(this.distDir, '.well-known', 'did.json'), didDoc, { spaces: 2 });
         await fs.writeJson(path.join(this.distDir, 'did.json'), didDoc, { spaces: 2 });
+    }
+
+    public async resetHistory() {
+        console.log("[IdentityManager] Resetting key history...");
+        const historyPath = path.join(this.dataDir, 'key-history.json');
+        
+        // Backup old history if it exists
+        if (await fs.pathExists(historyPath)) {
+            const backupPath = `${historyPath}.${Date.now()}.bak`;
+            await fs.copy(historyPath, backupPath);
+            console.log(`[IdentityManager] Backup of old history saved to: ${backupPath}`);
+        }
+
+        // Create a fresh chain starting with the current keys
+        const phc = new PrunableHashChain();
+        await phc.append('Genesis', {
+            timestamp: new Date().toISOString(),
+            buildId: this.buildId,
+            revoked: false,
+            ed25519Params: encodeDidKey(hexToBytes(this.currentKeys.ed25519.publicKey), 'ed25519'),
+            ...(this.currentKeys.pqc ? { pqcParams: encodePqcPublicKeyJwk(hexToBytes(this.currentKeys.pqc.publicKey)) } : {})
+        });
+
+        const historyData = phc.toJSON();
+        await fs.writeJson(historyPath, historyData, { spaces: 2 });
+        await fs.writeJson(path.join(this.distDir, 'key-history.json'), historyData, { spaces: 2 });
+        console.log("[IdentityManager] Key history has been reset with current key as Genesis.");
     }
 
     public getContextChain(vc: any): any[] | null {

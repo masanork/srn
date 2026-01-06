@@ -68,6 +68,7 @@ async function build() {
         const config = await loadConfig(configOverridePath);
         const { SITE_DIR, DIST_DIR, CONTENT_DIR, DATA_DIR, SCHEMAS_DIR } = getAbsolutePaths(config);
         const isClean = process.argv.includes('--clean');
+        const isResetHistory = process.argv.includes('--reset-history');
 
         if (isClean) await fs.emptyDir(DIST_DIR);
         await fs.ensureDir(DIST_DIR);
@@ -82,6 +83,10 @@ async function build() {
             config.identity.tsaUrl
         );
         await idManager.init();
+
+        if (isResetHistory) {
+            await idManager.resetHistory();
+        }
 
         const fontProcessor = new FontProcessor(config, process.cwd());
         await fontProcessor.init();

@@ -7,7 +7,8 @@ export type PHCEventType =
     | 'L4Rebuild'
     | 'Transfer'
     | 'MetadataUpdate'
-    | 'Verification';
+    | 'Verification'
+    | 'KeyRotation';
 
 export interface PHCEvent {
     type: PHCEventType;

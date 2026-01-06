@@ -179,7 +179,9 @@ program
     .name('weba-aggregator')
     .description('Aggregate JSON-LD data from multiple Web/A HTML files')
     .argument('<directory>', 'Directory containing Web/A HTML files')
-    .option('-o, --output <file>', 'Output CSV file path', 'output.csv')
+    .option('-o, --output <file>', 'Output file path')
+    .option('-f, --format <type>', 'Output format (csv, jsonl)', 'csv')
+    .option('--explode <key>', 'Explode an array field into separate records (JSONL only)')
     .option('--l2-keys <file>', 'Recipient key file for L2 decryption (JSON)')
     .option('--include-json', 'Include raw JSON payload column')
     .option('--replay-store <file>', 'Path to replay store (JSON)')
@@ -189,6 +191,10 @@ program
             console.error(`Error: Directory '${dirPath}' does not exist.`);
             process.exit(1);
         }
+
+        const format = options.format.toLowerCase();
+        const defaultExt = format === 'jsonl' ? '.jsonl' : '.csv';
+        const outputPath = options.output ? path.resolve(options.output) : path.join(process.cwd(), `aggregated${defaultExt}`);
 
         let l2Keys: L2KeyFile | null = null;
         if (options.l2Keys) {
@@ -206,70 +212,103 @@ program
         }
 
         const replayGuard = new ReplayGuard(replayStore);
-        const aggregatedData: any[] = [];
-        const allKeys = new Set<string>(['_filename']);
-
+        
         let processedCount = 0;
         let errorCount = 0;
 
-        for (const file of files) {
-            const filePath = path.join(dirPath, file);
-            try {
-                const content = fs.readFileSync(filePath, 'utf-8');
+        if (format === 'jsonl') {
+            const outStream = fs.createWriteStream(outputPath);
+            for (const file of files) {
+                const filePath = path.join(dirPath, file);
+                try {
+                    const content = fs.readFileSync(filePath, 'utf-8');
+                    const extracted = await extractPlainFromHtml(content, l2Keys, replayGuard);
+                    if (extracted.plain) {
+                        const baseRecord = {
+                            _filename: file,
+                            _source: extracted.source,
+                            ...extracted.plain
+                        };
+                        if (extracted.sig) (baseRecord as any)._l2_sig = extracted.sig;
 
-                const extracted = await extractPlainFromHtml(content, l2Keys, replayGuard);
-                if (extracted.source === 'l2' && extracted.plain) {
-                    const built = buildRowFromPlain({
-                        plain: extracted.plain,
-                        filename: file,
-                        includeJson: options.includeJson,
-                        sig: extracted.sig,
-                    });
-                    built.keys.forEach((key) => allKeys.add(key));
-                    const row = built.row;
-                    aggregatedData.push(row);
-                    processedCount++;
-                    continue;
+                        const explodeKey = options.explode;
+                        if (explodeKey && Array.isArray(extracted.plain[explodeKey])) {
+                            const subRecords = extracted.plain[explodeKey] as any[];
+                            const { [explodeKey]: _, ...parentFields } = baseRecord; // Omit the array itself from sub-records
+                            
+                            if (subRecords.length === 0) {
+                                // If array is empty, emit at least the parent record
+                                outStream.write(JSON.stringify(parentFields) + '\n');
+                                processedCount++;
+                            } else {
+                                for (const sub of subRecords) {
+                                    const merged = {
+                                        ...parentFields,
+                                        ...(typeof sub === 'object' && sub !== null ? sub : { [explodeKey]: sub })
+                                    };
+                                    outStream.write(JSON.stringify(merged) + '\n');
+                                }
+                                processedCount += subRecords.length;
+                            }
+                        } else {
+                            outStream.write(JSON.stringify(baseRecord) + '\n');
+                            processedCount++;
+                        }
+                    }
+                } catch (e: any) {
+                    console.error(`Error processing ${file}: ${e.message}`);
+                    errorCount++;
                 }
-
-                if (extracted.source === 'jsonld' && extracted.plain) {
-                    const json = extracted.plain;
-                    const built = buildRowFromPlain({
-                        plain: json,
-                        filename: file,
-                        includeJson: options.includeJson,
-                        omitKey: (key) => key.startsWith('@'),
-                    });
-                    built.keys.forEach((key) => allKeys.add(key));
-                    const row = built.row;
-                    aggregatedData.push(row);
-                    processedCount++;
-                } else {
-                    console.warn(`Warning: No JSON-LD found in ${file}`);
-                }
-            } catch (e: any) {
-                console.error(`Error processing ${file}: ${e.message}`);
-                errorCount++;
             }
+            outStream.end();
+            console.log(`Successfully wrote ${processedCount} records to ${outputPath}`);
+        } else {
+            // CSV mode requires collecting all keys first or using a predefined schema
+            const aggregatedData: any[] = [];
+            const allKeys = new Set<string>(['_filename']);
+
+            for (const file of files) {
+                const filePath = path.join(dirPath, file);
+                try {
+                    const content = fs.readFileSync(filePath, 'utf-8');
+
+                    const extracted = await extractPlainFromHtml(content, l2Keys, replayGuard);
+                    if (extracted.plain) {
+                        const built = buildRowFromPlain({
+                            plain: extracted.plain,
+                            filename: file,
+                            includeJson: options.includeJson,
+                            sig: extracted.sig,
+                        });
+                        built.keys.forEach((key) => allKeys.add(key));
+                        aggregatedData.push(built.row);
+                        processedCount++;
+                    } else {
+                        console.warn(`Warning: No valid data found in ${file}`);
+                    }
+                } catch (e: any) {
+                    console.error(`Error processing ${file}: ${e.message}`);
+                    errorCount++;
+                }
+            }
+
+            const sortedKeys = Array.from(allKeys).sort((a, b) => {
+                if (a === '_filename') return -1;
+                if (b === '_filename') return 1;
+                return a.localeCompare(b);
+            });
+
+            const csvStream = csv.format({ headers: sortedKeys, writeBOM: true });
+            const writableStream = fs.createWriteStream(outputPath);
+
+            csvStream.pipe(writableStream).on('finish', () => {
+                console.log(`Successfully wrote ${processedCount} records to ${outputPath}`);
+                if (errorCount > 0) console.log(`(Failed to process ${errorCount} files)`);
+            });
+
+            aggregatedData.forEach(row => csvStream.write(row));
+            csvStream.end();
         }
-
-        // Write CSV
-        const sortedKeys = Array.from(allKeys).sort((a, b) => {
-            if (a === '_filename') return -1;
-            if (b === '_filename') return 1;
-            return a.localeCompare(b);
-        });
-
-        const csvStream = csv.format({ headers: sortedKeys, writeBOM: true });
-        const writableStream = fs.createWriteStream(options.output);
-
-        csvStream.pipe(writableStream).on('end', () => {
-            console.log(`Successfully wrote ${processedCount} records to ${options.output}`);
-            if (errorCount > 0) console.log(`(Failed to process ${errorCount} files)`);
-        });
-
-        aggregatedData.forEach(row => csvStream.write(row));
-        csvStream.end();
     });
 
 if (import.meta.main) {
