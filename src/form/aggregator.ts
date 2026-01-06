@@ -138,7 +138,7 @@ export async function extractPlainFromHtml(
         const payload = await decryptLayer2(
             l2Envelope,
             recipientSk,
-            { pqc: pqc ? { pqc } : undefined, replayGuard }
+            { ...(pqc ? { pqc } : {}), ...(replayGuard ? { replayGuard } : {}) }
         );
         const plain = (payload as any).layer2_plain ?? payload;
         const sig = (payload as any).layer2_sig;
@@ -180,7 +180,7 @@ program
     .description('Aggregate JSON-LD data from multiple Web/A HTML files')
     .argument('<directory>', 'Directory containing Web/A HTML files')
     .option('-o, --output <file>', 'Output file path')
-    .option('-f, --format <type>', 'Output format (csv, jsonl)', 'csv')
+    .option('-f, --format <type>', 'Output format (csv, jsonl, parquet)', 'csv')
     .option('--explode <key>', 'Explode an array field into separate records (JSONL only)')
     .option('--l2-keys <file>', 'Recipient key file for L2 decryption (JSON)')
     .option('--include-json', 'Include raw JSON payload column')
@@ -212,7 +212,7 @@ program
         }
 
         const replayGuard = new ReplayGuard(replayStore);
-        
+
         let processedCount = 0;
         let errorCount = 0;
 
@@ -235,7 +235,7 @@ program
                         if (explodeKey && Array.isArray(extracted.plain[explodeKey])) {
                             const subRecords = extracted.plain[explodeKey] as any[];
                             const { [explodeKey]: _, ...parentFields } = baseRecord; // Omit the array itself from sub-records
-                            
+
                             if (subRecords.length === 0) {
                                 // If array is empty, emit at least the parent record
                                 outStream.write(JSON.stringify(parentFields) + '\n');
@@ -262,6 +262,103 @@ program
             }
             outStream.end();
             console.log(`Successfully wrote ${processedCount} records to ${outputPath}`);
+        } else if (format === 'parquet') {
+            const { ParquetSchema, ParquetWriter } = await import('parquetjs');
+
+            // 1. Collect all data and infer schema
+            console.log("Collecting data to infer schema...");
+            const records: any[] = [];
+
+            for (const file of files) {
+                const filePath = path.join(dirPath, file);
+                try {
+                    const content = fs.readFileSync(filePath, 'utf-8');
+                    const extracted = await extractPlainFromHtml(content, l2Keys, replayGuard);
+                    if (extracted.plain) {
+                        const rec = {
+                            _filename: file,
+                            _source: extracted.source || 'unknown',
+                            ...extracted.plain
+                        };
+                        // Flatten for better columnar access in parquet
+                        // But Parquet allows nested, so we can keep it nested or flatten.
+                        // For simplicity and compatibility with big data tools, flattening is often safer 
+                        // unless we define a complex schema.
+                        // Let's use the same flattenForCsv logic to get simple k/v pairs for now,
+                        // as dynamic schema inference for nested objects is complex.
+                        const flatParams = buildRowFromPlain({
+                            plain: extracted.plain,
+                            filename: file,
+                            includeJson: options.includeJson,
+                            sig: extracted.sig
+                        });
+                        records.push(flatParams.row);
+                        processedCount++;
+                    }
+                } catch (e: any) {
+                    console.error(`Error processing ${file}: ${e.message}`);
+                    errorCount++;
+                }
+            }
+
+            if (records.length === 0) {
+                console.log("No records to write.");
+                return;
+            }
+
+            // 2. Build Schema from all keys found
+            const allKeys = new Set<string>();
+            records.forEach(r => Object.keys(r).forEach(k => allKeys.add(k)));
+
+            const schemaDef: Record<string, any> = {};
+            // Simple type inference
+            for (const key of allKeys) {
+                // Check multiple records to guess type
+                let type: string = 'UTF8';
+                let isOptional = true; // defaulting to optional is safer for sparse data
+
+                // Find a non-null value to guess
+                const sampleVal = records.find(r => r[key] !== null && r[key] !== undefined)?.[key];
+
+                if (typeof sampleVal === 'number') {
+                    if (Number.isInteger(sampleVal)) type = 'INT64';
+                    else type = 'DOUBLE';
+                } else if (typeof sampleVal === 'boolean') {
+                    type = 'BOOLEAN';
+                }
+
+                schemaDef[key] = { type, optional: isOptional };
+            }
+
+            const schema = new ParquetSchema(schemaDef);
+            const writer = await ParquetWriter.openFile(schema, outputPath);
+
+            // 3. Write rows
+            for (const record of records) {
+                // Ensure record matches schema (fill missing with null/undefined is handled by optional)
+                // But we must correct types if they diverge (e.g. string in int column).
+                // For now, strict type writing might fail if inference was partial.
+                // ParquetJS is strict.
+
+                // Simple cast/sanitization
+                const cleanRow: any = {};
+                for (const key of Object.keys(schemaDef)) {
+                    if (record[key] !== undefined && record[key] !== null) {
+                        // TODO: Robust type casting
+                        const val = record[key];
+                        if (schemaDef[key].type === 'UTF8') cleanRow[key] = String(val);
+                        else if (schemaDef[key].type === 'INT64') cleanRow[key] = Math.floor(Number(val));
+                        else if (schemaDef[key].type === 'DOUBLE') cleanRow[key] = Number(val);
+                        else if (schemaDef[key].type === 'BOOLEAN') cleanRow[key] = !!val;
+                        else cleanRow[key] = val;
+                    }
+                }
+                await writer.appendRow(cleanRow);
+            }
+
+            await writer.close();
+            console.log(`Successfully wrote ${processedCount} records to ${outputPath}`);
+
         } else {
             // CSV mode requires collecting all keys first or using a predefined schema
             const aggregatedData: any[] = [];
