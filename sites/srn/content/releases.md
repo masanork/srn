@@ -5,6 +5,32 @@ description: "Release history and major updates for the Sorane project."
 ai_generated: true
 ---
 
+## v3.6.0 - MCP Server & Seamless Integration
+
+**Date:** 2026-01-07
+
+Integration of **Model Context Protocol (MCP)** support and consolidation of the project architecture, enabling AI agents to directly interact with the Tobari ecosystem.
+
+*   **MCP Server Integration**:
+    *   **Agentic Document Handling**: Released `@tobari/mcp-server`, allowing AI assistants (like Claude) to autonomously discover, read, and verify Tobari documents (`.html`, `.cose`) within the user's workspace.
+    *   **Service Request Analysis**: Agents can now parse administrative Service Request definitions and understand required credentials and user inputs programmatically.
+    *   **Presentation Generation**: Supported agent-driven creation of Verifiable Presentations (VP) with selective disclosure, including coordination with external signing tools (JPKI/WebAuthn).
+
+*   **Architecture Consolidation**:
+    *   **Project Unification**: Merged the experimental `Folio` project features into the core `Tobari` platform to eliminate redundancy.
+        *   **Identity Management**: Integrated identity and key management logic from Folio directly into Tobari's infrastructure layers.
+        *   **Cleanup**: Removed deprecated `folio-cli` and `folio-core` packages from the SRN repository, establishing SRN as a pure "Form & Publisher" layer and Tobari as the "Trust Infrastructure" layer.
+
+*   **JPKI Simulation Enhancements**:
+    *   **Realistic Cryptography**: Updated `dummy-myna` to use industry-standard **RSA-2048 / SHA-256** for signatures, providing a high-fidelity simulation environment for development without physical cards.
+    *   **Data Compliance**: Refined dummy identity data to strictly conform to JIS X 0208 character sets, ensuring compatibility with legacy government systems.
+
+## v3.5.1 - Fixes & Refinements
+
+**Date:** 2026-01-06
+
+*   **Validation Fixes**: Corrected path resolution issues in the Validator tool.
+
 ## v3.5.0 - Quality Hardening & Shared Aggregator Engine
 
 **Date:** 2026-01-06
