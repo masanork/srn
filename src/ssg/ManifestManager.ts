@@ -174,10 +174,25 @@ export class ManifestManager {
       const code = new TextDecoder().decode(data);
       const blobUrl = URL.createObjectURL(new Blob([code], {type: 'application/javascript'}));
       const script = document.createElement('script');
-      script.type = 'module';
-      script.src = blobUrl;
+      if (b.id === 'js-mermaid') {
+          // Mermaid (UMD) must be loaded as a normal script to set window.mermaid
+          script.src = blobUrl;
+          script.onload = () => {
+              if (window.mermaid) {
+                  window.mermaid.initialize({ 
+                      startOnLoad: true,
+                      securityLevel: 'loose',
+                      theme: 'default'
+                  });
+                  // Also trigger run for any existing .mermaid elements
+                  window.mermaid.run?.({ querySelector: '.mermaid' });
+              }
+          };
+      } else {
+          script.type = 'module';
+          script.src = blobUrl;
+      }
       document.body.appendChild(script);
-      if (b.id === 'js-mermaid' && window.mermaid) window.mermaid.initialize({ startOnLoad: true });
     }
   }
 })();

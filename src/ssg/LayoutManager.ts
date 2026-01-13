@@ -59,6 +59,27 @@ export class LayoutManager {
             } catch (e) { console.warn('Failed to register mermaid blob', e); }
         }
 
+        // --- Mermaid HTML Transformation ---
+        let effectiveHtmlContent = htmlContent;
+        const hasMermaidClass = effectiveHtmlContent.includes('class="language-mermaid"');
+
+        // We check either markdown source OR html output to decide if we need the blob
+        if (needsMermaid || hasMermaidClass) {
+            // Transform <pre><code class="language-mermaid">...</code></pre> to <div class="mermaid">...</div>
+            effectiveHtmlContent = effectiveHtmlContent.replace(
+                /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
+                (_, code) => {
+                    const unescaped = code
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'");
+                    return `<div class="mermaid">${unescaped}</div>`;
+                }
+            );
+        }
+
         // --- Mermaid Detection & Blob Registration ---
         // ... (existing mermaid logic) ...
 
@@ -93,6 +114,17 @@ export class LayoutManager {
                 }
             } catch (e) { console.warn('Failed to register WASM crypto blob', e); }
         }
+
+        // --- CSS Handling ---
+        // For standalone/portable Web/A, we inline the shared style.css
+        let combinedCss = fontCss;
+        try {
+            const sharedCssPath = path.resolve('shared/style.css');
+            if (await fs.pathExists(sharedCssPath)) {
+                const sharedCss = await fs.readFile(sharedCssPath, 'utf-8');
+                combinedCss = `<style>\n${sharedCss}\n</style>\n${fontCss}`;
+            }
+        } catch (e) { console.warn('Failed to load shared style.css', e); }
 
         switch (data.layout) {
             case 'form':
@@ -137,7 +169,7 @@ export class LayoutManager {
                 finalHtml = await formLayout({
                     data,
                     rawMarkdown: content,
-                    fontCss,
+                    fontCss: combinedCss,
                     fontFamilies: safeFontFamilies,
                     vc,
                     relPath,
@@ -150,7 +182,7 @@ export class LayoutManager {
                 // Extra output: Report page (use separate ManifestManager to avoid blob duplication)
                 const { ManifestManager: MM } = await import('./ManifestManager.js');
                 const reportManifestManager = new MM(distDir);
-                const reportHtml = await formReportLayout({ data, rawMarkdown: content, fontCss, fontFamilies: safeFontFamilies, relPath, distDir, manifestManager: reportManifestManager });
+                const reportHtml = await formReportLayout({ data, rawMarkdown: content, fontCss: combinedCss, fontFamilies: safeFontFamilies, relPath, distDir, manifestManager: reportManifestManager });
                 const reportPath = path.join(distDir, relPath.replace('.md', '.report.html'));
                 await fs.ensureDir(path.dirname(reportPath));
                 await fs.writeFile(reportPath, reportHtml);
@@ -192,17 +224,17 @@ export class LayoutManager {
                     }
                 }
 
-                finalHtml = blogLayout(data, allPages, fontCss, safeFontFamilies, htmlContent, latestArticleContent, latestArticleData, relPath);
+                finalHtml = blogLayout(data, allPages, combinedCss, safeFontFamilies, effectiveHtmlContent, latestArticleContent, latestArticleData, relPath);
                 break;
 
             case 'verifier':
-                finalHtml = verifierLayout(data, htmlContent, fontCss, safeFontFamilies, relPath);
+                finalHtml = verifierLayout(data, effectiveHtmlContent, combinedCss, safeFontFamilies, relPath);
                 break;
 
             case 'juminhyo':
                 {
                     const jsonLd = buildJuminhyoJsonLd(data);
-                    const draftHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, undefined, undefined, undefined, undefined, relPath);
+                    const draftHtml = juminhyoLayout(data, content, combinedCss, safeFontFamilies, jsonLd, undefined, undefined, undefined, undefined, relPath);
                     const htmlDigest = crypto.createHash('sha256').update(draftHtml).digest('hex');
                     const jsonLdDigest = crypto.createHash('sha256').update(JSON.stringify(jsonLd)).digest('hex');
                     const contentDigest = crypto.createHash('sha256')
@@ -243,7 +275,7 @@ export class LayoutManager {
                     });
 
                     vc = instanceVc;
-                    finalHtml = juminhyoLayout(data, content, fontCss, safeFontFamilies, jsonLd, templateVc, instanceVc, undefined, undefined, relPath);
+                    finalHtml = juminhyoLayout(data, content, combinedCss, safeFontFamilies, jsonLd, templateVc, instanceVc, undefined, undefined, relPath);
                 }
                 break;
 
@@ -270,7 +302,7 @@ export class LayoutManager {
                     credentialSubject: {
                         id: `${idManager.siteDid}/${relPath.replace('.md', '')}`,
                         name: data.title,
-                        contentDigest: crypto.createHash('sha256').update(cheerio.load(htmlContent).text().trim()).digest('hex')
+                        contentDigest: crypto.createHash('sha256').update(cheerio.load(effectiveHtmlContent).text().trim()).digest('hex')
                     }
                 }, {
                     license: data.license,
@@ -279,7 +311,7 @@ export class LayoutManager {
                     updated: data.updated,
                     schemas: data.schemas
                 });
-                finalHtml = articleLayout(data, htmlContent, fontCss, safeFontFamilies, vc, relPath);
+                finalHtml = articleLayout(data, effectiveHtmlContent, combinedCss, safeFontFamilies, vc, relPath);
                 break;
         }
 
