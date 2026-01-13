@@ -25,16 +25,19 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     const masterData: Record<string, string[][]> = {};
     let scanInMaster = false;
     let scanMasterKey: string = '';
-    let scanInAggSpec = false;
+    let scanInCodeBlock = false;
 
     lines.forEach(line => {
         const t = line.trim();
-        if (t === '```agg') {
-            scanInAggSpec = true;
+        if (t.startsWith('```')) {
+            if (scanInCodeBlock) {
+                scanInCodeBlock = false;
+            } else {
+                scanInCodeBlock = true;
+            }
             return;
         }
-        if (scanInAggSpec) {
-            if (t === '```') scanInAggSpec = false;
+        if (scanInCodeBlock) {
             return;
         }
         const masterMatch = t.match(/^\[master:([^\]]+)\]$/);
@@ -78,8 +81,9 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     let tabs: { id: string, title: string, isSystem?: boolean }[] = [];
     let currentTabId: string | null = null;
     let mainContentHtml = '';
-    let inAggBlock = false;
-    let aggLines: string[] = [];
+    let inCodeBlock = false;
+    let codeLines: string[] = [];
+    let codeLang = '';
 
     // Helper to append to the correct buffer
     const appendHtml = (str: string) => {
@@ -160,20 +164,30 @@ export function parseMarkdown(text: string): { html: string, jsonStructure: any 
     lines.forEach((line) => {
         const trimmed = line.trim();
 
-        if (trimmed === '```agg') {
-            inAggBlock = true;
-            aggLines = [];
+        if (trimmed.startsWith('```')) {
+            if (inCodeBlock) {
+                if (codeLang === 'agg') {
+                    const parsed = parseAggSpec(codeLines.join('\n'));
+                    if (parsed) aggSpecs.push(parsed);
+                } else {
+                    const langClass = codeLang ? ` class="language-${codeLang}"` : '';
+                    appendHtml(`<pre><code${langClass}>${Renderers.escapeHtml(codeLines.join('\n'))}</code></pre>`);
+                }
+                inCodeBlock = false;
+                codeLines = [];
+                codeLang = '';
+            } else {
+                flushSingleLineFields();
+                if (currentRadioGroup) { appendHtml('</div></div>'); currentRadioGroup = null; }
+                inCodeBlock = true;
+                codeLang = trimmed.slice(3).trim().split(/\s+/)[0] || '';
+                codeLines = [];
+            }
             return;
         }
-        if (inAggBlock) {
-            if (trimmed === '```') {
-                inAggBlock = false;
-                const parsed = parseAggSpec(aggLines.join('\n'));
-                if (parsed) aggSpecs.push(parsed);
-                aggLines = [];
-            } else {
-                aggLines.push(line);
-            }
+
+        if (inCodeBlock) {
+            codeLines.push(line);
             return;
         }
 
