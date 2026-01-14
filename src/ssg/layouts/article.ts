@@ -313,7 +313,8 @@ export function articleLayout(
         jsonLd: vc ? [schema, vc] : schema,
         lang: lang,
         className: `layout-${data.layout || 'article'}${presentationEnabled ? ` presentation-template-${presentationTemplate}` : ''}`,
-        relPath
+        relPath,
+        includeStyleLink: false
     });
 }
 

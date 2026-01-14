@@ -94,6 +94,7 @@ export function verifierLayout(
         content: fullContent,
         fontCss,
         fontFamilies,
-        relPath
+        relPath,
+        includeStyleLink: false
     });
 }

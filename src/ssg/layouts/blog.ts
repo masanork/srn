@@ -251,6 +251,7 @@ export function blogLayout(
         content: fullContent,
         fontCss,
         fontFamilies,
-        relPath
+        relPath,
+        includeStyleLink: false
     });
 }

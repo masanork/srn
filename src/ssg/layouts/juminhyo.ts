@@ -229,6 +229,7 @@ export function juminhyoLayout(
         fontFamilies,
         jsonLd: jsonLdPayload,
         lang: lang,
-        relPath
+        relPath,
+        includeStyleLink: false
     });
 }
