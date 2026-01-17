@@ -75,7 +75,7 @@ export function articleLayout(
 
     const verificationFooter = `
         <footer class="doc-verification no-print" style="margin-top: 5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
                 ${data.license ? `<div class="doc-license">⚖️ License: ${data.license}</div>` : '<div></div>'}
                 ${vc ? `
                 <details>
